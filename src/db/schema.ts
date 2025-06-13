@@ -8,17 +8,32 @@ import {
   uuid,
   varchar,
   check,
+  date,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  firstName: varchar('first_name', { length: 75 }).notNull(),
-  lastName: varchar('last_name', { length: 75 }),
-  email: varchar('email', { length: 150 }).notNull().unique(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-})
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    firstName: varchar('first_name', { length: 75 }).notNull(),
+    lastName: varchar('last_name', { length: 75 }),
+    email: varchar('email', { length: 150 }).notNull().unique(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    provider: varchar('provider', { length: 50 })
+      .notNull()
+      .default('credentials'),
+    providerId: varchar('provider_id', { length: 100 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
+  },
+  (t) => [
+    check(
+      'valid_provider',
+      sql`provider IN ('credentials', 'google', 'apple')`
+    ),
+  ]
+)
 
 export const notebooks = pgTable('notebooks', {
   userId: uuid('user_id')
@@ -26,15 +41,16 @@ export const notebooks = pgTable('notebooks', {
     .references(() => users.id, { onDelete: 'cascade' }),
 })
 
-export const tags = pgTable(
-  'tags',
+export const notebookTags = pgTable(
+  'notebook_tags',
   {
+    id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 50 }).notNull(),
-    notebookId: uuid('notebook_id')
+    userId: uuid('user_id')
       .notNull()
-      .references(() => notebooks.userId, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.notebookId, t.name] })]
+  (t) => [unique().on(t.name, t.userId)] // tag names can be unique per notebook
 )
 
 export const notebookEntries = pgTable('notebook_entries', {
@@ -44,26 +60,23 @@ export const notebookEntries = pgTable('notebook_entries', {
     .references(() => notebooks.userId, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }),
   body: text('body').notNull(), // limit to n words in business logic
+  date: date('date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
 })
 
-export const notebookEntryTags = pgTable(
-  'notebook_entry_tags',
+export const notebookEntryTagLinks = pgTable(
+  'notebook_entry_tag_links',
   {
     entryId: uuid('entry_id')
       .notNull()
       .references(() => notebookEntries.id, { onDelete: 'cascade' }),
 
-    notebookId: uuid('notebook_id')
+    tagId: uuid('tag_id')
       .notNull()
-      .references(() => notebooks.userId, { onDelete: 'cascade' }),
-
-    tagName: varchar('tag_name', { length: 50 })
-      .notNull()
-      .references(() => tags.name, { onDelete: 'cascade' }),
+      .references(() => notebookTags.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.entryId, t.tagName, t.notebookId] })]
+  (t) => [primaryKey({ columns: [t.entryId, t.tagId] })]
 )
 
 export const weightEntries = pgTable(
@@ -74,22 +87,55 @@ export const weightEntries = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     weight: numeric('weight', { precision: 4, scale: 1 }).notNull(), // in lbs
-    date: timestamp('date').notNull().defaultNow(),
+    date: date('date').notNull().defaultNow(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
   (t) => [unique().on(t.userId, t.date)] // ensure max one entry per user per date
 )
 
-export const workouts = pgTable('workouts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 100 }).notNull(),
-  notes: text('notes'), // limit to n words in business logic
-  date: timestamp('date').notNull().defaultNow(),
-  location: varchar('location', { length: 100 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-})
+export const workoutTags = pgTable(
+  'workout_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 50 }).notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (t) => [unique().on(t.name, t.userId)]
+)
+
+export const workoutTagLinks = pgTable(
+  'workout_tag_links',
+  {
+    workoutId: uuid('workout_id')
+      .notNull()
+      .references(() => workouts.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id')
+      .notNull()
+      .references(() => workoutTags.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.workoutId, t.tagId] })]
+)
+
+export const workouts = pgTable(
+  'workouts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 100 }).notNull(),
+    notes: text('notes'), // limit to n words in business logic
+    date: date('date').notNull().defaultNow(),
+    location: varchar('location', { length: 100 }),
+    status: varchar('status', { length: 20 }).notNull().default('completed'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
+  },
+  (t) => [check('valid_status', sql`status IN ('completed', 'planned')`)]
+)
 
 export const workoutExercises = pgTable('workout_exercises', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -129,6 +175,14 @@ export const sets = pgTable(
     }).notNull(),
     weight: numeric('weight', { precision: 4, scale: 1 }), // in lbs
     reps: numeric('reps', { precision: 2, scale: 0 }),
+    lowReps: numeric('low_reps', {
+      precision: 2,
+      scale: 0,
+    }),
+    highReps: numeric('high_reps', {
+      precision: 2,
+      scale: 0,
+    }),
     rpe: numeric('rpe', { precision: 2, scale: 1 }),
     rir: numeric('rir', { precision: 2, scale: 1 }),
     partialReps: numeric('partial_reps', {
@@ -143,6 +197,10 @@ export const sets = pgTable(
   (t) => [
     check('rpe_xor_rir', sql`(rpe IS NULL OR rir IS NULL)`),
     check('cheat_xor_partial', sql`cheat_reps IS NULL OR partial_reps IS NULL`),
+    check(
+      'reps_xor_low_high',
+      sql`(reps IS NULL OR (low_reps IS NULL AND high_reps IS NULL))`
+    ),
   ]
 )
 
@@ -154,3 +212,5 @@ export const setGroupings = pgTable(
   },
   (t) => [check('valid_grouping_type', sql`type IN ('superset', 'dropset')`)]
 )
+
+export * as schema from './schema'
