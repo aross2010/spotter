@@ -55,7 +55,7 @@ export const notebookTags = pgTable(
 
 export const notebookEntries = pgTable('notebook_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
-  notebookId: uuid('notebook_id')
+  user_id: uuid('user_id')
     .notNull()
     .references(() => notebooks.userId, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }),

@@ -6,7 +6,6 @@ import { users } from '@/src/db/schema'
 import { sendSignupEmail } from '@/app/functions/sendEmails'
 import isEmail from 'validator/lib/isEmail'
 
-// sign up a user with credentials
 export async function POST(req: Request) {
   const data = await req.json()
   if (!data)
@@ -17,13 +16,6 @@ export async function POST(req: Request) {
   if (!firstName || !email || !password) {
     return NextResponse.json(
       { error: 'Missing required fields' },
-      { status: 400 }
-    )
-  }
-
-  if (password.length > 100) {
-    return NextResponse.json(
-      { error: 'Password exceeds maximum length' },
       { status: 400 }
     )
   }
