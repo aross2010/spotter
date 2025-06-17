@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   if (!data)
     return NextResponse.json({ error: 'No data provided' }, { status: 400 })
 
-  const { title, body, date, tags, userId } = data
+  let { title, body, date, tags, userId } = data
   if (!body || !date || !userId) {
     return NextResponse.json(
       { error: 'Missing required fields' },
@@ -42,6 +42,9 @@ export async function POST(req: Request) {
     )
   }
 
+  // remove dup tags
+  tags = Array.from(new Set(tags))
+
   if (tags.length > 10) {
     return NextResponse.json(
       { error: 'Maximum of 10 tags allowed' },
@@ -54,55 +57,39 @@ export async function POST(req: Request) {
   }
 
   try {
-    await db.transaction(async (tx) => {
-      const [notebookEntry] = await tx
-        .insert(notebookEntries)
-        .values({
-          title,
-          body,
-          date,
-          user_id: userId,
-        })
-        .returning()
+    const [notebookEntry] = await db
+      .insert(notebookEntries)
+      .values({ title, body, date, user_id: userId })
+      .returning()
 
-      const tagIds: string[] = []
+    const tagIds: string[] = []
 
-      for (const tag of tags) {
-        const existingTag = await tx.query.notebookTags.findFirst({
-          where: (notebookTags, { eq, and }) =>
-            and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
-        })
+    for (const tag of tags) {
+      const existingTag = await db.query.notebookTags.findFirst({
+        where: (notebookTags, { eq, and }) =>
+          and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
+      })
 
-        if (!existingTag) {
-          const [newTag] = await tx
-            .insert(notebookTags)
-            .values({
-              name: tag,
-              userId,
-            })
-            .returning()
-          tagIds.push(newTag.id)
-        } else {
-          tagIds.push(existingTag.id)
-        }
+      if (!existingTag) {
+        const [newTag] = await db
+          .insert(notebookTags)
+          .values({ name: tag, userId })
+          .returning()
+        tagIds.push(newTag.id)
+      } else {
+        tagIds.push(existingTag.id)
       }
+    }
 
-      await tx.insert(notebookEntryTagLinks).values(
-        tagIds.map((tagId) => ({
-          entryId: notebookEntry.id,
-          tagId,
-        }))
-      )
-    })
+    await db.insert(notebookEntryTagLinks).values(
+      tagIds.map((tagId) => ({
+        entryId: notebookEntry.id,
+        tagId,
+      }))
+    )
+
     return NextResponse.json(
-      {
-        id: data.id,
-        title: title || null,
-        body,
-        date,
-        tags,
-        userId,
-      },
+      { id: notebookEntry.id, title: title || null, body, date, tags, userId },
       { status: 201 }
     )
   } catch (error: any) {

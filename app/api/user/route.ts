@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt'
 import { users } from '@/src/db/schema'
 import { sendSignupEmail } from '@/app/functions/sendEmails'
 import isEmail from 'validator/lib/isEmail'
+import { notebooks } from '@/src/db/schema'
 
 export async function POST(req: Request) {
   const data = await req.json()
@@ -88,6 +89,11 @@ export async function POST(req: Request) {
         email: users.email,
         firstName: users.firstName,
       })
+
+    // create notebook for user
+    await db.insert(notebooks).values({
+      userId: newUser.id,
+    })
 
     await sendSignupEmail(newUser)
     return NextResponse.json(newUser, {

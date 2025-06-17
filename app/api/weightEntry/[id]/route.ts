@@ -37,7 +37,7 @@ export async function PUT(req: Request, props: { params: Params }) {
   }
 
   try {
-    const updatedEntry = await db
+    const [updatedEntry] = await db
       .update(weightEntries)
       .set({
         ...(date && { date }),

@@ -9,6 +9,7 @@ import {
   varchar,
   check,
   date,
+  boolean,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -63,6 +64,7 @@ export const notebookEntries = pgTable('notebook_entries', {
   date: date('date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
+  pinned: boolean('pinned').notNull().default(false),
 })
 
 export const notebookEntryTagLinks = pgTable(
