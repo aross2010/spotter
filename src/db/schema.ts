@@ -141,6 +141,9 @@ export const workouts = pgTable(
 
 export const workoutExercises = pgTable('workout_exercises', {
   id: uuid('id').primaryKey().defaultRandom(),
+  exerciseId: uuid('exercise_id')
+    .notNull()
+    .references(() => exercises.id, { onDelete: 'cascade' }),
   workoutId: uuid('workout_id')
     .notNull()
     .references(() => workouts.id, { onDelete: 'cascade' }),
@@ -153,12 +156,13 @@ export const workoutExercises = pgTable('workout_exercises', {
 export const exercises = pgTable(
   'exercises',
   {
+    id: uuid('id').primaryKey().defaultRandom(),
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 100 }).notNull(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.name] })]
+  (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )
 
 export const sets = pgTable(
