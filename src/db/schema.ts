@@ -189,8 +189,8 @@ export const sets = pgTable(
       precision: 2,
       scale: 0,
     }),
-    rpe: numeric('rpe', { precision: 2, scale: 1 }),
-    rir: numeric('rir', { precision: 2, scale: 1 }),
+    rpe: numeric('rpe', { precision: 3, scale: 1 }),
+    rir: numeric('rir', { precision: 3, scale: 1 }),
     partialReps: numeric('partial_reps', {
       precision: 2,
       scale: 0,
