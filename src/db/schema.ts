@@ -11,7 +11,7 @@ import {
   date,
   boolean,
 } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
+import { sql, relations } from 'drizzle-orm'
 
 export const users = pgTable(
   'users',
@@ -218,5 +218,106 @@ export const setGroupings = pgTable(
   },
   (t) => [check('valid_grouping_type', sql`type IN ('superset', 'dropset')`)]
 )
+
+// 1 notebook to many entries
+export const notebooksRelations = relations(notebooks, ({ many }) => ({
+  notebookEntries: many(notebookEntries),
+}))
+
+// 1 notebook entry to many tags and 1 notebook
+export const notebookEntriesRelations = relations(
+  notebookEntries,
+  ({ one, many }) => ({
+    notebook: one(notebooks, {
+      fields: [notebookEntries.user_id],
+      references: [notebooks.userId],
+    }),
+    notebookEntryTagLinks: many(notebookEntryTagLinks),
+  })
+)
+
+// 1 notebook tag to many links and 1 notebook
+export const notebookTagsRelations = relations(notebookTags, ({ many }) => ({
+  notebookEntryTagLinks: many(notebookEntryTagLinks),
+}))
+
+// 1 notebook entry tag link to 1 entry and 1 tag
+export const notebookEntryTagLinksRelations = relations(
+  notebookEntryTagLinks,
+  ({ one }) => ({
+    notebookEntry: one(notebookEntries, {
+      fields: [notebookEntryTagLinks.entryId],
+      references: [notebookEntries.id],
+    }),
+    notebookTag: one(notebookTags, {
+      fields: [notebookEntryTagLinks.tagId],
+      references: [notebookTags.id],
+    }),
+  })
+)
+
+// 1 workout to many exercises and tags
+export const workoutsRelations = relations(workouts, ({ many }) => ({
+  workoutExercises: many(workoutExercises),
+  workoutTagLinks: many(workoutTagLinks),
+}))
+
+// 1 workout exercise to 1 exercise, 1 workout, and many sets
+export const workoutExercisesRelations = relations(
+  workoutExercises,
+  ({ one, many }) => ({
+    exercise: one(exercises, {
+      fields: [workoutExercises.exerciseId],
+      references: [exercises.id],
+    }),
+    workout: one(workouts, {
+      fields: [workoutExercises.workoutId],
+      references: [workouts.id],
+    }),
+    sets: many(sets),
+  })
+)
+
+// 1 exercise to many workout exercises
+export const exercisesRelations = relations(exercises, ({ many }) => ({
+  workoutExercises: many(workoutExercises),
+}))
+
+// 1 set to 1 set grouping and 1 workout exercise (each set is unique)
+export const setsRelations = relations(sets, ({ one }) => ({
+  setGrouping: one(setGroupings, {
+    fields: [sets.setGroupingId],
+    references: [setGroupings.id],
+  }),
+  workoutExercise: one(workoutExercises, {
+    fields: [sets.workoutExerciseId],
+    references: [workoutExercises.id],
+  }),
+}))
+
+// 1 set grouping to many sets (dropset or superset can have many sets)
+export const setGroupingsRelations = relations(setGroupings, ({ many }) => ({
+  sets: many(sets),
+}))
+
+// 1 workout tag link to 1 workout and 1 tag
+export const workoutTagLinksRelations = relations(
+  workoutTagLinks,
+  ({ one }) => ({
+    workoutTag: one(workoutTags, {
+      fields: [workoutTagLinks.tagId],
+      references: [workoutTags.id],
+    }),
+    workout: one(workouts, {
+      fields: [workoutTagLinks.workoutId],
+      references: [workouts.id],
+    }),
+  })
+)
+
+// 1 workout tag to many links (tag can be used in many workouts)
+export const workoutTagsRelations = relations(workoutTags, ({ many }) => ({
+  workoutTagLinks: many(workoutTagLinks),
+}))
 
 export * as schema from './schema'
