@@ -47,7 +47,13 @@ export async function PUT(req: Request, props: { params: Params }) {
       .where(eq(weightEntries.id, id))
       .returning()
 
-    return NextResponse.json(updatedEntry, { status: 200 })
+    return NextResponse.json(
+      {
+        message: 'Weight entry updated successfully',
+        id: updatedEntry.id,
+      },
+      { status: 200 }
+    )
   } catch (error: any) {
     console.error(error.cause)
     if (error.cause.code === '23505') {
@@ -75,19 +81,25 @@ export async function DELETE(req: Request, props: { params: Params }) {
   }
 
   try {
-    const deletedEntry = await db
+    const [deletedEntry] = await db
       .delete(weightEntries)
       .where(eq(weightEntries.id, id))
       .returning()
 
-    if (deletedEntry.length === 0) {
+    if (!deletedEntry) {
       return NextResponse.json(
         { error: 'Weight entry not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(deletedEntry, { status: 200 })
+    return NextResponse.json(
+      {
+        message: 'Weight entry deleted successfully',
+        weightEntryId: deletedEntry.id,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error(error)
     return NextResponse.json(

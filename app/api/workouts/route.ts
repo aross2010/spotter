@@ -20,7 +20,7 @@ type GroupSets = {
   setNumber: number
 }[]
 
-const getExerciseId = async (name: string, userId: string, tx: any) => {
+export const getExerciseId = async (name: string, userId: string, tx: any) => {
   // check if exists
   const existingExercise = await tx.query.exercises.findFirst({
     where: (
@@ -48,11 +48,12 @@ const getExerciseId = async (name: string, userId: string, tx: any) => {
   return exercise.id
 }
 
-const setSuperOrDropsets = async (
+export const setSuperOrDropsets = async (
   groupings: {
     groupingType: GroupingType
     groupSets: GroupSets
   }[],
+  setIdMap: Map<string, string>,
   tx: any
 ) => {
   const setIdsInGroupings = new Set<string>()
@@ -154,7 +155,7 @@ const setSuperOrDropsets = async (
   }
 }
 
-const setTags = async (
+export const setTags = async (
   tags: string[],
   workoutId: string,
   userId: string,
@@ -198,9 +199,11 @@ const setTags = async (
   }
 }
 
-const setExercise = async (
+export const setExercise = async (
   exercise: ExercisePayload,
   status: 'completed' | 'planned',
+  setIdMap: Map<string, string>,
+  exNum: number,
   userId: string,
   workoutId: string,
   tx: any
@@ -280,12 +283,12 @@ const setExercise = async (
   exNum++
 }
 
-const setIdMap = new Map<string, string>()
-let exNum = 1
-
 // upload workout data, then exercises (exercise then workout exercises), then sets, then any dropsets/supersets, then tags
 export async function POST(req: Request) {
   const data = await req.json()
+
+  const setIdMap = new Map<string, string>()
+  let exNum = 1
 
   let {
     date,
@@ -340,7 +343,7 @@ export async function POST(req: Request) {
 
   if (tags && (!Array.isArray(tags) || tags.length > 10)) {
     return NextResponse.json(
-      { error: 'Tags must be an aarray of strings, limited to 10' },
+      { error: 'Tags must be an array of strings, limited to 10' },
       { status: 400 }
     )
   }
@@ -386,11 +389,19 @@ export async function POST(req: Request) {
       }
 
       for (const exercise of exercises) {
-        await setExercise(exercise, status, userId, workout.id, tx)
+        await setExercise(
+          exercise,
+          status,
+          setIdMap,
+          exNum,
+          userId,
+          workout.id,
+          tx
+        )
       }
 
       if (setGroupings && setGroupings.length > 0) {
-        await setSuperOrDropsets(setGroupings, tx)
+        await setSuperOrDropsets(setGroupings, setIdMap, tx)
       }
 
       if (tags) {
@@ -403,7 +414,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         message: 'Workout created successfully',
-        workoutId: result,
+        id: result,
       },
       { status: 201 }
     )

@@ -150,17 +150,23 @@ export async function PUT(req: Request, props: { params: Params }) {
   updatedData['updatedAt'] = new Date()
 
   try {
-    const updatedUser = await db
+    const [updatedUser] = await db
       .update(users)
       .set(updatedData)
       .where(eq(users.id, id))
       .returning()
 
-    if (updatedUser.length === 0) {
+    if (!updatedUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(updatedUser, { status: 200 })
+    return NextResponse.json(
+      {
+        message: 'User updated successfully',
+        user: updatedUser.id,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -179,16 +185,22 @@ export async function DELETE(req: Request, props: { params: Params }) {
   }
 
   try {
-    const deletedUser = await db
+    const [deletedUser] = await db
       .delete(users)
       .where(eq(users.id, id))
       .returning()
 
-    if (deletedUser.length === 0) {
+    if (!deletedUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(deletedUser, { status: 200 })
+    return NextResponse.json(
+      {
+        message: 'User deleted successfully',
+        userId: deletedUser.id,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error(error)
     return NextResponse.json(

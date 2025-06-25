@@ -57,39 +57,46 @@ export async function POST(req: Request) {
   }
 
   try {
-    const [notebookEntry] = await db
-      .insert(notebookEntries)
-      .values({ title, body, date, user_id: userId })
-      .returning()
+    const result = await db.transaction(async (tx) => {
+      const [notebookEntry] = await tx
+        .insert(notebookEntries)
+        .values({ title, body, date, user_id: userId })
+        .returning()
 
-    const tagIds: string[] = []
+      const tagIds: string[] = []
 
-    for (const tag of tags) {
-      const existingTag = await db.query.notebookTags.findFirst({
-        where: (notebookTags, { eq, and }) =>
-          and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
-      })
+      for (const tag of tags) {
+        const existingTag = await tx.query.notebookTags.findFirst({
+          where: (notebookTags, { eq, and }) =>
+            and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
+        })
 
-      if (!existingTag) {
-        const [newTag] = await db
-          .insert(notebookTags)
-          .values({ name: tag, userId })
-          .returning()
-        tagIds.push(newTag.id)
-      } else {
-        tagIds.push(existingTag.id)
+        if (!existingTag) {
+          const [newTag] = await tx
+            .insert(notebookTags)
+            .values({ name: tag, userId })
+            .returning()
+          tagIds.push(newTag.id)
+        } else {
+          tagIds.push(existingTag.id)
+        }
       }
-    }
 
-    await db.insert(notebookEntryTagLinks).values(
-      tagIds.map((tagId) => ({
-        entryId: notebookEntry.id,
-        tagId,
-      }))
-    )
+      await tx.insert(notebookEntryTagLinks).values(
+        tagIds.map((tagId) => ({
+          entryId: notebookEntry.id,
+          tagId,
+        }))
+      )
+
+      return notebookEntry.id
+    })
 
     return NextResponse.json(
-      { id: notebookEntry.id, title: title || null, body, date, tags, userId },
+      {
+        message: 'Notebook entry created successfully',
+        id: result,
+      },
       { status: 201 }
     )
   } catch (error: any) {

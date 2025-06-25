@@ -67,60 +67,60 @@ export async function PUT(req: Request, props: { params: Params }) {
   }
 
   try {
-    const [upadatedEntry] = await db
-      .update(notebookEntries)
-      .set({
-        ...(title && { title }),
-        ...(body && { body }),
-        ...(date && { date }),
-        updatedAt: new Date(),
-      })
-      .where(eq(notebookEntries.id, id))
-      .returning()
-
-    const tagIds: string[] = []
-
-    if (tags) {
-      for (const tag of tags) {
-        const existingTag = await db.query.notebookTags.findFirst({
-          where: (notebookTags, { eq, and }) =>
-            and(
-              eq(notebookTags.name, tag),
-              eq(notebookTags.userId, upadatedEntry.user_id)
-            ),
+    const result = await db.transaction(async (tx) => {
+      const [upadatedEntry] = await tx
+        .update(notebookEntries)
+        .set({
+          ...(title && { title }),
+          ...(body && { body }),
+          ...(date && { date }),
+          updatedAt: new Date(),
         })
+        .where(eq(notebookEntries.id, id))
+        .returning()
 
-        if (!existingTag) {
-          const [newTag] = await db
-            .insert(notebookTags)
-            .values({ name: tag, userId: upadatedEntry.user_id })
-            .returning()
-          tagIds.push(newTag.id)
-        } else {
-          tagIds.push(existingTag.id)
+      const tagIds: string[] = []
+
+      if (tags) {
+        for (const tag of tags) {
+          const existingTag = await tx.query.notebookTags.findFirst({
+            where: (notebookTags, { eq, and }) =>
+              and(
+                eq(notebookTags.name, tag),
+                eq(notebookTags.userId, upadatedEntry.user_id)
+              ),
+          })
+
+          if (!existingTag) {
+            const [newTag] = await tx
+              .insert(notebookTags)
+              .values({ name: tag, userId: upadatedEntry.user_id })
+              .returning()
+            tagIds.push(newTag.id)
+          } else {
+            tagIds.push(existingTag.id)
+          }
         }
+
+        await tx
+          .delete(notebookEntryTagLinks)
+          .where(eq(notebookEntryTagLinks.entryId, id))
+
+        await tx.insert(notebookEntryTagLinks).values(
+          tagIds.map((tagId) => ({
+            entryId: id,
+            tagId,
+          }))
+        )
       }
 
-      await db
-        .delete(notebookEntryTagLinks)
-        .where(eq(notebookEntryTagLinks.entryId, id))
-
-      await db.insert(notebookEntryTagLinks).values(
-        tagIds.map((tagId) => ({
-          entryId: id,
-          tagId,
-        }))
-      )
-    }
+      return upadatedEntry.id
+    })
 
     return NextResponse.json(
       {
-        id: id,
-        title: upadatedEntry.title,
-        body: upadatedEntry.body,
-        date: upadatedEntry.date,
-        tags,
-        userId: upadatedEntry.user_id,
+        message: 'Notebook entry updated successfully',
+        id: result,
       },
       { status: 201 }
     )
@@ -152,12 +152,12 @@ export async function DELETE(req: Request, props: { params: Params }) {
 
     const tagIds = toBeDeletedTagLinks.map((link) => link.tagId)
 
-    const deletedEntry = await db
+    const [deletedEntry] = await db
       .delete(notebookEntries)
       .where(eq(notebookEntries.id, id))
       .returning()
 
-    if (deletedEntry.length === 0) {
+    if (!deletedEntry) {
       return NextResponse.json(
         { error: 'Notebook entry not found' },
         { status: 404 }
@@ -183,7 +183,13 @@ export async function DELETE(req: Request, props: { params: Params }) {
         .where(inArray(notebookTags.id, unusedTagIds))
     }
 
-    return NextResponse.json(deletedEntry, { status: 200 })
+    return NextResponse.json(
+      {
+        message: 'Notebook entry deleted successfully',
+        entryId: deletedEntry.id,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -205,10 +211,16 @@ export async function GET(req: Request, props: { params: Params }) {
   }
 
   try {
-    const [notebookEntry] = await db
-      .select()
-      .from(notebookEntries)
-      .where(eq(notebookEntries.id, id))
+    const notebookEntry = await db.query.notebookEntries.findFirst({
+      where: (notebookEntries, { eq }) => eq(notebookEntries.id, id),
+      with: {
+        notebookEntryTagLinks: {
+          with: {
+            notebookTag: true,
+          },
+        },
+      },
+    })
 
     if (!notebookEntry) {
       return NextResponse.json(
@@ -217,14 +229,9 @@ export async function GET(req: Request, props: { params: Params }) {
       )
     }
 
-    const tags = await db
-      .select({ name: notebookTags.name, id: notebookTags.id })
-      .from(notebookTags)
-      .innerJoin(
-        notebookEntryTagLinks,
-        eq(notebookTags.id, notebookEntryTagLinks.tagId)
-      )
-      .where(eq(notebookEntryTagLinks.entryId, id))
+    const tags = notebookEntry?.notebookEntryTagLinks.map(
+      (link) => link.notebookTag
+    )
 
     return NextResponse.json({ ...notebookEntry, tags }, { status: 200 })
   } catch (error) {

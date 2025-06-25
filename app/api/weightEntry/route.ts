@@ -44,7 +44,13 @@ export async function POST(req: Request) {
         date,
       })
       .returning()
-    return NextResponse.json(newWeightEntry, { status: 201 })
+    return NextResponse.json(
+      {
+        message: 'Weight entry created successfully',
+        id: newWeightEntry.id,
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     console.log(error.cause)
     if (error.cause.code === '23505') {
