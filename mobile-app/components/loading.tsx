@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 import React from 'react'
 
-// will be lift logo + 'progress simplified' text
+// will be lift logo + a barbell racking on weights
 const Loading = () => {
   return (
     <View>
@@ -11,5 +11,3 @@ const Loading = () => {
 }
 
 export default Loading
-
-const styles = StyleSheet.create({})

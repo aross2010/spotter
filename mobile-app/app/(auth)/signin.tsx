@@ -1,17 +1,14 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, TextInput } from 'react-native'
 import React from 'react'
-import TabWrapper from '../../components/tab-wrapper'
-import { Link } from 'expo-router'
+import SafeView from '../../components/safe-view'
+import Txt from '../../components/text'
 
 const SignIn = () => {
   return (
-    <TabWrapper>
-      <Text>SignIn</Text>
-      <Link href="/dashboard">Sign In</Link>
-    </TabWrapper>
+    <SafeView>
+      <Txt>Sign In</Txt>
+    </SafeView>
   )
 }
 
 export default SignIn
-
-const styles = StyleSheet.create({})

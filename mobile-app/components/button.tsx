@@ -1,13 +1,24 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native'
+import { StyleSheet, Text, View, Pressable, PressableProps } from 'react-native'
 import React, { ReactNode } from 'react'
 
-const Button = ({ children }: { children: ReactNode }) => {
+type ButtonProps = {
+  children: ReactNode
+  textClassName?: string
+  className?: string
+} & PressableProps
+
+const Button = ({
+  children,
+  textClassName,
+  className,
+  ...props
+}: ButtonProps) => {
   return (
     <Pressable
-      onPress={() => console.log('presed')}
-      className="flex-row active:opacity-75 justify-center mx-8 bg-brand-primary p-4 rounded-lg"
+      className={`active:opacity-75 disabled:opacity-50 ${className}`}
+      {...props}
     >
-      <Text className="text-white text-lg font-semibold">{children}</Text>
+      <Text className={`${textClassName}`}>{children}</Text>
     </Pressable>
   )
 }

@@ -1,8 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import React from 'react'
-import { Redirect, Slot, Stack } from 'expo-router'
-import { useEffect } from 'react'
-import { StatusBar } from 'expo-status-bar'
+import { Slot, Stack } from 'expo-router'
 import { useFonts } from 'expo-font'
 import {
   Poppins_100Thin,
@@ -24,7 +22,21 @@ import {
   Poppins_900Black,
   Poppins_900Black_Italic,
 } from '@expo-google-fonts/poppins'
+
+import {
+  Geologica_100Thin,
+  Geologica_200ExtraLight,
+  Geologica_300Light,
+  Geologica_400Regular,
+  Geologica_500Medium,
+  Geologica_600SemiBold,
+  Geologica_700Bold,
+  Geologica_800ExtraBold,
+  Geologica_900Black,
+} from '@expo-google-fonts/geologica'
+
 import Loading from '../components/loading'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
@@ -46,13 +58,26 @@ const RootLayout = () => {
     Poppins_800ExtraBold_Italic,
     Poppins_900Black,
     Poppins_900Black_Italic,
+    Geologica_100Thin,
+    Geologica_200ExtraLight,
+    Geologica_300Light,
+    Geologica_400Regular,
+    Geologica_500Medium,
+    Geologica_600SemiBold,
+    Geologica_700Bold,
+    Geologica_800ExtraBold,
+    Geologica_900Black,
   })
 
   if (!fontsLoaded) {
     return <Loading />
   }
 
-  return <Slot />
+  return (
+    <SafeAreaProvider>
+      <Slot />
+    </SafeAreaProvider>
+  )
 }
 
 export default RootLayout

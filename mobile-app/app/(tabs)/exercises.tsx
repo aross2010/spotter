@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import TabWrapper from '../../components/tab-wrapper'
+import TabWrapper from '../../components/safe-view'
 
 const Exercises = () => {
   return (

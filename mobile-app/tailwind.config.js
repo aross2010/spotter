@@ -4,6 +4,33 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Poppins_400Regular'],
+
+        poppins: ['Poppins_400Regular'],
+        poppinsThin: ['Poppins_100Thin'],
+        poppinsExtraLight: ['Poppins_200ExtraLight'],
+        poppinsLight: ['Poppins_300Light'],
+        poppinsMedium: ['Poppins_500Medium'],
+        poppinsSemiBold: ['Poppins_600SemiBold'],
+        poppinsBold: ['Poppins_700Bold'],
+        poppinsExtraBold: ['Poppins_800ExtraBold'],
+        poppinsBlack: ['Poppins_900Black'],
+
+        poppinsItalic: ['Poppins_400Regular_Italic'],
+        poppinsBoldItalic: ['Poppins_700Bold_Italic'],
+
+        geologica: ['Geologica_400Regular'],
+        geologicaThin: ['Geologica_100Thin'],
+        geologicaExtraLight: ['Geologica_200ExtraLight'],
+        geologicaLight: ['Geologica_300Light'],
+        geologicaMedium: ['Geologica_500Medium'],
+        geologicaSemiBold: ['Geologica_600SemiBold'],
+        geologicaBold: ['Geologica_700Bold'],
+        geologicaExtraBold: ['Geologica_800ExtraBold'],
+        geologicaBlack: ['Geologica_900Black'],
+      },
+
       colors: {
         primary: '#807BCF',
         secondary: '#E6E7A3',
@@ -14,6 +41,7 @@ module.exports = {
           grayPrimary: '#1F1F1F',
           graySecondary: '#2C2C2C',
           grayTertiary: '#3A3A3A',
+          grayText: '#4F4F4F',
           iconActive: '#FFFFFF',
           iconInactive: '#808080',
         },
@@ -24,6 +52,7 @@ module.exports = {
           grayPrimary: '#F5F5F5',
           graySecondary: '#E0E0E0',
           grayTertiary: '#CFCFCF',
+          grayText: '#4F4F4F',
           iconActive: '#E6E7A3',
           iconInactive: '#C7C7C7',
         },
