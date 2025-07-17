@@ -14,12 +14,12 @@ const AuthLayout = () => {
         animation: 'none',
         headerShown: true,
         headerStyle: {
-          backgroundColor: 'transparent',
+          backgroundColor: '#FFFFFF',
         },
         headerShadowVisible: false,
         headerTitleStyle: {
           fontFamily: 'Geologica_700Bold',
-          fontSize: 28,
+          fontSize: 24,
           color: '#807BCF',
         },
         headerLeft: () => (
@@ -37,6 +37,12 @@ const AuthLayout = () => {
         ),
       }}
     >
+      <Stack.Screen
+        name="auth"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name="signin"
         options={{

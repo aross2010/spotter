@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
-import React from 'react'
-import { Tabs } from 'expo-router'
+import React, { useContext } from 'react'
+import { Redirect, Tabs } from 'expo-router'
 import {
   LayoutDashboard,
   Dumbbell,
@@ -9,6 +9,7 @@ import {
   BarChart,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
+import { AuthContext } from '../../utils/auth-context'
 
 // the main dashboard layout for the app for a logged in user
 

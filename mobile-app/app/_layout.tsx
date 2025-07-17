@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import React from 'react'
 import { Slot, Stack } from 'expo-router'
 import { useFonts } from 'expo-font'
@@ -37,6 +37,9 @@ import {
 
 import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { AuthProvider } from '../utils/auth-context'
+import '../global.css'
+import { StatusBar } from 'expo-status-bar'
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
@@ -74,12 +77,32 @@ const RootLayout = () => {
   }
 
   return (
-    <SafeAreaProvider>
-      <Slot />
-    </SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <StatusBar />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+              animation: 'none',
+            }}
+          />
+          <Stack.Screen
+            name="(auth)"
+            options={{
+              headerShown: false,
+              animation: 'none',
+            }}
+          />
+        </Stack>
+      </SafeAreaProvider>
+    </AuthProvider>
   )
 }
 
 export default RootLayout
-
-const styles = StyleSheet.create({})

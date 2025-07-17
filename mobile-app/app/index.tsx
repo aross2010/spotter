@@ -1,57 +1,14 @@
-import { StyleSheet, Text, View, Image, Pressable } from 'react-native'
-import React, { useEffect } from 'react'
-import { Link, useRouter } from 'expo-router'
-import '../global.css'
-import SafeView from '../components/safe-view'
-import TextLogo from '../components/text-logo'
-import Button from '../components/button'
+import { Redirect } from 'expo-router'
+import { useContext } from 'react'
+import { AuthContext } from '../utils/auth-context'
 
-const Home = () => {
-  const router = useRouter()
-  const user = false
+export default function Index() {
+  const authState = useContext(AuthContext)
 
-  useEffect(() => {
-    // loading...
-    if (user) router.replace('/dashboard')
-  })
+  if (!authState.isLoggedIn) {
+    console.log('User is not logged in, redirecting to authenticate')
+    return <Redirect href="/auth" />
+  }
 
-  return (
-    <SafeView
-      noHeader
-      noScroll
-    >
-      <View className="mt-28 flex flex-row justify-center mb-8">
-        <TextLogo color="#807BCF" />
-      </View>
-      <Text className="text-light-text text-2xl font-poppins text-center">
-        progress simplified
-      </Text>
-      <View className="mt-auto items-center flex-col gap-4">
-        <Link
-          href="/signup"
-          asChild
-        >
-          <Button
-            textClassName="text-primary font-poppinsBold"
-            className="w-full flex flex-row border border-primary rounded-full py-5 px-8 items-center justify-center"
-          >
-            Sign Up
-          </Button>
-        </Link>
-        <Link
-          href="/signin"
-          asChild
-        >
-          <Button
-            textClassName="text-dark-text font-poppinsBold"
-            className="w-full flex flex-row bg-primary rounded-full py-5 px-8 items-center justify-center"
-          >
-            Sign In
-          </Button>
-        </Link>
-      </View>
-    </SafeView>
-  )
+  return <Redirect href="/dashboard" />
 }
-
-export default Home
