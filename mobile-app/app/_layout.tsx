@@ -22,6 +22,7 @@ import {
   Poppins_900Black,
   Poppins_900Black_Italic,
 } from '@expo-google-fonts/poppins'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 
 import {
   Geologica_100Thin,
@@ -78,29 +79,27 @@ const RootLayout = () => {
 
   return (
     <AuthProvider>
-      <SafeAreaProvider>
-        <StatusBar />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen
-            name="(tabs)"
-            options={{
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <StatusBar />
+          <Stack
+            screenOptions={{
               headerShown: false,
-              animation: 'none',
             }}
-          />
-          <Stack.Screen
-            name="(auth)"
-            options={{
-              headerShown: false,
-              animation: 'none',
-            }}
-          />
-        </Stack>
-      </SafeAreaProvider>
+          >
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                animation: 'none',
+              }}
+            />
+            <Stack.Screen
+              name="(auth)"
+              options={{ animation: 'none' }}
+            />
+          </Stack>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </AuthProvider>
   )
 }

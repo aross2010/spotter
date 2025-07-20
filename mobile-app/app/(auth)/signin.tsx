@@ -1,8 +1,6 @@
 import {
   Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
+  KeyboardAvoidingView,
   Image,
   ScrollView,
   KeyboardTypeOptions,
@@ -85,9 +83,11 @@ const SignIn = () => {
         </Pressable>
       </View>
       <OrDivider />
-      <ScrollView>
-        <View className="flex flex-col gap-4">{renderedFields}</View>
-      </ScrollView>
+      <KeyboardAvoidingView>
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <View className="flex flex-col gap-4">{renderedFields}</View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <View className="mt-auto">
         <Button
           onPress={() => authState.logIn(data)}

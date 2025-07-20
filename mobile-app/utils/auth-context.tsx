@@ -1,11 +1,5 @@
 import { useRouter } from 'expo-router'
-import React, {
-  createContext,
-  PropsWithChildren,
-  ReactNode,
-  useContext,
-  useState,
-} from 'react'
+import React, { createContext, ReactNode, useState } from 'react'
 
 type AuthState = {
   isLoggedIn: boolean
@@ -37,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        isLoggedIn: false,
+        isLoggedIn,
         logIn,
         logOut,
       }}

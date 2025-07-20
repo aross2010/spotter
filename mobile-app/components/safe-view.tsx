@@ -19,35 +19,29 @@ const SafeView = ({
   const insets = useSafeAreaInsets()
 
   const styles = {
-    paddingTop: noHeader ? insets.top : 32,
+    paddingTop: noHeader ? insets.top : 16,
     paddingBottom: insets.bottom,
-    paddingLeft: insets.left,
-    paddingRight: insets.right,
+    flex: 1,
+    paddingLeft: 16,
+    paddingRight: 16,
   }
 
   if (noScroll)
     return (
       <View
-        style={styles}
         className={`bg-light-background dark:bg-dark-background flex-1 ${className}`}
         {...rest}
       >
-        <View className="flex-1 px-4">{children}</View>
+        <View style={styles}>{children}</View>
       </View>
     )
 
   return (
     <ScrollView
-      style={{
-        paddingTop: noHeader ? insets.top : 32,
-        paddingBottom: insets.bottom,
-        paddingLeft: insets.left,
-        paddingRight: insets.right,
-      }}
       className={`bg-light-background dark:bg-dark-background flex-1 overflow-y-auto ${className}`}
       {...rest}
     >
-      <View className="flex-1 px-4">{children}</View>
+      <View style={styles}>{children}</View>
     </ScrollView>
   )
 }

@@ -1,16 +1,22 @@
-import { TextInput, Image, View, Pressable, ScrollView } from 'react-native'
-import React, { useState } from 'react'
-import type { KeyboardTypeOptions } from 'react-native'
+import {
+  View,
+  Pressable,
+  Image,
+  KeyboardTypeOptions,
+  ScrollView,
+} from 'react-native'
+import { useState } from 'react'
+import { Link } from 'expo-router'
+import { KeyboardAvoidingView } from 'react-native'
 import Txt from '../../components/text'
 import AppleLogo from '../../assets/apple.png'
 import GoogleLogo from '../../assets/google.png'
-import SafeView from '../../components/safe-view'
 import OrDivider from '../../components/or-divider'
 import Input from '../../components/input'
-import { Link } from 'expo-router'
 import Button from '../../components/button'
+import SafeView from '../../components/safe-view'
 
-const fields = [
+const inputFields = [
   {
     name: 'firstName',
     label: 'First Name',
@@ -45,7 +51,7 @@ const SignUp = () => {
     password: '',
   })
 
-  const renderedNames = fields.slice(0, 2).map((field) => {
+  const renderedNameFields = inputFields.slice(0, 2).map((field) => {
     return (
       <View
         key={field.name}
@@ -61,7 +67,7 @@ const SignUp = () => {
     )
   })
 
-  const renderedAuthFields = fields.slice(2).map((field) => {
+  const renderedAuthFields = inputFields.slice(2).map((field) => {
     return (
       <View
         key={field.name}
@@ -79,43 +85,45 @@ const SignUp = () => {
 
   return (
     <SafeView noScroll>
-      <View className="flex flex-col gap-4">
-        <Pressable
-          className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-4 px-8 items-center"
-          onPress={() => console.log('Apple Auth')}
-        >
-          <Image
-            source={AppleLogo}
-            className="w-7 h-7"
-            resizeMode="contain"
-          />
-          <Txt>Sign Up with Apple</Txt>
-        </Pressable>
-        <Pressable
-          className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-4 px-8 items-center"
-          onPress={() => console.log('Apple Auth')}
-        >
-          <Image
-            source={GoogleLogo}
-            className="w-7 h-7"
-            resizeMode="contain"
-          />
-          <Txt>Sign Up with Google</Txt>
-        </Pressable>
-      </View>
-      <OrDivider />
-      <ScrollView>
-        <View className="flex-row items-center gap-4 mb-4">
-          {renderedNames}
-        </View>
-        <View className="flex flex-col gap-4">{renderedAuthFields}</View>
-        {data.password.length !== 0 && data.password.length < 8 && (
-          <Txt className="text-xs mt-4 text-light-grayText dark:text-dark-grayText">
-            Password must contain at least 8 characters (one uppercase AND one
-            special character or number).
-          </Txt>
-        )}
-      </ScrollView>
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={100}
+        className="flex-1"
+      >
+        <ScrollView className="flex-1">
+          <View className="gap-4">
+            <Pressable
+              className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-5 px-8 items-center"
+              onPress={() => console.log('Apple Auth')}
+            >
+              <Image
+                source={AppleLogo}
+                className="w-7 h-7"
+                resizeMode="contain"
+              />
+              <Txt>Sign Up with Apple</Txt>
+            </Pressable>
+            <Pressable
+              className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-5 px-8 items-center"
+              onPress={() => console.log('Apple Auth')}
+            >
+              <Image
+                source={GoogleLogo}
+                className="w-7 h-7"
+                resizeMode="contain"
+              />
+              <Txt>Sign Up with Google</Txt>
+            </Pressable>
+          </View>
+          <OrDivider />
+          <View className="gap-6">
+            <View className="flex flex-row justify-between">
+              {renderedNameFields}
+            </View>
+            <View className="flex flex-col gap-2">{renderedAuthFields}</View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <View className="mt-auto">
         <Txt className="text-xs text-center text-light-grayText dark:text-dark-grayText mb-2">
           By signing up, you agree to our{' '}
