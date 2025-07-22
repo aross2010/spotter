@@ -14,7 +14,6 @@ import Button from '../../components/button'
 import AppleLogo from '../../assets/apple.png'
 import GoogleLogo from '../../assets/google.png'
 import OrDivider from '../../components/or-divider'
-import { Link } from 'expo-router'
 import { AuthContext } from '../../utils/auth-context'
 
 const fields = [
@@ -42,17 +41,12 @@ const SignIn = () => {
 
   const renderedFields = fields.map((field) => {
     return (
-      <View
+      <Input
         key={field.name}
-        className="flex flex-col gap-2"
-      >
-        <Txt>{field.label}</Txt>
-        <Input
-          {...field}
-          value={data[field.name]}
-          onChangeText={(text) => setData({ ...data, [field.name]: text })}
-        />
-      </View>
+        {...field}
+        value={data[field.name]}
+        onChangeText={(text) => setData({ ...data, [field.name]: text })}
+      />
     )
   })
 

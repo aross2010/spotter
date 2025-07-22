@@ -1,5 +1,4 @@
 import { Pressable } from 'react-native'
-import React from 'react'
 import { Stack } from 'expo-router'
 import { ArrowLeft } from 'lucide-react-native'
 import { useRouter } from 'expo-router'

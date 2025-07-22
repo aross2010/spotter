@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   const logIn = (data: { email: string; password: string }) => {
-    console.log('Loggin in with:', data)
+    console.log('Logging in with:', data)
     setIsLoggedIn(true)
     router.replace('/dashboard')
   }

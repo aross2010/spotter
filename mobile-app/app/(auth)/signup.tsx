@@ -15,6 +15,9 @@ import OrDivider from '../../components/or-divider'
 import Input from '../../components/input'
 import Button from '../../components/button'
 import SafeView from '../../components/safe-view'
+import { CircleAlert, CircleCheck } from 'lucide-react-native'
+import Colors from '../../constants/colors'
+import isValidPassword from '../../functions/validatePassword'
 
 const inputFields = [
   {
@@ -39,7 +42,7 @@ const inputFields = [
     name: 'password',
     label: 'Password',
     autoCorrect: false,
-    secureTextEntry: true,
+    password: true,
   },
 ] as const
 
@@ -53,33 +56,24 @@ const SignUp = () => {
 
   const renderedNameFields = inputFields.slice(0, 2).map((field) => {
     return (
-      <View
+      <Input
+        containerClassName="w-[48%]"
         key={field.name}
-        className="flex flex-col gap-2 w-[48%]"
-      >
-        <Txt>{field.label}</Txt>
-        <Input
-          {...field}
-          value={data[field.name]}
-          onChangeText={(text) => setData({ ...data, [field.name]: text })}
-        />
-      </View>
+        {...field}
+        value={data[field.name]}
+        onChangeText={(text) => setData({ ...data, [field.name]: text })}
+      />
     )
   })
 
   const renderedAuthFields = inputFields.slice(2).map((field) => {
     return (
-      <View
+      <Input
         key={field.name}
-        className="flex flex-col gap-2"
-      >
-        <Txt>{field.label}</Txt>
-        <Input
-          {...field}
-          value={data[field.name]}
-          onChangeText={(text) => setData({ ...data, [field.name]: text })}
-        />
-      </View>
+        {...field}
+        value={data[field.name]}
+        onChangeText={(text) => setData({ ...data, [field.name]: text })}
+      />
     )
   })
 
@@ -90,7 +84,10 @@ const SignUp = () => {
         keyboardVerticalOffset={100}
         className="flex-1"
       >
-        <ScrollView className="flex-1">
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+        >
           <View className="gap-4">
             <Pressable
               className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-5 px-8 items-center"
@@ -117,10 +114,23 @@ const SignUp = () => {
           </View>
           <OrDivider />
           <View className="gap-6">
-            <View className="flex flex-row justify-between">
+            <View className="flex-row justify-between">
               {renderedNameFields}
             </View>
             <View className="flex flex-col gap-2">{renderedAuthFields}</View>
+          </View>
+          <View className="mt-2 flex-row items-center gap-2">
+            {data.password.length == 0 ? (
+              <CircleAlert color={Colors.warn} />
+            ) : data.password.length > 0 && !isValidPassword(data.password) ? (
+              <CircleAlert color={Colors.alert} />
+            ) : (
+              <CircleCheck color={Colors.success} />
+            )}
+            <Txt className="text-xs text-light-grayText dark:text-dark-grayText flex-1">
+              Password must be at least 8 characters long, contain one uppercase
+              letter, and at least one special character or number.
+            </Txt>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

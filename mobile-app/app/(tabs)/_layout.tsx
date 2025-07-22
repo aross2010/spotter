@@ -7,6 +7,8 @@ import {
   Book,
   BookOpen,
   BarChart,
+  Calendar,
+  CalendarFold,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import { AuthContext } from '../../utils/auth-context'
@@ -20,12 +22,12 @@ const TabsLayout = () => {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
         tabBarStyle: {
           backgroundColor: '#807BCF',
           height: 90,
           paddingTop: 10,
         },
+        headerShadowVisible: false,
         tabBarActiveTintColor: theme.iconActive,
         tabBarInactiveTintColor: theme.iconInactive,
       }}
@@ -36,12 +38,12 @@ const TabsLayout = () => {
           title: 'Dashboard',
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <BarChart
+              <LayoutDashboard
                 size={24}
                 color={theme.iconActive}
               />
             ) : (
-              <BarChart
+              <LayoutDashboard
                 size={24}
                 color={theme.iconInactive}
               />
@@ -54,12 +56,12 @@ const TabsLayout = () => {
           title: 'Workouts',
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <LayoutDashboard
+              <CalendarFold
                 size={24}
                 color={theme.iconActive}
               />
             ) : (
-              <LayoutDashboard
+              <Calendar
                 size={24}
                 color={theme.iconInactive}
               />
