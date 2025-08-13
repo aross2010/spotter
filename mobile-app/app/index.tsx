@@ -1,11 +1,15 @@
 import { Redirect } from 'expo-router'
 import { useContext } from 'react'
-import { AuthContext } from '../utils/auth-context'
+import { useAuth } from '../context/auth-context'
+import Loading from '../components/loading'
 
 export default function Index() {
-  const authState = useContext(AuthContext)
+  const { user, isLoading } = useAuth()
+  if (isLoading) {
+    return <Loading />
+  }
 
-  if (!authState.isLoggedIn) {
+  if (!user) {
     console.log('User is not logged in, redirecting to authenticate')
     return <Redirect href="/auth" />
   }

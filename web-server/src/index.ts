@@ -1,13 +1,16 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
+import { drizzle } from 'drizzle-orm/neon-serverless'
 import ws from 'ws'
 import { schema } from './db/schema'
-import postgres from 'postgres'
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-const db = postgres(process.env.DATABASE_URL!)
+const db = drizzle({
+  connection: process.env.DATABASE_URL,
+  ws: ws,
+  schema: schema,
+})
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set')

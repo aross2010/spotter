@@ -38,7 +38,7 @@ import {
 
 import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { AuthProvider } from '../utils/auth-context'
+import { AuthProvider } from '../context/auth-context'
 import '../global.css'
 import { StatusBar } from 'expo-status-bar'
 

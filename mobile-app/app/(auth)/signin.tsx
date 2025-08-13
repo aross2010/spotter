@@ -11,10 +11,10 @@ import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import Input from '../../components/input'
 import Button from '../../components/button'
-import AppleLogo from '../../assets/apple.png'
-import GoogleLogo from '../../assets/google.png'
 import OrDivider from '../../components/or-divider'
-import { AuthContext } from '../../utils/auth-context'
+import { useAuth } from '../../context/auth-context'
+import { SignInWithAppleIos } from '../../components/sign-in-apple.ios'
+import SignInWithGoogle from '../../components/sign-in-google'
 
 const fields = [
   {
@@ -32,8 +32,7 @@ const fields = [
 ] as const
 
 const SignIn = () => {
-  const authState = useContext(AuthContext)
-
+  const { signIn } = useAuth()
   const [data, setData] = useState({
     email: '',
     password: '',
@@ -53,28 +52,8 @@ const SignIn = () => {
   return (
     <SafeView noScroll>
       <View className="flex flex-col gap-4">
-        <Pressable
-          className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-4 px-8 items-center"
-          onPress={() => console.log('Apple Auth')}
-        >
-          <Image
-            source={AppleLogo}
-            className="w-7 h-7"
-            resizeMode="contain"
-          />
-          <Txt>Sign In with Apple</Txt>
-        </Pressable>
-        <Pressable
-          className="flex flex-row justify-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg py-4 px-8 items-center"
-          onPress={() => console.log('Apple Auth')}
-        >
-          <Image
-            source={GoogleLogo}
-            className="w-7 h-7"
-            resizeMode="contain"
-          />
-          <Txt>Sign In with Google</Txt>
-        </Pressable>
+        <SignInWithAppleIos />
+        <SignInWithGoogle onPress={signIn} />
       </View>
       <OrDivider />
       <KeyboardAvoidingView>
@@ -84,7 +63,7 @@ const SignIn = () => {
       </KeyboardAvoidingView>
       <View className="mt-auto">
         <Button
-          onPress={() => authState.logIn(data)}
+          onPress={() => console.log('Sign In')}
           textClassName="text-dark-text font-poppinsBold"
           className="w-full flex flex-row bg-primary rounded-full py-5 px-8 items-center justify-center"
         >

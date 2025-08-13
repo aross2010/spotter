@@ -8,3 +8,15 @@ export type ExercisePayload = {
   name: string
   exerciseSets: Set[]
 }
+
+export type AuthUser = {
+  id: string
+  email: string
+  name: string
+  picture?: string
+  given_name?: string
+  family_name?: string
+  email_verified?: boolean
+  provider?: string
+  exp?: number
+}

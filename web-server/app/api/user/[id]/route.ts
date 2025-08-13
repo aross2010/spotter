@@ -6,12 +6,10 @@ import bcrypt from 'bcrypt'
 import { users } from '@/src/db/schema'
 import { eq } from 'drizzle-orm'
 import isEmail from 'validator/lib/isEmail'
+import { withAuth } from '../../middleware'
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params
+export const GET = withAuth(async (req, user) => {
+  const id = req.url.split('/').pop() // Extract user ID from the URL
 
   if (!id) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -42,7 +40,7 @@ export async function GET(
       { status: 500 }
     )
   }
-}
+})
 
 export async function PUT(req: Request, props: { params: Params }) {
   const params = await props.params

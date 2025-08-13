@@ -11,7 +11,7 @@ import {
   CalendarFold,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
-import { AuthContext } from '../../utils/auth-context'
+import { AuthContext } from '../../context/auth-context'
 
 // the main dashboard layout for the app for a logged in user
 

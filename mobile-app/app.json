@@ -15,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Lift"
+      "bundleIdentifier": "com.anonymous.Lift",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -27,12 +28,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
+      "output": "server",
       "bundler": "metro"
     },
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-build-properties"
+      "expo-build-properties",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.216743842353-e8ab810c68h93uuc3crkqjqgrj6qiqnj"
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser",
+      ["expo-apple-authentication"]
     ]
   }
 }
