@@ -1,8 +1,8 @@
 {
   "expo": {
-    "scheme": "lift-app",
-    "name": "Lift",
-    "slug": "Lift",
+    "scheme": "spotter-lifting-app",
+    "name": "Spotter",
+    "slug": "Spotter",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,8 +15,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Lift",
-      "usesAppleSignIn": true
+      "bundleIdentifier": "app.aross.spotter",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Lift"
+      "package": "app.aross.spotter"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -43,7 +46,15 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      ["expo-apple-authentication"]
-    ]
+      [
+        "expo-apple-authentication"
+      ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "84762c8f-5847-45ae-bb90-317dbbc9c6ea"
+      }
+    }
   }
 }

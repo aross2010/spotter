@@ -52,7 +52,6 @@ export async function POST(req: Request) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.log(error.cause)
     if (error.cause.code === '23505') {
       return NextResponse.json(
         { error: 'Weight entry for this date already exists' },

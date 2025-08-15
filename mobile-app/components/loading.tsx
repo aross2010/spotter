@@ -5,7 +5,7 @@ import React from 'react'
 const Loading = () => {
   return (
     <View>
-      <Text>Loading</Text>
+      <Text>Loading....</Text>
     </View>
   )
 }

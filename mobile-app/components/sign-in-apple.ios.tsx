@@ -6,10 +6,10 @@ export function SignInWithAppleIos() {
 
   return (
     <AppleAuthentication.AppleAuthenticationButton
-      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+      buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
       buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-      cornerRadius={5}
-      style={{ width: '100%', height: 48 }}
+      cornerRadius={9999}
+      style={{ width: '100%', height: 52 }}
       onPress={signInWithApple}
     />
   )

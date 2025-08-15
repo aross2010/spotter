@@ -12,29 +12,18 @@ export default function SignInWithGoogle({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      className="w-full h-[52px] rounded-full justify-center bg-white border border-gray-300"
     >
-      <View
-        style={{
-          width: '100%',
-          height: 48,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 5,
-          backgroundColor: '#fff',
-          borderWidth: 1,
-          borderColor: '#ccc',
-        }}
-      >
+      <View className="flex flex-row justify-center items-center">
         <Image
           source={require('../assets/google.png')}
           style={{
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
             marginRight: 6,
           }}
         />
-        <Txt className="text-lg">Continue with Google</Txt>
+        <Txt className="text-xl">Continue with Google</Txt>
       </View>
     </Pressable>
   )

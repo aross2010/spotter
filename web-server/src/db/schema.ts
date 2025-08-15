@@ -20,11 +20,10 @@ export const users = pgTable(
     firstName: varchar('first_name', { length: 75 }).notNull(),
     lastName: varchar('last_name', { length: 75 }),
     email: varchar('email', { length: 150 }).notNull().unique(),
-    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     provider: varchar('provider', { length: 50 })
       .notNull()
       .default('credentials'),
-    providerId: varchar('provider_id', { length: 100 }),
+    providerId: varchar('provider_id', { length: 100 }).notNull(), // the user's unique ID for the provider
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },

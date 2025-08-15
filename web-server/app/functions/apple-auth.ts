@@ -1,6 +1,7 @@
 import * as jose from 'jose'
 import crypto from 'crypto'
 import { JWT_EXP_TIME, REFRESH_TOKEN_EXP_TIME, JWT_SECRET } from '../libs/auth'
+import db from '@/src'
 
 interface AppleAuthResult {
   accessToken: string
@@ -10,20 +11,14 @@ interface AppleAuthResult {
 interface AppleUserInfo {
   identityToken: string
   rawNonce: string
-  givenName?: string
-  familyName?: string
-  email?: string
+  providerId: string
 }
 
 export async function verifyAndCreateTokens({
   identityToken,
   rawNonce,
-  givenName,
-  familyName,
-  email,
+  providerId,
 }: AppleUserInfo): Promise<AppleAuthResult> {
-  const isFirstSignIn = givenName && email
-
   // Apple's public keys from their JWKS endpoint
   const JWKS = jose.createRemoteJWKSet(
     new URL('https://appleid.apple.com/auth/keys')
@@ -32,7 +27,7 @@ export async function verifyAndCreateTokens({
   try {
     const { payload } = await jose.jwtVerify(identityToken, JWKS, {
       issuer: 'https://appleid.apple.com',
-      audience: 'com.anonymous.Lift',
+      audience: 'app.aross.spotter',
     })
 
     const currentTimestamp = Math.floor(Date.now() / 1000)
@@ -59,46 +54,39 @@ export async function verifyAndCreateTokens({
       }
     }
 
-    const { exp, ...userInfoWithoutExp } = payload
+    const userInDb = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.providerId, providerId),
+    })
 
-    const sub = (payload as { sub: string }).sub
+    if (!userInDb) {
+      throw new Error(`User with providerId: ${providerId} not found`)
+    }
+
+    const user = {
+      id: userInDb.id,
+      email: userInDb.email,
+      firstName: userInDb.firstName,
+      lastName: userInDb.lastName,
+      provider: 'apple',
+      providerId: userInDb.providerId,
+    }
+
     const issuedAt = Math.floor(Date.now() / 1000)
     const jti = crypto.randomUUID()
 
-    const accessToken = await new jose.SignJWT({
-      ...userInfoWithoutExp,
-      ...(isFirstSignIn && {
-        email,
-        firstName: `${givenName}`,
-        lastName: `${familyName}`,
-      }),
-      email_verified: (payload as any).email_verified ?? false,
-      is_private_email: (payload as any).is_private_email ?? false,
-      real_user_status: (payload as any).real_user_status ?? 0,
-    })
+    const accessToken = await new jose.SignJWT(user)
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime(JWT_EXP_TIME)
-      .setSubject(sub)
+      .setSubject(userInDb.providerId)
       .setIssuedAt(issuedAt)
       .sign(new TextEncoder().encode(JWT_SECRET))
 
     // Create refresh token (long-lived)
     const refreshToken = await new jose.SignJWT({
-      sub,
       jti,
       type: 'refresh',
-      ...(isFirstSignIn && {
-        email,
-        firstName: `${givenName}`,
-        lastName: `${familyName}`,
-      }),
-      email_verified: (payload as any).email_verified ?? false,
-      is_private_email: (payload as any).is_private_email ?? false,
-      real_user_status: (payload as any).real_user_status ?? 0,
-      nonce_supported: (payload as any).nonce_supported ?? false,
-      iss: 'https://appleid.apple.com',
-      aud: (payload as any).aud,
-      ...userInfoWithoutExp,
+      sub: user.providerId,
+      ...user,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime(REFRESH_TOKEN_EXP_TIME)

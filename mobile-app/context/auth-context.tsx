@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import * as WebBrowser from 'expo-web-browser'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import { randomUUID } from 'expo-crypto'
@@ -10,23 +10,25 @@ import {
   makeRedirectUri,
   useAuthRequest,
 } from 'expo-auth-session'
-import { BASE_URL, TOKEN_KEY_NAME } from '../constants/auth'
+import {
+  BASE_URL,
+  REFRESH_TOKEN_KEY_NAME,
+  TOKEN_KEY_NAME,
+} from '../constants/auth'
 import { Platform } from 'react-native'
 import * as jose from 'jose'
 import { tokenCache } from '../utils/cache'
-import { AppleAuthenticationButton } from 'expo-apple-authentication'
+import { useRouter } from 'expo-router'
 
 WebBrowser.maybeCompleteAuthSession()
 
 export type AuthUser = {
-  sub: string
+  id: string
   email: string
-  name: string
-  picture?: string
-  given_name?: string
-  family_name?: string
-  email_verified?: boolean
-  provider?: string
+  firstName: string
+  lastName?: string
+  provider: 'google' | 'apple'
+  providerId: string // provider id
   exp?: number
 }
 
@@ -35,7 +37,6 @@ type AuthContextType = {
   signIn: () => void | Promise<void>
   signOut: () => void | Promise<void>
   signInWithApple: () => void | Promise<void>
-  signInWithAppleWebBrowser: () => void | Promise<void>
   fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>
   isLoading: boolean
   error: AuthError | null
@@ -46,7 +47,6 @@ const AuthContext = createContext<AuthContextType>({
   signIn: () => {},
   signOut: () => {},
   signInWithApple: () => {},
-  signInWithAppleWebBrowser: () => {},
   fetchWithAuth: (url: string, options: RequestInit) =>
     Promise.resolve(new Response()),
   isLoading: false,
@@ -69,14 +69,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null)
 
   const [request, response, promptAsync] = useAuthRequest(config, discovery)
+  const refreshInProgressRef = useRef(false)
+  const router = useRouter()
 
   useEffect(() => {
     const restoreSession = async () => {
       setIsLoading(true)
+      console.log('Restoring session...')
       try {
         const storedAccessToken = await tokenCache?.getToken(TOKEN_KEY_NAME)
+        const storedRefreshToken = await tokenCache?.getToken(
+          REFRESH_TOKEN_KEY_NAME
+        )
         if (storedAccessToken) {
           try {
             const decoded = jose.decodeJwt(storedAccessToken) as AuthUser
@@ -85,17 +92,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             if (exp && exp > now) {
               // access token is still valid
-              console.log('Restored valid access token from cache')
               setAccessToken(storedAccessToken)
+
+              if (storedRefreshToken) {
+                setRefreshToken(storedRefreshToken)
+              }
+
               setUser(decoded)
-            } else {
-              console.log('clearing token from storage')
-              setUser(null)
-              tokenCache?.deleteToken(TOKEN_KEY_NAME)
+            } else if (storedRefreshToken) {
+              // access token expired, but we have a refresh token
+              setRefreshToken(storedRefreshToken)
+              await refreshAccessToken(storedRefreshToken)
             }
-          } catch (error) {}
+          } catch (error) {
+            if (storedRefreshToken) {
+              setRefreshToken(storedRefreshToken)
+              await refreshAccessToken(storedRefreshToken)
+            }
+          }
+        } else if (storedRefreshToken) {
+          setRefreshToken(storedRefreshToken)
+          await refreshAccessToken(storedRefreshToken)
+        } else {
+          console.log(
+            'User is not authenticated, no access or refresh token found.'
+          )
         }
       } catch (error) {
+        console.log('Error restoring session: ', error)
       } finally {
         setIsLoading(false)
       }
@@ -108,72 +132,169 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     handleResponse()
   }, [response])
 
+  // Function to refresh the access token
+  const refreshAccessToken = async (tokenToUse?: string) => {
+    // Prevent multiple simultaneous refresh attempts
+    if (refreshInProgressRef.current) {
+      console.log('Token refresh already in progress, skipping')
+      return null
+    }
+
+    refreshInProgressRef.current = true
+
+    try {
+      console.log('Refreshing access token...')
+
+      // use the provided token or fall back to the state
+      const currentRefreshToken = tokenToUse || refreshToken
+      if (!currentRefreshToken) {
+        console.log('No refresh token available')
+        signOut()
+        return null
+      }
+      const refreshResponse = await fetch(`${BASE_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refreshToken: currentRefreshToken,
+        }),
+      })
+
+      if (!refreshResponse.ok) {
+        const errorData = await refreshResponse.json()
+        console.log('Token refresh failed:', errorData)
+
+        // refresh fails due to expired token, sign out
+        if (refreshResponse.status === 401) {
+          signOut()
+        }
+        return null
+      }
+      const tokens = await refreshResponse.json()
+      const newAccessToken = tokens.accessToken
+      const newRefreshToken = tokens.refreshToken
+
+      console.log(
+        'Received new access token:',
+        newAccessToken ? 'exists' : 'missing'
+      )
+      console.log(
+        'Received new refresh token:',
+        newRefreshToken ? 'exists' : 'missing'
+      )
+
+      if (newAccessToken) setAccessToken(newAccessToken)
+      if (newRefreshToken) setRefreshToken(newRefreshToken)
+
+      if (newAccessToken)
+        await tokenCache?.saveToken('accessToken', newAccessToken)
+      if (newRefreshToken)
+        await tokenCache?.saveToken('refreshToken', newRefreshToken)
+
+      // Update user data from the new access token
+      if (newAccessToken) {
+        const decoded = jose.decodeJwt(newAccessToken)
+        // Check if we have all required user fields
+        setUser(decoded as AuthUser)
+      }
+
+      return newAccessToken // Return the new access token
+    } catch (error) {
+      console.log('Error refreshing token:', error)
+      // If there's an error refreshing, we should sign out
+      signOut()
+      return null
+    } finally {
+      refreshInProgressRef.current = false
+    }
+  }
+
   const handleResponse = async () => {
     if (response?.type === 'success') {
-      const { code } = response.params
-
       try {
         setIsLoading(true)
+        const { code } = response.params
 
-        const tokenResponse = await exchangeCodeAsync(
-          {
-            code,
-            extraParams: {
-              platform: Platform.OS,
-            },
-            clientId: 'google',
-            redirectUri: makeRedirectUri(),
-          },
-          discovery
-        )
+        const tokenResponse = await fetch(`${BASE_URL}/api/auth/token`, {
+          method: 'POST',
+          body: JSON.stringify({ code }),
+        })
 
-        const accessToken = tokenResponse.accessToken
-        setAccessToken(accessToken)
+        console.log('Token response:', tokenResponse)
 
-        if (!accessToken) {
-          console.log('No access token received')
-          return
-        }
-
-        // save token to local storage or secure store
-        tokenCache?.saveToken(TOKEN_KEY_NAME, accessToken)
-
-        const decoded = jose.decodeJwt(accessToken)
-        setUser(decoded as AuthUser)
+        const tokens = await tokenResponse.json()
+        await handleNativeTokens(tokens)
       } catch (error) {
-        console.log('Error handling response', error)
+        console.log(error)
+        console.log('Error handling response: ', error)
       } finally {
         setIsLoading(false)
       }
     } else if (response?.type === 'error') {
       setError(response.error as AuthError)
-      console.error('Auth error:', response.error)
+      console.log('Auth error:', response.error)
     }
   }
 
   const signIn = async () => {
     try {
       if (!request) {
-        console.log('Auth request is not available')
         return
       }
       await promptAsync()
-      console.log('User signed in')
     } catch (error) {
-      console.log(error)
+      console.log('Sign in error: ', error)
     }
   }
 
   const signOut = async () => {
+    console.log('Signing out in context...')
     await tokenCache?.deleteToken(TOKEN_KEY_NAME)
+    await tokenCache?.deleteToken(REFRESH_TOKEN_KEY_NAME)
     setUser(null)
     setAccessToken(null)
+    setRefreshToken(null)
+    router.replace('/')
+  }
+
+  const signUp = async (
+    email: string,
+    firstName: string,
+    lastName: string | null,
+    provider: string,
+    providerId: string
+  ) => {
+    try {
+      const res = await fetchWithAuth(`${BASE_URL}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          firstName,
+          lastName,
+          provider,
+          providerId,
+        }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to create account')
+      }
+
+      const data = await res.json()
+      return data
+    } catch (error) {
+      console.log('Sign up error: ', error)
+    }
   }
 
   const signInWithApple = async () => {
     try {
       const rawNonce = randomUUID()
-      console.log('Generated raw nonce:', rawNonce)
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -182,11 +303,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         nonce: rawNonce,
       })
 
-      console.log('Apple credential:', credential)
-
       if (credential.fullName?.givenName && credential.email) {
-        // first sign in, only chance to get user's full name and email
-        // store in db
+        // first sign in, sign up the user
+        await signUp(
+          credential.email,
+          credential.fullName?.givenName || '',
+          credential.fullName?.familyName || '',
+          'apple',
+          credential.user
+        )
+        return
       }
 
       const appleResponse = await fetch(
@@ -199,48 +325,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           body: JSON.stringify({
             identityToken: credential.identityToken,
             rawNonce,
-
             givenName: credential.fullName?.givenName,
             familyName: credential.fullName?.familyName,
             email: credential.email,
+            providerId: credential.user,
           }),
         }
       )
 
-      console.log('Apple response:', appleResponse)
-
       const tokens = await appleResponse.json()
       await handleNativeTokens(tokens)
     } catch (error) {
-      console.error('Apple sign-in error:', error)
+      console.log('Apple sign-in error: ', error)
       setError(error as AuthError)
     }
   }
 
   const handleNativeTokens = async (tokens: {
-    access_token: string
-    refresh_token?: string
+    accessToken: string
+    refreshToken?: string
   }) => {
-    const { access_token: newAccessToken, refresh_token: newRefreshToken } =
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
       tokens
 
-    console.log('Received initial access token:', newAccessToken)
-    console.log('Received initial refresh token:', newRefreshToken)
+    if (newAccessToken) setAccessToken(newAccessToken)
+    if (newRefreshToken) setRefreshToken(newRefreshToken)
 
+    if (newAccessToken)
+      await tokenCache?.saveToken('accessToken', newAccessToken)
+    if (newRefreshToken)
+      await tokenCache?.saveToken('refreshToken', newRefreshToken)
     if (newAccessToken) {
-      setAccessToken(newAccessToken)
-      await tokenCache?.saveToken(TOKEN_KEY_NAME, newAccessToken)
-      const decoded = jose.decodeJwt(newAccessToken) as AuthUser
-      setUser(decoded)
+      const decoded = jose.decodeJwt(newAccessToken)
+      setUser(decoded as AuthUser)
     }
-
-    // if (newRefreshToken) {
-    //   setRefreshToken(newRefreshToken)
-    //   await tokenCache?.saveToken(REFRESH_TOKEN_KEY_NAME, newRefreshToken)
-    // }
   }
-
-  const signInWithAppleWebBrowser = async () => {}
 
   const fetchWithAuth = async (url: string, options: RequestInit) => {
     const response = await fetch(url, {
@@ -251,7 +370,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       },
     })
 
-    // if response is 401, refresh
+    if (response.status === 401) {
+      const newToken = await refreshAccessToken()
+
+      if (newToken) {
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        })
+      }
+    }
 
     return response
   }
@@ -263,7 +394,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signIn,
         signOut,
         signInWithApple,
-        signInWithAppleWebBrowser,
         fetchWithAuth,
         isLoading,
         error,

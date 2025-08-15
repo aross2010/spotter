@@ -20,8 +20,6 @@ export async function GET(request: Request) {
     state,
   })
 
-  console.log('Outgoing params: ', outgoingParams.toString())
-
   return NextResponse.redirect(
     (platform === 'web' ? BASE_URL : APP_SCHEME) +
       '?' +

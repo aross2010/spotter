@@ -5,7 +5,6 @@ import {
   GOOGLE_CLIENT_ID,
   GOOGLE_REDIRECT_URI,
 } from '@/app/libs/auth'
-import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {

@@ -88,14 +88,14 @@ const RootLayout = () => {
             }}
           >
             <Stack.Screen
+              name="index"
+              options={{ animation: 'none' }}
+            />
+            <Stack.Screen
               name="(tabs)"
               options={{
                 animation: 'none',
               }}
-            />
-            <Stack.Screen
-              name="(auth)"
-              options={{ animation: 'none' }}
             />
           </Stack>
         </SafeAreaProvider>

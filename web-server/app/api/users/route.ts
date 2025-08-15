@@ -1,7 +1,5 @@
-import isValidPassword from '@/app/functions/validatePassword'
 import db from '@/src'
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcrypt'
 import { users } from '@/src/db/schema'
 import { sendSignupEmail } from '@/app/functions/sendEmails'
 import isEmail from 'validator/lib/isEmail'
@@ -12,21 +10,13 @@ export async function POST(req: Request) {
   if (!data)
     return NextResponse.json({ error: 'No data provided' }, { status: 400 })
 
-  const { firstName, lastName, email, password } = data
+  const { firstName, lastName, email, provider, providerId } = data
 
-  if (!firstName || !email || !password) {
+  console.log('Creating user in API: ', data)
+
+  if (!firstName || !email || !provider || !providerId) {
     return NextResponse.json(
       { error: 'Missing required fields' },
-      { status: 400 }
-    )
-  }
-
-  if (!isValidPassword(password)) {
-    return NextResponse.json(
-      {
-        error:
-          'Password must be at least 8 characters long, contain one uppercase letter, and one special character or number',
-      },
       { status: 400 }
     )
   }
@@ -74,15 +64,14 @@ export async function POST(req: Request) {
       }
     }
 
-    const passwordHash = await bcrypt.hash(password, 10)
     const [newUser] = await db
       .insert(users)
       .values({
         firstName,
-        lastName: lastName || null,
+        lastName,
         email,
-        passwordHash,
-        provider: 'credentials',
+        provider,
+        providerId,
       })
       .returning({
         id: users.id,
@@ -100,7 +89,6 @@ export async function POST(req: Request) {
       status: 201,
     })
   } catch (error) {
-    console.log(error)
     return NextResponse.json({
       error: 'An unexpected error occurred',
       status: 500,
