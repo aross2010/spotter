@@ -6,6 +6,8 @@ import Animated, {
   useFrameCallback,
 } from 'react-native-reanimated'
 
+// animate them in
+
 type BackgroundDotsProps = {
   numDots?: number
   minSize?: number

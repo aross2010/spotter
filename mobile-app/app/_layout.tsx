@@ -1,6 +1,6 @@
-import { StyleSheet, Text } from 'react-native'
+import Toast from 'react-native-toast-message'
 import React from 'react'
-import { Slot, Stack } from 'expo-router'
+import { Stack } from 'expo-router'
 import { useFonts } from 'expo-font'
 import {
   Poppins_100Thin,
@@ -41,6 +41,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import '../global.css'
 import { StatusBar } from 'expo-status-bar'
+import { toastConfig } from '../utils/toast'
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
@@ -100,6 +101,7 @@ const RootLayout = () => {
           </Stack>
         </SafeAreaProvider>
       </KeyboardProvider>
+      <Toast config={toastConfig} />
     </AuthProvider>
   )
 }
