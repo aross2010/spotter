@@ -1,4 +1,5 @@
 import {
+  BASE_URL,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI,
@@ -9,7 +10,7 @@ import {
 import { NextResponse } from 'next/server'
 import * as jose from 'jose'
 import db from '@/src'
-import { users } from '@/src/db/schema'
+import { and, eq } from 'drizzle-orm'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -57,30 +58,51 @@ export async function POST(request: Request) {
     providerId: (userInfo as { sub: string }).sub,
   }
 
-  const userInDb = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.providerId, user.providerId),
+  const link = await db.query.userProviders.findFirst({
+    where: (up, { and, eq }) =>
+      and(eq(up.provider, 'google'), eq(up.providerId, user.providerId)),
+    with: {
+      user: true,
+    },
   })
 
-  if (userInDb) {
-    user.id = userInDb.id
+  if (link) {
+    user.id = link.user.id
   }
 
   if (!user.id) {
     // user does not exist, create account
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        provider: user.provider,
-        providerId: user.providerId,
-      })
-      .returning({
-        id: users.id,
+    try {
+      const response = await fetch(`${BASE_URL}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          provider: user.provider,
+          providerId: user.providerId,
+        }),
       })
 
-    user.id = newUser.id
+      if (response.status === 409) {
+        return NextResponse.json(
+          { error: 'User with email already exists' },
+          { status: 409 }
+        )
+      }
+
+      const newUser = await response.json()
+      user.id = newUser.id
+    } catch (error) {
+      console.error('Error creating user:', error)
+      return NextResponse.json(
+        { error: 'Failed to create user' },
+        { status: 500 }
+      )
+    }
   }
 
   // current time

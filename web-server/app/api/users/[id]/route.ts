@@ -138,6 +138,8 @@ export async function DELETE(req: Request, props: { params: Params }) {
   const params = await props.params
   const id = params.id as string
 
+  // https://developer.apple.com/documentation/signinwithapplerestapi/revoke_tokens
+  // for when a user deletes their apple account, revoke their tokens
   if (!id) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
   }

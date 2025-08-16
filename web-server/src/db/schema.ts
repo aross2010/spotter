@@ -10,28 +10,38 @@ import {
   check,
   date,
   boolean,
+  pgEnum,
+  index,
 } from 'drizzle-orm/pg-core'
 import { sql, relations } from 'drizzle-orm'
 
-export const users = pgTable(
-  'users',
+export const authProvider = pgEnum('auth_provider', ['google', 'apple'])
+
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  firstName: varchar('first_name', { length: 75 }).notNull(),
+  lastName: varchar('last_name', { length: 75 }),
+  email: varchar('email', { length: 150 }).notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }),
+})
+
+export const userProviders = pgTable(
+  'user_providers',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    firstName: varchar('first_name', { length: 75 }).notNull(),
-    lastName: varchar('last_name', { length: 75 }),
-    email: varchar('email', { length: 150 }).notNull().unique(),
-    provider: varchar('provider', { length: 50 })
+    userId: uuid('user_id')
       .notNull()
-      .default('credentials'),
-    providerId: varchar('provider_id', { length: 100 }).notNull(), // the user's unique ID for the provider
+      .references(() => users.id, { onDelete: 'cascade' }),
+    provider: authProvider('provider').notNull(),
+    providerId: varchar('provider_id', { length: 200 }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
   (t) => [
-    check(
-      'valid_provider',
-      sql`provider IN ('credentials', 'google', 'apple')`
-    ),
+    unique('uq_provider_providerId').on(t.provider, t.providerId),
+    unique('uq_user_provider').on(t.userId, t.provider),
+    index('idx_provider_lookup').on(t.provider, t.providerId),
+    index('idx_user_lookup').on(t.userId),
   ]
 )
 
@@ -217,6 +227,18 @@ export const setGroupings = pgTable(
   },
   (t) => [check('valid_grouping_type', sql`type IN ('superset', 'dropset')`)]
 )
+
+// 1 user to many providers
+export const userRelations = relations(users, ({ many }) => ({
+  userProviders: many(userProviders),
+}))
+
+export const userProvidersRelations = relations(userProviders, ({ one }) => ({
+  user: one(users, {
+    fields: [userProviders.userId],
+    references: [users.id],
+  }),
+}))
 
 // 1 notebook to many entries
 export const notebooksRelations = relations(notebooks, ({ many }) => ({

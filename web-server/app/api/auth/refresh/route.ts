@@ -99,17 +99,27 @@ export async function POST(request: Request) {
     let completeUserInfo = { ...userInfo }
 
     if (!hasRequiredInfo) {
-      const user = await db.query.users.findFirst({
-        where: (users, { eq }) => eq(users.providerId, sub),
+      const link = await db.query.userProviders.findFirst({
+        where: (up, { eq }) => eq(up.providerId, sub),
+        with: { user: true },
       })
+
+      const user = link?.user
+
+      if (!user || !link) {
+        return NextResponse.json(
+          { error: 'User not found by provider ID' },
+          { status: 401 }
+        )
+      }
 
       completeUserInfo = {
         ...userInfo,
         email: user?.email,
         firstName: user?.firstName,
         lastName: user?.lastName,
-        providerId: user?.providerId,
-        provider: user?.provider,
+        providerId: link.providerId,
+        provider: link.provider,
       }
     }
 

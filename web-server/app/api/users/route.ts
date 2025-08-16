@@ -1,7 +1,6 @@
 import db from '@/src'
 import { NextResponse } from 'next/server'
-import { users } from '@/src/db/schema'
-import { sendSignupEmail } from '@/app/functions/sendEmails'
+import { userProviders, users } from '@/src/db/schema'
 import isEmail from 'validator/lib/isEmail'
 import { notebooks } from '@/src/db/schema'
 
@@ -15,6 +14,7 @@ export async function POST(req: Request) {
   console.log('Creating user in API: ', data)
 
   if (!firstName || !email || !provider || !providerId) {
+    console.log('Missing required fields')
     return NextResponse.json(
       { error: 'Missing required fields' },
       { status: 400 }
@@ -42,50 +42,79 @@ export async function POST(req: Request) {
   try {
     const existingUser = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.email, email),
+      with: {
+        userProviders: true,
+      },
     })
 
     if (existingUser) {
-      const { provider } = existingUser
-      if (provider === 'google') {
+      const providers = existingUser.userProviders.map((p) => p.provider)
+      if (providers.includes('google')) {
+        console.log('User w/ google already exists.')
         return NextResponse.json(
           { error: 'Google account already exists' },
-          { status: 400 }
+          { status: 409 }
         )
       } else if (provider === 'apple') {
+        console.log('User w/ apple already exists.')
         return NextResponse.json(
           { error: 'Apple account already exists' },
-          { status: 400 }
+          { status: 409 }
         )
       } else {
+        console.log('User with this email already exists.')
         return NextResponse.json(
           { error: 'User with this email already exists' },
-          { status: 400 }
+          { status: 409 }
         )
       }
     }
 
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        firstName,
-        lastName,
-        email,
-        provider,
-        providerId,
-      })
-      .returning({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-      })
+    const createdUser = await db.transaction(async (tx) => {
+      const [newUser] = await tx
+        .insert(users)
+        .values({
+          firstName,
+          lastName,
+          email,
+        })
+        .returning({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        })
+
+      await tx
+        .insert(userProviders)
+        .values({
+          userId: newUser.id,
+          provider,
+          providerId,
+        })
+        .onConflictDoNothing({
+          target: [userProviders.userId, userProviders.provider],
+        })
+
+      return newUser
+    })
 
     // create notebook for user
     await db.insert(notebooks).values({
-      userId: newUser.id,
+      userId: createdUser.id,
     })
 
-    await sendSignupEmail(newUser)
-    return NextResponse.json(newUser, {
+    const completeUser = {
+      id: createdUser.id,
+      email: createdUser.email,
+      firstName: createdUser.firstName,
+      lastName: createdUser.lastName ?? null,
+      provider,
+      providerId,
+    }
+
+    // await sendSignupEmail(newUser)
+    return NextResponse.json(completeUser, {
       status: 201,
     })
   } catch (error) {

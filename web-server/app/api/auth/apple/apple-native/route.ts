@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { verifyAndCreateTokens } from '@/app/functions/apple-auth'
 export async function POST(req: Request) {
-  const { identityToken, rawNonce, givenName, familyName, email, providerId } =
-    await req.json()
+  const { identityToken, rawNonce, providerId } = await req.json()
 
   try {
     const { accessToken, refreshToken } = await verifyAndCreateTokens({
@@ -13,7 +12,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ accessToken, refreshToken }, { status: 200 })
   } catch (error) {
-    console.error('Error verifying Apple token:', error)
+    if ((error as Error).message.includes('Apple user not found')) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
     return NextResponse.json(
       { error: 'Failed to verify Apple token' },
       { status: 500 }

@@ -2,6 +2,7 @@ import * as jose from 'jose'
 import crypto from 'crypto'
 import { JWT_EXP_TIME, REFRESH_TOKEN_EXP_TIME, JWT_SECRET } from '../libs/auth'
 import db from '@/src'
+import { NextResponse } from 'next/server'
 
 interface AppleAuthResult {
   accessToken: string
@@ -54,12 +55,26 @@ export async function verifyAndCreateTokens({
       }
     }
 
-    const userInDb = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.providerId, providerId),
+    const link = await db.query.userProviders.findFirst({
+      where: (up, { and, eq }) =>
+        and(eq(up.provider, 'apple'), eq(up.providerId, providerId)),
+      with: {
+        user: true,
+      },
     })
 
-    if (!userInDb) {
-      throw new Error(`User with providerId: ${providerId} not found`)
+    let userInDbProviderId = null
+    let userInDb = null
+
+    if (link) {
+      userInDb = link.user
+      userInDbProviderId = link.providerId
+    }
+
+    if (!userInDb || !userInDbProviderId) {
+      throw new Error(
+        'Apple user not found in database, original sign up attempt failed.'
+      )
     }
 
     const user = {
@@ -68,7 +83,7 @@ export async function verifyAndCreateTokens({
       firstName: userInDb.firstName,
       lastName: userInDb.lastName,
       provider: 'apple',
-      providerId: userInDb.providerId,
+      providerId: userInDbProviderId,
     }
 
     const issuedAt = Math.floor(Date.now() / 1000)
@@ -77,7 +92,7 @@ export async function verifyAndCreateTokens({
     const accessToken = await new jose.SignJWT(user)
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime(JWT_EXP_TIME)
-      .setSubject(userInDb.providerId)
+      .setSubject(userInDbProviderId)
       .setIssuedAt(issuedAt)
       .sign(new TextEncoder().encode(JWT_SECRET))
 
