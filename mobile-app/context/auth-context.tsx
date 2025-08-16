@@ -19,6 +19,8 @@ import { Platform } from 'react-native'
 import * as jose from 'jose'
 import { tokenCache } from '../utils/cache'
 import { useRouter } from 'expo-router'
+import Toast from 'react-native-toast-message'
+import { toast } from '../utils/toast'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -222,9 +224,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           body: JSON.stringify({ code }),
         })
 
+        if (tokenResponse.status == 409) {
+          toast(
+            'myError',
+            'Unsuccessful Sign In',
+            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.'
+          )
+          return
+        }
+
         console.log('Token response:', tokenResponse)
 
         const tokens = await tokenResponse.json()
+        console.log('Received tokens:', tokens)
         await handleNativeTokens(tokens)
       } catch (error) {
         console.log(error)
@@ -259,6 +271,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.replace('/')
   }
 
+  // helper function for apple sign in
   const signUp = async (
     email: string,
     firstName: string,
@@ -281,14 +294,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }),
       })
 
-      if (!res.ok) {
-        throw new Error('Failed to create account')
+      if (res.status === 409) {
+        toast(
+          'myError',
+          'Unsuccessful Sign Up',
+          'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.'
+        )
+        return {
+          status: 409,
+        }
       }
 
       const data = await res.json()
       return data
     } catch (error) {
-      console.log('Sign up error: ', error)
+      toast(
+        'myError',
+        'Unsuccessful Sign Up',
+        'An error occurred during sign up. Please try again.'
+      )
     }
   }
 
@@ -302,22 +326,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ],
         nonce: rawNonce,
       })
+      setIsLoading(true)
 
       if (credential.fullName?.givenName && credential.email) {
-        // first sign in, sign up the user
+        // first time signing in w/ Apple, store key credentials to db
+
+        // save to cache in case sign up fails
+        tokenCache?.saveAppleDetails({
+          email: credential.email,
+          givenName: credential.fullName?.givenName,
+          familyName: credential.fullName?.familyName ?? null,
+        })
+
         await signUp(
           credential.email,
-          credential.fullName?.givenName || '',
-          credential.fullName?.familyName || '',
+          credential.fullName.givenName,
+          credential.fullName.familyName ?? null,
           'apple',
           credential.user
         )
-        return
       }
+      let appleResponse
+      appleResponse = await fetch(`${BASE_URL}/api/auth/apple/apple-native`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identityToken: credential.identityToken,
+          rawNonce,
+          providerId: credential.user,
+        }),
+      })
 
-      const appleResponse = await fetch(
-        `${BASE_URL}/api/auth/apple/apple-native`,
-        {
+      if (appleResponse.status === 404) {
+        // user could not be found, sign up with cache details and try again
+        const appleUserDetails = await tokenCache?.getAppleDetails()
+        if (!appleUserDetails) return
+        const res = await signUp(
+          appleUserDetails?.email,
+          appleUserDetails?.givenName ?? '',
+          appleUserDetails?.familyName ?? null,
+          'apple',
+          credential.user
+        )
+
+        if (res.status === 409) {
+          return
+        }
+
+        appleResponse = await fetch(`${BASE_URL}/api/auth/apple/apple-native`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -325,19 +383,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           body: JSON.stringify({
             identityToken: credential.identityToken,
             rawNonce,
-            givenName: credential.fullName?.givenName,
-            familyName: credential.fullName?.familyName,
-            email: credential.email,
             providerId: credential.user,
           }),
-        }
-      )
+        })
+      }
+
+      if (appleResponse.status !== 200) {
+        console.log('Apple sign-in error: ', appleResponse.statusText)
+      }
 
       const tokens = await appleResponse.json()
       await handleNativeTokens(tokens)
     } catch (error) {
       console.log('Apple sign-in error: ', error)
       setError(error as AuthError)
+    } finally {
+      setIsLoading(false)
     }
   }
 

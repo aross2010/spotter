@@ -1,10 +1,21 @@
 import * as SecureStore from 'expo-secure-store'
 import { Platform } from 'react-native'
 
+type AppleDetails = {
+  email: string
+  givenName?: string | null
+  familyName?: string | null
+}
+
+const APPLE_DETAILS_KEY = 'apple_signup_details'
+
 type TokenCache = {
   getToken: (key: string) => Promise<string | null>
   saveToken: (key: string, token: string) => Promise<void>
   deleteToken: (key: string) => Promise<void>
+  saveAppleDetails: (d: AppleDetails) => Promise<void>
+  getAppleDetails: () => Promise<AppleDetails | null>
+  clearAppleDetails: () => Promise<void>
 }
 
 const createTokenCache = (): TokenCache => {
@@ -29,7 +40,23 @@ const createTokenCache = (): TokenCache => {
     deleteToken: async (key: string) => {
       return SecureStore.deleteItemAsync(key)
     },
+    saveAppleDetails: async (d) => {
+      await SecureStore.setItemAsync(APPLE_DETAILS_KEY, JSON.stringify(d))
+    },
+    getAppleDetails: async () => {
+      const raw = await SecureStore.getItemAsync(APPLE_DETAILS_KEY)
+      if (!raw) return null
+      try {
+        return JSON.parse(raw) as AppleDetails
+      } catch {
+        await SecureStore.deleteItemAsync(APPLE_DETAILS_KEY)
+        return null
+      }
+    },
+    clearAppleDetails: async () => {
+      await SecureStore.deleteItemAsync(APPLE_DETAILS_KEY)
+    },
   }
 }
 
-export const tokenCache = Platform.OS === 'web' ? undefined : createTokenCache()
+export const tokenCache = createTokenCache()
