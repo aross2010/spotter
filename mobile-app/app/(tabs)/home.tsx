@@ -3,12 +3,12 @@ import { useAuth } from '../../context/auth-context'
 import Button from '../../components/button'
 import Txt from '../../components/text'
 
-const Dashboard = () => {
+const Home = () => {
   const { fetchWithAuth, user, signOut } = useAuth()
 
   return (
     <SafeView>
-      <Txt>Dashboard</Txt>
+      <Txt>Home</Txt>
       <Button
         onPress={async () => {
           const response = await fetchWithAuth(
@@ -35,4 +35,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default Home

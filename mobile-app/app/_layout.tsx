@@ -96,6 +96,14 @@ const RootLayout = () => {
               name="(tabs)"
               options={{
                 animation: 'none',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="add"
+              options={{
+                animation: 'none',
+                headerShown: false,
               }}
             />
           </Stack>

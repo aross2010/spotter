@@ -15,8 +15,8 @@ export default function Index() {
   }
 
   if (user) {
-    console.log('User is authenticated, redirecting to their dashboard.')
-    return <Redirect href="/dashboard" />
+    console.log('User is authenticated, redirecting to their home.')
+    return <Redirect href="/home" />
   }
 
   console.log('User is not authenticated, showing auth screen.')
