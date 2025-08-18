@@ -4,40 +4,35 @@ import Button from '../../components/button'
 import Txt from '../../components/text'
 import { Link } from 'expo-router'
 
+function getGreeting(d: Date = new Date()) {
+  const h = d.getHours()
+  if (h >= 5 && h < 12) return 'Good Morning'
+  if (h >= 12 && h < 17) return 'Good Afternoon'
+  if (h >= 17 && h < 22) return 'Good Evening'
+  // late night / very early
+  return 'Good Evening'
+}
+
 const Home = () => {
-  const { fetchWithAuth, user, signOut } = useAuth()
+  const { fetchWithAuth, user } = useAuth()
+
+  // day (abbreviated). month, day, year
+  const formattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+  const greeting = getGreeting()
 
   return (
     <SafeView>
-      <Txt>Home</Txt>
-      <Button
-        onPress={async () => {
-          const response = await fetchWithAuth(
-            `http://localhost:3000/api/users/${user?.id}`,
-            {
-              method: 'GET',
-            }
-          )
-          const data = await response.json()
-          console.log('User data:', data)
-        }}
-      >
-        Fetch User Data
-      </Button>
-      <Button
-        onPress={() => {
-          console.log('Signing out...')
-          signOut()
-        }}
-      >
-        Sign Out
-      </Button>
-      <Link
-        href="/weight-form"
-        asChild
-      >
-        <Button>Open Settings</Button>
-      </Link>
+      <Txt className="uppercase text-light-grayText font-geologicaSemiBold text-sm">
+        {formattedDate}
+      </Txt>
+      <Txt className="text-2xl font-geologicaSemiBold mb-4">
+        {greeting}, {user?.firstName} 👋
+      </Txt>
     </SafeView>
   )
 }

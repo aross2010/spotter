@@ -1,4 +1,6 @@
-import { Stack } from 'expo-router'
+import { router, Stack } from 'expo-router'
+import { Pressable } from 'react-native'
+import Button from '../../components/button'
 
 export default function ModalLayout() {
   return (
@@ -8,10 +10,31 @@ export default function ModalLayout() {
         presentation: 'modal',
       }}
     >
-      <Stack.Screen name="settings" />
-      <Stack.Screen name="notebook-entry-form" />
-      <Stack.Screen name="workout-form" />
-      <Stack.Screen name="weight-form" />
+      <Stack.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          headerTitle: 'Settings',
+        }}
+      />
+      <Stack.Screen
+        name="notebook-entry-form"
+        options={{
+          title: 'Notebook Entry',
+        }}
+      />
+      <Stack.Screen
+        name="workout-form"
+        options={{
+          title: 'Workout',
+        }}
+      />
+      <Stack.Screen
+        name="weight-form"
+        options={{
+          title: 'Weight',
+        }}
+      />
     </Stack>
   )
 }

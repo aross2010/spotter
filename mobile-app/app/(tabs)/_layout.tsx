@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
 import { useState } from 'react'
-import { Redirect, router, Tabs } from 'expo-router'
+import { Link, Redirect, router, Tabs } from 'expo-router'
 import Modal from 'react-native-modal'
 import {
   LayoutDashboard,
@@ -11,10 +11,11 @@ import {
   CalendarFold,
   CirclePlus,
   Home,
+  Settings,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import TopIndicatorTabBar from '../../components/tabbar'
-import Txt from '../../components/text'
+import TextLogo from '../../assets/spotter-text-logo.svg'
 import Log from '../../components/log'
 import MyModal from '../../components/modal'
 
@@ -38,6 +39,10 @@ const TabsLayout = () => {
         screenOptions={{
           headerShadowVisible: false,
           animation: 'fade',
+          headerTitleStyle: {
+            fontSize: 22,
+            fontFamily: 'Geologica_600SemiBold',
+          },
         }}
       >
         <Tabs.Screen
@@ -58,6 +63,28 @@ const TabsLayout = () => {
                   color={theme.grayText}
                 />
               ),
+            headerTitle: () => (
+              <View style={{ height: '100%', aspectRatio: 135 / 57 }}>
+                <TextLogo
+                  width={'100%'}
+                  height={'100%'}
+                  color={Colors.primary}
+                />
+              </View>
+            ),
+            headerLeft: () => (
+              <Link
+                href="/settings"
+                accessibilityLabel="settings"
+                className="p-2"
+              >
+                <Settings
+                  height={24}
+                  width={24}
+                  color={theme.grayText}
+                />
+              </Link>
+            ),
           }}
         />
         <Tabs.Screen
@@ -157,5 +184,3 @@ const TabsLayout = () => {
 }
 
 export default TabsLayout
-
-const styles = StyleSheet.create({})

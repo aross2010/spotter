@@ -71,7 +71,7 @@ const Log = ({ setIsOpen }: LogProps) => {
   return (
     <View className="bg-light-background dark:bg-dark-background rounded-lg px-4 pt-10 pb-12 gap-4 relative">
       <View className="absolute h-2 bg-light-grayTertiary w-1/4 dark:bg-dark-grayTertiary rounded-full mt-2 self-center" />
-      <Txt className="text-primary font-poppinsSemiBold text-2xl text-center">
+      <Txt className="text-primary font-geologicaSemiBold text-2xl text-center">
         What would you like to log?
       </Txt>
       <View className="flex-col gap-2">{renderedElements}</View>
