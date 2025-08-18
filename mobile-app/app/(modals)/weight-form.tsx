@@ -1,10 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const AddPlaceHolder = () => {
-  return null
+const WeightForm = () => {
+  return (
+    <View>
+      <Text>WeightForm</Text>
+    </View>
+  )
 }
 
-export default AddPlaceHolder
+export default WeightForm
 
 const styles = StyleSheet.create({})

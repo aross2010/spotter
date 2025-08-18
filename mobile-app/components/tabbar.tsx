@@ -9,7 +9,9 @@ import {
 } from 'react-native'
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { BlurView } from 'expo-blur'
 import Colors from '../constants/colors'
+import Txt from './text'
 
 type Props = BottomTabBarProps & {
   barColor?: string
@@ -18,12 +20,22 @@ type Props = BottomTabBarProps & {
   paddingTop?: number
 }
 
+// tiny helper for hex → rgba
+function hexToRgba(hex: string, alpha = 1) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!m) return `rgba(0,0,0,${alpha})`
+  const r = parseInt(m[1], 16)
+  const g = parseInt(m[2], 16)
+  const b = parseInt(m[3], 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 export default function TopIndicatorTabBar({
   state,
   descriptors,
   navigation,
-  barColor = Colors.primary,
-  indicatorColor = Colors.light.background,
+  barColor = Colors.light.grayPrimary,
+  indicatorColor = Colors.light.text,
   height = 90,
   paddingTop = 10,
 }: Props) {
@@ -37,12 +49,17 @@ export default function TopIndicatorTabBar({
     Animated.spring(translateX, {
       toValue: tabW * state.index,
       useNativeDriver: true,
-      bounciness: 5,
+      bounciness: 2,
       speed: 12,
     }).start()
   }, [state.index, tabW, translateX])
 
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)
+
+  // overlay color with alpha (keeps content opaque)
+  const overlayColor = barColor.startsWith('#')
+    ? hexToRgba(barColor, 0.8)
+    : barColor
 
   return (
     <View
@@ -50,14 +67,23 @@ export default function TopIndicatorTabBar({
       style={[
         styles.container,
         {
-          backgroundColor: barColor,
+          backgroundColor: 'transparent',
           height,
           paddingTop,
           paddingBottom: Math.max(insets.bottom, 12),
         },
       ]}
     >
-      {/* sliding indicator */}
+      <BlurView
+        intensity={30}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]}
+      />
+
       <Animated.View
         pointerEvents="none"
         style={[
@@ -73,6 +99,7 @@ export default function TopIndicatorTabBar({
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key]
         const isFocused = state.index === index
+        const isAddTab = route.name === 'add'
 
         const onPress = () => {
           const event = navigation.emit({
@@ -89,14 +116,19 @@ export default function TopIndicatorTabBar({
           navigation.emit({ type: 'tabLongPress', target: route.key })
         }
 
+        const activeColor = options.tabBarActiveTintColor ?? Colors.light.text
+        const inactiveColor =
+          options.tabBarInactiveTintColor ?? 'rgba(255,255,255,0.8)'
+        const color = isFocused ? activeColor : inactiveColor
+
         const icon =
           typeof options.tabBarIcon === 'function'
-            ? options.tabBarIcon({
-                focused: isFocused,
-                color: '#fff',
-                size: 28,
-              })
+            ? options.tabBarIcon({ focused: isFocused, color, size: 28 })
             : null
+        const label =
+          (options.tabBarLabel as string) ??
+          (options.title as string) ??
+          route.name
 
         return (
           <Pressable
@@ -105,9 +137,16 @@ export default function TopIndicatorTabBar({
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={styles.tab}
+            className={`flex-1 items-center justify-end h-16`}
           >
             {icon}
+
+            <Txt
+              numberOfLines={1}
+              className={` text-xs transition-all ${!isFocused ? 'text-light-grayText dark:text-dark-grayText' : 'text-light-text dark:text-dark-text'}`}
+            >
+              {label}
+            </Txt>
           </Pressable>
         )
       })}
@@ -124,13 +163,14 @@ const styles = StyleSheet.create({
   indicator: {
     position: 'absolute',
     top: 0,
-    height: 3,
+    height: 2,
     borderRadius: 999,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end', // anchor content to bottom
+    paddingBottom: 8, // room for label so icon doesn't get pushed up
     height: 64,
   },
 })

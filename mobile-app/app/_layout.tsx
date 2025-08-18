@@ -100,10 +100,9 @@ const RootLayout = () => {
               }}
             />
             <Stack.Screen
-              name="add"
+              name="(modals)"
               options={{
-                animation: 'none',
-                headerShown: false,
+                presentation: 'modal',
               }}
             />
           </Stack>
