@@ -17,6 +17,5 @@ export type AuthUser = {
   given_name?: string
   family_name?: string
   email_verified?: boolean
-  provider?: string
   exp?: number
 }

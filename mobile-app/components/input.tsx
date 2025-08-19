@@ -27,7 +27,7 @@ const Input = ({
 
   const standardInput = (
     <TextInput
-      className={`font-poppins border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg px-2 py-3 focus:border-primary ${className}`}
+      className={`font-poppins border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg px-2 py-3 focus:border-primary ${props.editable ? '' : 'opacity-50'} ${className}`}
       {...props}
     />
   )
@@ -36,7 +36,7 @@ const Input = ({
     <View className="px-2 border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg flex flex-row items-center gap-4">
       <TextInput
         secureTextEntry={!isTextVisible}
-        className={`font-poppins flex-1 py-3 focus:border-primary ${className}`}
+        className={`font-poppins flex-1 py-3 focus:border-primary ${props.editable ? '' : 'opacity-50'} ${className}`}
         {...props}
       />
       <Pressable
@@ -57,7 +57,11 @@ const Input = ({
     if (label) {
       return (
         <View className={`flex flex-col gap-2 ${containerClassName}`}>
-          <Txt className={` ${labelClassName}`}>{label}</Txt>
+          <Txt
+            className={`${props.editable ? '' : 'opacity-50'} ${labelClassName}`}
+          >
+            {label}
+          </Txt>
           {passwordInput}
         </View>
       )
@@ -69,7 +73,11 @@ const Input = ({
   if (label) {
     return (
       <View className={`flex flex-col gap-2 ${containerClassName}`}>
-        <Txt className={` ${labelClassName}`}>{label}</Txt>
+        <Txt
+          className={`${props.editable ? '' : 'opacity-50'} ${labelClassName}`}
+        >
+          {label}
+        </Txt>
         {standardInput}
       </View>
     )

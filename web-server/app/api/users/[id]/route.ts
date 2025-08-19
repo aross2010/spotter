@@ -7,6 +7,7 @@ import isEmail from 'validator/lib/isEmail'
 import { withAuth } from '../../middleware'
 
 export const GET = withAuth(async (req, user) => {
+  console.log('GET user route called with user: ', user)
   const id = req.url.split('/').pop() // Extract user ID from the URL
 
   console.log('Fetching user data for user: ', user)
@@ -28,11 +29,26 @@ export const GET = withAuth(async (req, user) => {
       },
     })
 
+    console.log('got user')
+
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
+    const providers = await db.query.userProviders.findMany({
+      where: (up, { eq }) => eq(up.userId, id),
+      columns: {
+        id: true,
+        provider: true,
+        providerId: true,
+      },
+    })
 
-    return NextResponse.json(user, { status: 200 })
+    const completeUser = {
+      ...user,
+      providers: providers.map((p) => p.provider),
+    }
+
+    return NextResponse.json(completeUser, { status: 200 })
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -118,13 +134,21 @@ export async function PUT(req: Request, props: { params: Params }) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(
-      {
-        message: 'User updated successfully',
-        user: updatedUser.id,
+    const providers = await db.query.userProviders.findMany({
+      where: (up, { eq }) => eq(up.userId, id),
+      columns: {
+        id: true,
+        provider: true,
+        providerId: true,
       },
-      { status: 200 }
-    )
+    })
+
+    const completeUser = {
+      ...updatedUser,
+      providers: providers.map((p) => p.provider),
+    }
+
+    return NextResponse.json(completeUser, { status: 200 })
   } catch (error) {
     console.error(error)
     return NextResponse.json(

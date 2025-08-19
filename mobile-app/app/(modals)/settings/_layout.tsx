@@ -34,16 +34,15 @@ const SettingsLayout = () => {
               hitSlop={12}
               accessibilityLabel="close modal"
               textClassName="text-lg text-primary font-poppinsMedium"
-            >
-              Close
-            </Button>
+              text="Close"
+            />
           ),
         }}
       />
       <Stack.Screen
         name="profile"
         options={{
-          headerTitle: 'Profile',
+          headerTitle: 'Edit Profile',
         }}
       />
       <Stack.Screen

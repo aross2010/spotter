@@ -1,8 +1,7 @@
 import SafeView from '../../components/safe-view'
 import { useAuth } from '../../context/auth-context'
-import Button from '../../components/button'
 import Txt from '../../components/text'
-import { Link } from 'expo-router'
+import { useUserStore } from '../../stores/user-store'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -14,7 +13,7 @@ function getGreeting(d: Date = new Date()) {
 }
 
 const Home = () => {
-  const { fetchWithAuth, user } = useAuth()
+  const { user } = useUserStore()
 
   // day (abbreviated). month, day, year
   const formattedDate = new Date().toLocaleDateString('en-US', {
@@ -27,14 +26,14 @@ const Home = () => {
 
   return (
     <SafeView>
-      <Txt className="uppercase text-light-grayText font-geologicaSemiBold text-sm">
+      <Txt className="uppercase text-light-grayText text-sm">
         {formattedDate}
       </Txt>
-      <Txt className="text-2xl font-geologicaSemiBold mb-4">
+      <Txt className="text-2xl mb-4 font-poppinsMedium">
         {greeting}, {user?.firstName} 👋
       </Txt>
     </SafeView>
   )
 }
-
+;``
 export default Home

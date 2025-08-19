@@ -1,5 +1,4 @@
 import * as SecureStore from 'expo-secure-store'
-import { Platform } from 'react-native'
 
 type AppleDetails = {
   email: string

@@ -68,7 +68,9 @@ export async function POST(request: Request) {
 
   if (link) {
     user.id = link.user.id
-  }
+    user.firstName = link.user.firstName
+    user.lastName = link.user.lastName ?? ''
+  } // use database names to allow users to edit their profile
 
   if (!user.id) {
     // user does not exist, create account

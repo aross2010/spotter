@@ -3,8 +3,11 @@ import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router } from 'expo-router'
-import { ChevronRight } from 'lucide-react-native'
+import { ArrowRight, ChevronRight } from 'lucide-react-native'
 import useTheme from '../../../context/theme'
+import Button from '../../../components/button'
+import { useAuth } from '../../../context/auth-context'
+import Colors from '../../../constants/colors'
 
 const settingsData = [
   {
@@ -20,23 +23,6 @@ const settingsData = [
         label: 'Linked Accounts',
         onPress: () => {
           router.push('/settings/linked-accounts')
-        },
-      },
-      {
-        label: 'Sign Out',
-        onPress: () => {
-          Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'OK',
-              onPress: () => {
-                router.push('/sign-out')
-              },
-            },
-          ])
         },
       },
       {
@@ -133,6 +119,7 @@ const settingsData = [
 
 const Settings = () => {
   const { theme } = useTheme()
+  const { signOut } = useAuth()
 
   const renderedSettings = settingsData.map(
     ({ sectionTitle, options }, index) => {
@@ -167,6 +154,32 @@ const Settings = () => {
   return (
     <SafeView>
       <View className="flex-col gap-8">{renderedSettings}</View>
+      <Button
+        onPress={() => {
+          Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'OK',
+              onPress: () => {
+                router.back()
+                signOut()
+              },
+            },
+          ])
+        }}
+        className="px-2 py-4 flex-row items-center gap-2"
+        text="Sign Out"
+        textClassName="font-poppinsMedium text-primary"
+      >
+        <ArrowRight
+          height={16}
+          width={16}
+          color={Colors.primary}
+        />
+      </Button>
     </SafeView>
   )
 }

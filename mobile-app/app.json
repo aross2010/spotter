@@ -46,9 +46,7 @@
       ],
       "expo-secure-store",
       "expo-web-browser",
-      [
-        "expo-apple-authentication"
-      ]
+      ["expo-apple-authentication"]
     ],
     "extra": {
       "router": {},

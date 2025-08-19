@@ -6,7 +6,6 @@ import {
   AuthError,
   AuthRequestConfig,
   DiscoveryDocument,
-  exchangeCodeAsync,
   makeRedirectUri,
   useAuthRequest,
 } from 'expo-auth-session'
@@ -15,12 +14,11 @@ import {
   REFRESH_TOKEN_KEY_NAME,
   TOKEN_KEY_NAME,
 } from '../constants/auth'
-import { Platform } from 'react-native'
 import * as jose from 'jose'
 import { tokenCache } from '../utils/cache'
 import { useRouter } from 'expo-router'
-import Toast from 'react-native-toast-message'
-import { toast } from '../utils/toast'
+import { UserProfile, useUserStore } from '../stores/user-store'
+import { Alert } from 'react-native'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -76,6 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [request, response, promptAsync] = useAuthRequest(config, discovery)
   const refreshInProgressRef = useRef(false)
   const router = useRouter()
+  const { setUserProfile, clearUserStore } = useUserStore()
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -225,11 +224,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         })
 
         if (tokenResponse.status == 409) {
-          toast(
-            'myError',
+          Alert.alert(
             'Unsuccessful Sign In',
             'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.'
           )
+
           return
         }
 
@@ -268,6 +267,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null)
     setAccessToken(null)
     setRefreshToken(null)
+    clearUserStore()
     router.replace('/')
   }
 
@@ -295,11 +295,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       })
 
       if (res.status === 409) {
-        toast(
-          'myError',
+        Alert.alert(
           'Unsuccessful Sign Up',
           'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.'
         )
+
         return {
           status: 409,
         }
@@ -308,8 +308,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await res.json()
       return data
     } catch (error) {
-      toast(
-        'myError',
+      Alert.alert(
         'Unsuccessful Sign Up',
         'An error occurred during sign up. Please try again.'
       )
@@ -418,7 +417,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await tokenCache?.saveToken('refreshToken', newRefreshToken)
     if (newAccessToken) {
       const decoded = jose.decodeJwt(newAccessToken)
-      setUser(decoded as AuthUser)
+      const user = decoded as AuthUser
+      setUser(user)
+      await getAndSetUserProfile(user.id, newAccessToken)
     }
   }
 
@@ -446,6 +447,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return response
+  }
+
+  // for user store
+  const getAndSetUserProfile = async (
+    userId: string,
+    newAccessToken: string
+  ) => {
+    console.log('Fetching user profile for userId: ', userId)
+    try {
+      const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newAccessToken}`,
+        },
+      })
+      const userProfile = (await response.json()) as UserProfile
+      console.log('Fetched user profile: ', userProfile)
+      setUserProfile(userProfile)
+    } catch (error) {
+      console.log('Error fetching user profile: ', error)
+    }
   }
 
   return (
