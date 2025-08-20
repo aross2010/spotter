@@ -25,42 +25,6 @@ const settingsData = [
           router.push('/settings/linked-accounts')
         },
       },
-      {
-        label: 'Delete Account',
-        onPress: () => {
-          Alert.alert(
-            'Delete Account',
-            'Are you sure you want to delete your account?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'OK',
-                onPress: () => {
-                  Alert.alert(
-                    'Are you sure you want to delete your account?',
-                    'This action is irreversible and will delete all your data.',
-                    [
-                      {
-                        text: 'Cancel',
-                        style: 'cancel',
-                      },
-                      {
-                        text: 'OK',
-                        onPress: () => {
-                          router.push('/delete-account')
-                        },
-                      },
-                    ]
-                  )
-                },
-              },
-            ]
-          )
-        },
-      },
     ],
   },
   {
@@ -119,7 +83,7 @@ const settingsData = [
 
 const Settings = () => {
   const { theme } = useTheme()
-  const { signOut } = useAuth()
+  const { signOut, deleteAccount } = useAuth()
 
   const renderedSettings = settingsData.map(
     ({ sectionTitle, options }, index) => {
@@ -151,35 +115,80 @@ const Settings = () => {
     }
   )
 
+  const promptDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => {
+            Alert.alert(
+              'Confirm Account Deletion',
+              'This action is irreversible and will delete all your data.',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Delete Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await deleteAccount()
+                  },
+                },
+              ]
+            )
+          },
+        },
+      ]
+    )
+  }
+
+  const promptSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: () => {
+          router.back()
+          signOut()
+        },
+      },
+    ])
+  }
+
   return (
     <SafeView>
       <View className="flex-col gap-8">{renderedSettings}</View>
-      <Button
-        onPress={() => {
-          Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'OK',
-              onPress: () => {
-                router.back()
-                signOut()
-              },
-            },
-          ])
-        }}
-        className="px-2 py-4 flex-row items-center gap-2"
-        text="Sign Out"
-        textClassName="font-poppinsMedium text-primary"
-      >
-        <ArrowRight
-          height={16}
-          width={16}
-          color={Colors.primary}
+      <View className="flex-row justify-between mt-4">
+        <Button
+          onPress={promptSignOut}
+          className="px-2 py-4 flex-row items-center gap-2"
+          text="Sign Out"
+          textClassName="font-poppinsMedium text-primary"
+        >
+          <ArrowRight
+            height={16}
+            width={16}
+            color={Colors.primary}
+          />
+        </Button>
+        <Button
+          onPress={promptDeleteAccount}
+          className="px-2 py-4"
+          text="Delete Account"
+          textClassName="font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         />
-      </Button>
+      </View>
     </SafeView>
   )
 }

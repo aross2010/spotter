@@ -91,6 +91,7 @@ export async function POST(req: Request) {
           userId: newUser.id,
           provider,
           providerId,
+          providerEmail: email,
         })
         .onConflictDoNothing({
           target: [userProviders.userId, userProviders.provider],
@@ -111,6 +112,7 @@ export async function POST(req: Request) {
       lastName: createdUser.lastName ?? null,
       provider,
       providerId,
+      providerEmail: email,
     }
 
     // await sendSignupEmail(newUser)

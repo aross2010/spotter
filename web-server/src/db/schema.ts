@@ -35,6 +35,7 @@ export const userProviders = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     provider: authProvider('provider').notNull(),
     providerId: varchar('provider_id', { length: 200 }).notNull(),
+    providerEmail: varchar('provider_email', { length: 150 }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (t) => [

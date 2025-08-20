@@ -36,10 +36,11 @@ type AuthContextType = {
   authUser: AuthUser | null
   signIn: () => void | Promise<void>
   signOut: () => void | Promise<void>
-  signInWithApple: () => void | Promise<void>
+  signInWithApple: (deleteAccount: boolean) => void | Promise<void>
   fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>
   linkAppleAccount: () => Promise<void>
   linkGoogleAccount: () => Promise<void>
+  deleteAccount: () => Promise<void>
   isLoading: boolean
   error: AuthError | null
 }
@@ -48,11 +49,12 @@ const AuthContext = createContext<AuthContextType>({
   authUser: null,
   signIn: () => {},
   signOut: () => {},
-  signInWithApple: () => {},
+  signInWithApple: (deleteAccount: boolean) => {},
   fetchWithAuth: (url: string, options: RequestInit) =>
     Promise.resolve(new Response()),
   linkAppleAccount: async () => {},
   linkGoogleAccount: async () => {},
+  deleteAccount: async () => {},
   isLoading: false,
   error: null,
 })
@@ -74,7 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<AuthError | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
-
   const [request, response, promptAsync] = useAuthRequest(config, discovery)
   const refreshInProgressRef = useRef(false)
   const router = useRouter()
@@ -83,7 +84,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const restoreSession = async () => {
       setIsLoading(true)
-      console.log('Restoring session...')
       try {
         const storedAccessToken = await tokenCache?.getToken(TOKEN_KEY_NAME)
         const storedRefreshToken = await tokenCache?.getToken(
@@ -118,13 +118,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else if (storedRefreshToken) {
           setRefreshToken(storedRefreshToken)
           await refreshAccessToken(storedRefreshToken)
-        } else {
-          console.log(
-            'User is not authenticated, no access or refresh token found.'
-          )
         }
       } catch (error) {
-        console.log('Error restoring session: ', error)
       } finally {
         setIsLoading(false)
       }
@@ -142,19 +137,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshAccessToken = async (tokenToUse?: string) => {
     // Prevent multiple simultaneous refresh attempts
     if (refreshInProgressRef.current) {
-      console.log('Token refresh already in progress, skipping')
       return null
     }
 
     refreshInProgressRef.current = true
 
     try {
-      console.log('Refreshing access token...')
-
       // use the provided token or fall back to the state
       const currentRefreshToken = tokenToUse || refreshToken
       if (!currentRefreshToken) {
-        console.log('No refresh token available')
         signOut()
         return null
       }
@@ -170,8 +161,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!refreshResponse.ok) {
         const errorData = await refreshResponse.json()
-        console.log('Token refresh failed:', errorData)
-
         // refresh fails due to expired token, sign out
         if (refreshResponse.status === 401) {
           signOut()
@@ -181,15 +170,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const tokens = await refreshResponse.json()
       const newAccessToken = tokens.accessToken
       const newRefreshToken = tokens.refreshToken
-
-      console.log(
-        'Received new access token:',
-        newAccessToken ? 'exists' : 'missing'
-      )
-      console.log(
-        'Received new refresh token:',
-        newRefreshToken ? 'exists' : 'missing'
-      )
 
       if (newAccessToken) setAccessToken(newAccessToken)
       if (newRefreshToken) setRefreshToken(newRefreshToken)
@@ -208,7 +188,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       return newAccessToken // Return the new access token
     } catch (error) {
-      console.log('Error refreshing token:', error)
       // If there's an error refreshing, we should sign out
       signOut()
       return null
@@ -236,37 +215,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           return
         }
-
-        console.log('Token response:', tokenResponse)
-
         const tokens = await tokenResponse.json()
-        console.log('Received tokens:', tokens)
         await handleNativeTokens(tokens)
       } catch (error) {
-        console.log(error)
-        console.log('Error handling response: ', error)
       } finally {
         setIsLoading(false)
       }
     } else if (response?.type === 'error') {
       setError(response.error as AuthError)
-      console.log('Auth error:', response.error)
     }
   }
 
   const signIn = async () => {
     try {
       if (!request) {
+        console.error('Auth request is not ready')
         return
       }
       await promptAsync()
     } catch (error) {
-      console.log('Sign in error: ', error)
+      console.error('Error during sign in:', error)
     }
   }
 
   const signOut = async () => {
-    console.log('Signing out in context...')
     await tokenCache?.deleteToken(TOKEN_KEY_NAME)
     await tokenCache?.deleteToken(REFRESH_TOKEN_KEY_NAME)
     setAuthUser(null)
@@ -320,7 +292,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const signInWithApple = async () => {
+  const signInWithApple = async (deleteAccount: boolean = false) => {
     try {
       const rawNonce = randomUUID()
       const credential = await AppleAuthentication.signInAsync({
@@ -334,7 +306,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (credential.fullName?.givenName && credential.email) {
         // first time signing in w/ Apple, store key credentials to db
-
         // save to cache in case sign up fails
         tokenCache?.saveAppleDetails({
           email: credential.email,
@@ -366,7 +337,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (appleResponse.status === 404) {
         // user could not be found, sign up with cache details and try again
         const appleUserDetails = await tokenCache?.getAppleDetails()
-        if (!appleUserDetails) return
+        if (!appleUserDetails) {
+          Alert.alert(
+            'Apple Sign Up Failed',
+            'You previously deleted an account with Apple credentials. To recover your account, continue with Google and link your Apple account.'
+          )
+          return
+        }
         const res = await signUp(
           appleUserDetails?.email,
           appleUserDetails?.givenName ?? '',
@@ -393,13 +370,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (appleResponse.status !== 200) {
-        console.log('Apple sign-in error: ', appleResponse.statusText)
       }
 
       const tokens = await appleResponse.json()
+      if (deleteAccount) return tokens
       await handleNativeTokens(tokens)
     } catch (error) {
-      console.log('Apple sign-in error: ', error)
       setError(error as AuthError)
     } finally {
       setIsLoading(false)
@@ -456,7 +432,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // for user store when a user logs in
   const getAndSetUser = async (userId: string, newAccessToken: string) => {
-    console.log('Fetching user profile for userId: ', userId)
     try {
       const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
         method: 'GET',
@@ -466,24 +441,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       })
       const userProfile = (await response.json()) as UserProfile
-      console.log('Fetched user profile: ', userProfile)
       setUser(userProfile)
-    } catch (error) {
-      console.log('Error fetching user profile: ', error)
-    }
+    } catch (error) {}
   }
 
   const linkAppleAccount = async () => {
     if (!user) {
-      console.log('No user found to link Apple account to')
       return
     }
 
     const rawNonce = randomUUID()
     const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
       nonce: rawNonce,
     })
     const providerId = credential.user
+    let providerEmail = credential.email
+
+    if (!providerEmail) {
+      const appleUserDetails = await tokenCache.getAppleDetails()
+      providerEmail = appleUserDetails?.email ?? null
+    }
 
     try {
       const response = await fetchWithAuth(
@@ -495,35 +476,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           },
           body: JSON.stringify({
             providerId,
+            providerEmail,
           }),
         }
       )
 
-      console.log('Link Apple account response:', response)
-
       if (response.status === 200) {
-        setUser({ ...user, providers: [...user.providers, 'apple'] })
+        const { updatedLinkedAccount } = await response.json()
+        setUser({
+          ...user,
+          providers: [
+            ...user.providers,
+            {
+              name: 'apple',
+              email: updatedLinkedAccount.providerEmail,
+              id: updatedLinkedAccount.providerId,
+            },
+          ],
+        })
+        tokenCache.saveAppleDetails({
+          email: user.email,
+          givenName: user.firstName,
+          familyName: user.lastName ?? null,
+        })
         Alert.alert(
           'Success',
           'Apple account successfully linked. You can now sign in with Apple.'
         )
       }
     } catch (error) {
-      console.log('Error linking Apple account: ', error)
       setError(error as AuthError)
     }
   }
 
   const linkGoogleAccount = async () => {
     if (!user) {
-      console.log('No user found to link Apple account to')
+      console.log('No user found')
       return
     }
-    console.log('Linking Google account...')
     await signIn()
-    console.log('Sign in request:', request)
     if (!request) {
-      console.log('No request available for Google sign-in')
+      Alert.alert('Error', 'Failed to sign in with Google. Please try again.')
       return
     }
 
@@ -541,19 +534,106 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         )
 
-        console.log('Link Google account response:', response)
-
         if (response.status === 200) {
-          setUser({ ...user, providers: [...user.providers, 'google'] })
+          const { updatedLinkedAccount } = await response.json()
+          setUser({
+            ...user,
+            providers: [
+              ...user.providers,
+              {
+                name: 'google',
+                email: updatedLinkedAccount.providerEmail,
+                id: updatedLinkedAccount.providerId,
+              },
+            ],
+          })
           Alert.alert(
             'Success',
             'Google account successfully linked. You can now sign in with Google.'
           )
         }
       } catch (error) {
-        console.log('Error linking Google account: ', error)
         setError(error as AuthError)
+        console.log('Error linking Google account:', error)
       }
+    }
+  }
+
+  const promptAppleReAuth = async (): Promise<Boolean> => {
+    return new Promise((resolve) => {
+      Alert.alert(
+        'Sign in with Apple',
+        'You must sign in with Apple to delete your account.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Sign In',
+            onPress: async () => {
+              resolve(true)
+            },
+          },
+        ],
+        { cancelable: true }
+      )
+    })
+  }
+
+  const deleteAccount = async () => {
+    if (!user) {
+      return
+    }
+
+    try {
+      // if auth User provider == apple, send refresh token, else prompt login to get refresh token
+      let appleRefreshToken =
+        authUser?.provider == 'apple' ? refreshToken : null
+
+      if (
+        !appleRefreshToken &&
+        user.providers.some((p) => p.name === 'apple')
+      ) {
+        const confirm = await promptAppleReAuth()
+        if (!confirm) return
+
+        const tokens = await signInWithApple(true)
+        if (!tokens.refreshToken) {
+          Alert.alert(
+            'Error',
+            'Failed to sign in with Apple. Please try again.'
+          )
+          return
+        }
+        appleRefreshToken = tokens.refreshToken
+      }
+
+      setIsLoading(true)
+
+      const response = await fetchWithAuth(`${BASE_URL}/api/users/${user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ appleRefreshToken }),
+      })
+
+      if (response.status === 200) {
+        router.back()
+        signOut()
+        Alert.alert(
+          'Account Deleted',
+          'Your account has been successfully deleted.'
+        )
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred while deleting your account.'
+      )
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -567,6 +647,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchWithAuth,
         linkAppleAccount,
         linkGoogleAccount,
+        deleteAccount,
         isLoading,
         error,
       }}

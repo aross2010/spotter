@@ -66,11 +66,15 @@ export const POST = withAuth(async (req, user) => {
       )
     }
 
-    const updatedLinkedAccount = await db.insert(userProviders).values({
-      userId: id,
-      provider: 'google',
-      providerId,
-    })
+    const [updatedLinkedAccount] = await db
+      .insert(userProviders)
+      .values({
+        userId: id,
+        provider: 'google',
+        providerId,
+        providerEmail: (userInfo as { email: string }).email,
+      })
+      .returning()
 
     if (!updatedLinkedAccount) {
       return NextResponse.json(
@@ -79,10 +83,7 @@ export const POST = withAuth(async (req, user) => {
       )
     }
 
-    return NextResponse.json(
-      { message: 'Google account linked successfully', providerId },
-      { status: 200 }
-    )
+    return NextResponse.json({ updatedLinkedAccount }, { status: 200 })
   } catch (error) {
     console.error('Error fetching Google token:', error)
     return NextResponse.json(

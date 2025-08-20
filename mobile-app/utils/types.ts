@@ -1,10 +1,10 @@
 export type Providers = 'apple' | 'google'
 
-export type UserProviders = {
-  provider: Providers
-  providerId: string
-  userId: string
-}[]
+export type Provider = {
+  id: string
+  name: Providers
+  email: string
+}
 
 export type User = {
   id: string
@@ -18,5 +18,5 @@ export type CompleteUser = {
   firstName: string
   lastName?: string
   email: string
-  providers: UserProviders
+  providers: Provider[]
 }

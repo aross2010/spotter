@@ -10,7 +10,7 @@ export function SignInWithAppleIos() {
       buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
       cornerRadius={9999}
       style={{ width: '100%', height: 52 }}
-      onPress={signInWithApple}
+      onPress={() => signInWithApple(false)}
     />
   )
 }

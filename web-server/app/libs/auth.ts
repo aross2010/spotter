@@ -10,3 +10,8 @@ export const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!
 export const APP_SCHEME = process.env.NEXT_PUBLIC_APP_SCHEME!
 export const JWT_SECRET = process.env.JWT_SECRET!
+
+export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID!
+export const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID!
+export const APPLE_KEY_ID = process.env.APPLE_KEY_ID!
+export const APPLE_PRIVATE_KEY_P8 = process.env.APPLE_PRIVATE_KEY_P8!

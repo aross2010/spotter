@@ -5,9 +5,15 @@ import { users } from '@/src/db/schema'
 import { eq } from 'drizzle-orm'
 import isEmail from 'validator/lib/isEmail'
 import { withAuth } from '../../middleware'
+import { SignJWT, importPKCS8 } from 'jose'
+import {
+  APPLE_CLIENT_ID,
+  APPLE_KEY_ID,
+  APPLE_PRIVATE_KEY_P8,
+  APPLE_TEAM_ID,
+} from '@/app/libs/auth'
 
 export const GET = withAuth(async (req, user) => {
-  console.log('GET user route called with user: ', user)
   const id = req.url.split('/').pop() // Extract user ID from the URL
 
   if (!id) {
@@ -38,12 +44,19 @@ export const GET = withAuth(async (req, user) => {
         id: true,
         provider: true,
         providerId: true,
+        providerEmail: true,
       },
     })
 
     const completeUser = {
       ...user,
-      providers: providers.map((p) => p.provider),
+      providers: providers.map((p) => {
+        return {
+          id: p.id,
+          name: p.provider,
+          email: p.providerEmail,
+        }
+      }),
     }
 
     return NextResponse.json(completeUser, { status: 200 })
@@ -156,9 +169,10 @@ export async function PUT(req: Request, props: { params: Params }) {
   }
 }
 
-export async function DELETE(req: Request, props: { params: Params }) {
-  const params = await props.params
-  const id = params.id as string
+export const DELETE = withAuth(async (req, user) => {
+  const id = req.url.split('/').pop() as string
+  const data = await req.json()
+  let { appleRefreshToken } = data
 
   // https://developer.apple.com/documentation/signinwithapplerestapi/revoke_tokens
   // for when a user deletes their apple account, revoke their tokens
@@ -167,6 +181,62 @@ export async function DELETE(req: Request, props: { params: Params }) {
   }
 
   try {
+    const userProviders = await db.query.userProviders.findMany({
+      where: (up, { and, eq }) => eq(up.userId, id),
+    })
+
+    const hasAppleProvider = userProviders.some(
+      (provider) => provider.provider === 'apple'
+    )
+
+    if (hasAppleProvider) {
+      // revoke apple tokens
+      if (!appleRefreshToken) {
+        console.log('No apple refresh token provided')
+        // user made the request from a google account, but has their apple account linked
+        return NextResponse.json(
+          { error: 'Refresh token is required' },
+          { status: 400 }
+        )
+      }
+
+      console.log(APPLE_PRIVATE_KEY_P8)
+
+      const pem = APPLE_PRIVATE_KEY_P8.replace(/\\n/g, '\n')
+      const privateKey = await importPKCS8(pem, 'ES256')
+      const clientSecret = await new SignJWT({})
+        .setProtectedHeader({ alg: 'ES256', kid: APPLE_KEY_ID })
+        .setIssuer(APPLE_TEAM_ID) // iss
+        .setSubject(APPLE_CLIENT_ID) // sub = your Bundle ID (iOS) or Services ID (web)
+        .setAudience('https://appleid.apple.com') // aud
+        .setIssuedAt()
+        .setExpirationTime('180d')
+        .sign(privateKey)
+
+      // hit revoke enpoint
+      const response = await fetch(`https://appleid.apple.com/auth/revoke`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          token: appleRefreshToken,
+          client_id: APPLE_CLIENT_ID,
+          client_secret: clientSecret,
+          token_type_hint: 'refresh_token',
+        }).toString(),
+      })
+
+      console.log('Apple revoke response: ', response)
+
+      if (response.status !== 200) {
+        return NextResponse.json(
+          { error: 'Failed to revoke Apple tokens' },
+          { status: 400 }
+        )
+      }
+    }
+
     const [deletedUser] = await db
       .delete(users)
       .where(eq(users.id, id))
@@ -176,13 +246,7 @@ export async function DELETE(req: Request, props: { params: Params }) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(
-      {
-        message: 'User deleted successfully',
-        userId: deletedUser.id,
-      },
-      { status: 200 }
-    )
+    return NextResponse.json({ deletedUser }, { status: 200 })
   } catch (error) {
     console.error(error)
     return NextResponse.json(
@@ -190,4 +254,4 @@ export async function DELETE(req: Request, props: { params: Params }) {
       { status: 500 }
     )
   }
-}
+})

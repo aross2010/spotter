@@ -7,7 +7,7 @@ import { userProviders } from '@/src/db/schema'
 export const POST = withAuth(async (req, user) => {
   const id = req.url.split('/').pop() as string
   const data = await req.json()
-  const { providerId } = data
+  const { providerId, providerEmail } = data
 
   console.log(providerId, id)
 
@@ -38,11 +38,15 @@ export const POST = withAuth(async (req, user) => {
       )
     }
 
-    const updatedLinkedAccount = await db.insert(userProviders).values({
-      userId: id,
-      provider: 'apple',
-      providerId,
-    })
+    const [updatedLinkedAccount] = await db
+      .insert(userProviders)
+      .values({
+        userId: id,
+        provider: 'apple',
+        providerId,
+        providerEmail,
+      })
+      .returning()
 
     if (!updatedLinkedAccount) {
       return NextResponse.json(
@@ -51,10 +55,7 @@ export const POST = withAuth(async (req, user) => {
       )
     }
 
-    return NextResponse.json(
-      { message: 'Apple account linked successfully', providerId },
-      { status: 200 }
-    )
+    return NextResponse.json({ updatedLinkedAccount }, { status: 200 })
   } catch (error) {
     console.error(error)
     return NextResponse.json(

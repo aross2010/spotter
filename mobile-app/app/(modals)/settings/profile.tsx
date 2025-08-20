@@ -8,6 +8,7 @@ import Button from '../../../components/button'
 import { BASE_URL } from '../../../constants/auth'
 import { toast } from '../../../utils/toast'
 import { useUserStore } from '../../../stores/user-store'
+import { tokenCache } from '../../../utils/cache'
 
 const profileFields = [
   {
@@ -33,16 +34,6 @@ const profileFields = [
   },
 ] as const
 
-const listWithAnd = (items: string[]) => {
-  const arr = items.filter(Boolean)
-  if (arr.length === 0) return ''
-  if (arr.length === 1) return arr[0]
-  if (arr.length === 2) return `${arr[0]} and ${arr[1]}`
-  return `${arr.slice(0, -1).join(', ')}, and ${arr[arr.length - 1]}`
-}
-
-const cap = (s: string) => s.replace(/^./, (c) => c.toUpperCase())
-
 const Profile = () => {
   const { fetchWithAuth } = useAuth()
   const { user, setUser } = useUserStore()
@@ -62,9 +53,6 @@ const Profile = () => {
     if (hasChanges) setCanSubmit(true)
     else setCanSubmit(false)
   }, [userData])
-
-  const hasProvider = user?.providers && user.providers.length > 0
-  const providerDisplay = hasProvider && listWithAnd(user.providers.map(cap))
 
   const updateProfile = async () => {
     // ensure that user data is valid and has been changed
@@ -116,14 +104,9 @@ const Profile = () => {
           onChangeText={(text) =>
             setUserData({ ...userData, [field.name]: text })
           }
-          editable={field.name !== 'email' && hasProvider}
+          editable={field.name !== 'email'}
           {...field}
         />
-        {field.name === 'email' && hasProvider && (
-          <Txt className="text-sm -mt-2 text-light-grayText dark:text-dark-grayText">
-            Email address managed by {providerDisplay}.
-          </Txt>
-        )}
       </Fragment>
     )
   })

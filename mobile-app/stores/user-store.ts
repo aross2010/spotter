@@ -1,18 +1,17 @@
-import { version } from 'react'
 import { MMKV } from 'react-native-mmkv'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
+import { Provider } from '../utils/types'
 
 type WeightMetric = 'lbs' | 'kgs'
 type IntensityMetric = 'rpe' | 'rir'
-type Providers = 'google' | 'apple'
 
 export type UserProfile = {
   id: string | null
   firstName: string
   lastName?: string
   email: string
-  providers: Providers[]
+  providers: Provider[]
 }
 
 type UserPreferences = {
@@ -77,11 +76,9 @@ export const useUserStore = create<UserStore>()(
                   : undefined,
             email: u && u.email ? u.email.trim() : s.user ? s.user.email : '',
             providers:
-              u && Array.isArray(u.providers)
-                ? u.providers
-                : s.user && Array.isArray(s.user.providers)
-                  ? s.user.providers
-                  : [],
+              u && Object.prototype.hasOwnProperty.call(u, 'providers')
+                ? (u.providers ?? [])
+                : (s.user?.providers ?? []),
           },
         })),
       setPreferences: (p) =>

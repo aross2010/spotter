@@ -86,6 +86,7 @@ export async function POST(request: Request) {
           email: user.email,
           provider: user.provider,
           providerId: user.providerId,
+          providerEmail: user.email,
         }),
       })
 
