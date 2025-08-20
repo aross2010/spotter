@@ -23,7 +23,7 @@ type UserPreferences = {
 type UserStore = {
   user: UserProfile | null
   preferences: UserPreferences | null
-  setUserProfile: (user: UserProfile | null) => void
+  setUser: (user: UserProfile | null) => void
   setPreferences: (preferences: UserPreferences | null) => void
   clearUserStore: () => void
 }
@@ -52,7 +52,7 @@ export const useUserStore = create<UserStore>()(
     (set) => ({
       user: initialUser,
       preferences: initialUserPreferences,
-      setUserProfile: (u) =>
+      setUser: (u) =>
         set((s) => ({
           user: {
             id:

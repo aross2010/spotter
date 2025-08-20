@@ -33,22 +33,26 @@ export type AuthUser = {
 }
 
 type AuthContextType = {
-  user: AuthUser | null
+  authUser: AuthUser | null
   signIn: () => void | Promise<void>
   signOut: () => void | Promise<void>
   signInWithApple: () => void | Promise<void>
   fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>
+  linkAppleAccount: () => Promise<void>
+  linkGoogleAccount: () => Promise<void>
   isLoading: boolean
   error: AuthError | null
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
+  authUser: null,
   signIn: () => {},
   signOut: () => {},
   signInWithApple: () => {},
   fetchWithAuth: (url: string, options: RequestInit) =>
     Promise.resolve(new Response()),
+  linkAppleAccount: async () => {},
+  linkGoogleAccount: async () => {},
   isLoading: false,
   error: null,
 })
@@ -65,7 +69,7 @@ const discovery: DiscoveryDocument = {
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
@@ -74,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [request, response, promptAsync] = useAuthRequest(config, discovery)
   const refreshInProgressRef = useRef(false)
   const router = useRouter()
-  const { setUserProfile, clearUserStore } = useUserStore()
+  const { setUser, user, clearUserStore } = useUserStore()
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -99,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setRefreshToken(storedRefreshToken)
               }
 
-              setUser(decoded)
+              setAuthUser(decoded)
             } else if (storedRefreshToken) {
               // access token expired, but we have a refresh token
               setRefreshToken(storedRefreshToken)
@@ -130,7 +134,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [])
 
   useEffect(() => {
-    handleResponse()
+    // case where user is just linking their account and has accessToken, do not complete sign in
+    if (!accessToken) handleResponse()
   }, [response])
 
   // Function to refresh the access token
@@ -198,7 +203,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (newAccessToken) {
         const decoded = jose.decodeJwt(newAccessToken)
         // Check if we have all required user fields
-        setUser(decoded as AuthUser)
+        setAuthUser(decoded as AuthUser)
       }
 
       return newAccessToken // Return the new access token
@@ -264,7 +269,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('Signing out in context...')
     await tokenCache?.deleteToken(TOKEN_KEY_NAME)
     await tokenCache?.deleteToken(REFRESH_TOKEN_KEY_NAME)
-    setUser(null)
+    setAuthUser(null)
     setAccessToken(null)
     setRefreshToken(null)
     clearUserStore()
@@ -418,8 +423,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (newAccessToken) {
       const decoded = jose.decodeJwt(newAccessToken)
       const user = decoded as AuthUser
-      setUser(user)
-      await getAndSetUserProfile(user.id, newAccessToken)
+      setAuthUser(user)
+      await getAndSetUser(user.id, newAccessToken)
     }
   }
 
@@ -449,11 +454,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return response
   }
 
-  // for user store
-  const getAndSetUserProfile = async (
-    userId: string,
-    newAccessToken: string
-  ) => {
+  // for user store when a user logs in
+  const getAndSetUser = async (userId: string, newAccessToken: string) => {
     console.log('Fetching user profile for userId: ', userId)
     try {
       const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
@@ -465,20 +467,106 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       })
       const userProfile = (await response.json()) as UserProfile
       console.log('Fetched user profile: ', userProfile)
-      setUserProfile(userProfile)
+      setUser(userProfile)
     } catch (error) {
       console.log('Error fetching user profile: ', error)
+    }
+  }
+
+  const linkAppleAccount = async () => {
+    if (!user) {
+      console.log('No user found to link Apple account to')
+      return
+    }
+
+    const rawNonce = randomUUID()
+    const credential = await AppleAuthentication.signInAsync({
+      nonce: rawNonce,
+    })
+    const providerId = credential.user
+
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/users/link/apple/${user.id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            providerId,
+          }),
+        }
+      )
+
+      console.log('Link Apple account response:', response)
+
+      if (response.status === 200) {
+        setUser({ ...user, providers: [...user.providers, 'apple'] })
+        Alert.alert(
+          'Success',
+          'Apple account successfully linked. You can now sign in with Apple.'
+        )
+      }
+    } catch (error) {
+      console.log('Error linking Apple account: ', error)
+      setError(error as AuthError)
+    }
+  }
+
+  const linkGoogleAccount = async () => {
+    if (!user) {
+      console.log('No user found to link Apple account to')
+      return
+    }
+    console.log('Linking Google account...')
+    await signIn()
+    console.log('Sign in request:', request)
+    if (!request) {
+      console.log('No request available for Google sign-in')
+      return
+    }
+
+    if (response?.type === 'success') {
+      const { code } = response.params
+      try {
+        const response = await fetchWithAuth(
+          `${BASE_URL}/api/users/link/google/${user.id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code }),
+          }
+        )
+
+        console.log('Link Google account response:', response)
+
+        if (response.status === 200) {
+          setUser({ ...user, providers: [...user.providers, 'google'] })
+          Alert.alert(
+            'Success',
+            'Google account successfully linked. You can now sign in with Google.'
+          )
+        }
+      } catch (error) {
+        console.log('Error linking Google account: ', error)
+        setError(error as AuthError)
+      }
     }
   }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        authUser,
         signIn,
         signOut,
         signInWithApple,
         fetchWithAuth,
+        linkAppleAccount,
+        linkGoogleAccount,
         isLoading,
         error,
       }}

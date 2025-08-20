@@ -33,9 +33,19 @@ const profileFields = [
   },
 ] as const
 
+const listWithAnd = (items: string[]) => {
+  const arr = items.filter(Boolean)
+  if (arr.length === 0) return ''
+  if (arr.length === 1) return arr[0]
+  if (arr.length === 2) return `${arr[0]} and ${arr[1]}`
+  return `${arr.slice(0, -1).join(', ')}, and ${arr[arr.length - 1]}`
+}
+
+const cap = (s: string) => s.replace(/^./, (c) => c.toUpperCase())
+
 const Profile = () => {
   const { fetchWithAuth } = useAuth()
-  const { user, setUserProfile } = useUserStore()
+  const { user, setUser } = useUserStore()
   const [userData, setUserData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -54,11 +64,7 @@ const Profile = () => {
   }, [userData])
 
   const hasProvider = user?.providers && user.providers.length > 0
-  const providerDisplay = hasProvider
-    ? user.providers
-        .map((p) => p.replace(/^./, (c) => c.toUpperCase()))
-        .join(', ')
-    : ''
+  const providerDisplay = hasProvider && listWithAnd(user.providers.map(cap))
 
   const updateProfile = async () => {
     // ensure that user data is valid and has been changed
@@ -83,7 +89,7 @@ const Profile = () => {
         lastName: string
       }
       if (user)
-        setUserProfile({
+        setUser({
           ...user,
           firstName: updatedUser.firstName,
           lastName: updatedUser.lastName,

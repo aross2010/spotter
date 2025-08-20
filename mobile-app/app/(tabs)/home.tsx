@@ -35,5 +35,4 @@ const Home = () => {
     </SafeView>
   )
 }
-;``
 export default Home

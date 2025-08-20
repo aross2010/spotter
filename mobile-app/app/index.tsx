@@ -4,22 +4,22 @@ import { useAuth } from '../context/auth-context'
 import Loading from '../components/loading'
 
 export default function Index() {
-  const { user, isLoading } = useAuth()
+  const { authUser, isLoading } = useAuth()
 
-  console.log('User:', user)
+  console.log('authUser:', authUser)
   console.log('Is loading:', isLoading)
 
   if (isLoading) {
-    console.log('User is loading, showing loading screen...')
-    return <Loading />
+    console.log('authUser is loading, showing loading screen...')
+    return <Loading visible />
   }
 
-  if (user) {
-    console.log('User is authenticated, redirecting to their home.')
+  if (authUser) {
+    console.log('authUser is authenticated, redirecting to their home.')
     return <Redirect href="/home" />
   }
 
-  console.log('User is not authenticated, showing auth screen.')
+  console.log('authUser is not authenticated, showing auth screen.')
 
   return <Auth />
 }

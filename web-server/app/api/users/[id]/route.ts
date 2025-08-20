@@ -10,8 +10,6 @@ export const GET = withAuth(async (req, user) => {
   console.log('GET user route called with user: ', user)
   const id = req.url.split('/').pop() // Extract user ID from the URL
 
-  console.log('Fetching user data for user: ', user)
-
   if (!id) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
   }
