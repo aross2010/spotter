@@ -2,10 +2,26 @@ import React from 'react'
 import { StatusBar } from 'expo-status-bar'
 import useTheme from '../app/hooks/theme'
 
-const ThemedStatusBar = () => {
+type ThemedStatusBarProps = {
+  override?: 'light' | 'dark' | 'auto'
+}
+
+const ThemedStatusBar = ({ override }: ThemedStatusBarProps) => {
   const { colorScheme } = useTheme()
 
-  return <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+  const getStatusBarStyle = () => {
+    if (override && override !== 'auto') {
+      return override
+    }
+    return colorScheme === 'dark' ? 'light' : 'dark'
+  }
+
+  return (
+    <StatusBar
+      animated
+      style={getStatusBarStyle()}
+    />
+  )
 }
 
 export default ThemedStatusBar

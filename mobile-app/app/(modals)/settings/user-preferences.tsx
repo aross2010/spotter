@@ -10,6 +10,7 @@ import { useState, useRef, useEffect } from 'react'
 const preferenceOptions = [
   {
     title: 'Theme',
+    subtitle: null,
     options: [
       {
         value: 'light',
@@ -28,6 +29,7 @@ const preferenceOptions = [
   },
   {
     title: 'Weight Metric',
+    subtitle: null,
     options: [
       {
         value: 'lbs',
@@ -42,6 +44,7 @@ const preferenceOptions = [
   },
   {
     title: 'Intensity Metric',
+    subtitle: null,
     options: [
       {
         value: 'rir',
@@ -75,7 +78,14 @@ const UserPreferences = () => {
         key={pref.type}
         style={tw`gap-4`}
       >
-        <Txt twcn="text-base font-poppinsSemiBold">{pref.title}</Txt>
+        <View>
+          <Txt twcn="text-base font-poppinsSemiBold">{pref.title}</Txt>
+          {pref.subtitle && (
+            <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mt-1">
+              {pref.subtitle}
+            </Txt>
+          )}
+        </View>
         <View style={tw`flex-row justify-between gap-3`}>
           {pref.options.map((option) => {
             const isSelected = localPreferences[pref.type] === option.value

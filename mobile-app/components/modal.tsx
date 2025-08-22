@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal'
+import useTheme from '../app/hooks/theme'
 
 type ModalProps = {
   isOpen: boolean
@@ -28,5 +29,3 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
 }
 
 export default MyModal
-
-const styles = StyleSheet.create({})

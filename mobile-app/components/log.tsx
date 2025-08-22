@@ -68,12 +68,16 @@ const Log = ({ setIsOpen }: LogProps) => {
   )
 
   return (
-    <View className="bg-light-background dark:bg-dark-background rounded-lg px-4 pt-10 pb-12 gap-4 relative">
-      <View className="absolute h-2 bg-grayTertiary w-1/4 rounded-full mt-2 self-center" />
-      <Txt twcn="text-primary text-xl text-center font-geologicaSemiBold">
+    <View
+      style={tw`bg-light-background dark:bg-dark-background rounded-lg px-4 pt-10 pb-12 gap-4 relative`}
+    >
+      <View
+        style={tw`absolute h-2 bg-light-grayTertiary dark:bg-dark-grayTertiary w-1/4 rounded-full mt-3 self-center`}
+      />
+      <Txt twcn="text-primary dark:text-primary text-xl text-center font-geologicaSemiBold">
         What would you like to log?
       </Txt>
-      <View className="flex-col gap-2">{renderedElements}</View>
+      <View style={tw`flex-col gap-2`}>{renderedElements}</View>
     </View>
   )
 }

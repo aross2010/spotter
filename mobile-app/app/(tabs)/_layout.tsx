@@ -35,7 +35,7 @@ const TabsLayout = () => {
             height={90}
             paddingTop={10}
             barColor={theme.background}
-            indicatorColor={Colors.primary}
+            indicatorColor={theme.text}
           />
         )}
         screenOptions={{
@@ -129,7 +129,6 @@ const TabsLayout = () => {
           listeners={{
             tabPress: (e) => {
               e.preventDefault()
-              console.log('Log tab pressed')
               setIsLogModalOpen(true)
             },
           }}
