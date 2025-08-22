@@ -5,6 +5,7 @@ import { BookOpen, Calendar, PersonStanding } from 'lucide-react-native'
 import Colors from '../constants/colors'
 import Button from './button'
 import { router } from 'expo-router'
+import tw from '../tw'
 
 type LogProps = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -48,7 +49,7 @@ const Log = ({ setIsOpen }: LogProps) => {
         >
           <View
             key={index}
-            className="bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg px-4 py-6 flex-row gap-6 items-center"
+            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg px-4 py-6 flex-row gap-6 items-center`}
           >
             <Icon
               color={Colors.primary}
@@ -56,11 +57,9 @@ const Log = ({ setIsOpen }: LogProps) => {
               width={28}
             />
 
-            <View className="gap-1 flex-1">
-              <Txt className="font-poppinsSemiBold text-lg">{title}</Txt>
-              <Txt className="text-light-grayText dark:text-dark-grayText">
-                {description}
-              </Txt>
+            <View style={tw`flex-1 gap-1`}>
+              <Txt twcn="font-poppinsSemiBold text-base">{title}</Txt>
+              <Txt twcn="text-grayText">{description}</Txt>
             </View>
           </View>
         </Button>
@@ -70,8 +69,8 @@ const Log = ({ setIsOpen }: LogProps) => {
 
   return (
     <View className="bg-light-background dark:bg-dark-background rounded-lg px-4 pt-10 pb-12 gap-4 relative">
-      <View className="absolute h-2 bg-light-grayTertiary w-1/4 dark:bg-dark-grayTertiary rounded-full mt-2 self-center" />
-      <Txt className="text-primary font-geologicaSemiBold text-2xl text-center">
+      <View className="absolute h-2 bg-grayTertiary w-1/4 rounded-full mt-2 self-center" />
+      <Txt twcn="text-primary text-xl text-center font-geologicaSemiBold">
         What would you like to log?
       </Txt>
       <View className="flex-col gap-2">{renderedElements}</View>
@@ -80,5 +79,3 @@ const Log = ({ setIsOpen }: LogProps) => {
 }
 
 export default Log
-
-const styles = StyleSheet.create({})

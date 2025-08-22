@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { Link, Redirect, router, Tabs } from 'expo-router'
 import Modal from 'react-native-modal'
@@ -18,30 +18,36 @@ import TopIndicatorTabBar from '../../components/tabbar'
 import TextLogo from '../../assets/spotter-text-logo.svg'
 import Log from '../../components/log'
 import MyModal from '../../components/modal'
+import useTheme from '../hooks/theme'
 
 // the main dashboard layout for the app for a logged in user
 
 const TabsLayout = () => {
-  const colorScheme = useColorScheme() ?? 'light'
-  const theme = Colors[colorScheme] ?? Colors.light
+  const { theme } = useTheme()
   const [isLogModalOpen, setIsLogModalOpen] = useState(false)
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <Tabs
         tabBar={(props) => (
           <TopIndicatorTabBar
             {...props}
             height={90}
             paddingTop={10}
+            barColor={theme.background}
+            indicatorColor={Colors.primary}
           />
         )}
         screenOptions={{
           headerShadowVisible: false,
           animation: 'fade',
+          headerStyle: {
+            backgroundColor: theme.background,
+          },
           headerTitleStyle: {
             fontSize: 22,
             fontFamily: 'Geologica_600SemiBold',
+            color: theme.text,
           },
         }}
       >
@@ -179,7 +185,7 @@ const TabsLayout = () => {
       >
         <Log setIsOpen={setIsLogModalOpen} />
       </MyModal>
-    </>
+    </View>
   )
 }
 

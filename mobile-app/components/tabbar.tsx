@@ -12,6 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BlurView } from 'expo-blur'
 import Colors from '../constants/colors'
 import Txt from './text'
+import useTheme from '../app/hooks/theme'
+import tw from '../tw'
 
 type Props = BottomTabBarProps & {
   barColor?: string
@@ -44,6 +46,7 @@ export default function TopIndicatorTabBar({
   const translateX = React.useRef(new Animated.Value(0)).current
   const count = state.routes.length
   const tabW = count > 0 ? w / count : 0
+  const { theme } = useTheme()
 
   React.useEffect(() => {
     Animated.spring(translateX, {
@@ -137,13 +140,16 @@ export default function TopIndicatorTabBar({
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             onLongPress={onLongPress}
-            className={`flex-1 items-center justify-end h-16`}
+            style={tw`flex-1 items-center justify-end h-16`}
           >
             {icon}
-
             <Txt
               numberOfLines={1}
-              className={` text-xs transition-all ${!isFocused ? 'text-light-grayText dark:text-dark-grayText' : 'text-light-text dark:text-dark-text'}`}
+              twcn={`text-xs ${
+                !isFocused
+                  ? 'text-light-grayText dark:text-dark-grayText'
+                  : 'text-light-text dark:text-dark-text'
+              }`}
             >
               {label}
             </Txt>

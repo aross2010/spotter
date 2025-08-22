@@ -1,7 +1,8 @@
 import SafeView from '../../components/safe-view'
-import { useAuth } from '../../context/auth-context'
 import Txt from '../../components/text'
+import useTheme from '../hooks/theme'
 import { useUserStore } from '../../stores/user-store'
+import tw from '../../tw'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -14,6 +15,7 @@ function getGreeting(d: Date = new Date()) {
 
 const Home = () => {
   const { user } = useUserStore()
+  const { theme } = useTheme()
 
   // day (abbreviated). month, day, year
   const formattedDate = new Date().toLocaleDateString('en-US', {
@@ -23,13 +25,12 @@ const Home = () => {
     day: 'numeric',
   })
   const greeting = getGreeting()
-
   return (
     <SafeView>
-      <Txt className="uppercase text-light-grayText text-sm">
+      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
         {formattedDate}
       </Txt>
-      <Txt className="text-2xl mb-4 font-poppinsMedium">
+      <Txt twcn="text-xl font-poppinsMedium">
         {greeting}, {user?.firstName} 👋
       </Txt>
     </SafeView>

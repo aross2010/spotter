@@ -115,8 +115,8 @@ const Profile = () => {
     <SafeView noScroll>
       <View className="flex-col gap-4">{renderedFields}</View>
       <Button
-        textClassName="text-light-background font-poppinsSemiBold"
-        className="bg-primary rounded-full p-4 w-full items-center justify-center mt-auto"
+        twcnText="text-light-background dark:text-light-background font-poppinsSemiBold"
+        twcn="bg-primary rounded-full p-4 w-full items-center justify-center mt-auto"
         onPress={updateProfile}
         loading={loading}
         disabled={!canSubmit || loading}

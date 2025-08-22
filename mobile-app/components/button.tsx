@@ -1,31 +1,31 @@
 import { Text, Pressable, PressableProps } from 'react-native'
 import React, { ReactNode } from 'react'
+import Txt from './text'
+import tw from '../tw'
 
 type ButtonProps = {
   children?: ReactNode
   text?: string
-  textClassName?: string
-  className?: string
+  twcnText?: string
+  twcn?: string
   loading?: boolean
 } & PressableProps
 
 const Button = ({
   children,
   text,
-  textClassName,
-  className,
+  twcnText,
+  twcn,
   loading,
   ...props
 }: ButtonProps) => {
   if (text) {
     return (
       <Pressable
-        className={`active:opacity-75 disabled:opacity-50 ${className}`}
+        style={tw`active:opacity-75 disabled:opacity-50 ${twcn ?? ''}`}
         {...props}
       >
-        <Text className={`${textClassName}`}>
-          {loading ? 'Loading...' : text}
-        </Text>
+        <Txt twcn={twcnText}>{loading ? 'Loading...' : text}</Txt>
         {children}
       </Pressable>
     )
@@ -33,7 +33,7 @@ const Button = ({
 
   return (
     <Pressable
-      className={`active:opacity-75 disabled:opacity-50 ${className}`}
+      style={tw`active:opacity-75 disabled:opacity-50 ${twcn ?? ''}`}
       {...props}
     >
       {children}

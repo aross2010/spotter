@@ -3,10 +3,12 @@ import React from 'react'
 import { router, Stack } from 'expo-router'
 import Button from '../../../components/button'
 import Colors from '../../../constants/colors'
-import useTheme from '../../../context/theme'
+import useTheme from '../../hooks/theme'
+import tw from '../../../tw'
 
 const SettingsLayout = () => {
   const { theme } = useTheme()
+
   return (
     <Stack
       screenOptions={{
@@ -17,11 +19,14 @@ const SettingsLayout = () => {
         },
         headerBackButtonDisplayMode: 'default',
         headerShadowVisible: false,
+        headerStyle: {
+          backgroundColor: theme.background,
+        },
         headerBackTitleStyle: {
           fontSize: 16,
           fontFamily: 'Poppins_500Medium',
         },
-        headerTintColor: `${Colors.primary}`,
+        headerTintColor: Colors.primary,
       }}
     >
       <Stack.Screen
@@ -33,7 +38,7 @@ const SettingsLayout = () => {
               onPress={() => router.back()}
               hitSlop={12}
               accessibilityLabel="close modal"
-              textClassName="text-lg text-primary font-poppinsMedium"
+              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
               text="Close"
             />
           ),
@@ -52,15 +57,9 @@ const SettingsLayout = () => {
         }}
       />
       <Stack.Screen
-        name="theme-selector"
+        name="user-preferences"
         options={{
-          headerTitle: 'Theme Selector',
-        }}
-      />
-      <Stack.Screen
-        name="workout-preferences"
-        options={{
-          headerTitle: 'Workout Preferences',
+          headerTitle: 'Preferences',
         }}
       />
       <Stack.Screen

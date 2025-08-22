@@ -4,10 +4,12 @@ import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router } from 'expo-router'
 import { ArrowRight, ChevronRight } from 'lucide-react-native'
-import useTheme from '../../../context/theme'
+import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
 import Colors from '../../../constants/colors'
+import { useUserStore } from '../../../stores/user-store'
+import tw from '../../../tw'
 
 const settingsData = [
   {
@@ -31,15 +33,9 @@ const settingsData = [
     sectionTitle: 'User Experience',
     options: [
       {
-        label: 'Theme',
+        label: 'Preferences',
         onPress: () => {
-          router.push('/settings/theme-selector')
-        },
-      },
-      {
-        label: 'Workout Preferences', // weight (lbs or kg), intensity (rpe, rir)
-        onPress: () => {
-          router.push('/settings/workout-preferences')
+          router.push('/settings/user-preferences')
         },
       },
     ],
@@ -79,41 +75,21 @@ const settingsData = [
       },
     ],
   },
+  {
+    sectionTitle: null,
+    options: [
+      {
+        label: 'Sign Out',
+        onPress: null,
+      },
+    ],
+  },
 ]
 
 const Settings = () => {
   const { theme } = useTheme()
   const { signOut, deleteAccount } = useAuth()
-
-  const renderedSettings = settingsData.map(
-    ({ sectionTitle, options }, index) => {
-      return (
-        <View
-          className="flex-col gap-4"
-          key={index}
-        >
-          <Txt className="text-lg font-poppinsMedium">{sectionTitle}</Txt>
-          <View className="bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg flex-col">
-            {options.map(({ label, onPress }, index) => {
-              return (
-                <Pressable
-                  key={index}
-                  onPress={onPress}
-                  className={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-graySecondary dark:border-dark-graySecondary'}`}
-                >
-                  <Txt className="text-base font-poppinsRegular">{label}</Txt>
-                  <ChevronRight
-                    strokeWidth={1.5}
-                    color={theme.grayText}
-                  />
-                </Pressable>
-              )
-            })}
-          </View>
-        </View>
-      )
-    }
-  )
+  const { preferences } = useUserStore()
 
   const promptDeleteAccount = async () => {
     Alert.alert(
@@ -166,27 +142,49 @@ const Settings = () => {
     ])
   }
 
+  const renderedSettings = settingsData.map(
+    ({ sectionTitle, options }, index) => {
+      return (
+        <View
+          style={tw`flex-col gap-4`}
+          key={index}
+        >
+          {sectionTitle && (
+            <Txt twcn="text-base font-poppinsMedium">{sectionTitle}</Txt>
+          )}
+          <View
+            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg flex-col`}
+          >
+            {options.map(({ label, onPress }, index) => {
+              return (
+                <Pressable
+                  key={index}
+                  onPress={onPress ? onPress : promptSignOut}
+                  style={tw`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-graySecondary dark:border-dark-graySecondary'}`}
+                >
+                  <Txt twcn="font-poppinsRegular">{label}</Txt>
+                  <ChevronRight
+                    strokeWidth={1.5}
+                    color={theme.grayText}
+                  />
+                </Pressable>
+              )
+            })}
+          </View>
+        </View>
+      )
+    }
+  )
+
   return (
     <SafeView>
-      <View className="flex-col gap-8">{renderedSettings}</View>
-      <View className="flex-row justify-between mt-4">
-        <Button
-          onPress={promptSignOut}
-          className="px-2 py-4 flex-row items-center gap-2"
-          text="Sign Out"
-          textClassName="font-poppinsMedium text-primary"
-        >
-          <ArrowRight
-            height={16}
-            width={16}
-            color={Colors.primary}
-          />
-        </Button>
+      <View style={tw`flex-col gap-8`}>{renderedSettings}</View>
+      <View style={tw`flex-row justify-between mt-4`}>
         <Button
           onPress={promptDeleteAccount}
-          className="px-2 py-4"
+          style={tw`px-2 py-4`}
           text="Delete Account"
-          textClassName="font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+          twcnText="font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         />
       </View>
     </SafeView>

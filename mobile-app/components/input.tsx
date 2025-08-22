@@ -4,21 +4,22 @@ import { useColorScheme } from 'react-native'
 import Colors from '../constants/colors'
 import { useState } from 'react'
 import Txt from './text'
+import tw from '../tw'
 
 type InputProps = {
-  className?: string
+  twcnInput?: string
   password?: boolean
   label?: string
-  labelClassName?: string
-  containerClassName?: string
+  twcnLabel?: string
+  twcnContainer?: string
 } & TextInputProps
 
 const Input = ({
-  className,
+  twcnInput,
   password,
   label,
-  labelClassName,
-  containerClassName,
+  twcnLabel,
+  twcnContainer,
   ...props
 }: InputProps) => {
   const colorScheme = useColorScheme() ?? 'light'
@@ -27,16 +28,18 @@ const Input = ({
 
   const standardInput = (
     <TextInput
-      className={`font-poppins border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg px-2 py-3 focus:border-primary ${props.editable ? '' : 'opacity-50'} ${className}`}
+      style={tw`font-poppins text-text dark:text-dark-text border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg px-2 py-3 focus:border-primary dark:focus:border-primary ${props.editable ? '' : 'opacity-50'} ${twcnInput ?? ''}`}
       {...props}
     />
   )
 
   const passwordInput = (
-    <View className="px-2 border border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg flex flex-row items-center gap-4">
+    <View
+      style={tw`px-2 border border-light-grayTertiary rounded-lg flex flex-row items-center gap-4`}
+    >
       <TextInput
         secureTextEntry={!isTextVisible}
-        className={`font-poppins flex-1 py-3 focus:border-primary ${props.editable ? '' : 'opacity-50'} ${className}`}
+        style={tw`font-poppins flex-1 py-3 focus:border-primary ${props.editable ? '' : 'opacity-50'} ${twcnInput ?? ''}`}
         {...props}
       />
       <Pressable
@@ -56,10 +59,8 @@ const Input = ({
   if (password) {
     if (label) {
       return (
-        <View className={`flex flex-col gap-2 ${containerClassName}`}>
-          <Txt
-            className={`${props.editable ? '' : 'opacity-50'} ${labelClassName}`}
-          >
+        <View style={tw`flex flex-col gap-2 ${twcnContainer ?? ''}`}>
+          <Txt twcn={`${props.editable ? '' : 'opacity-50'} ${twcnLabel}`}>
             {label}
           </Txt>
           {passwordInput}
@@ -72,10 +73,8 @@ const Input = ({
 
   if (label) {
     return (
-      <View className={`flex flex-col gap-2 ${containerClassName}`}>
-        <Txt
-          className={`${props.editable ? '' : 'opacity-50'} ${labelClassName}`}
-        >
+      <View style={tw`flex flex-col gap-2 ${twcnContainer ?? ''}`}>
+        <Txt twcn={`${props.editable ? '' : 'opacity-50'} ${twcnLabel}`}>
           {label}
         </Txt>
         {standardInput}

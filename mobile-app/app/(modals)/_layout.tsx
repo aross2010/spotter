@@ -1,13 +1,16 @@
 import { router, Stack } from 'expo-router'
-import { Pressable } from 'react-native'
-import Button from '../../components/button'
+import useTheme from '../hooks/theme'
 
 export default function ModalLayout() {
+  const { theme } = useTheme()
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         presentation: 'modal',
+        headerStyle: {
+          backgroundColor: theme.background,
+        },
       }}
     >
       <Stack.Screen

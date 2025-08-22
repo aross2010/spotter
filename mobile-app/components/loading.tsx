@@ -28,7 +28,7 @@ export default function Loading({
           },
         ]}
       >
-        <View className="bg-light-grayTertiary p-4 rounded-lg">
+        <View className="bg-grayTertiary p-4 rounded-lg">
           <ActivityIndicator
             size="large"
             color={Colors.light.grayText}

@@ -146,7 +146,7 @@ export function BackgroundDots({
   maxSize = 48,
   boundsPadding = 8,
   minGap = 8,
-  colorClass = 'bg-primary/20',
+  colorClass = 'bg-primary opacity-20',
   regenKey,
   speedMin = 20, // ~slow walk
   speedMax = 60, // a bit faster

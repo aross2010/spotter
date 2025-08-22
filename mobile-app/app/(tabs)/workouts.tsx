@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import TabWrapper from '../../components/safe-view'
+import SafeView from '../../components/safe-view'
 
 const Workouts = () => {
   return (
-    <TabWrapper>
+    <SafeView>
       <Text>Workouts</Text>
-    </TabWrapper>
+    </SafeView>
   )
 }
 

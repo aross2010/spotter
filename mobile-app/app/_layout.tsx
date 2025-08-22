@@ -40,10 +40,16 @@ import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import '../global.css'
-import { StatusBar } from 'expo-status-bar'
 import { toastConfig } from '../utils/toast'
+import { useDeviceContext } from 'twrnc'
+import tw from '../tw'
+import ThemedStatusBar from '../components/status-bar'
 
 const RootLayout = () => {
+  useDeviceContext(tw, {
+    observeDeviceColorSchemeChanges: false,
+    initialColorScheme: 'device',
+  })
   const [fontsLoaded] = useFonts({
     Poppins_100Thin,
     Poppins_100Thin_Italic,
@@ -75,14 +81,14 @@ const RootLayout = () => {
   })
 
   if (!fontsLoaded) {
-    return <Loading />
+    return <Loading visible />
   }
 
   return (
     <AuthProvider>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <StatusBar />
+          <ThemedStatusBar />
           <Stack
             screenOptions={{
               headerShown: false,

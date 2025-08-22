@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { StatusBar } from 'expo-status-bar'
+import useTheme from '../app/hooks/theme'
 
 const ThemedStatusBar = () => {
-  return <StatusBar style="auto" />
+  const { colorScheme } = useTheme()
+
+  return <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
 }
 
-export default StatusBar
-
-const styles = StyleSheet.create({})
+export default ThemedStatusBar

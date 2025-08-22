@@ -17,6 +17,7 @@ export type UserProfile = {
 type UserPreferences = {
   weightMetric: WeightMetric
   intensityMetric: IntensityMetric
+  colorScheme: 'dark' | 'light' | 'system'
 }
 
 type UserStore = {
@@ -37,6 +38,7 @@ const initialUser = {
 const initialUserPreferences: UserPreferences = {
   weightMetric: 'lbs',
   intensityMetric: 'rir',
+  colorScheme: 'system',
 }
 
 const kv = new MMKV({ id: 'spotter-user-store' })
@@ -92,6 +94,10 @@ export const useUserStore = create<UserStore>()(
               p?.intensityMetric ??
               s.preferences?.intensityMetric ??
               initialUserPreferences.intensityMetric,
+            colorScheme:
+              p?.colorScheme ??
+              s.preferences?.colorScheme ??
+              initialUserPreferences.colorScheme,
           },
         })),
       clearUserStore: () =>

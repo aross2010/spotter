@@ -1,17 +1,18 @@
 import { ScrollView, View, ViewProps } from 'react-native'
 import { ReactNode } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import tw from '../tw'
 
 type SafeViewProps = {
   children: ReactNode
-  className?: string
+  twcn?: string
   noHeader?: boolean
   noScroll?: boolean
 } & ViewProps
 
 const SafeView = ({
   children,
-  className,
+  twcn,
   noHeader,
   noScroll,
   ...rest
@@ -29,7 +30,10 @@ const SafeView = ({
   if (noScroll)
     return (
       <View
-        className={`bg-light-background dark:bg-dark-background flex-1 ${className}`}
+        style={tw.style(
+          `bg-light-background dark:bg-dark-background flex-1`,
+          twcn && `${twcn}`
+        )}
         {...rest}
       >
         <View style={styles}>{children}</View>
@@ -38,7 +42,10 @@ const SafeView = ({
 
   return (
     <ScrollView
-      className={`bg-light-background dark:bg-dark-background flex-1 overflow-y-auto ${className}`}
+      style={tw.style(
+        'bg-light-background dark:bg-dark-background flex-1 overflow-y-auto',
+        twcn && `${twcn}`
+      )}
       {...rest}
     >
       <View style={styles}>{children}</View>

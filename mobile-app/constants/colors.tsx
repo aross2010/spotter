@@ -6,25 +6,21 @@ const Colors = {
   success: '#16a34a',
 
   dark: {
-    text: '#FFFFFF',
-    background: '#000000',
-    grayPrimary: '#1F1F1F',
-    graySecondary: '#2C2C2C',
-    grayTertiary: '#3A3A3A',
-    grayText: '#4F4F4F',
-    iconActive: '#FFFFFF',
-    iconInactive: '#808080',
+    text: '#F7F7F7',
+    background: '#1a1a1a',
+    grayPrimary: '#292929',
+    graySecondary: '#3D3D3D',
+    grayTertiary: '#4D4D4D',
+    grayText: '#bababa',
   },
 
   light: {
-    text: '#000000',
-    background: '#FFFFFF',
+    text: '#1a1a1a',
+    background: '#F7F7F7',
     grayPrimary: '#F5F5F5',
     graySecondary: '#E0E0E0',
     grayTertiary: '#CFCFCF',
     grayText: '#4F4F4F',
-    iconActive: '#E6E7A3',
-    iconInactive: '#C7C7C7',
   },
 }
 

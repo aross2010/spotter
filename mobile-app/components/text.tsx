@@ -1,16 +1,20 @@
 import { Text, TextProps } from 'react-native'
 import { ReactNode } from 'react'
+import tw from '../tw'
 
 type TxtProps = {
   children: ReactNode
-  className?: string
+  twcn?: string
 } & TextProps
 
-const Txt = ({ children, className, ...props }: TxtProps) => {
+const Txt = ({ children, twcn, ...props }: TxtProps) => {
   return (
     <Text
       {...props}
-      className={`font-poppins ${className}`}
+      style={tw.style(
+        'font-poppins light:text-light-text dark:text-dark-text',
+        twcn ?? ''
+      )}
     >
       {children}
     </Text>
