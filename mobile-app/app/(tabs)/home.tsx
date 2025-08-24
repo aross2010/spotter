@@ -3,6 +3,7 @@ import Txt from '../../components/text'
 import useTheme from '../hooks/theme'
 import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
+import { formattedDate } from '../../functions/formatted-date'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -17,13 +18,6 @@ const Home = () => {
   const { user } = useUserStore()
   const { theme } = useTheme()
 
-  // day (abbreviated). month, day, year
-  const formattedDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
   const greeting = getGreeting()
   return (
     <SafeView>

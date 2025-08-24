@@ -98,7 +98,7 @@ export const weightEntries = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    weight: numeric('weight', { precision: 4, scale: 1 }).notNull(), // in lbs
+    weight: numeric('weight', { precision: 4, scale: 1 }).notNull(), // in lbs, translate to kg in frontend
     date: date('date').notNull().defaultNow(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
@@ -171,6 +171,7 @@ export const exercises = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 100 }).notNull(),
+    isUnilateral: boolean('is_unilateral').notNull().default(false),
   },
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )
@@ -191,6 +192,8 @@ export const sets = pgTable(
     }).notNull(),
     weight: numeric('weight', { precision: 4, scale: 1 }), // in lbs
     reps: numeric('reps', { precision: 2, scale: 0 }),
+    leftReps: numeric('left_reps', { precision: 2, scale: 0 }), // validate the exercise is unilateral on front end
+    rightReps: numeric('right_reps', { precision: 2, scale: 0 }), // validate the exercise is unilateral on front end
     lowReps: numeric('low_reps', {
       precision: 2,
       scale: 0,
@@ -213,9 +216,15 @@ export const sets = pgTable(
   (t) => [
     check('rpe_xor_rir', sql`(rpe IS NULL OR rir IS NULL)`),
     check('cheat_xor_partial', sql`cheat_reps IS NULL OR partial_reps IS NULL`),
+    // for planned sets: allow either reps or both low/high reps, but not both or neither
     check(
-      'reps_xor_low_high',
-      sql`(reps IS NULL OR (low_reps IS NULL AND high_reps IS NULL))`
+      'reps_or_low_high',
+      sql`((reps IS NOT NULL AND low_reps IS NULL AND high_reps IS NULL) OR (reps IS NULL AND low_reps IS NOT NULL AND high_reps IS NOT NULL))`
+    ),
+    // for completed sets: allow either reps or both left/right reps, but not both or neither
+    check(
+      'reps_or_left_right',
+      sql`((reps IS NOT NULL AND left_reps IS NULL AND right_reps IS NULL) OR (reps IS NULL AND left_reps IS NOT NULL AND right_reps IS NOT NULL))`
     ),
   ]
 )

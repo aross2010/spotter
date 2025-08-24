@@ -79,7 +79,7 @@ const UserPreferences = () => {
         style={tw`gap-4`}
       >
         <View>
-          <Txt twcn="text-base font-poppinsSemiBold">{pref.title}</Txt>
+          <Txt twcn="text-base font-poppinsMedium">{pref.title}</Txt>
           {pref.subtitle && (
             <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mt-1">
               {pref.subtitle}
