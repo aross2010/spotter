@@ -118,12 +118,12 @@ const UserPreferences = () => {
                     })
                   }
                 }}
-                twcn={`flex-1 items-center justify-center p-4 rounded-xl ${
+                twcn={`flex-1 items-center justify-center p-4 rounded-full ${
                   isSelected
                     ? 'bg-primary'
                     : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'
                 }`}
-                twcnText={`text-center ${isSelected ? 'text-white font-poppinsSemiBold' : ''}`}
+                twcnText={`text-center text-sm ${isSelected ? 'text-white font-poppinsSemiBold' : ''}`}
               />
             )
           })}
@@ -132,11 +132,7 @@ const UserPreferences = () => {
     )
   })
 
-  return (
-    <SafeView>
-      <View style={tw`gap-8`}>{renderedPreferenceOptions}</View>
-    </SafeView>
-  )
+  return <SafeView twcnInnerView="gap-8">{renderedPreferenceOptions}</SafeView>
 }
 
 export default UserPreferences

@@ -13,8 +13,8 @@ const SettingsLayout = () => {
     <Stack
       screenOptions={{
         headerTitleStyle: {
-          fontSize: 20,
-          fontFamily: 'Poppins_600SemiBold',
+          fontSize: 18,
+          fontFamily: 'Geologica_600SemiBold',
           color: theme.text,
         },
         headerBackButtonDisplayMode: 'default',

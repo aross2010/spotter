@@ -153,7 +153,7 @@ const Settings = () => {
             <Txt twcn="text-base font-poppinsMedium">{sectionTitle}</Txt>
           )}
           <View
-            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg flex-col`}
+            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (

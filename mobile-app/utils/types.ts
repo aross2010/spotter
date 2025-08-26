@@ -20,3 +20,9 @@ export type CompleteUser = {
   email: string
   providers: Provider[]
 }
+
+export type UsedTags = {
+  id: string
+  name: string
+  used: number
+}

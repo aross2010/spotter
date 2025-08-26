@@ -50,7 +50,7 @@ module.exports = {
           grayPrimary: '#EBEBEB',
           graySecondary: '#d9d9d9',
           grayTertiary: '#C9C9C9',
-          grayText: '#4F4F4F',
+          grayText: '#747474',
         },
       },
     },

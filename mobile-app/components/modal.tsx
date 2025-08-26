@@ -19,6 +19,7 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       onSwipeComplete={() => setIsOpen(false)}
       useNativeDriver
       useNativeDriverForBackdrop
+      backdropOpacity={0.4}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       style={{ justifyContent: 'flex-end', margin: 0, position: 'relative' }}

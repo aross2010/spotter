@@ -5,7 +5,6 @@ import Txt from '../../components/text'
 import {
   Activity,
   Ambulance,
-  Pencil,
   PenLine,
   Smile,
   Target,
@@ -92,7 +91,7 @@ const Notebook = () => {
         <Animated.View
           key={title}
           style={[
-            tw`flex-row items-center gap-6 rounded-xl p-4 bg-light-grayPrimary dark:bg-dark-grayBackground`,
+            tw`flex-row items-center gap-6 rounded-2xl p-4 bg-light-grayPrimary dark:bg-dark-grayBackground`,
             {
               transform: [{ translateX: animValue.translateX }],
               opacity: animValue.opacity,
@@ -126,7 +125,7 @@ const Notebook = () => {
           <Txt twcn="text-center text-base mb-6 opacity-60">
             Capture everything beyond your workouts
           </Txt>
-          <View style={tw`gap-2`}>{renderedNotebookFunctions}</View>
+          <View style={tw`gap-3`}>{renderedNotebookFunctions}</View>
         </View>
         <View>
           <Button
@@ -147,5 +146,3 @@ const Notebook = () => {
 }
 
 export default Notebook
-
-const styles = StyleSheet.create({})

@@ -1,9 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useState } from 'react'
 import { Link, Redirect, router, Tabs } from 'expo-router'
-import Modal from 'react-native-modal'
 import {
-  LayoutDashboard,
   Dumbbell,
   Book,
   BookOpen,
