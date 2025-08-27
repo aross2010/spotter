@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View, Animated, Easing } from 'react-native'
-import React, { useEffect, useRef } from 'react'
+import { StyleSheet, Text, View, Animated, Easing, Alert } from 'react-native'
+import React, { Fragment, useEffect, useRef } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import {
   Activity,
   Ambulance,
+  Circle,
+  Ellipsis,
   PenLine,
+  Pin,
   Smile,
   Target,
   Utensils,
@@ -14,6 +17,15 @@ import tw from '../../tw'
 import Colors from '../../constants/colors'
 import Button from '../../components/button'
 import { router } from 'expo-router'
+import { useUserStore } from '../../stores/user-store'
+import { useState } from 'react'
+import { useAuth } from '../../context/auth-context'
+import { BASE_URL } from '../../constants/auth'
+import { NotebookEntry } from '../../utils/types'
+import useTheme from '../hooks/theme'
+import Spinner from '../../components/activity-indicator'
+import { formatDate } from '../../functions/formatted-date'
+import NotebookEntryView from '../../components/notebook-entry'
 
 const notebookFunctions = [
   {
@@ -49,15 +61,42 @@ const notebookFunctions = [
 ]
 
 const Notebook = () => {
-  // Create animated values for each function
-  const animatedValues = useRef(
-    notebookFunctions.map(() => ({
-      translateX: new Animated.Value(-50),
-      opacity: new Animated.Value(0),
-    }))
-  ).current
+  const { user } = useUserStore()
+  const { fetchWithAuth } = useAuth()
+  const { theme } = useTheme()
+  const [isLoading, setIsLoading] = useState(true)
+  const [notebookEntries, setNotebookEntries] = useState<NotebookEntry[]>([])
+  const hasEntries = notebookEntries.length > 0
 
-  // Trigger animations on mount
+  useEffect(() => {
+    const fetchEntries = async () => {
+      if (!user) return
+      setIsLoading(true)
+      try {
+        // Fetch notebook entries for the user
+        const response = await fetchWithAuth(
+          `${BASE_URL}/api/notebookEntries/user/${user.id}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+        const notebookEntries = (await response.json()) as NotebookEntry[]
+        setNotebookEntries(notebookEntries)
+        console.log('Fetched notebook entries: ', notebookEntries)
+      } catch (error: any) {
+        console.error('Error fetching notebook entries: ', error)
+        Alert.alert('Error', error.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchEntries()
+  }, [user])
+
   useEffect(() => {
     const animations = animatedValues.map((animValue, index) => {
       return Animated.parallel([
@@ -81,6 +120,13 @@ const Notebook = () => {
     // Start all animations
     Animated.stagger(0, animations).start()
   }, [])
+
+  const animatedValues = useRef(
+    notebookFunctions.map(() => ({
+      translateX: new Animated.Value(-50),
+      opacity: new Animated.Value(0),
+    }))
+  ).current
 
   const renderedNotebookFunctions = notebookFunctions.map(
     ({ icon, title, description }, index) => {
@@ -118,14 +164,60 @@ const Notebook = () => {
     }
   )
 
-  return (
+  const pinnedTitle = (
+    <View style={tw`flex-row items-center gap-1 mb-4`}>
+      <Pin
+        size={18}
+        color={theme.text}
+      />
+      <Txt twcn="text-sm font-poppinsSemiBold">Pinned</Txt>
+    </View>
+  )
+
+  let currentMonth = ''
+
+  const renderedEntries = notebookEntries.map((entry, index) => {
+    let addMonth = false
+    const { date, pinned, id } = entry
+    const month = new Date(date).toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    })
+
+    if (month !== currentMonth && !pinned) {
+      currentMonth = month
+      addMonth = true
+    }
+
+    const monthTitle = addMonth && (
+      <View style={tw`flex-row items-center gap-2 my-4`}>
+        <Circle
+          size={10}
+          fill={theme.text}
+          color={theme.text}
+        />
+        <Txt twcn="text-base font-poppinsSemiBold">{month}</Txt>
+        <View style={tw`flex-1 h-px bg-primary/20 dark:bg-primary/50 ml-2`} />
+      </View>
+    )
+
+    return (
+      <View key={id}>
+        {index == 0 && pinned ? pinnedTitle : null}
+        {monthTitle}
+        <NotebookEntryView entry={entry} />
+      </View>
+    )
+  })
+
+  const notebookPrompt = (
     <SafeView noScroll>
       <View style={tw`flex-1 justify-between`}>
         <View>
           <Txt twcn="text-center text-base mb-6 opacity-60">
             Capture everything beyond your workouts
           </Txt>
-          <View style={tw`gap-3`}>{renderedNotebookFunctions}</View>
+          <View style={tw`gap-4`}>{renderedNotebookFunctions}</View>
         </View>
         <View>
           <Button
@@ -143,6 +235,17 @@ const Notebook = () => {
       </View>
     </SafeView>
   )
+
+  const notebookView = (
+    <SafeView twcnInnerView="gap-3">
+      <Txt twcn="text-xs uppercase font-poppinsMedium mb-1 text-light-grayText dark:text-dark-grayText">
+        {notebookEntries.length} entries
+      </Txt>
+      {renderedEntries}
+    </SafeView>
+  )
+
+  return isLoading ? <Spinner /> : hasEntries ? notebookView : notebookPrompt
 }
 
 export default Notebook

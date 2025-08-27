@@ -6,13 +6,16 @@ import {
 } from '@/src/db/schema'
 import { NextResponse } from 'next/server'
 import { isISO8601 } from 'validator'
+import { withAuth } from '../middleware'
 
-export async function POST(req: Request) {
+export const POST = withAuth(async (req, user) => {
   const data = await req.json()
   if (!data)
     return NextResponse.json({ error: 'No data provided' }, { status: 400 })
 
-  let { title, body, date, tags, userId } = data
+  const userId = user.id
+
+  let { title, body, date, tags } = data
   if (!body || !date || !userId) {
     return NextResponse.json(
       { error: 'Missing required fields' },
@@ -60,45 +63,46 @@ export async function POST(req: Request) {
     const result = await db.transaction(async (tx) => {
       const [notebookEntry] = await tx
         .insert(notebookEntries)
-        .values({ title, body, date, user_id: userId })
+        .values({ title, body, date, userId })
         .returning()
 
-      const tagIds: string[] = []
+      const tagsInEntry = []
 
-      for (const tag of tags) {
-        const existingTag = await tx.query.notebookTags.findFirst({
-          where: (notebookTags, { eq, and }) =>
-            and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
-        })
+      if (tags.length > 0) {
+        for (const tag of tags) {
+          const existingTag = await tx.query.notebookTags.findFirst({
+            where: (notebookTags, { eq, and }) =>
+              and(eq(notebookTags.name, tag), eq(notebookTags.userId, userId)),
+          })
 
-        if (!existingTag) {
-          const [newTag] = await tx
-            .insert(notebookTags)
-            .values({ name: tag, userId })
-            .returning()
-          tagIds.push(newTag.id)
-        } else {
-          tagIds.push(existingTag.id)
+          if (!existingTag) {
+            const [newTag] = await tx
+              .insert(notebookTags)
+              .values({ name: tag, userId })
+              .returning()
+            tagsInEntry.push(newTag)
+          } else {
+            tagsInEntry.push(existingTag)
+          }
         }
+
+        await tx.insert(notebookEntryTagLinks).values(
+          tagsInEntry.map((tag) => ({
+            entryId: notebookEntry.id,
+            tagId: tag.id,
+          }))
+        )
       }
 
-      await tx.insert(notebookEntryTagLinks).values(
-        tagIds.map((tagId) => ({
-          entryId: notebookEntry.id,
-          tagId,
-        }))
-      )
+      const completeNotebookEntry = {
+        ...notebookEntry,
+        tags: tagsInEntry,
+      }
 
-      return notebookEntry.id
+      return completeNotebookEntry
     })
 
-    return NextResponse.json(
-      {
-        message: 'Notebook entry created successfully',
-        id: result,
-      },
-      { status: 201 }
-    )
+    return NextResponse.json({ result }, { status: 201 })
   } catch (error: any) {
     console.error(error)
     return NextResponse.json(
@@ -106,4 +110,4 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
-}
+})

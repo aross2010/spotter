@@ -1,16 +1,22 @@
-import { StyleSheet, ScrollView, TextInput } from 'react-native'
+import { Alert } from 'react-native'
 import SafeView from '../../components/safe-view'
 import Button from '../../components/button'
-import { formattedDate } from '../../functions/formatted-date'
+import { formatDate, formattedDate } from '../../functions/formatted-date'
 import Input from '../../components/input'
 import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { X, Plus, Tag } from 'lucide-react-native'
+import { Plus } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import { useColorScheme, Pressable } from 'react-native'
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../context/auth-context'
+import { BASE_URL } from '../../constants/auth'
+import { NotebookEntry } from '../../utils/types'
+import DatePicker from 'react-native-date-picker'
+import MyModal from '../../components/modal'
+import NotebookEntryOptions from '../../components/notebook-entry-options'
 
 const NotebookEntryForm = () => {
   const colorScheme = useColorScheme() ?? 'light'
@@ -21,7 +27,10 @@ const NotebookEntryForm = () => {
     body: '',
     tags: [] as string[],
   })
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const { tags } = useLocalSearchParams()
+  const { fetchWithAuth, authUser } = useAuth()
+  const [isSaving, setIsSaving] = useState(false)
   const navigation = useNavigation()
   const selectedTags = tags ? JSON.parse(tags as string) : []
 
@@ -34,11 +43,11 @@ const NotebookEntryForm = () => {
           accessibilityLabel="submit notebook entry"
           twcnText="font-poppinsSemiBold text-primary dark:text-primary"
           text="Save"
-          disabled={data.body.trim().length < 1}
+          disabled={data.body.trim().length < 1 || isSaving}
         />
       ),
     })
-  }, [navigation])
+  }, [navigation, isSaving, data.body])
 
   useEffect(() => {
     if (selectedTags.length > 0) {
@@ -46,9 +55,27 @@ const NotebookEntryForm = () => {
     }
   }, [tags])
 
-  const handleSubmitEntry = async () => [
-    console.log('Submit notebook entry', data),
-  ]
+  const handleSubmitEntry = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetchWithAuth(`${BASE_URL}/api/notebookEntries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      const notebookEntry = (await response.json()) as NotebookEntry
+      console.log(notebookEntry)
+      router.back()
+    } catch (error: any) {
+      console.log('catching')
+      Alert.alert('Error', error.message ?? 'Something went wrong')
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const renderedTags = data.tags.map((tag, index) => {
     return (
@@ -71,11 +98,10 @@ const NotebookEntryForm = () => {
       <View style={tw`flex-1`}>
         <View style={tw`flex-row items-center justify-between mb-2`}>
           <Button
-            text={formattedDate}
+            text={formatDate(data.date)}
             onPress={() => {
-              console.log('Open date selector')
+              setIsDatePickerOpen(true)
             }}
-            twcn="w-fit"
             hitSlop={12}
             twcnText="text-xs font-poppinsMedium text-primary uppercase"
           />
@@ -100,9 +126,13 @@ const NotebookEntryForm = () => {
             placeholder="Anything on your mind..."
             multiline
             noBorder
-            twcnInput="flex-1 items-top"
+            twcnInput="flex-1"
           />
         </View>
+
+        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mb-2 self-end">
+          {data.body.length} / {500}
+        </Txt>
 
         <View style={tw`mb-4`}>
           {data.tags.length > 0 ? (
@@ -145,17 +175,30 @@ const NotebookEntryForm = () => {
             twcn="flex-1 border border-light-grayTertiary dark:border-dark-grayTertiary justify-center items-center rounded-full py-3"
             twcnText="text-light-grayText dark:text-dark-grayText font-poppinsMedium"
             onPress={() => router.back()}
+            disabled={isSaving}
           />
           <Button
             text="Save"
             twcn="flex-1 bg-primary justify-center items-center rounded-full py-3"
             twcnText="text-light-background font-poppinsMedium"
-            onPress={() => {
-              console.log('Save notebook entry')
-            }}
+            onPress={handleSubmitEntry}
+            disabled={data.body.trim().length < 1 || isSaving}
           />
         </View>
       </View>
+      <DatePicker
+        modal
+        open={isDatePickerOpen}
+        date={data.date}
+        onConfirm={(date) => {
+          setIsDatePickerOpen(false)
+          setData({ ...data, date })
+        }}
+        mode="date"
+        onCancel={() => {
+          setIsDatePickerOpen(false)
+        }}
+      />
     </SafeView>
   )
 }

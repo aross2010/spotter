@@ -21,8 +21,27 @@ export type CompleteUser = {
   providers: Provider[]
 }
 
+export type Tag = {
+  id: string
+  name: string
+  userId: string
+}
+
+// for tag selector results
 export type UsedTags = {
   id: string
   name: string
   used: number
+}
+
+export type NotebookEntry = {
+  id: string
+  userId: string
+  title?: string
+  body: string
+  date: string
+  createdAt: string
+  updatedAt?: string
+  pinned: boolean
+  tags: Tag[]
 }

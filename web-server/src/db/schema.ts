@@ -66,11 +66,11 @@ export const notebookTags = pgTable(
 
 export const notebookEntries = pgTable('notebook_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id')
+  userId: uuid('user_id')
     .notNull()
     .references(() => notebooks.userId, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }),
-  body: text('body').notNull(), // limit to n words in business logic
+  body: varchar('body', { length: 1000 }).notNull(),
   date: date('date').notNull().defaultNow(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }),
@@ -260,7 +260,7 @@ export const notebookEntriesRelations = relations(
   notebookEntries,
   ({ one, many }) => ({
     notebook: one(notebooks, {
-      fields: [notebookEntries.user_id],
+      fields: [notebookEntries.userId],
       references: [notebooks.userId],
     }),
     notebookEntryTagLinks: many(notebookEntryTagLinks),

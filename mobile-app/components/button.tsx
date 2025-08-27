@@ -9,6 +9,7 @@ type ButtonProps = {
   twcnText?: string
   twcn?: string
   loading?: boolean
+  loadingText?: string
 } & PressableProps
 
 const Button = ({
@@ -17,15 +18,20 @@ const Button = ({
   twcnText,
   twcn,
   loading,
+  loadingText = 'Loading...',
+  disabled,
   ...props
 }: ButtonProps) => {
+  const isDisabled = disabled || loading
+
   if (text) {
     return (
       <Pressable
-        style={tw`active:opacity-75 disabled:opacity-50 ${twcn ?? ''}`}
+        style={tw`active:opacity-75 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
+        disabled={isDisabled}
         {...props}
       >
-        <Txt twcn={twcnText}>{loading ? 'Loading...' : text}</Txt>
+        <Txt twcn={twcnText}>{loading ? loadingText : text}</Txt>
         {children}
       </Pressable>
     )
@@ -33,7 +39,8 @@ const Button = ({
 
   return (
     <Pressable
-      style={tw`active:opacity-75 disabled:opacity-50 ${twcn ?? ''}`}
+      style={tw`active:opacity-75 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
+      disabled={isDisabled}
       {...props}
     >
       {children}

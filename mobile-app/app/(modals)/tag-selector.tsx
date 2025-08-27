@@ -27,7 +27,7 @@ const TagSelector = () => {
       router.back()
       setTimeout(() => {
         router.setParams({ tags: JSON.stringify(selectedTags) })
-      }, 50)
+      }, 100)
     }
   }
 

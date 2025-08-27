@@ -118,7 +118,7 @@ const UserPreferences = () => {
                     })
                   }
                 }}
-                twcn={`flex-1 items-center justify-center p-4 rounded-full ${
+                twcn={`flex-1 items-center justify-center p-2 rounded-full ${
                   isSelected
                     ? 'bg-primary'
                     : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'

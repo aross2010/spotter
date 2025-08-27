@@ -87,14 +87,14 @@ export async function PUT(req: Request, props: { params: Params }) {
             where: (notebookTags, { eq, and }) =>
               and(
                 eq(notebookTags.name, tag),
-                eq(notebookTags.userId, upadatedEntry.user_id)
+                eq(notebookTags.userId, upadatedEntry.userId)
               ),
           })
 
           if (!existingTag) {
             const [newTag] = await tx
               .insert(notebookTags)
-              .values({ name: tag, userId: upadatedEntry.user_id })
+              .values({ name: tag, userId: upadatedEntry.userId })
               .returning()
             tagIds.push(newTag.id)
           } else {
