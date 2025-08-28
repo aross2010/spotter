@@ -27,7 +27,7 @@ const Button = ({
   if (text) {
     return (
       <Pressable
-        style={tw`active:opacity-75 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
+        className={`active:opacity-50 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
         disabled={isDisabled}
         {...props}
       >
@@ -39,7 +39,7 @@ const Button = ({
 
   return (
     <Pressable
-      style={tw`active:opacity-75 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
+      className={`active:opacity-50 ${isDisabled ? 'opacity-50' : ''} ${twcn ?? ''}`}
       disabled={isDisabled}
       {...props}
     >

@@ -13,7 +13,7 @@ export async function PUT(req: Request, props: { params: Params }) {
   const params = await props.params
   const id = params.id as string
   const data = await req.json()
-  let { title, body, date, tags } = data
+  let { title, body, date, tags, pinned } = data
 
   if (!id) {
     return NextResponse.json(
@@ -22,10 +22,11 @@ export async function PUT(req: Request, props: { params: Params }) {
     )
   }
 
-  if (!title && !body && !date && !tags) {
+  if (!title && !body && !date && !tags && pinned === undefined) {
     return NextResponse.json(
       {
-        error: 'At least one field (title, body, date, tags) must be provided',
+        error:
+          'At least one field (title, body, date, tags, pinned) must be provided',
       },
       { status: 400 }
     )
@@ -66,6 +67,15 @@ export async function PUT(req: Request, props: { params: Params }) {
     tags = Array.from(new Set(tags))
   }
 
+  if (pinned !== undefined) {
+    if (typeof pinned !== 'boolean') {
+      return NextResponse.json(
+        { error: 'Pinned must be a boolean value' },
+        { status: 400 }
+      )
+    }
+  }
+
   try {
     const result = await db.transaction(async (tx) => {
       const [upadatedEntry] = await tx
@@ -74,14 +84,15 @@ export async function PUT(req: Request, props: { params: Params }) {
           ...(title && { title }),
           ...(body && { body }),
           ...(date && { date }),
+          ...(pinned !== undefined && { pinned }),
           updatedAt: new Date(),
         })
         .where(eq(notebookEntries.id, id))
         .returning()
 
-      const tagIds: string[] = []
+      const tagsInEntry = []
 
-      if (tags) {
+      if (tags && tags.length > 0) {
         for (const tag of tags) {
           const existingTag = await tx.query.notebookTags.findFirst({
             where: (notebookTags, { eq, and }) =>
@@ -96,9 +107,9 @@ export async function PUT(req: Request, props: { params: Params }) {
               .insert(notebookTags)
               .values({ name: tag, userId: upadatedEntry.userId })
               .returning()
-            tagIds.push(newTag.id)
+            tagsInEntry.push(newTag)
           } else {
-            tagIds.push(existingTag.id)
+            tagsInEntry.push(existingTag)
           }
         }
 
@@ -107,23 +118,26 @@ export async function PUT(req: Request, props: { params: Params }) {
           .where(eq(notebookEntryTagLinks.entryId, id))
 
         await tx.insert(notebookEntryTagLinks).values(
-          tagIds.map((tagId) => ({
+          tagsInEntry.map((tag) => ({
             entryId: id,
-            tagId,
+            tagId: tag.id,
           }))
         )
+      } else {
+        await tx
+          .delete(notebookEntryTagLinks)
+          .where(eq(notebookEntryTagLinks.entryId, id))
       }
 
-      return upadatedEntry.id
+      const completeNotebookEntry = {
+        ...upadatedEntry,
+        tags: tagsInEntry,
+      }
+
+      return completeNotebookEntry
     })
 
-    return NextResponse.json(
-      {
-        message: 'Notebook entry updated successfully',
-        id: result,
-      },
-      { status: 201 }
-    )
+    return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
     console.error(error)
     return NextResponse.json(

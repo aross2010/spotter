@@ -1,69 +1,199 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { Alert, View } from 'react-native'
+import React, { Fragment } from 'react'
 import { NotebookEntry } from '../utils/types'
-import { Pencil, Trash } from 'lucide-react-native'
-import Button from './button'
+import { Pencil, Pin, Trash, Calendar, Tag, PinOff } from 'lucide-react-native'
 import Colors from '../constants/colors'
 import tw from '../tw'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
-import DragHandle from './drag-handle'
+import useTheme from '../app/hooks/theme'
+import Button from './button'
+import { useNotebook } from '../context/notebook-context'
+import { router } from 'expo-router'
+import { useAuth } from '../context/auth-context'
+import { BASE_URL } from '../constants/auth'
 
 type NotebookEntryOptionsProps = {
   entry: NotebookEntry
+  setIsOptionsOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const options = [
-  {
-    title: 'Edit Entry',
-    onPress: () => {},
-    icon: Pencil,
-  },
-  {
-    title: 'Delete Entry',
-    onPress: () => {},
-    icon: Trash,
-  },
-]
+const NotebookEntryOptions = ({
+  entry,
+  setIsOptionsOpen,
+}: NotebookEntryOptionsProps) => {
+  const { theme } = useTheme()
+  const { pinEntry, unpinEntry, deleteEntry } = useNotebook()
+  const { pinned, title, body, tags, id, date } = entry
+  const { fetchWithAuth } = useAuth()
 
-const NotebookEntryOptions = ({ entry }: NotebookEntryOptionsProps) => {
+  const handlePinToggle = async () => {
+    if (pinned) await unpinEntry(id)
+    else await pinEntry(id)
+    setIsOptionsOpen(false)
+  }
+
+  const deleteEntryFromDb = async () => {
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/notebookEntries/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      deleteEntry(id)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  const handleDelete = () => {
+    Alert.alert('Delete Entry', 'Are you sure you want to delete this entry?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        onPress: () => {
+          setIsOptionsOpen(false)
+          deleteEntryFromDb()
+        },
+        style: 'destructive',
+      },
+    ])
+  }
+
+  const handleEdit = () => {
+    setIsOptionsOpen(false)
+    router.push({
+      pathname: '/notebook-entry-form',
+      params: {
+        entryId: id,
+        entryTitle: title || '',
+        entryBody: body,
+        entryDate: date,
+        entryTags: JSON.stringify(tags),
+      },
+    })
+  }
+
+  const options = [
+    {
+      title: pinned ? 'Unpin' : 'Pin',
+      description: pinned
+        ? 'Remove this entry from the top'
+        : 'Keep this entry at the top',
+      onPress: handlePinToggle,
+      icon: pinned ? PinOff : Pin,
+    },
+    {
+      title: 'Edit',
+      description: 'Modify title, content, or tags',
+      onPress: handleEdit,
+      icon: Pencil,
+    },
+    {
+      title: 'Delete',
+      description: 'Remove this entry permanently',
+      onPress: handleDelete,
+      icon: Trash,
+    },
+  ]
+
   const renderedOptions = options.map(
-    ({ title, onPress, icon: Icon }, index) => {
+    ({ title, description, onPress, icon: Icon }, index) => {
       return (
         <Button
-          onPress={onPress}
           key={index}
+          onPress={onPress}
+          style={tw`flex-row items-center gap-4 p-4 rounded-xl bg-white dark:bg-dark-grayPrimary border border-light-grayPrimary dark:border-dark-graySecondary`}
         >
-          <View
-            key={index}
-            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-lg px-4 py-6 flex-row gap-6 items-center`}
-          >
-            <Icon
-              color={Colors.primary}
-              height={20}
-              width={20}
-            />
+          <Icon
+            size={20}
+            color={Colors.primary}
+            strokeWidth={1.5}
+          />
 
-            <View style={tw`flex-1 gap-1`}>
-              <Txt twcn="font-poppinsMedium">{title}</Txt>
-            </View>
+          <View style={tw`flex-1`}>
+            <Txt twcn="font-poppinsSemiBold text-base text-light-text dark:text-dark-text mb-0.5">
+              {title}
+            </Txt>
+            <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+              {description}
+            </Txt>
           </View>
         </Button>
       )
     }
   )
 
-  return (
-    <View
-      style={tw`bg-light-background dark:bg-dark-background rounded-xl px-4 pt-10 pb-12 gap-4 relative`}
-    >
-      <DragHandle />
-
-      <View style={tw`flex-col gap-2`}>{renderedOptions}</View>
+  const renderedTags = tags.length > 0 && (
+    <View style={tw`flex-row items-center gap-2 mt-3`}>
+      <Tag
+        size={12}
+        color={theme.grayText}
+      />
+      <View style={tw`flex-row flex-wrap gap-1`}>
+        {tags.slice(0, 3).map((tag, index) => (
+          <Txt
+            key={tag.id}
+            twcn="text-xs text-primary font-poppinsMedium"
+          >
+            #{tag.name}
+          </Txt>
+        ))}
+        {tags.length > 3 && (
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+            +{tags.length - 3} more
+          </Txt>
+        )}
+      </View>
     </View>
+  )
+
+  return (
+    <Fragment>
+      <View
+        style={tw`px-2 pb-4 border-b border-light-graySecondary dark:border-dark-graySecondary`}
+      >
+        <View style={tw`flex-row items-center gap-2 mb-2`}>
+          <Calendar
+            size={14}
+            color={theme.grayText}
+          />
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
+            {formatDate(new Date(date))}
+          </Txt>
+        </View>
+
+        {title && (
+          <Txt twcn="text-lg font-poppinsSemiBold text-light-text dark:text-dark-text mb-2">
+            {title}
+          </Txt>
+        )}
+
+        <Txt
+          twcn="text-sm text-light-grayText dark:text-dark-grayText leading-relaxed"
+          numberOfLines={2}
+        >
+          {body}
+        </Txt>
+
+        {renderedTags}
+      </View>
+
+      <View>
+        <Txt twcn="text-xs uppercase font-poppinsMedium text-light-grayText dark:text-dark-grayText mb-3 px-2 tracking-wide">
+          Actions
+        </Txt>
+        <View style={tw`gap-2`}>{renderedOptions}</View>
+      </View>
+    </Fragment>
   )
 }
 
 export default NotebookEntryOptions
-
-const styles = StyleSheet.create({})

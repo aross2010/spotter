@@ -39,6 +39,7 @@ import {
 import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
+import { NotebookProvider } from '../context/notebook-context'
 import '../global.css'
 import { toastConfig } from '../utils/toast'
 import { useDeviceContext } from 'twrnc'
@@ -89,31 +90,34 @@ const RootLayout = () => {
       <KeyboardProvider>
         <SafeAreaProvider>
           <ThemedStatusBar />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen
-              name="index"
-              options={{ animation: 'none' }}
-            />
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                animation: 'none',
+          <NotebookProvider>
+            <Stack
+              screenOptions={{
                 headerShown: false,
               }}
-            />
-            <Stack.Screen
-              name="(modals)"
-              options={{
-                presentation: 'modal',
-              }}
-            />
-          </Stack>
+            >
+              <Stack.Screen
+                name="index"
+                options={{ animation: 'none' }}
+              />
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  animation: 'none',
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="(modals)"
+                options={{
+                  presentation: 'modal',
+                }}
+              />
+            </Stack>
+          </NotebookProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
+
       <Toast config={toastConfig} />
     </AuthProvider>
   )

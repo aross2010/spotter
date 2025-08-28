@@ -17,15 +17,10 @@ import tw from '../../tw'
 import Colors from '../../constants/colors'
 import Button from '../../components/button'
 import { router } from 'expo-router'
-import { useUserStore } from '../../stores/user-store'
-import { useState } from 'react'
-import { useAuth } from '../../context/auth-context'
-import { BASE_URL } from '../../constants/auth'
-import { NotebookEntry } from '../../utils/types'
-import useTheme from '../hooks/theme'
 import Spinner from '../../components/activity-indicator'
-import { formatDate } from '../../functions/formatted-date'
 import NotebookEntryView from '../../components/notebook-entry'
+import { useNotebook } from '../../context/notebook-context'
+import useTheme from '../hooks/theme'
 
 const notebookFunctions = [
   {
@@ -61,41 +56,13 @@ const notebookFunctions = [
 ]
 
 const Notebook = () => {
-  const { user } = useUserStore()
-  const { fetchWithAuth } = useAuth()
+  const { notebookEntries, isLoading, initializeNotebook } = useNotebook()
   const { theme } = useTheme()
-  const [isLoading, setIsLoading] = useState(true)
-  const [notebookEntries, setNotebookEntries] = useState<NotebookEntry[]>([])
   const hasEntries = notebookEntries.length > 0
 
   useEffect(() => {
-    const fetchEntries = async () => {
-      if (!user) return
-      setIsLoading(true)
-      try {
-        // Fetch notebook entries for the user
-        const response = await fetchWithAuth(
-          `${BASE_URL}/api/notebookEntries/user/${user.id}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-        const notebookEntries = (await response.json()) as NotebookEntry[]
-        setNotebookEntries(notebookEntries)
-        console.log('Fetched notebook entries: ', notebookEntries)
-      } catch (error: any) {
-        console.error('Error fetching notebook entries: ', error)
-        Alert.alert('Error', error.message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchEntries()
-  }, [user])
+    initializeNotebook()
+  }, [])
 
   useEffect(() => {
     const animations = animatedValues.map((animValue, index) => {
@@ -167,10 +134,12 @@ const Notebook = () => {
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
       <Pin
-        size={18}
-        color={theme.text}
+        size={16}
+        color={theme.grayText}
       />
-      <Txt twcn="text-sm font-poppinsSemiBold">Pinned</Txt>
+      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+        Pinned
+      </Txt>
     </View>
   )
 
@@ -191,13 +160,12 @@ const Notebook = () => {
 
     const monthTitle = addMonth && (
       <View style={tw`flex-row items-center gap-2 my-4`}>
-        <Circle
-          size={10}
-          fill={theme.text}
-          color={theme.text}
+        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+          {month}
+        </Txt>
+        <View
+          style={tw`flex-1 h-px bg-light-grayPrimary dark:bg-dark-graySecondary ml-2`}
         />
-        <Txt twcn="text-base font-poppinsSemiBold">{month}</Txt>
-        <View style={tw`flex-1 h-px bg-primary/20 dark:bg-primary/50 ml-2`} />
       </View>
     )
 
@@ -237,12 +205,7 @@ const Notebook = () => {
   )
 
   const notebookView = (
-    <SafeView twcnInnerView="gap-3">
-      <Txt twcn="text-xs uppercase font-poppinsMedium mb-1 text-light-grayText dark:text-dark-grayText">
-        {notebookEntries.length} entries
-      </Txt>
-      {renderedEntries}
-    </SafeView>
+    <SafeView twcnInnerView="gap-3">{renderedEntries}</SafeView>
   )
 
   return isLoading ? <Spinner /> : hasEntries ? notebookView : notebookPrompt

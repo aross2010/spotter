@@ -428,6 +428,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!response.ok) {
+      console.log('response: ', await response.json())
       const { error } = await response.json()
       console.log('in with auth', error)
       throw new Error(error)

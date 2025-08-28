@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { useState } from 'react'
-import { Link, Redirect, router, Tabs } from 'expo-router'
+import { View } from 'react-native'
+import { useState, Fragment } from 'react'
+import { Link, Tabs } from 'expo-router'
 import {
   Dumbbell,
   Book,
@@ -10,6 +10,9 @@ import {
   CirclePlus,
   Home,
   Settings,
+  Plus,
+  Sliders,
+  ListFilter,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import TopIndicatorTabBar from '../../components/tabbar'
@@ -17,6 +20,8 @@ import TextLogo from '../../assets/spotter-text-logo.svg'
 import Log from '../../components/log'
 import MyModal from '../../components/modal'
 import useTheme from '../hooks/theme'
+import Button from '../../components/button'
+import tw from '../../tw'
 
 // the main dashboard layout for the app for a logged in user
 
@@ -173,6 +178,26 @@ const TabsLayout = () => {
                   color={theme.grayText}
                 />
               ),
+            headerRight: () => {
+              return (
+                <View style={tw`flex-row items-center gap-4 pr-2`}>
+                  <Button hitSlop={12}>
+                    <ListFilter
+                      strokeWidth={1.5}
+                      size={28}
+                      color={Colors.primary}
+                    />
+                  </Button>
+                  <Link href="/notebook-entry-form">
+                    <Plus
+                      strokeWidth={1.5}
+                      size={28}
+                      color={Colors.primary}
+                    />
+                  </Link>
+                </View>
+              )
+            },
           }}
         />
       </Tabs>

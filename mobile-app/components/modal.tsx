@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { Platform, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal'
 import useTheme from '../app/hooks/theme'
+import tw from '../tw'
+import DragHandle from './drag-handle'
 
 type ModalProps = {
   isOpen: boolean
@@ -18,13 +20,18 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       onBackdropPress={() => setIsOpen(false)}
       onSwipeComplete={() => setIsOpen(false)}
       useNativeDriver
-      useNativeDriverForBackdrop
+      useNativeDriverForBackdrop={Platform.OS == 'android'}
       backdropOpacity={0.4}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       style={{ justifyContent: 'flex-end', margin: 0, position: 'relative' }}
     >
-      {children}
+      <View
+        style={tw`bg-light-background dark:bg-dark-background rounded-xl px-4 pt-10 pb-12 gap-4 relative`}
+      >
+        <DragHandle />
+        {children}
+      </View>
     </Modal>
   )
 }

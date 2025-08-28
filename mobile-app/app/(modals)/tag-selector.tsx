@@ -4,18 +4,21 @@ import SafeView from '../../components/safe-view'
 import Input from '../../components/input'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
-import { UsedTags } from '../../utils/types'
+import { Tag } from '../../utils/types'
 import Button from '../../components/button'
 import { ActivityIndicator, Pressable, View } from 'react-native'
 import tw from '../../tw'
-import Loading from '../../components/loading'
 import useTheme from '../hooks/theme'
-import { router, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 
 const TagSelector = () => {
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [usedTags, setUsedTags] = useState<UsedTags[]>([])
-  const [results, setResults] = useState<UsedTags[]>([])
+  const { existingTags } = useLocalSearchParams()
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(
+    existingTags ? JSON.parse(existingTags as string) : []
+  )
+  const [tagResults, setTagResults] = useState<(Tag & { used: number })[]>([])
+  const [tags, setTags] = useState<(Tag & { used: number })[]>([])
+  const [removedTags, setRemovedTags] = useState<(Tag & { used: number })[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const { fetchWithAuth, authUser } = useAuth()
@@ -39,24 +42,31 @@ const TagSelector = () => {
           hitSlop={12}
           accessibilityLabel="save selected tags"
           twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-          text="Save"
+          text="Done"
         />
       ),
     })
   }, [navigation, selectedTags])
 
   useEffect(() => {
-    const usedAndSelected = usedTags.filter(
-      (tag) => !selectedTags.includes(tag.name)
+    const filteredQueryResults = tags.filter(
+      (tag) =>
+        tag.name.toLowerCase().includes(query.toLowerCase()) &&
+        !selectedTags.find((t) => t.name === tag.name)
     )
-    const filtered = usedAndSelected.filter((tag) =>
-      tag.name.toLowerCase().includes(query.toLowerCase())
-    )
-    setResults(filtered)
+    setTagResults(filteredQueryResults)
   }, [query])
 
   useEffect(() => {
-    // fetch user tags - can change route based on if notebook or workout tags
+    const filteredTags = tags.filter(
+      (tag) =>
+        !selectedTags.find((t) => t.name === tag.name) &&
+        tag.name.toLowerCase().includes(query.toLowerCase())
+    )
+    setTagResults(filteredTags)
+  }, [selectedTags, query])
+
+  useEffect(() => {
     const getTags = async () => {
       const response = await fetchWithAuth(
         `${BASE_URL}/api/notebookEntries/tags/${authUser?.id}`,
@@ -67,87 +77,73 @@ const TagSelector = () => {
           },
         }
       )
-      const tags = await response.json()
-      setUsedTags(tags)
-      setResults(tags)
+      const tags = (await response.json()) as (Tag & { used: number })[]
+      setTags(tags)
+      const filteredTags = tags.filter(
+        (tag) => !selectedTags.find((t) => t.name === tag.name)
+      )
+      setTagResults(filteredTags)
       setLoading(false)
     }
     getTags()
   }, [])
 
   const handleSelectTag = (tagName: string) => {
-    setSelectedTags((prev) => {
-      if (prev.includes(tagName)) {
-        return prev.filter((name) => name !== tagName)
-      }
-      return [...prev, tagName]
-    })
-    setUsedTags((prev) => {
-      if (prev.find((tag) => tag.name === tagName)) {
-        return prev.filter((tag) => tag.name !== tagName)
-      }
-      return prev
-    })
-    setResults((prev) => {
-      if (prev.find((tag) => tag.name === tagName)) {
-        return prev.filter((tag) => tag.name !== tagName)
-      }
-      return prev
-    })
+    // remove from tags so it cant be searched and add to removed in case it gets deselected
+    setTags((prev) => prev.filter((tag) => tag.name !== tagName))
+    setTagResults((prev) => prev.filter((tag) => tag.name !== tagName))
+    setRemovedTags((prev) => [
+      ...prev,
+      tags.find((tag) => tag.name === tagName)!,
+    ])
+    const tag = tags.find((tag) => tag.name === tagName)!
+    if (tag) setSelectedTags((prev) => [...prev, tag])
     setQuery('')
   }
 
   const handleCreateNewTag = () => {
-    const trimmedQuery = query.trim()
-    if (trimmedQuery && !selectedTags.includes(trimmedQuery)) {
-      handleSelectTag(trimmedQuery)
-    }
-  }
-
-  const handleDeselectTag = (tagName: string) => {
-    setSelectedTags((prev) => {
-      if (prev.includes(tagName)) {
-        return prev.filter((name) => name !== tagName)
-      }
-      return prev
-    })
-    setUsedTags((prev) => {
-      if (prev.find((tag) => tag.name === tagName)) {
-        return prev.filter((tag) => tag.name !== tagName)
-      }
-      return prev
-    })
-    setResults((prev) => {
-      if (prev.find((tag) => tag.name === tagName)) {
-        return prev.filter((tag) => tag.name !== tagName)
-      }
-      return [...prev, usedTags.find((tag) => tag.name === tagName)!]
-    })
+    // create new tag to selected tags
+    const newTag = {
+      id: Date.now().toString(),
+      name: query.trim(),
+      userId: authUser?.id ?? '',
+    } // dummy id to match type
+    setSelectedTags((prev) => [...prev, newTag])
+    // do not add to tags (those are tags from database)
     setQuery('')
   }
 
-  const renderedResults = results.map((tag) => {
+  const handleDeselectTag = (tagName: string) => {
+    // remove from selected tags, and add back to tags (find in removedTags)
+    const isInRemovedTags = removedTags.find((tag) => tag.name === tagName)
+    setSelectedTags((prev) => prev.filter((tag) => tag.name !== tagName))
+    if (isInRemovedTags) {
+      setTags((prev) => [...prev, isInRemovedTags])
+    }
+  }
+
+  const renderedResults = tagResults.map(({ id, name, used }) => {
     return (
       <Pressable
         style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary justify-between flex-row px-2 py-3 items-center`}
-        key={tag.id}
-        onPress={() => handleSelectTag(tag.name)}
+        key={id}
+        onPress={() => handleSelectTag(name)}
       >
-        <Txt>{tag.name}</Txt>
-        <Txt>{tag.used}</Txt>
+        <Txt>{name}</Txt>
+        <Txt>{used}</Txt>
       </Pressable>
     )
   })
 
-  const renderedSelectedTags = selectedTags.map((tag) => {
+  const renderedSelectedTags = selectedTags.map(({ id, name }) => {
     return (
       <Pressable
-        key={tag}
-        onPress={() => handleDeselectTag(tag)}
+        key={id}
+        onPress={() => handleDeselectTag(name)}
         style={tw`bg-primary dark:bg-primary rounded-full px-2 py-0.5`}
       >
         <Txt twcn="text-xs text-light-background dark:text-light-background">
-          {tag}
+          {name}
         </Txt>
       </Pressable>
     )

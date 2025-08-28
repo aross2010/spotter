@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native'
-import React from 'react'
+import React, { Fragment } from 'react'
 import Txt from './text'
 import { BookOpen, Calendar, PersonStanding } from 'lucide-react-native'
 import Colors from '../constants/colors'
@@ -50,7 +50,7 @@ const Log = ({ setIsOpen }: LogProps) => {
         >
           <View
             key={index}
-            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl px-4 py-6 flex-row gap-6 items-center`}
+            style={tw`bg-white border border-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl px-4 py-6 flex-row gap-6 items-center`}
           >
             <Icon
               color={Colors.primary}
@@ -71,15 +71,12 @@ const Log = ({ setIsOpen }: LogProps) => {
   )
 
   return (
-    <View
-      style={tw`bg-light-background dark:bg-dark-background rounded-xl px-4 pt-10 pb-12 gap-4 relative`}
-    >
-      <DragHandle />
+    <Fragment>
       <Txt twcn="text-primary dark:text-primary text-xl text-center font-geologicaSemiBold">
         What would you like to log?
       </Txt>
       <View style={tw`flex-col gap-2`}>{renderedElements}</View>
-    </View>
+    </Fragment>
   )
 }
 

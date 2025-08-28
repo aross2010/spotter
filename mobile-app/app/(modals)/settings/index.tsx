@@ -150,24 +150,26 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="text-base font-poppinsMedium">{sectionTitle}</Txt>
+            <Txt twcn="uppercase text-sm font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+              {sectionTitle}
+            </Txt>
           )}
           <View
-            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (
-                <Pressable
+                <Button
                   key={index}
                   onPress={onPress ? onPress : promptSignOut}
-                  style={tw`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-graySecondary dark:border-dark-graySecondary'}`}
+                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayPrimary dark:border-dark-graySecondary'}`}
                 >
                   <Txt twcn="font-poppinsRegular">{label}</Txt>
                   <ChevronRight
                     strokeWidth={1.5}
-                    color={theme.grayText}
+                    color={theme.grayTertiary}
                   />
-                </Pressable>
+                </Button>
               )
             })}
           </View>

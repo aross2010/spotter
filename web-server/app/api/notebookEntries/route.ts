@@ -15,6 +15,8 @@ export const POST = withAuth(async (req, user) => {
 
   const userId = user.id
 
+  console.log(data)
+
   let { title, body, date, tags } = data
   if (!body || !date || !userId) {
     return NextResponse.json(
@@ -102,7 +104,7 @@ export const POST = withAuth(async (req, user) => {
       return completeNotebookEntry
     })
 
-    return NextResponse.json({ result }, { status: 201 })
+    return NextResponse.json(result, { status: 201 })
   } catch (error: any) {
     console.error(error)
     return NextResponse.json(
