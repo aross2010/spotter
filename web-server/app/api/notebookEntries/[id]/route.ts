@@ -8,12 +8,16 @@ import {
   notebookTags,
 } from '@/src/db/schema'
 import { eq, inArray } from 'drizzle-orm'
+import { withAuth } from '../../middleware'
 
-export async function PUT(req: Request, props: { params: Params }) {
-  const params = await props.params
-  const id = params.id as string
+export const PUT = withAuth(async (req, user) => {
+  console.log('Received request to update notebook entry')
+  const id = req.url.split('/').pop()
   const data = await req.json()
   let { title, body, date, tags, pinned } = data
+
+  console.log('Received data for update:', data)
+  console.log('Updating notebook entry ID:', id)
 
   if (!id) {
     return NextResponse.json(
@@ -145,7 +149,7 @@ export async function PUT(req: Request, props: { params: Params }) {
       { status: 500 }
     )
   }
-}
+})
 
 export async function DELETE(req: Request, props: { params: Params }) {
   const params = await props.params

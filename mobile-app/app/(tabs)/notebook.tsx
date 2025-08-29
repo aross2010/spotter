@@ -1,22 +1,23 @@
-import { StyleSheet, Text, View, Animated, Easing, Alert } from 'react-native'
-import React, { Fragment, useEffect, useRef } from 'react'
+import { View, Animated, Easing } from 'react-native'
+import React, { useEffect, useRef } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import {
   Activity,
   Ambulance,
-  Circle,
-  Ellipsis,
   PenLine,
   Pin,
   Smile,
   Target,
   Utensils,
+  ListFilter,
+  Plus,
 } from 'lucide-react-native'
+import { Link } from 'expo-router'
 import tw from '../../tw'
 import Colors from '../../constants/colors'
 import Button from '../../components/button'
-import { router } from 'expo-router'
+import { router, useNavigation } from 'expo-router'
 import Spinner from '../../components/activity-indicator'
 import NotebookEntryView from '../../components/notebook-entry'
 import { useNotebook } from '../../context/notebook-context'
@@ -56,9 +57,50 @@ const notebookFunctions = [
 ]
 
 const Notebook = () => {
-  const { notebookEntries, isLoading, initializeNotebook } = useNotebook()
+  const { currentNotebookEntries, isLoading, initializeNotebook, tagFilters } =
+    useNotebook()
   const { theme } = useTheme()
-  const hasEntries = notebookEntries.length > 0
+  const navigation = useNavigation()
+  const hasEntries = currentNotebookEntries.length > 0
+  const noResults = currentNotebookEntries.length === 0 && tagFilters.length > 0
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => {
+        return (
+          <View style={tw`flex-row items-center gap-4 pr-2`}>
+            <View style={tw`relative`}>
+              <Link href="/notebook-filters">
+                <ListFilter
+                  strokeWidth={1.5}
+                  size={28}
+                  color={Colors.primary}
+                />
+              </Link>
+              {tagFilters.length > 0 && (
+                <View
+                  style={tw.style(
+                    'absolute -z-1 -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary'
+                  )}
+                >
+                  <Txt twcn="text-xs font-poppinsMedium text-white">
+                    {tagFilters.length}
+                  </Txt>
+                </View>
+              )}
+            </View>
+            <Link href="/notebook-entry-form">
+              <Plus
+                strokeWidth={1.5}
+                size={28}
+                color={Colors.primary}
+              />
+            </Link>
+          </View>
+        )
+      },
+    })
+  }, [navigation, tagFilters])
 
   useEffect(() => {
     initializeNotebook()
@@ -145,7 +187,7 @@ const Notebook = () => {
 
   let currentMonth = ''
 
-  const renderedEntries = notebookEntries.map((entry, index) => {
+  const renderedEntries = currentNotebookEntries.map((entry, index) => {
     let addMonth = false
     const { date, pinned, id } = entry
     const month = new Date(date).toLocaleString('default', {
@@ -204,8 +246,12 @@ const Notebook = () => {
     </SafeView>
   )
 
-  const notebookView = (
-    <SafeView twcnInnerView="gap-3">{renderedEntries}</SafeView>
+  const notebookView = noResults ? (
+    <View>
+      <Txt>No results found</Txt>
+    </View>
+  ) : (
+    <SafeView twcnInnerView="gap-2">{renderedEntries}</SafeView>
   )
 
   return isLoading ? <Spinner /> : hasEntries ? notebookView : notebookPrompt

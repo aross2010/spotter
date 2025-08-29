@@ -5,8 +5,7 @@ import { notebookEntries } from '@/src/db/schema'
 import { desc } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
-  const url = new URL(req.url)
-  const userId = url.pathname.split('/').pop()
+  const userId = req.url.split('/').pop()
 
   if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })

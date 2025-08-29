@@ -3,13 +3,15 @@ import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
 import Input from '../../components/input'
 import { useAuth } from '../../context/auth-context'
-import { BASE_URL } from '../../constants/auth'
+import { Alert } from 'react-native'
 import { Tag } from '../../utils/types'
 import Button from '../../components/button'
 import { ActivityIndicator, Pressable, View } from 'react-native'
 import tw from '../../tw'
 import useTheme from '../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import TagView from '../../components/tag'
+import { useNotebook } from '../../context/notebook-context'
 
 const TagSelector = () => {
   const { existingTags } = useLocalSearchParams()
@@ -21,8 +23,9 @@ const TagSelector = () => {
   const [removedTags, setRemovedTags] = useState<(Tag & { used: number })[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
-  const { fetchWithAuth, authUser } = useAuth()
+  const { authUser } = useAuth()
   const { theme } = useTheme()
+  const { fetchTags } = useNotebook()
   const navigation = useNavigation()
 
   const handleSaveTags = () => {
@@ -68,22 +71,19 @@ const TagSelector = () => {
 
   useEffect(() => {
     const getTags = async () => {
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/tags/${authUser?.id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-      const tags = (await response.json()) as (Tag & { used: number })[]
-      setTags(tags)
-      const filteredTags = tags.filter(
-        (tag) => !selectedTags.find((t) => t.name === tag.name)
-      )
-      setTagResults(filteredTags)
-      setLoading(false)
+      try {
+        setLoading(true)
+        const tags = await fetchTags()
+        setTags(tags)
+        const filteredTags = tags.filter(
+          (tag) => !selectedTags.find((t) => t.name === tag.name)
+        )
+        setTagResults(filteredTags)
+      } catch (error: any) {
+        Alert.alert('Error', error.message)
+      } finally {
+        setLoading(false)
+      }
     }
     getTags()
   }, [])
@@ -135,16 +135,14 @@ const TagSelector = () => {
     )
   })
 
-  const renderedSelectedTags = selectedTags.map(({ id, name }) => {
+  const renderedSelectedTags = selectedTags.map(({ id, name, userId }) => {
     return (
       <Pressable
         key={id}
         onPress={() => handleDeselectTag(name)}
-        style={tw`bg-primary dark:bg-primary rounded-full px-2 py-0.5`}
+        hitSlop={12}
       >
-        <Txt twcn="text-xs text-light-background dark:text-light-background">
-          {name}
-        </Txt>
+        <TagView tag={{ id, name, userId }} />
       </Pressable>
     )
   })
@@ -165,7 +163,7 @@ const TagSelector = () => {
             autoCorrect={false}
             autoCapitalize="none"
             noBorder
-            placeholder="Search tags..."
+            placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
             value={query}
             onChange={(e) => setQuery(e.nativeEvent.text)}
             onSubmitEditing={handleCreateNewTag}

@@ -19,7 +19,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const { theme } = useTheme()
-  const { id, date, title, body, tags } = entry
+  const { date, title, body, tags } = entry
 
   const CHARACTER_LIMIT = 400
   const shouldTruncate = body.length > CHARACTER_LIMIT
@@ -47,7 +47,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
-            {formatDate(new Date(date))}
+            {formatDate(date)}
           </Txt>
           <Button
             hitSlop={12}
@@ -62,7 +62,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
 
         {title && <Txt twcn="font-poppinsMedium text-base">{title}</Txt>}
 
-        <View style={tw`mt-4`}>
+        <View style={tw`mt-2`}>
           <Txt twcn="text-sm leading-relaxed">{displayText}</Txt>
 
           {shouldTruncate && (

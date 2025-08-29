@@ -33,40 +33,6 @@ const NotebookEntryOptions = ({
     setIsOptionsOpen(false)
   }
 
-  const deleteEntryFromDb = async () => {
-    try {
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-      deleteEntry(id)
-    } catch (error: any) {
-      Alert.alert('Error', error.message)
-    }
-  }
-
-  const handleDelete = () => {
-    Alert.alert('Delete Entry', 'Are you sure you want to delete this entry?', [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Delete',
-        onPress: () => {
-          setIsOptionsOpen(false)
-          deleteEntryFromDb()
-        },
-        style: 'destructive',
-      },
-    ])
-  }
-
   const handleEdit = () => {
     setIsOptionsOpen(false)
     router.push({
@@ -99,7 +65,10 @@ const NotebookEntryOptions = ({
     {
       title: 'Delete',
       description: 'Remove this entry permanently',
-      onPress: handleDelete,
+      onPress: () => {
+        deleteEntry(id)
+        setIsOptionsOpen(false)
+      },
       icon: Trash,
     },
   ]
@@ -166,7 +135,7 @@ const NotebookEntryOptions = ({
             color={theme.grayText}
           />
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
-            {formatDate(new Date(date))}
+            {formatDate(date)}
           </Txt>
         </View>
 

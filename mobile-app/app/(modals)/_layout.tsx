@@ -64,6 +64,24 @@ export default function ModalLayout() {
             ),
           }}
         />
+
+        <Stack.Screen
+          name="notebook-filters"
+          options={{
+            title: 'Notebook Filters',
+            headerTitle: 'Notebook Filters',
+            headerShown: true,
+            headerLeft: () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close notebook entry"
+                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
+                text="Cancel"
+              />
+            ),
+          }}
+        />
         <Stack.Screen
           name="tag-selector"
           options={{

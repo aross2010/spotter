@@ -178,26 +178,6 @@ const TabsLayout = () => {
                   color={theme.grayText}
                 />
               ),
-            headerRight: () => {
-              return (
-                <View style={tw`flex-row items-center gap-4 pr-2`}>
-                  <Button hitSlop={12}>
-                    <ListFilter
-                      strokeWidth={1.5}
-                      size={28}
-                      color={Colors.primary}
-                    />
-                  </Button>
-                  <Link href="/notebook-entry-form">
-                    <Plus
-                      strokeWidth={1.5}
-                      size={28}
-                      color={Colors.primary}
-                    />
-                  </Link>
-                </View>
-              )
-            },
           }}
         />
       </Tabs>

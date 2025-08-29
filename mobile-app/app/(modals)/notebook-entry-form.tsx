@@ -16,6 +16,7 @@ import { BASE_URL } from '../../constants/auth'
 import { NotebookEntry, Tag } from '../../utils/types'
 import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
+import TagView from '../../components/tag'
 
 const NotebookEntryForm = () => {
   const colorScheme = useColorScheme() ?? 'light'
@@ -27,7 +28,14 @@ const NotebookEntryForm = () => {
   const isEditing = !!entryId
 
   const [data, setData] = useState({
-    date: entryDate ? new Date(entryDate as string) : new Date(),
+    date: entryDate
+      ? (() => {
+          const [year, month, day] = (entryDate as string)
+            .split('-')
+            .map(Number)
+          return new Date(year, month - 1, day)
+        })()
+      : new Date(),
     title: (entryTitle as string) || '',
     body: (entryBody as string) || '',
     tags: entryTags
@@ -35,7 +43,6 @@ const NotebookEntryForm = () => {
       : ([] as Tag[]),
   })
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const { fetchWithAuth, authUser } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
   const navigation = useNavigation()
   const selectedTags = tags ? JSON.parse(tags as string) : []
@@ -57,11 +64,7 @@ const NotebookEntryForm = () => {
   }, [navigation, isSaving, data])
 
   useEffect(() => {
-    console.log('in tags dependednt use effect in form')
-    console.log('Updating tags:', selectedTags)
-    console.log('Current tags:', tags)
     if (tags) {
-      console.log('Setting tags:', selectedTags)
       setData((prevData) => ({ ...prevData, tags: selectedTags }))
     }
   }, [tags])
@@ -70,37 +73,15 @@ const NotebookEntryForm = () => {
     setIsSaving(true)
     try {
       if (isEditing) {
-        const response = await fetchWithAuth(
-          `${BASE_URL}/api/notebookEntries/${entryId}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...data,
-              tags: data.tags.map((tag) => tag.name),
-            }),
-          }
-        )
-        const updatedEntry = (await response.json()) as NotebookEntry
-        updateEntry(entryId as string, updatedEntry)
+        await updateEntry(entryId as string, {
+          ...data,
+          date: data.date.toISOString(),
+        })
       } else {
-        const response = await fetchWithAuth(
-          `${BASE_URL}/api/notebookEntries`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ...data,
-              tags: data.tags.map((tag) => tag.name),
-            }),
-          }
-        )
-        const notebookEntry = (await response.json()) as NotebookEntry
-        addEntry(notebookEntry)
+        await addEntry({
+          ...data,
+          date: data.date.toISOString(),
+        })
       }
       router.back()
     } catch (error: any) {
@@ -110,16 +91,12 @@ const NotebookEntryForm = () => {
     }
   }
 
-  const renderedTags = data.tags.map(({ id, name }, index) => {
+  const renderedTags = data.tags.map(({ id, name, userId }, index) => {
     return (
-      <View
+      <TagView
         key={id}
-        style={tw`bg-primary rounded-full px-2 py-0.5`}
-      >
-        <Txt twcn="text-xs text-light-background dark:text-light-background">
-          {name}
-        </Txt>
-      </View>
+        tag={{ id, name, userId }}
+      />
     )
   })
 
