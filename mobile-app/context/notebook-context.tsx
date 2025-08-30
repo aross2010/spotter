@@ -14,17 +14,22 @@ type NotebookEntryData = Omit<
 type NotebookContextType = {
   currentNotebookEntries: NotebookEntry[]
   isLoading: boolean
+  isLoadingMore: boolean
   hasLoaded: boolean
+  hasMore: boolean
   initializeNotebook: () => Promise<void>
   refreshEntries: () => Promise<void>
+  loadMoreEntries: () => Promise<void>
   updateEntry: (entryId: string, entryToUpdate: NotebookEntryData) => void
   deleteEntry: (entryId: string) => void
   addEntry: (newEntry: NotebookEntryData) => Promise<void>
   pinEntry: (entryId: string) => Promise<void>
   unpinEntry: (entryId: string) => Promise<void>
   fetchTags: () => Promise<(Tag & { used: number })[]>
-  applyTagFilters: (tags: Tag[]) => void
+  applyFiltersAndSort: (tags: Tag[], order: 'asc' | 'desc') => Promise<void>
   tagFilters: Tag[]
+  sortOrder: 'asc' | 'desc'
+  setSortOrder: (order: 'asc' | 'desc') => void
 }
 
 // filters: by tags
@@ -41,37 +46,58 @@ type NotebookProviderProps = {
 export const NotebookProvider = ({ children }: NotebookProviderProps) => {
   const { user } = useUserStore()
   const { fetchWithAuth, authUser } = useAuth()
-  const [allNotebookEntries, setAllNotebookEntries] = useState<NotebookEntry[]>(
-    []
-  ) // Store all entries
   const [currentNotebookEntries, setCurrentNotebookEntries] = useState<
     NotebookEntry[]
-  >([]) // Filtered/displayed entries
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasLoaded, setHasLoaded] = useState(false)
-  const [sortDateOrder, setSortDateOrder] = useState<'asc' | 'desc'>('desc')
-  const [tagFilters, setTagFilters] = useState<Tag[]>([])
+  >([]) // the entries displayed after optional filtering/sorting
+  const [isLoading, setIsLoading] = useState(false) // fetching new set of entries
+  const [isLoadingMore, setIsLoadingMore] = useState(false) // fetching more entries from scroll
+  const [hasLoaded, setHasLoaded] = useState(false) // has the initial data loaded
+  const [hasMore, setHasMore] = useState(true) // from pagination data, whether there are more entries to load
+  const [currentPage, setCurrentPage] = useState(1) // current page number from pagination data
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc') // date desc or asc
+  const [tagFilters, setTagFilters] = useState<Tag[]>([]) // active tag filters
 
-  const sortEntries = (entries: NotebookEntry[]): NotebookEntry[] => {
-    return entries.sort((a, b) => {
-      // Pinned entries always come first
-      if (a.pinned && !b.pinned) return -1
-      if (!a.pinned && b.pinned) return 1
+  const PAGE_SIZE = 25
 
-      // Both pinned or both unpinned - sort by date (newest first)
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
+  const buildQueryParams = (
+    page: number,
+    tags: Tag[] = tagFilters,
+    order: 'asc' | 'desc' = sortOrder,
+    resetFilters: boolean = false
+  ) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: PAGE_SIZE.toString(),
+      sortBy: 'date',
+      sortOrder: order,
     })
+
+    if (!resetFilters && tags.length > 0) {
+      const tagNames = tags.map((tag) => tag.name)
+      params.append('tags', JSON.stringify(tagNames))
+    }
+
+    return params.toString()
   }
 
-  const fetchEntries = async () => {
-    if (!user) {
-      setIsLoading(false)
-      return
+  const fetchEntries = async (
+    page: number = 1,
+    append: boolean = false,
+    tags: Tag[] = tagFilters,
+    order: 'asc' | 'desc' = sortOrder
+  ) => {
+    if (!user) return
+
+    if (append) {
+      setIsLoadingMore(true)
+    } else {
+      setIsLoading(true)
     }
-    setIsLoading(true)
+
     try {
+      const queryParams = buildQueryParams(page, tags, order)
       const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/user/${user.id}`,
+        `${BASE_URL}/api/notebookEntries/user/${user.id}?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -79,17 +105,29 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
           },
         }
       )
-      const entries = (await response.json()) as NotebookEntry[]
-      console.log('Fetched notebook entries:', entries)
-      const sortedEntries = sortEntries(entries)
-      setAllNotebookEntries(sortedEntries)
-      setCurrentNotebookEntries(sortedEntries)
+
+      const data = await response.json()
+
+      if (append) {
+        setCurrentNotebookEntries((prev) => [...prev, ...data.entries])
+      } else {
+        setCurrentNotebookEntries(data.entries)
+      }
+
+      setHasMore(data.pagination.hasNextPage)
+      setCurrentPage(data.pagination.page)
       setHasLoaded(true)
     } catch (error: any) {
       Alert.alert('Error', error.message)
     } finally {
       setIsLoading(false)
+      setIsLoadingMore(false)
     }
+  }
+
+  const loadMoreEntries = async () => {
+    if (!hasMore || isLoadingMore) return
+    await fetchEntries(currentPage + 1, true)
   }
 
   const fetchTags = async () => {
@@ -106,33 +144,46 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     return tags
   }
 
-  const applyTagFilters = (tags: Tag[]) => {
+  const applyFiltersAndSort = async (tags: Tag[], order: 'asc' | 'desc') => {
     setTagFilters(tags)
-    console.log('Applying tag filters in applyTagFilters:', tags)
-
-    if (tags.length === 0) {
-      // No filters - show all entries
-      setCurrentNotebookEntries(allNotebookEntries)
-    } else {
-      // Apply filters to the original data
-      const tagNames = tags.map((tag) => tag.name)
-      const filteredNotebookEntries = allNotebookEntries.filter((entry) =>
-        entry.tags.some((tag) => tagNames.includes(tag.name))
-      )
-      console.log('Filtered notebook entries:', filteredNotebookEntries)
-      setCurrentNotebookEntries(filteredNotebookEntries)
-    }
+    setSortOrder(order)
+    setCurrentPage(1)
+    setHasMore(true)
+    await fetchEntries(1, false, tags, order)
   }
 
   const initializeNotebook = async () => {
-    // prevent unnecessary fetches
     if (!hasLoaded && !isLoading) {
-      await fetchEntries()
+      await fetchEntries(1, false)
     }
   }
 
   const refreshEntries = async () => {
-    await fetchEntries()
+    setCurrentPage(1)
+    setHasMore(true)
+    await fetchEntries(1, false)
+  }
+
+  const updateCurrentEntries = (
+    entryId: string,
+    updates: Partial<NotebookEntry>
+  ) => {
+    setCurrentNotebookEntries((prev) => {
+      const updatedEntries = prev.map((entry) =>
+        entry.id === entryId ? { ...entry, ...updates } : entry
+      )
+
+      // Sort: pinned first, then by date according to current sort order
+      return updatedEntries.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1
+        if (!a.pinned && b.pinned) return 1
+
+        // Both have same pinned status, sort by date
+        const dateA = new Date(a.date).getTime()
+        const dateB = new Date(b.date).getTime()
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB
+      })
+    })
   }
 
   const updateEntry = async (
@@ -154,26 +205,11 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     )
     const updatedEntry = (await response.json()) as NotebookEntry
 
-    // Update both the full list and filtered list
-    setAllNotebookEntries((prev) => {
-      const updatedEntries = prev.map((entry) =>
+    setCurrentNotebookEntries((prev) =>
+      prev.map((entry) =>
         entry.id === entryId ? { ...entry, ...updatedEntry } : entry
       )
-      if ('pinned' in updatedEntry) {
-        return sortEntries(updatedEntries)
-      }
-      return updatedEntries
-    })
-
-    setCurrentNotebookEntries((prev) => {
-      const updatedEntries = prev.map((entry) =>
-        entry.id === entryId ? { ...entry, ...updatedEntry } : entry
-      )
-      if ('pinned' in updatedEntry) {
-        return sortEntries(updatedEntries)
-      }
-      return updatedEntries
-    })
+    )
   }
 
   const deleteEntry = (entryId: string) => {
@@ -196,11 +232,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
                 },
               }
             )
-            // Only remove from UI if API call was successful
             if (response.ok) {
-              setAllNotebookEntries((prev) =>
-                prev.filter((entry) => entry.id !== entryId)
-              )
               setCurrentNotebookEntries((prev) =>
                 prev.filter((entry) => entry.id !== entryId)
               )
@@ -227,45 +259,20 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
         tags: newEntry.tags.map((tag) => tag.name),
       }),
     })
-    const notebookEntry = (await response.json()) as NotebookEntry
-    const newEntries = sortEntries([...allNotebookEntries, notebookEntry])
-    setAllNotebookEntries(newEntries)
-
-    // Apply current filters to decide if the new entry should be shown
-    if (tagFilters.length === 0) {
-      setCurrentNotebookEntries(newEntries)
-    } else {
-      const tagNames = tagFilters.map((tag) => tag.name)
-      if (notebookEntry.tags.some((tag) => tagNames.includes(tag.name))) {
-        setCurrentNotebookEntries((prev) =>
-          sortEntries([...prev, notebookEntry])
-        )
-      }
-    }
+    await refreshEntries()
   }
 
   const pinEntry = async (entryId: string) => {
     try {
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/${entryId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ pinned: true }),
-        }
-      )
-      setAllNotebookEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === entryId ? { ...entry, pinned: true } : entry
-        )
-      )
-      setCurrentNotebookEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === entryId ? { ...entry, pinned: true } : entry
-        )
-      )
+      await fetchWithAuth(`${BASE_URL}/api/notebookEntries/${entryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pinned: true }),
+      })
+
+      updateCurrentEntries(entryId, { pinned: true })
     } catch (error: any) {
       Alert.alert('Error', error.message)
     }
@@ -273,26 +280,15 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
 
   const unpinEntry = async (entryId: string) => {
     try {
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/${entryId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ pinned: false }),
-        }
-      )
-      setAllNotebookEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === entryId ? { ...entry, pinned: false } : entry
-        )
-      )
-      setCurrentNotebookEntries((prev) =>
-        prev.map((entry) =>
-          entry.id === entryId ? { ...entry, pinned: false } : entry
-        )
-      )
+      await fetchWithAuth(`${BASE_URL}/api/notebookEntries/${entryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pinned: false }),
+      })
+
+      updateCurrentEntries(entryId, { pinned: false })
     } catch (error) {
       Alert.alert('Error', 'Failed to unpin entry')
     }
@@ -301,17 +297,22 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
   const value: NotebookContextType = {
     currentNotebookEntries,
     isLoading,
+    isLoadingMore,
     hasLoaded,
+    hasMore,
     initializeNotebook,
     refreshEntries,
+    loadMoreEntries,
     updateEntry,
     deleteEntry,
     addEntry,
     pinEntry,
     unpinEntry,
     fetchTags,
-    applyTagFilters,
+    applyFiltersAndSort,
     tagFilters,
+    sortOrder,
+    setSortOrder,
   }
 
   return (

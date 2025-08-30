@@ -69,7 +69,7 @@ export default function ModalLayout() {
           name="notebook-filters"
           options={{
             title: 'Notebook Filters',
-            headerTitle: 'Notebook Filters',
+            headerTitle: 'Filter Entries',
             headerShown: true,
             headerLeft: () => (
               <Button

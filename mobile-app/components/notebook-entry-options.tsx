@@ -1,4 +1,4 @@
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import React, { Fragment } from 'react'
 import { NotebookEntry } from '../utils/types'
 import { Pencil, Pin, Trash, Calendar, Tag, PinOff } from 'lucide-react-native'
@@ -10,8 +10,6 @@ import useTheme from '../app/hooks/theme'
 import Button from './button'
 import { useNotebook } from '../context/notebook-context'
 import { router } from 'expo-router'
-import { useAuth } from '../context/auth-context'
-import { BASE_URL } from '../constants/auth'
 
 type NotebookEntryOptionsProps = {
   entry: NotebookEntry
@@ -25,7 +23,6 @@ const NotebookEntryOptions = ({
   const { theme } = useTheme()
   const { pinEntry, unpinEntry, deleteEntry } = useNotebook()
   const { pinned, title, body, tags, id, date } = entry
-  const { fetchWithAuth } = useAuth()
 
   const handlePinToggle = async () => {
     if (pinned) await unpinEntry(id)

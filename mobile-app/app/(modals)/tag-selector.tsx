@@ -11,7 +11,7 @@ import tw from '../../tw'
 import useTheme from '../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import TagView from '../../components/tag'
-import { useNotebook } from '../../context/notebook-context'
+import { useNotebook, NotebookProvider } from '../../context/notebook-context'
 
 const TagSelector = () => {
   const { existingTags } = useLocalSearchParams()

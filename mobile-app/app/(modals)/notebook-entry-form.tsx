@@ -17,6 +17,7 @@ import { NotebookEntry, Tag } from '../../utils/types'
 import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
 import TagView from '../../components/tag'
+import { Tag as TagIcon } from 'lucide-react-native'
 
 const NotebookEntryForm = () => {
   const colorScheme = useColorScheme() ?? 'light'
@@ -42,32 +43,68 @@ const NotebookEntryForm = () => {
       ? (JSON.parse(entryTags as string) as Tag[])
       : ([] as Tag[]),
   })
+  const [initialState, setInitialState] = useState<{
+    date: Date
+    title: string
+    body: string
+    tags: Tag[]
+  } | null>(null)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const navigation = useNavigation()
   const selectedTags = tags ? JSON.parse(tags as string) : []
 
   useEffect(() => {
+    setInitialState({ ...data })
+  }, []) // Only run once on mount
+  const hasChanges = () => {
+    if (!isEditing || !initialState) return true // For new entries or before initial state is set, always allow saving if body is not empty
+
+    const dateChanged = data.date.getTime() !== initialState.date.getTime()
+    const titleChanged = data.title.trim() !== initialState.title.trim()
+    const bodyChanged = data.body.trim() !== initialState.body.trim()
+    const tagsChanged =
+      data.tags.length !== initialState.tags.length ||
+      data.tags.some(
+        (tag) =>
+          !initialState.tags.some((initial: Tag) => initial.id === tag.id)
+      )
+
+    return dateChanged || titleChanged || bodyChanged || tagsChanged
+  }
+
+  const canSave = () => {
+    const hasContent = data.body.trim().length > 0
+    const hasValidChanges = hasChanges()
+    return hasContent && hasValidChanges && !isSaving
+  }
+
+  useEffect(() => {
+    const saveEnabled = canSave()
     navigation.setOptions({
       headerTitle: isEditing ? 'Edit Entry' : 'New Entry',
       headerRight: () => (
         <Button
-          onPress={handleSubmitEntry}
+          onPress={saveEnabled ? handleSubmitEntry : undefined}
           hitSlop={12}
           accessibilityLabel="submit notebook entry"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
           text="Save"
-          disabled={data.body.trim().length < 1 || isSaving}
+          disabled={!saveEnabled}
         />
       ),
     })
-  }, [navigation, isSaving, data])
+  }, [navigation, isSaving, data, initialState])
 
   useEffect(() => {
     if (tags) {
       setData((prevData) => ({ ...prevData, tags: selectedTags }))
+      // If this is the first time setting tags (initial load), update initial state too
+      if (!isEditing && initialState) {
+        setInitialState({ ...initialState, tags: selectedTags })
+      }
     }
-  }, [tags])
+  }, [tags, isEditing])
 
   const handleSubmitEntry = async () => {
     setIsSaving(true)
@@ -139,17 +176,17 @@ const NotebookEntryForm = () => {
             twcnInput="flex-1"
           />
         </View>
-
-        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mb-2 self-end">
-          {data.body.length} / {500}
-        </Txt>
+        {data.tags.length == 0 && (
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end mb-2">
+            {data.body.length} / {500}
+          </Txt>
+        )}
 
         <View style={tw`mb-4`}>
           {data.tags.length > 0 ? (
-            <>
-              <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-                Tags:
-              </Txt>
+            <View
+              style={tw`flex-row items-center justify-between border-b pb-2 border-light-grayTertiary dark:border-dark-grayTertiary`}
+            >
               <Pressable
                 onPress={() => {
                   router.push({
@@ -157,11 +194,19 @@ const NotebookEntryForm = () => {
                     params: { existingTags: JSON.stringify(data.tags) },
                   })
                 }}
-                style={tw`flex-row gap-2 flex-wrap mb-2 py-4 border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
+                style={tw`flex-row gap-2 flex-wrap items-center`}
               >
+                <TagIcon
+                  color={Colors.primary}
+                  size={12}
+                  strokeWidth={1.5}
+                />
                 {renderedTags}
               </Pressable>
-            </>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
+                {data.body.length} / {500}
+              </Txt>
+            </View>
           ) : (
             <View style={tw`gap-4`}>
               <Button

@@ -1,4 +1,4 @@
-import { View, Animated, Easing } from 'react-native'
+import { View, Animated, Easing, FlatList, ScrollView } from 'react-native'
 import React, { useEffect, useRef } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
@@ -22,6 +22,7 @@ import Spinner from '../../components/activity-indicator'
 import NotebookEntryView from '../../components/notebook-entry'
 import { useNotebook } from '../../context/notebook-context'
 import useTheme from '../hooks/theme'
+import { NotebookEntry } from '../../utils/types'
 
 const notebookFunctions = [
   {
@@ -57,8 +58,16 @@ const notebookFunctions = [
 ]
 
 const Notebook = () => {
-  const { currentNotebookEntries, isLoading, initializeNotebook, tagFilters } =
-    useNotebook()
+  const {
+    currentNotebookEntries,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    initializeNotebook,
+    loadMoreEntries,
+    tagFilters,
+    sortOrder,
+  } = useNotebook()
   const { theme } = useTheme()
   const navigation = useNavigation()
   const hasEntries = currentNotebookEntries.length > 0
@@ -67,24 +76,26 @@ const Notebook = () => {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => {
+        const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
           <View style={tw`flex-row items-center gap-4 pr-2`}>
             <View style={tw`relative`}>
               <Link href="/notebook-filters">
                 <ListFilter
                   strokeWidth={1.5}
-                  size={28}
+                  size={24}
                   color={Colors.primary}
                 />
               </Link>
-              {tagFilters.length > 0 && (
+              {numFilters > 0 && (
                 <View
                   style={tw.style(
-                    'absolute -z-1 -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary'
+                    'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
+                    { pointerEvents: 'none' }
                   )}
                 >
                   <Txt twcn="text-xs font-poppinsMedium text-white">
-                    {tagFilters.length}
+                    {numFilters}
                   </Txt>
                 </View>
               )}
@@ -92,7 +103,7 @@ const Notebook = () => {
             <Link href="/notebook-entry-form">
               <Plus
                 strokeWidth={1.5}
-                size={28}
+                size={24}
                 color={Colors.primary}
               />
             </Link>
@@ -100,7 +111,7 @@ const Notebook = () => {
         )
       },
     })
-  }, [navigation, tagFilters])
+  }, [navigation, tagFilters, sortOrder])
 
   useEffect(() => {
     initializeNotebook()
@@ -185,18 +196,35 @@ const Notebook = () => {
     </View>
   )
 
-  let currentMonth = ''
-
-  const renderedEntries = currentNotebookEntries.map((entry, index) => {
+  const renderEntry = ({
+    item,
+    index,
+  }: {
+    item: NotebookEntry
+    index: number
+  }) => {
     let addMonth = false
-    const { date, pinned, id } = entry
+    const { date, pinned, id } = item
     const month = new Date(date).toLocaleString('default', {
       month: 'long',
       year: 'numeric',
     })
 
-    if (month !== currentMonth && !pinned) {
-      currentMonth = month
+    // Check if we need to show month header
+    if (index > 0) {
+      const prevEntry = currentNotebookEntries[index - 1]
+      const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+      })
+
+      if (
+        !pinned &&
+        (prevEntry.pinned || (month !== prevMonth && !prevEntry.pinned))
+      ) {
+        addMonth = true
+      }
+    } else if (!pinned) {
       addMonth = true
     }
 
@@ -211,14 +239,27 @@ const Notebook = () => {
       </View>
     )
 
+    const showPinnedHeader = index === 0 && pinned
+
     return (
-      <View key={id}>
-        {index == 0 && pinned ? pinnedTitle : null}
+      <View>
+        {showPinnedHeader && pinnedTitle}
         {monthTitle}
-        <NotebookEntryView entry={entry} />
+        <NotebookEntryView entry={item} />
       </View>
     )
-  })
+  }
+
+  const handleLoadMore = () => {
+    if (hasMore && !isLoadingMore) {
+      loadMoreEntries()
+    }
+  }
+
+  const renderFooter = () => {
+    if (!isLoadingMore) return null
+    return <Spinner />
+  }
 
   const notebookPrompt = (
     <SafeView noScroll>
@@ -247,11 +288,28 @@ const Notebook = () => {
   )
 
   const notebookView = noResults ? (
-    <View>
-      <Txt>No results found</Txt>
-    </View>
+    <SafeView>
+      <View style={tw`flex-1 items-center justify-center`}>
+        <Txt twcn="text-center text-base opacity-60">No results found</Txt>
+      </View>
+    </SafeView>
   ) : (
-    <SafeView twcnInnerView="gap-2">{renderedEntries}</SafeView>
+    <View style={tw`flex-1`}>
+      <FlatList
+        data={currentNotebookEntries}
+        renderItem={renderEntry}
+        keyExtractor={(item) => item.id}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={tw`p-4 gap-2`}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+        disableVirtualization={true}
+        initialNumToRender={currentNotebookEntries.length}
+        maxToRenderPerBatch={currentNotebookEntries.length}
+      />
+    </View>
   )
 
   return isLoading ? <Spinner /> : hasEntries ? notebookView : notebookPrompt

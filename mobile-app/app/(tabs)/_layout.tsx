@@ -1,5 +1,5 @@
-import { View } from 'react-native'
-import { useState, Fragment } from 'react'
+import { View, Animated } from 'react-native'
+import { useState, Fragment, useRef } from 'react'
 import { Link, Tabs } from 'expo-router'
 import {
   Dumbbell,
@@ -44,11 +44,13 @@ const TabsLayout = () => {
         screenOptions={{
           headerShadowVisible: false,
           animation: 'fade',
-          headerStyle: {
-            backgroundColor: theme.background,
-          },
+          headerStyle: [
+            {
+              backgroundColor: theme.background,
+            },
+          ] as any,
           headerTitleStyle: {
-            fontSize: 22,
+            fontSize: 20,
             fontFamily: 'Geologica_600SemiBold',
             color: theme.text,
           },

@@ -31,7 +31,7 @@ const Spinner = ({
   if (fullScreen) {
     return (
       <SafeView>
-        <View style={tw`flex-1 justify-center items-center mt-24`}>
+        <View style={tw`flex-1 justify-center items-center my-12`}>
           {spinner}
         </View>
       </SafeView>

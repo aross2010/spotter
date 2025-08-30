@@ -1,11 +1,11 @@
-import { View, Pressable } from 'react-native'
+import { View, Pressable, Text } from 'react-native'
 import { NotebookEntry } from '../utils/types'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { formatDate } from '../functions/formatted-date'
-import { Ellipsis, ChevronDown, ChevronUp } from 'lucide-react-native'
+import { Ellipsis, ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import MyModal from './modal'
 import NotebookEntryOptions from './notebook-entry-options'
@@ -88,7 +88,14 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
           )}
         </View>
         {tags.length > 0 && (
-          <View style={tw`mt-4 flex-row flex-wrap gap-2`}>{renderedTags}</View>
+          <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>
+            <Tag
+              color={Colors.primary}
+              strokeWidth={1.5}
+              size={12}
+            />
+            {renderedTags}
+          </View>
         )}
       </View>
       <MyModal
