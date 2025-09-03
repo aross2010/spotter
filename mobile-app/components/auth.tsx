@@ -15,6 +15,7 @@ const Auth = () => {
     <SafeView
       noHeader
       noScroll
+      inModal
     >
       <View className="flex-1 justify-between">
         <View className="flex-1 flex-col items-center relative">

@@ -79,27 +79,30 @@ const Notebook = () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
           <View style={tw`flex-row items-center gap-4 pr-2`}>
-            <View style={tw`relative`}>
-              <Link href="/notebook-filters">
-                <ListFilter
-                  strokeWidth={1.5}
-                  size={24}
-                  color={Colors.primary}
-                />
-              </Link>
-              {numFilters > 0 && (
-                <View
-                  style={tw.style(
-                    'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
-                    { pointerEvents: 'none' }
-                  )}
-                >
-                  <Txt twcn="text-xs font-poppinsMedium text-white">
-                    {numFilters}
-                  </Txt>
-                </View>
-              )}
-            </View>
+            {hasEntries && (
+              <View style={tw`relative`}>
+                <Link href="/notebook-filters">
+                  <ListFilter
+                    strokeWidth={1.5}
+                    size={24}
+                    color={Colors.primary}
+                  />
+                </Link>
+                {numFilters > 0 && (
+                  <View
+                    style={tw.style(
+                      'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
+                      { pointerEvents: 'none' }
+                    )}
+                  >
+                    <Txt twcn="text-xs font-poppinsMedium text-white">
+                      {numFilters}
+                    </Txt>
+                  </View>
+                )}
+              </View>
+            )}
+
             <Link href="/notebook-entry-form">
               <Plus
                 strokeWidth={1.5}
@@ -111,7 +114,7 @@ const Notebook = () => {
         )
       },
     })
-  }, [navigation, tagFilters, sortOrder])
+  }, [navigation, tagFilters, sortOrder, currentNotebookEntries])
 
   useEffect(() => {
     initializeNotebook()
@@ -157,7 +160,7 @@ const Notebook = () => {
         <Animated.View
           key={title}
           style={[
-            tw`flex-row items-center gap-6 rounded-2xl p-4 bg-light-grayPrimary dark:bg-dark-grayBackground`,
+            tw`flex-row items-center gap-6 rounded-2xl p-4 bg-white dark:bg-dark-grayPrimary border border-light-grayPrimary dark:border-dark-graySecondary`,
             {
               transform: [{ translateX: animValue.translateX }],
               opacity: animValue.opacity,
@@ -268,7 +271,7 @@ const Notebook = () => {
           <Txt twcn="text-center text-base mb-6 opacity-60">
             Capture everything beyond your workouts
           </Txt>
-          <View style={tw`gap-4`}>{renderedNotebookFunctions}</View>
+          <View style={tw`gap-2`}>{renderedNotebookFunctions}</View>
         </View>
         <View>
           <Button

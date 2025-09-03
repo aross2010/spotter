@@ -1,9 +1,9 @@
-import { View, Pressable, Text } from 'react-native'
+import { View, Pressable } from 'react-native'
 import { NotebookEntry } from '../utils/types'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
-import { Fragment, useState, useEffect } from 'react'
+import { Fragment, useState } from 'react'
 import { formatDate } from '../functions/formatted-date'
 import { Ellipsis, ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
@@ -43,7 +43,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-xl bg-white border border-light-grayPrimary dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 rounded-xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">

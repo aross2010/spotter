@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import React, { Fragment } from 'react'
 import Txt from './text'
 import { BookOpen, Calendar, PersonStanding } from 'lucide-react-native'
@@ -6,7 +6,6 @@ import Colors from '../constants/colors'
 import Button from './button'
 import { router } from 'expo-router'
 import tw from '../tw'
-import DragHandle from './drag-handle'
 
 type LogProps = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -19,12 +18,6 @@ const thingsToLog = [
     description:
       'Plan a future workout or log your in-progress/finished workout.',
     href: '/workout-form',
-  },
-  {
-    title: 'Weight',
-    icon: PersonStanding,
-    description: 'Log your weight weekly (or daily) to track your progress.',
-    href: '/weight-form',
   },
   {
     title: 'Notebook Entry',
@@ -72,7 +65,7 @@ const Log = ({ setIsOpen }: LogProps) => {
 
   return (
     <Fragment>
-      <Txt twcn="text-primary dark:text-primary text-xl text-center font-geologicaSemiBold">
+      <Txt twcn="text-xl text-center font-poppinsSemiBold">
         What would you like to log?
       </Txt>
       <View style={tw`flex-col gap-2`}>{renderedElements}</View>

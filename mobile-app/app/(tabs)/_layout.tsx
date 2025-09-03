@@ -51,7 +51,7 @@ const TabsLayout = () => {
           ] as any,
           headerTitleStyle: {
             fontSize: 20,
-            fontFamily: 'Geologica_600SemiBold',
+            fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
         }}

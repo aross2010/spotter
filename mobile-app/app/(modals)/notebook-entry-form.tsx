@@ -9,11 +9,9 @@ import tw from '../../tw'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import { Plus } from 'lucide-react-native'
 import Colors from '../../constants/colors'
-import { useColorScheme, Pressable } from 'react-native'
+import { useColorScheme } from 'react-native'
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../context/auth-context'
-import { BASE_URL } from '../../constants/auth'
-import { NotebookEntry, Tag } from '../../utils/types'
+import { Tag } from '../../utils/types'
 import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
 import TagView from '../../components/tag'
@@ -120,7 +118,8 @@ const NotebookEntryForm = () => {
           date: data.date.toISOString(),
         })
       }
-      router.back()
+
+      router.replace('/notebook')
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {
@@ -187,14 +186,14 @@ const NotebookEntryForm = () => {
             <View
               style={tw`flex-row items-center justify-between border-b pb-2 border-light-grayTertiary dark:border-dark-grayTertiary`}
             >
-              <Pressable
+              <Button
                 onPress={() => {
                   router.push({
                     pathname: '/tag-selector',
                     params: { existingTags: JSON.stringify(data.tags) },
                   })
                 }}
-                style={tw`flex-row gap-2 flex-wrap items-center`}
+                style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
               >
                 <TagIcon
                   color={Colors.primary}
@@ -202,7 +201,7 @@ const NotebookEntryForm = () => {
                   strokeWidth={1.5}
                 />
                 {renderedTags}
-              </Pressable>
+              </Button>
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
                 {data.body.length} / {500}
               </Txt>

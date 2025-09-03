@@ -20,8 +20,11 @@ type NotebookContextType = {
   initializeNotebook: () => Promise<void>
   refreshEntries: () => Promise<void>
   loadMoreEntries: () => Promise<void>
-  updateEntry: (entryId: string, entryToUpdate: NotebookEntryData) => void
-  deleteEntry: (entryId: string) => void
+  updateEntry: (
+    entryId: string,
+    entryToUpdate: NotebookEntryData
+  ) => Promise<void>
+  deleteEntry: (entryId: string) => Promise<void>
   addEntry: (newEntry: NotebookEntryData) => Promise<void>
   pinEntry: (entryId: string) => Promise<void>
   unpinEntry: (entryId: string) => Promise<void>
@@ -212,7 +215,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     )
   }
 
-  const deleteEntry = (entryId: string) => {
+  const deleteEntry = async (entryId: string) => {
     Alert.alert('Delete Entry', 'Are you sure you want to delete this entry?', [
       {
         text: 'Cancel',

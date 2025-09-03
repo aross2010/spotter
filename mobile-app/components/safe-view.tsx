@@ -42,7 +42,7 @@ const SafeView = ({
       >
         <View
           style={tw.style(
-            `${noHeader ? 'pt-[${insets.top}px]' : 'pt-4'} pl-4 pr-4 ${inModal ? 'pb-12' : 'pb-4'} flex-1`,
+            `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pl-4 pr-4 ${inModal ? 'pb-12' : 'pb-4'} flex-1`,
             twcnInnerView ?? ''
           )}
         >
@@ -61,7 +61,7 @@ const SafeView = ({
     >
       <View
         style={tw.style(
-          `${noHeader ? 'pt-[${insets.top}px]' : 'pt-4'} pb-4 pl-4 pr-4 flex-1`,
+          `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pb-4 pl-4 pr-4 flex-1`,
           twcnInnerView ?? ''
         )}
       >
