@@ -22,8 +22,10 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       useNativeDriver
       useNativeDriverForBackdrop={Platform.OS == 'android'}
       backdropOpacity={0.4}
+      backdropTransitionOutTiming={1}
       animationIn="slideInUp"
       animationOut="slideOutDown"
+      hideModalContentWhileAnimating
       style={{ justifyContent: 'flex-end', margin: 0, position: 'relative' }}
     >
       <View

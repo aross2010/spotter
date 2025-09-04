@@ -45,6 +45,7 @@ import { toastConfig } from '../utils/toast'
 import { useDeviceContext } from 'twrnc'
 import tw from '../tw'
 import ThemedStatusBar from '../components/status-bar'
+import { WorkoutProvider } from '../context/workout-context'
 
 const RootLayout = () => {
   useDeviceContext(tw, {
@@ -91,29 +92,31 @@ const RootLayout = () => {
         <SafeAreaProvider>
           <ThemedStatusBar />
           <NotebookProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen
-                name="index"
-                options={{ animation: 'none' }}
-              />
-              <Stack.Screen
-                name="(tabs)"
-                options={{
-                  animation: 'none',
+            <WorkoutProvider>
+              <Stack
+                screenOptions={{
                   headerShown: false,
                 }}
-              />
-              <Stack.Screen
-                name="(modals)"
-                options={{
-                  presentation: 'modal',
-                }}
-              />
-            </Stack>
+              >
+                <Stack.Screen
+                  name="index"
+                  options={{ animation: 'none' }}
+                />
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{
+                    animation: 'none',
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="(modals)"
+                  options={{
+                    presentation: 'modal',
+                  }}
+                />
+              </Stack>
+            </WorkoutProvider>
           </NotebookProvider>
         </SafeAreaProvider>
       </KeyboardProvider>

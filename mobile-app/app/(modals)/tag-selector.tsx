@@ -124,26 +124,26 @@ const TagSelector = () => {
 
   const renderedResults = tagResults.map(({ id, name, used }) => {
     return (
-      <Pressable
+      <Button
         style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary justify-between flex-row px-2 py-3 items-center`}
         key={id}
         onPress={() => handleSelectTag(name)}
       >
         <Txt>{name}</Txt>
         <Txt>{used}</Txt>
-      </Pressable>
+      </Button>
     )
   })
 
   const renderedSelectedTags = selectedTags.map(({ id, name, userId }) => {
     return (
-      <Pressable
+      <Button
         key={id}
         onPress={() => handleDeselectTag(name)}
         hitSlop={12}
       >
         <TagView tag={{ id, name, userId }} />
-      </Pressable>
+      </Button>
     )
   })
 

@@ -43,7 +43,7 @@ const Log = ({ setIsOpen }: LogProps) => {
         >
           <View
             key={index}
-            style={tw`bg-white border border-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl px-4 py-6 flex-row gap-6 items-center`}
+            style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl px-4 py-6 flex-row gap-6 items-center`}
           >
             <Icon
               color={Colors.primary}

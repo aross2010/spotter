@@ -229,7 +229,7 @@ const NotebookEntryForm = () => {
           )}
         </View>
 
-        <View style={tw`flex-row gap-3`}>
+        {/* <View style={tw`flex-row gap-3`}>
           <Button
             text="Cancel"
             twcn="flex-1 border border-light-grayTertiary dark:border-dark-grayTertiary justify-center items-center rounded-full py-3"
@@ -246,7 +246,7 @@ const NotebookEntryForm = () => {
             loading={isSaving}
             loadingText={isEditing ? 'Updating...' : 'Saving...'}
           />
-        </View>
+        </View> */}
       </View>
       <DatePicker
         modal

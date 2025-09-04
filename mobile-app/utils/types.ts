@@ -45,3 +45,15 @@ export type NotebookEntry = {
   pinned: boolean
   tags: Tag[]
 }
+
+export type Workout = {
+  id: string
+  userId: string
+  name: string
+  notes?: string
+  date: string
+  location?: string
+  status: 'completed' | 'planned'
+  createdAt: string
+  updatedAt?: string
+}

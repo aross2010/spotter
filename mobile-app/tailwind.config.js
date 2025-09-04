@@ -55,7 +55,7 @@ module.exports = {
         light: {
           text: '#000000',
           background: '#FFFFFF',
-          grayPrimary: '#F5F5F5',
+          grayPrimary: '#E8E8E8',
           graySecondary: '#E0E0E0',
           grayTertiary: '#CFCFCF',
           grayText: '#4F4F4F',

@@ -305,7 +305,7 @@ const Notebook = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4 gap-2`}
+        contentContainerStyle={tw`p-4 gap-4`}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
         disableVirtualization={true}
