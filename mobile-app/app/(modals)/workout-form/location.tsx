@@ -1,14 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React, { useState, useEffect } from 'react'
-import Txt from './text'
-import Input from './input'
-import Button from './button'
-import tw from '../tw'
-
-type LocationSelectorProps = {
-  setLocation: (location: string) => void
-  closeModal: () => void
-}
+import Txt from '../../../components/text'
+import Input from '../../../components/input'
+import Button from '../../../components/button'
+import tw from '../../../tw'
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
+import SafeView from '../../../components/safe-view'
+import { capString } from '../../../functions/cap-string'
 
 type UsedLocations = {
   id: number
@@ -25,13 +23,28 @@ const usedLocations: UsedLocations[] = [
   { id: 5, name: 'Other', used: 5 },
 ]
 
-const LocationSelector = ({
-  setLocation,
-  closeModal,
-}: LocationSelectorProps) => {
+const LocationSelector = () => {
   const [locations, setLocations] = useState<UsedLocations[]>(usedLocations)
   const [locationResults, setLocationResults] = useState<UsedLocations[]>([])
   const [query, setQuery] = useState<string>('')
+  const router = useRouter()
+  const navigation = useNavigation()
+  const { name } = useLocalSearchParams()
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          onPress={() => handleSaveLocation(query)}
+          hitSlop={12}
+          accessibilityLabel="save selected location"
+          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          text="Save"
+        />
+      ),
+      headerBackTitle: name ? capString(name as string, 15) : 'Workout',
+    })
+  }, [navigation])
 
   useEffect(() => {
     setLocationResults(locations)
@@ -48,14 +61,22 @@ const LocationSelector = ({
     }
   }, [query])
 
+  const handleSaveLocation = (location: string) => {
+    if (router.canGoBack()) {
+      router.back()
+      setTimeout(() => {
+        router.setParams({ location: location })
+      }, 100)
+    }
+  }
+
   const renderedResults = locationResults.map(({ id, name, used }) => {
     return (
       <Button
         style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary justify-between flex-row px-2 py-3 items-center`}
         key={id}
         onPress={() => {
-          setLocation(name)
-          closeModal()
+          handleSaveLocation(name)
         }}
       >
         <Txt>{name}</Txt>
@@ -65,10 +86,7 @@ const LocationSelector = ({
   })
 
   return (
-    <View style={tw`max-h-80`}>
-      <Txt twcn="text-xl text-center font-poppinsSemiBold mb-4">
-        Select Location
-      </Txt>
+    <SafeView>
       <Input
         noBorder
         value={query}
@@ -76,9 +94,7 @@ const LocationSelector = ({
         placeholder="Enter location..."
         onSubmitEditing={(e) => {
           const newLocation = e.nativeEvent.text
-          setLocation(newLocation)
-          setQuery('')
-          closeModal()
+          handleSaveLocation(newLocation)
         }}
         returnKeyType="done"
       />
@@ -88,10 +104,8 @@ const LocationSelector = ({
       >
         {renderedResults}
       </View>
-    </View>
+    </SafeView>
   )
 }
 
 export default LocationSelector
-
-const styles = StyleSheet.create({})

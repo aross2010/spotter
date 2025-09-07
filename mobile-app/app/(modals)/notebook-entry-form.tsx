@@ -7,7 +7,7 @@ import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { Plus } from 'lucide-react-native'
+import { ArrowRight, Plus } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import { useColorScheme } from 'react-native'
 import { useState, useEffect } from 'react'
@@ -215,11 +215,11 @@ const NotebookEntryForm = () => {
                     params: { existingTags: JSON.stringify(data.tags) },
                   })
                 }}
-                twcn="flex-row items-center justify-center p-4 border border-dashed border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg"
+                twcn="flex-row items-center gap-2 justify-center p-4 border border-dashed border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg"
                 twcnText="text-light-grayText dark:text-dark-grayText text-sm "
                 text="Add tags"
               >
-                <Plus
+                <ArrowRight
                   size={16}
                   color={theme.grayText}
                   strokeWidth={1.5}
@@ -228,25 +228,6 @@ const NotebookEntryForm = () => {
             </View>
           )}
         </View>
-
-        {/* <View style={tw`flex-row gap-3`}>
-          <Button
-            text="Cancel"
-            twcn="flex-1 border border-light-grayTertiary dark:border-dark-grayTertiary justify-center items-center rounded-full py-3"
-            twcnText="text-light-grayText dark:text-dark-grayText font-poppinsMedium"
-            onPress={() => router.back()}
-            disabled={isSaving}
-          />
-          <Button
-            text="Save"
-            twcn="flex-1 bg-primary justify-center items-center rounded-full py-3"
-            twcnText="text-light-background font-poppinsMedium"
-            onPress={handleSubmitEntry}
-            disabled={data.body.trim().length < 1 || isSaving}
-            loading={isSaving}
-            loadingText={isEditing ? 'Updating...' : 'Saving...'}
-          />
-        </View> */}
       </View>
       <DatePicker
         modal

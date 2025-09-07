@@ -113,22 +113,6 @@ export default function ModalLayout() {
           options={{
             title: 'Workout',
             headerTitle: 'New Workout',
-            headerShown: true,
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close workout form"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
-            ),
-          }}
-        />
-        <Stack.Screen
-          name="weight-form"
-          options={{
-            title: 'Weight',
           }}
         />
       </Stack>

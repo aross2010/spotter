@@ -138,7 +138,7 @@ export const workouts = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    name: varchar('name', { length: 100 }).notNull(),
+    name: varchar('name', { length: 25 }).notNull(),
     notes: text('notes'), // limit to n words in business logic
     date: date('date').notNull().defaultNow(),
     location: varchar('location', { length: 100 }),

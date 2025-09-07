@@ -1,4 +1,10 @@
-import { Platform, StyleSheet, Text, View } from 'react-native'
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  KeyboardAvoidingView,
+} from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal'
 import useTheme from '../app/hooks/theme'
@@ -27,13 +33,19 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       animationOut="slideOutDown"
       hideModalContentWhileAnimating
       style={{ justifyContent: 'flex-end', margin: 0, position: 'relative' }}
+      avoidKeyboard={true}
     >
-      <View
-        style={tw`bg-light-background dark:bg-dark-background rounded-xl px-4 pt-10 pb-12 gap-4 relative`}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={tw`flex-1 justify-end`}
       >
-        <DragHandle />
-        {children}
-      </View>
+        <View
+          style={tw`bg-light-background dark:bg-dark-background rounded-t-xl px-4 pt-10 pb-12 gap-4 relative`}
+        >
+          <DragHandle />
+          {children}
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }

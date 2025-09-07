@@ -1,13 +1,12 @@
-import { View, Text, Pressable, Alert, Linking } from 'react-native'
+import { View, Alert, Linking } from 'react-native'
 import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router } from 'expo-router'
-import { ArrowRight, ChevronRight } from 'lucide-react-native'
+import { ChevronRight } from 'lucide-react-native'
 import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
-import Colors from '../../../constants/colors'
 import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 
@@ -89,7 +88,6 @@ const settingsData = [
 const Settings = () => {
   const { theme } = useTheme()
   const { signOut, deleteAccount } = useAuth()
-  const { preferences } = useUserStore()
 
   const promptDeleteAccount = async () => {
     Alert.alert(

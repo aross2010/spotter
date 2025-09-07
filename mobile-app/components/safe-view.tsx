@@ -53,15 +53,17 @@ const SafeView = ({
 
   return (
     <ScrollView
+      keyboardShouldPersistTaps="handled"
       style={tw.style(
         'bg-light-background dark:bg-dark-background flex-1',
         twcn && `${twcn}`
       )}
+      contentContainerStyle={tw`flex-grow`}
       {...rest}
     >
       <View
         style={tw.style(
-          `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pb-4 pl-4 pr-4 flex-1`,
+          `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pb-12 pl-4 pr-4 flex-1`,
           twcnInnerView ?? ''
         )}
       >
