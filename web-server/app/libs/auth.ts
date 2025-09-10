@@ -1,4 +1,4 @@
-export const JWT_EXP_TIME = '30m'
+export const JWT_EXP_TIME = '30s'
 export const REFRESH_TOKEN_EXP_TIME = '90d'
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30 // 30 days in seconds
 

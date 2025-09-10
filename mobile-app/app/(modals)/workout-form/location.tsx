@@ -7,6 +7,7 @@ import tw from '../../../tw'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import SafeView from '../../../components/safe-view'
 import { capString } from '../../../functions/cap-string'
+import { useWorkoutForm } from '../../../context/workout-form-context'
 
 type UsedLocations = {
   id: number
@@ -29,7 +30,7 @@ const LocationSelector = () => {
   const [query, setQuery] = useState<string>('')
   const router = useRouter()
   const navigation = useNavigation()
-  const { name } = useLocalSearchParams()
+  const { workoutData, updateWorkoutData } = useWorkoutForm()
 
   useEffect(() => {
     navigation.setOptions({
@@ -42,9 +43,9 @@ const LocationSelector = () => {
           text="Save"
         />
       ),
-      headerBackTitle: name ? capString(name as string, 15) : 'Workout',
+      headerBackTitle: capString(workoutData.name, 15),
     })
-  }, [navigation])
+  }, [navigation, workoutData.name, query])
 
   useEffect(() => {
     setLocationResults(locations)
@@ -62,11 +63,9 @@ const LocationSelector = () => {
   }, [query])
 
   const handleSaveLocation = (location: string) => {
+    updateWorkoutData({ location })
     if (router.canGoBack()) {
       router.back()
-      setTimeout(() => {
-        router.setParams({ location: location })
-      }, 100)
     }
   }
 

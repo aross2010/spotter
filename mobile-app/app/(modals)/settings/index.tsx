@@ -148,7 +148,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="uppercase text-sm font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+            <Txt twcn="uppercase text-xs tracking-wider font-poppinsMedium text-light-grayText dark:text-dark-grayText">
               {sectionTitle}
             </Txt>
           )}

@@ -35,7 +35,7 @@ const Input = ({
   const standardInput = (
     <TextInput
       style={[
-        tw`font-poppins font-light text-sm text-light-text dark:text-dark-text ${noBorder ? 'border-0 px-0 py-2 focus:border-0' : 'border border-light-graySecondary dark:border-dark-graySecondary focus:border-primary dark:focus:border-primary px-2 py-3'} rounded-lg ${props.editable ? '' : 'opacity-50'} ${twcnInput ?? ''}`,
+        tw`font-poppins text-sm text-light-text dark:text-dark-text ${noBorder ? 'border-0 px-0 py-2 focus:border-0' : 'w-full border-b border-light-grayTertiary dark:border-dark-grayTertiary focus:border-primary dark:focus:border-primary px-2 py-3'} rounded-lg ${twcnInput ?? ''}`,
         props.numberOfLines
           ? {
               height: getMultilineHeight(),
@@ -51,10 +51,8 @@ const Input = ({
 
   if (label) {
     return (
-      <View style={tw`flex flex-col gap-2 ${twcnContainer ?? ''}`}>
-        <Txt twcn={`${props.editable ? '' : 'opacity-50'} ${twcnLabel}`}>
-          {label}
-        </Txt>
+      <View style={tw`flex flex-col ${twcnContainer ?? ''}`}>
+        <Txt twcn={`${twcnLabel}`}>{label}</Txt>
         {standardInput}
       </View>
     )

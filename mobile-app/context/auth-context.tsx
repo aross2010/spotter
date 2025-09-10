@@ -413,8 +413,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       },
     })
 
+    console.log('Fetch response status:', response.status)
     if (response.status === 401) {
       const newToken = await refreshAccessToken()
+
+      console.log('Refreshed token:', newToken)
 
       if (newToken) {
         return fetch(url, {
@@ -424,6 +427,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             Authorization: `Bearer ${newToken}`,
           },
         })
+      } else {
+        console.log('No new token obtained,', newToken)
       }
     }
 

@@ -1,9 +1,10 @@
 import SafeView from '../../../components/safe-view'
-import { View } from 'react-native'
+import { Alert, View } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { useEffect, useState } from 'react'
+import Input from '../../../components/input'
 import {
   ArrowRight,
   Calendar,
@@ -17,27 +18,15 @@ import useTheme from '../../hooks/theme'
 import { useWorkout } from '../../../context/workout-context'
 import Txt from '../../../components/text'
 import WorkoutNameInput from '../../../components/workout-name-input'
+import Colors from '../../../constants/colors'
+import { useWorkoutForm } from '../../../context/workout-form-context'
+import Exercises from '../../../components/exercises'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [workoutData, setWorkoutData] = useState({
-    name: '',
-    date: new Date(),
-    location: '', // auto insert the most used location
-    tags: [],
-    notes: '',
-  })
-  const [exercises, setExercises] = useState([])
   const navigation = useNavigation()
   const { theme } = useTheme()
-  const { location } = useLocalSearchParams()
-
-  useEffect(() => {
-    if (location) {
-      setWorkoutData((prev) => ({ ...prev, location: location as string }))
-    }
-  }, [location])
+  const { workoutData, updateWorkoutData } = useWorkoutForm()
 
   useEffect(() => {
     const saveEnabled = true
@@ -46,9 +35,9 @@ const WorkoutForm = () => {
       headerTitle: 'New Workout',
       headerRight: () => (
         <Button
-          onPress={handleSubmitWorkout}
+          onPress={handleNextStep}
           hitSlop={12}
-          accessibilityLabel="submit notebook entry"
+          accessibilityLabel="Save Workout"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
           text="Save"
           disabled={!saveEnabled}
@@ -57,7 +46,13 @@ const WorkoutForm = () => {
     })
   }, [workoutData])
 
-  const handleSubmitWorkout = () => {}
+  const handleNextStep = () => {
+    // if (!workoutData.name) {
+    //   Alert.alert('Error', 'Please enter a workout name before proceeding.')
+    //   return
+    // }
+    // router.push('/workout-form/exercises')
+  }
 
   return (
     <SafeView
@@ -81,15 +76,12 @@ const WorkoutForm = () => {
         </Button>
         <Button
           text={
-            workoutData.location.length > 0 ? workoutData.location : 'Location'
+            workoutData.location.length > 0
+              ? workoutData.location
+              : 'Location (optional)'
           }
           onPress={() => {
-            router.push({
-              pathname: '/workout-form/location',
-              params: {
-                name: workoutData.name,
-              },
-            })
+            router.push('/workout-form/location')
           }}
           hitSlop={12}
           twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
@@ -108,80 +100,12 @@ const WorkoutForm = () => {
         </Button>
       </View>
 
-      <View style={tw`mt-4 flex-1 gap-4`}>
+      <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
         <WorkoutNameInput
           name={workoutData.name}
-          setName={(name) => setWorkoutData({ ...workoutData, name })}
+          setName={(name) => updateWorkoutData({ name })}
         />
-        <View style={tw`flex-row items-center justify-between`}>
-          <Txt>Exercises</Txt>
-          <Button hitSlop={12}>
-            <Ellipsis
-              size={20}
-              color={theme.grayText}
-            />
-          </Button>
-        </View>
-        <Button
-          onPress={() => {
-            router.push({
-              pathname: '/workout-form/exercises',
-              params: {
-                name: workoutData.name,
-                exercises: exercises,
-              },
-            })
-          }}
-          text="Add Exercises"
-          twcn="rounded-xl border p-4 h-28 items-center justify-center flex-row gap-2 border-light-grayTertiary dark:border-dark-grayTertiary"
-          twcnText="text-light-grayText dark:text-dark-grayText"
-        >
-          <ArrowRight
-            size={16}
-            color={theme.grayText}
-            strokeWidth={1.5}
-          />
-        </Button>
-        <Txt>Notes</Txt>
-        <Button
-          onPress={() => {
-            router.push({
-              pathname: '/workout-form/notes',
-              params: {
-                name: workoutData.name,
-              },
-            })
-          }}
-          text="Add Notes"
-          twcn="rounded-xl border p-4 h-28 items-center justify-center flex-row gap-2 border-light-grayTertiary dark:border-dark-grayTertiary"
-          twcnText="text-light-grayText dark:text-dark-grayText"
-        >
-          <ArrowRight
-            size={16}
-            color={theme.grayText}
-            strokeWidth={1.5}
-          />
-        </Button>
-        <Txt>Tags</Txt>
-        <Button
-          onPress={() => {
-            router.push({
-              pathname: '/tag-selector',
-              params: {
-                existingTags: workoutData.tags,
-              },
-            })
-          }}
-          text="Add Tags"
-          twcn="rounded-xl border p-4 h-28 items-center justify-center flex-row gap-2 border-light-grayTertiary dark:border-dark-grayTertiary"
-          twcnText="text-light-grayText dark:text-dark-grayText"
-        >
-          <ArrowRight
-            size={16}
-            color={theme.grayText}
-            strokeWidth={1.5}
-          />
-        </Button>
+        <Exercises />
       </View>
 
       <DatePicker
@@ -190,7 +114,7 @@ const WorkoutForm = () => {
         date={workoutData.date}
         onConfirm={(date) => {
           setIsDatePickerOpen(false)
-          setWorkoutData({ ...workoutData, date })
+          updateWorkoutData({ date })
         }}
         mode="date"
         onCancel={() => {

@@ -5,7 +5,7 @@ import tw from '../tw'
 import Txt from './text'
 import Input from './input'
 import Button from './button'
-import { Key } from 'lucide-react-native'
+import { useWorkoutForm } from '../context/workout-form-context'
 
 type WorkoutNameInputProps = {
   name: string
@@ -15,22 +15,17 @@ type WorkoutNameInputProps = {
 const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
   const [isWorkoutNameSelectorOpen, setIsWorkoutNameSelectorOpen] =
     useState(false)
-  const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
-  const [workoutNamesResults, setWorkoutNamesResults] =
-    useState<WorkoutName[]>(workoutNames)
-  const { fetchWorkoutNames } = useWorkout()
+  const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
+    []
+  )
+  const { workoutNames } = useWorkoutForm()
 
   useEffect(() => {
-    const getWorkoutNames = async () => {
-      const names = await fetchWorkoutNames()
-      setWorkoutNames(names)
-      setWorkoutNamesResults(names)
-    }
-    getWorkoutNames()
-  }, [])
+    setWorkoutNamesResults(workoutNames)
+  }, [workoutNames])
 
   const renderedWorkoutNames = workoutNamesResults
-    .slice(0, 5)
+    .slice(0, 6)
     .map(({ name, used }, index) => {
       return (
         <Button
@@ -40,7 +35,7 @@ const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
             setIsWorkoutNameSelectorOpen(false)
             Keyboard.dismiss()
           }}
-          style={tw`flex-1 bg-light-grayPrimary flex-row items-center justify-between p-3 w-full ${index === workoutNames.length - 1 ? '' : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'}`}
+          style={tw`flex-1 bg-light-grayPrimary flex-row items-center justify-between p-3 w-full ${index === workoutNamesResults.length - 1 ? '' : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'}`}
         >
           <Txt>{name}</Txt>
           <Txt>{used}</Txt>
@@ -60,27 +55,33 @@ const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
   }
 
   return (
-    <View style={tw`relative`}>
+    <View
+      style={tw`relative border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+    >
       <Input
         editable
         value={name}
         onPress={() => {
-          console.log('pressed', isWorkoutNameSelectorOpen, workoutNamesResults)
           setIsWorkoutNameSelectorOpen(!isWorkoutNameSelectorOpen)
         }}
         onChange={(e) => handleChange(e.nativeEvent.text)}
         onBlur={(e) => {
           setIsWorkoutNameSelectorOpen(false)
         }}
-        label="Workout Name"
+        noBorder
+        label="Name"
         placeholder="Legs, Push, Pull, Upper Body, etc..."
-        twcnInput="w-full"
+        twcnContainer="px-0"
+        twcnInput="px-0"
+        twcnLabel="uppercase text-xs tracking-wider font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         returnKeyType="done"
         onSubmitEditing={(e) => {
           setIsWorkoutNameSelectorOpen(false)
           setName(e.nativeEvent.text)
         }}
+        onFocus={() => setIsWorkoutNameSelectorOpen(true)}
       />
+
       {isWorkoutNameSelectorOpen && (
         <View
           style={tw`absolute top-full left-0 right-0 z-10 rounded-xl overflow-hidden mt-1`}

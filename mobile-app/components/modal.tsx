@@ -35,17 +35,12 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       style={{ justifyContent: 'flex-end', margin: 0, position: 'relative' }}
       avoidKeyboard={true}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={tw`flex-1 justify-end`}
+      <View
+        style={tw`bg-light-background dark:bg-dark-background rounded-t-xl px-4 pt-10 pb-12 gap-4 relative`}
       >
-        <View
-          style={tw`bg-light-background dark:bg-dark-background rounded-t-xl px-4 pt-10 pb-12 gap-4 relative`}
-        >
-          <DragHandle />
-          {children}
-        </View>
-      </KeyboardAvoidingView>
+        <DragHandle />
+        {children}
+      </View>
     </Modal>
   )
 }
