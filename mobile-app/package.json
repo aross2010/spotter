@@ -47,7 +47,8 @@
     "react-native-toast-message": "^2.3.3",
     "react-native-web": "^0.20.0",
     "twrnc": "^4.9.1",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.7",
+    "react-native-gesture-handler": "~2.24.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

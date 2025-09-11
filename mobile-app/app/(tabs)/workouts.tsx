@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useEffect } from 'react'
 import { useNavigation } from 'expo-router'
 import { Link } from 'expo-router'
@@ -7,6 +7,7 @@ import Colors from '../../constants/colors'
 import { ListFilter, Plus } from 'lucide-react-native'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -43,9 +44,173 @@ const Workouts = () => {
   }, [])
 
   return (
-    <SafeView>
-      <Txt>Workouts</Txt>
-    </SafeView>
+    <KeyboardAwareScrollView
+      style={{ flex: 1, padding: 16 }}
+      bottomOffset={100}
+    >
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+      <TextInput
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+        }}
+      />
+    </KeyboardAwareScrollView>
   )
 }
 

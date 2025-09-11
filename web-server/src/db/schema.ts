@@ -98,12 +98,16 @@ export const weightEntries = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    weight: numeric('weight', { precision: 4, scale: 1 }).notNull(), // in lbs, translate to kg in frontend
+    weightLbs: numeric('weight_lbs', { precision: 5, scale: 1 }),
+    weightKg: numeric('weight_kg', { precision: 5, scale: 1 }),
     date: date('date').notNull().defaultNow(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
   },
-  (t) => [unique().on(t.userId, t.date)] // ensure max one entry per user per date
+  (t) => [
+    unique().on(t.userId, t.date),
+    check('lbs_kg_consistency', sql`(weight_lbs IS NULL OR weight_kg IS NULL)`),
+  ] // ensure max one entry per user per date
 )
 
 export const workoutTags = pgTable(
@@ -190,7 +194,8 @@ export const sets = pgTable(
       precision: 2,
       scale: 0,
     }).notNull(),
-    weight: numeric('weight', { precision: 4, scale: 1 }), // in lbs
+    weightLbs: numeric('weight_lbs', { precision: 4, scale: 1 }),
+    weightKg: numeric('weight_kg', { precision: 4, scale: 1 }),
     reps: numeric('reps', { precision: 2, scale: 0 }),
     leftReps: numeric('left_reps', { precision: 2, scale: 0 }), // validate the exercise is unilateral on front end
     rightReps: numeric('right_reps', { precision: 2, scale: 0 }), // validate the exercise is unilateral on front end
@@ -203,19 +208,46 @@ export const sets = pgTable(
       scale: 0,
     }),
     rpe: numeric('rpe', { precision: 3, scale: 1 }),
+    leftRpe: numeric('left_rpe', { precision: 3, scale: 1 }), // for unilateral exercises
+    rightRpe: numeric('right_rpe', { precision: 3, scale: 1 }), // for unilateral exercises
     rir: numeric('rir', { precision: 3, scale: 1 }),
+    leftRir: numeric('left_rir', { precision: 3, scale: 1 }), // for unilateral exercises
+    rightRir: numeric('right_rir', { precision: 3, scale: 1 }), // for unilateral exercises
     partialReps: numeric('partial_reps', {
       precision: 2,
       scale: 0,
     }),
+    leftPartialReps: numeric('left_partial_reps', {
+      precision: 2,
+      scale: 0,
+    }), // for unilateral exercises
+    rightPartialReps: numeric('right_partial_reps', {
+      precision: 2,
+      scale: 0,
+    }), // for unilateral exercises
     cheatReps: numeric('cheat_reps', {
       precision: 2,
       scale: 0,
     }),
   },
   (t) => [
+    // RPE and RIR are mutually exclusive (either use RPE or RIR, not both)
     check('rpe_xor_rir', sql`(rpe IS NULL OR rir IS NULL)`),
+    check('left_rpe_xor_left_rir', sql`(left_rpe IS NULL OR left_rir IS NULL)`),
+    check(
+      'right_rpe_xor_right_rir',
+      sql`(right_rpe IS NULL OR right_rir IS NULL)`
+    ),
+    // Cheat reps and partial reps are mutually exclusive
     check('cheat_xor_partial', sql`cheat_reps IS NULL OR partial_reps IS NULL`),
+    check(
+      'left_cheat_xor_left_partial',
+      sql`cheat_reps IS NULL OR left_partial_reps IS NULL`
+    ),
+    check(
+      'right_cheat_xor_right_partial',
+      sql`cheat_reps IS NULL OR right_partial_reps IS NULL`
+    ),
     // for planned sets: allow either reps or both low/high reps, but not both or neither
     check(
       'reps_or_low_high',
@@ -226,6 +258,20 @@ export const sets = pgTable(
       'reps_or_left_right',
       sql`((reps IS NOT NULL AND left_reps IS NULL AND right_reps IS NULL) OR (reps IS NULL AND left_reps IS NOT NULL AND right_reps IS NOT NULL))`
     ),
+    // ensure left/right fields are used together for unilateral exercises
+    check(
+      'left_right_rpe_consistency',
+      sql`((left_rpe IS NULL AND right_rpe IS NULL) OR (left_rpe IS NOT NULL AND right_rpe IS NOT NULL))`
+    ),
+    check(
+      'left_right_rir_consistency',
+      sql`((left_rir IS NULL AND right_rir IS NULL) OR (left_rir IS NOT NULL AND right_rir IS NOT NULL))`
+    ),
+    check(
+      'left_right_partial_consistency',
+      sql`((left_partial_reps IS NULL AND right_partial_reps IS NULL) OR (left_partial_reps IS NOT NULL AND right_partial_reps IS NOT NULL))`
+    ),
+    check('lbs_kg_consistency', sql`(weight_lbs IS NULL OR weight_kg IS NULL)`), // either lbs or kg can be used, not both
   ]
 )
 

@@ -313,13 +313,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           familyName: credential.fullName?.familyName ?? null,
         })
 
-        await signUp(
-          credential.email,
-          credential.fullName.givenName,
-          credential.fullName.familyName ?? null,
-          'apple',
-          credential.user
-        )
+        try {
+          await signUp(
+            credential.email,
+            credential.fullName.givenName,
+            credential.fullName.familyName ?? null,
+            'apple',
+            credential.user
+          )
+        } catch (error) {
+          console.log('Error during Apple sign up:', error)
+        }
       }
       let appleResponse
       appleResponse = await fetch(`${BASE_URL}/api/auth/apple/apple-native`, {

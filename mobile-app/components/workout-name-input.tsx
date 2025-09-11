@@ -84,7 +84,7 @@ const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
 
       {isWorkoutNameSelectorOpen && (
         <View
-          style={tw`absolute top-full left-0 right-0 z-10 rounded-xl overflow-hidden mt-1`}
+          style={tw`absolute top-full left-0 right-0 z-10 rounded-xl overflow-hidden mt-3`}
         >
           {renderedWorkoutNames}
         </View>

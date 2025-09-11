@@ -5,6 +5,7 @@ import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { useEffect, useState } from 'react'
 import Input from '../../../components/input'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import {
   ArrowRight,
   Calendar,
@@ -56,8 +57,8 @@ const WorkoutForm = () => {
 
   return (
     <SafeView
-      inModal
-      twcn="h-full"
+      keyboardAvoiding
+      bottomOffset={100}
     >
       <View style={tw`flex-row gap-2`}>
         <Button

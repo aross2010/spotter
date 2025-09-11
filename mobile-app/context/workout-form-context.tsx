@@ -9,6 +9,7 @@ import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
+import { nanoid } from 'nanoid/non-secure'
 
 export type WorkoutName = {
   name: string
@@ -26,12 +27,19 @@ export type Set = {
   setNumber: number
   weight?: number // lbs or kg - depending on user preference
   reps?: number
-  leftReps?: number // for unilateral exercises
-  rightReps?: number // for unilateral exercises
+  leftReps?: number
+  rightReps?: number
   rpe?: number
+  leftRpe?: number
+  rightRpe?: number
   rir?: number
+  leftRir?: number
+  rightRir?: number
   partialReps?: number
+  leftPartialReps?: number
+  rightPartialReps?: number
   cheatReps?: number
+  id: string
 }
 
 export type SetGrouping = {
@@ -55,6 +63,7 @@ export type WorkoutFormData = {
   tags: string[]
   notes: string
   exercises: Exercise[]
+  weightUnit: 'lbs' | 'kg'
   setGroupings: SetGrouping[]
   status?: 'completed' | 'planned'
 }
@@ -74,6 +83,7 @@ const starterExercise = {
   sets: [
     {
       setNumber: 1,
+      id: nanoid(),
     },
   ],
   setGroupings: [],
@@ -85,6 +95,7 @@ const defaultWorkoutData: WorkoutFormData = {
   location: '',
   tags: [],
   notes: '',
+  weightUnit: 'lbs',
   exercises: [starterExercise],
   setGroupings: [],
 }

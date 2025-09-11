@@ -1,4 +1,4 @@
-import Toast from 'react-native-toast-message'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import React from 'react'
 import { Stack } from 'expo-router'
 import { useFonts } from 'expo-font'
@@ -41,7 +41,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import { NotebookProvider } from '../context/notebook-context'
 import '../global.css'
-import { toastConfig } from '../utils/toast'
 import { useDeviceContext } from 'twrnc'
 import tw from '../tw'
 import ThemedStatusBar from '../components/status-bar'
@@ -88,40 +87,40 @@ const RootLayout = () => {
 
   return (
     <AuthProvider>
-      <KeyboardProvider>
-        <SafeAreaProvider>
-          <ThemedStatusBar />
-          <NotebookProvider>
-            <WorkoutProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-              >
-                <Stack.Screen
-                  name="index"
-                  options={{ animation: 'none' }}
-                />
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    animation: 'none',
+      <GestureHandlerRootView>
+        <KeyboardProvider>
+          <SafeAreaProvider>
+            <ThemedStatusBar />
+            <NotebookProvider>
+              <WorkoutProvider>
+                <Stack
+                  screenOptions={{
                     headerShown: false,
                   }}
-                />
-                <Stack.Screen
-                  name="(modals)"
-                  options={{
-                    presentation: 'modal',
-                  }}
-                />
-              </Stack>
-            </WorkoutProvider>
-          </NotebookProvider>
-        </SafeAreaProvider>
-      </KeyboardProvider>
-
-      <Toast config={toastConfig} />
+                >
+                  <Stack.Screen
+                    name="index"
+                    options={{ animation: 'none' }}
+                  />
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{
+                      animation: 'none',
+                      headerShown: false,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="(modals)"
+                    options={{
+                      presentation: 'modal',
+                    }}
+                  />
+                </Stack>
+              </WorkoutProvider>
+            </NotebookProvider>
+          </SafeAreaProvider>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
     </AuthProvider>
   )
 }

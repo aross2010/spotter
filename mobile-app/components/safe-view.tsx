@@ -2,74 +2,81 @@ import { ScrollView, View, ViewProps } from 'react-native'
 import { ReactNode } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import tw from '../tw'
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller'
 
 type SafeViewProps = {
+  keyboardAvoiding?: boolean
+  bottomOffset?: number
+  extraKeyboardSpace?: number
   children: ReactNode
-  inModal?: boolean
-  twcn?: string
-  twcnInnerView?: string
-  noHeader?: boolean
-  noScroll?: boolean
+  hasTabBar?: boolean
+  twcnContentView?: string
+  hasHeader?: boolean
+  scroll?: boolean
 } & ViewProps
 
 const SafeView = ({
+  keyboardAvoiding,
+  bottomOffset = 50,
+  extraKeyboardSpace = 0,
   children,
-  inModal,
-  twcn,
-  twcnInnerView,
-  noHeader,
-  noScroll,
+  hasTabBar = false,
+  twcnContentView,
+  hasHeader = true,
+  scroll = true,
   ...rest
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()
 
-  // const styles = {
-  //   paddingTop: noHeader ? insets.top : 16,
-  //   paddingBottom: insets.bottom,
-  //   flex: 1,
-  //   paddingLeft: 16,
-  //   paddingRight: 16,
-  // }
+  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-2'}`
 
-  if (noScroll)
+  if (keyboardAvoiding && scroll) {
     return (
-      <View
-        style={tw.style(
-          `bg-light-background dark:bg-dark-background flex-1`,
-          twcn && `${twcn}`
-        )}
-        {...rest}
-      >
-        <View
-          style={tw.style(
-            `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pl-4 pr-4 ${inModal ? 'pb-12' : 'pb-4'} flex-1`,
-            twcnInnerView ?? ''
-          )}
-        >
-          {children}
-        </View>
-      </View>
-    )
-
-  return (
-    <ScrollView
-      keyboardShouldPersistTaps="handled"
-      style={tw.style(
-        'bg-light-background dark:bg-dark-background flex-1',
-        twcn && `${twcn}`
-      )}
-      contentContainerStyle={tw`flex-grow`}
-      {...rest}
-    >
-      <View
-        style={tw.style(
-          `${noHeader ? 'pt-[${insets.top}px]' : 'pt-2'} pb-12 pl-4 pr-4 flex-1`,
-          twcnInnerView ?? ''
-        )}
+      <KeyboardAwareScrollView
+        style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+        contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
+        bottomOffset={bottomOffset}
+        extraKeyboardSpace={extraKeyboardSpace}
       >
         {children}
-      </View>
-    </ScrollView>
+      </KeyboardAwareScrollView>
+    )
+  }
+
+  if (keyboardAvoiding && !scroll) {
+    return (
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-12' : 'mb-4'}`}
+        keyboardVerticalOffset={140}
+      >
+        {children}
+      </KeyboardAvoidingView>
+    )
+  }
+
+  if (scroll) {
+    return (
+      <ScrollView
+        style={tw`bg-light-background dark:bg-dark-background flex-1`}
+        contentContainerStyle={tw`flex-grow ${paddingClasses} ${twcnContentView ?? ''}`}
+        {...rest}
+      >
+        {children}
+      </ScrollView>
+    )
+  }
+
+  return (
+    <View
+      style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+      {...rest}
+    >
+      {children}
+    </View>
   )
 }
 
