@@ -5,7 +5,7 @@ import React from 'react'
 const DragHandle = () => {
   return (
     <View
-      style={tw`absolute h-1 bg-light-grayTertiary dark:bg-dark-grayTertiary w-1/4 rounded-full mt-3 self-center`}
+      style={tw`absolute h-1 bg-light-grayTertiary dark:bg-dark-grayTertiary w-1/6 rounded-full mt-3 self-center`}
     />
   )
 }

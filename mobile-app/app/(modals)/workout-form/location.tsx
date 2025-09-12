@@ -43,7 +43,9 @@ const LocationSelector = () => {
           text="Save"
         />
       ),
-      headerBackTitle: capString(workoutData.name, 15),
+      headerBackTitle: workoutData.name
+        ? capString(workoutData.name, 15)
+        : 'Workout',
     })
   }, [navigation, workoutData.name, query])
 

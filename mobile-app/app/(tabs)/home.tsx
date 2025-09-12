@@ -22,7 +22,7 @@ const Home = () => {
   const greeting = getGreeting()
   return (
     <SafeView>
-      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+      <Txt twcn="text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText font-poppinsMedium">
         {formattedDate}
       </Txt>
       <Txt twcn="text-xl font-poppinsMedium">

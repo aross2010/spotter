@@ -148,10 +148,7 @@ const TagSelector = () => {
   })
 
   return (
-    <SafeView
-      noScroll
-      inModal
-    >
+    <SafeView scroll={false}>
       {loading ? (
         <ActivityIndicator
           size="small"

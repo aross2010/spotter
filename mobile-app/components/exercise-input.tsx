@@ -5,8 +5,7 @@ import tw from '../tw'
 import Txt from './text'
 import Input from './input'
 import {
-  Hand,
-  History,
+  Info,
   Plus,
   Redo,
   SquareSplitHorizontal,
@@ -23,7 +22,7 @@ type ExerciseInputProps = {
 }
 
 const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
-  const [isExerciseHistoryOpen, setIsExerciseHistoryOpen] = useState(false)
+  const [isExerciseInfoOpen, setIsExerciseInfoOpen] = useState(false)
   const { workoutData, setWorkoutData } = useWorkoutForm()
   const { exercises } = workoutData
   const exercise = exercises[exerciseNumber - 1]
@@ -92,7 +91,7 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
     }
   }
 
-  const handleDisplayExerciseHistory = () => {}
+  const handleDisplayExerciseInfo = () => {}
 
   const handleAddNewSet = () => {
     const updatedExercises = [...workoutData.exercises]
@@ -296,9 +295,9 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
       onPress: handleMakeUnilateral,
     },
     {
-      name: 'View History',
-      icon: History,
-      onPress: handleDisplayExerciseHistory,
+      name: 'View Information', // history & exercise notes
+      icon: Info,
+      onPress: handleDisplayExerciseInfo,
     },
     {
       name: 'Delete Exercise',

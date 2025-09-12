@@ -72,7 +72,7 @@ const SafeView = ({
 
   return (
     <View
-      style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+      style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} ${twcnContentView ?? ''}`}
       {...rest}
     >
       {children}

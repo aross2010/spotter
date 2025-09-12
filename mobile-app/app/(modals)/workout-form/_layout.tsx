@@ -4,7 +4,6 @@ import { router, Stack } from 'expo-router'
 import Button from '../../../components/button'
 import Colors from '../../../constants/colors'
 import useTheme from '../../hooks/theme'
-import tw from '../../../tw'
 import { WorkoutFormProvider } from '../../../context/workout-form-context'
 
 const WorkoutFormLayout = () => {
@@ -65,6 +64,18 @@ const WorkoutFormLayout = () => {
           name="notes"
           options={{
             headerTitle: 'Workout Notes',
+          }}
+        />
+        <Stack.Screen
+          name="supersets"
+          options={{
+            headerTitle: 'Create Super Set',
+          }}
+        />
+        <Stack.Screen
+          name="dropsets"
+          options={{
+            headerTitle: 'Create Drop Set',
           }}
         />
       </Stack>

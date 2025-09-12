@@ -265,7 +265,7 @@ const Notebook = () => {
   }
 
   const notebookPrompt = (
-    <SafeView noScroll>
+    <SafeView hasTabBar>
       <View style={tw`flex-1 justify-between`}>
         <View>
           <Txt twcn="text-center text-base mb-6 opacity-60">
