@@ -80,7 +80,7 @@ const Exercises = () => {
         isOpen={isOptionsModalOpen}
         setIsOpen={setIsOptionsModalOpen}
       >
-        <ExerciseOptions />
+        <ExerciseOptions closeModal={() => setIsOptionsModalOpen(false)} />
       </MyModal>
     </View>
   )

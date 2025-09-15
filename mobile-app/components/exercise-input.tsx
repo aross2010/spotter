@@ -57,8 +57,6 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
     },
   ] as const
 
-  console.log('exercise sets: ', sets)
-
   const handleMakeUnilateral = () => {
     const updatedExercises = [...workoutData.exercises]
     if (exerciseNumber) {

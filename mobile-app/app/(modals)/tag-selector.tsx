@@ -6,7 +6,7 @@ import { useAuth } from '../../context/auth-context'
 import { Alert } from 'react-native'
 import { Tag } from '../../utils/types'
 import Button from '../../components/button'
-import { ActivityIndicator, Pressable, View } from 'react-native'
+import { ActivityIndicator, View } from 'react-native'
 import tw from '../../tw'
 import useTheme from '../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
@@ -171,7 +171,6 @@ const TagSelector = () => {
               {renderedSelectedTags}
             </View>
           )}
-
           <View
             style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
           >

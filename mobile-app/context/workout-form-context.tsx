@@ -47,9 +47,10 @@ export type SetGrouping = {
   groupSets: {
     exerciseNumber: number
     setNumber: number
-  }
+  }[]
 }
 
+// leave the isUnilateral button for new exercises only, not existing ones
 export type Exercise = {
   name: string
   isUnilateral: boolean
@@ -86,7 +87,6 @@ const starterExercise = {
       id: nanoid(),
     },
   ],
-  setGroupings: [],
 }
 
 const defaultWorkoutData: WorkoutFormData = {
@@ -123,6 +123,10 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
+
+  useEffect(() => {
+    console.log('Workout Data Updated:', JSON.stringify(workoutData))
+  }, [workoutData])
 
   useEffect(() => {
     getNames()

@@ -9,7 +9,11 @@ import { ArrowLeft, SquareStack } from 'lucide-react-native'
 import { useState } from 'react'
 import { useRouter } from 'expo-router'
 
-const ExerciseOptions = () => {
+type ExerciseOptionsProps = {
+  closeModal: () => void
+}
+
+const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   const { theme } = useTheme()
   const { workoutData, setWorkoutData } = useWorkoutForm()
   const { weightUnit } = workoutData
@@ -30,14 +34,24 @@ const ExerciseOptions = () => {
     },
   ]
 
+  const canCreateSuperset = workoutData.exercises.length >= 2
+  const canCreateDropset =
+    workoutData.exercises.length >= 1 &&
+    workoutData.exercises.some((ex) => ex.sets.length >= 2)
+
   const renderedOptions = exerciseOptions.map(
     ({ title, description, icon: Icon, href }, index) => {
       return (
         <Button
           onPress={() => {
             // close the modal, use passed function
+            closeModal()
             router.push(href)
           }}
+          disabled={
+            (title === 'Superset' && !canCreateSuperset) ||
+            (title === 'Drop Set' && !canCreateDropset)
+          }
           key={title}
           style={tw`flex-row items-center justify-between gap-6 bg-light-grayPrimary dark:bg-dark-grayPrimary p-4 rounded-lg`}
         >
