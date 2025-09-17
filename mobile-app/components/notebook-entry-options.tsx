@@ -74,23 +74,26 @@ const NotebookEntryOptions = ({
     ({ title, description, onPress, icon: Icon }, index) => {
       return (
         <Button
-          key={index}
           onPress={onPress}
-          style={tw`flex-row items-center gap-4 p-4 rounded-xl bg-white dark:bg-dark-grayPrimary border border-light-grayPrimary dark:border-dark-graySecondary`}
+          key={index}
         >
-          <Icon
-            size={20}
-            color={Colors.primary}
-            strokeWidth={1.5}
-          />
-
-          <View style={tw`flex-1`}>
-            <Txt twcn="font-poppinsSemiBold text-base text-light-text dark:text-dark-text mb-0.5">
-              {title}
-            </Txt>
-            <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-              {description}
-            </Txt>
+          <View
+            key={index}
+            style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
+          >
+            <View style={tw`bg-primary/10 rounded-xl p-2`}>
+              <Icon
+                size={20}
+                color={Colors.primary}
+                strokeWidth={1.5}
+              />
+            </View>
+            <View style={tw`flex-1`}>
+              <Txt twcn="text-base mb-0.5">{title}</Txt>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                {description}
+              </Txt>
+            </View>
           </View>
         </Button>
       )
@@ -156,7 +159,7 @@ const NotebookEntryOptions = ({
         <Txt twcn="text-xs uppercase font-poppinsMedium text-light-grayText dark:text-dark-grayText mb-3 px-2 tracking-wide">
           Actions
         </Txt>
-        <View style={tw`gap-2`}>{renderedOptions}</View>
+        <View style={tw``}>{renderedOptions}</View>
       </View>
     </Fragment>
   )

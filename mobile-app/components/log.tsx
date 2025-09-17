@@ -5,6 +5,8 @@ import Colors from '../constants/colors'
 import Button from './button'
 import { router } from 'expo-router'
 import tw from '../tw'
+import { theme } from '../twrnc.config'
+import useTheme from '../app/hooks/theme'
 
 type LogProps = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -28,6 +30,7 @@ const thingsToLog = [
 ] as const
 
 const Log = ({ setIsOpen }: LogProps) => {
+  const { theme } = useTheme()
   const renderedElements = thingsToLog.map(
     ({ title, description, href, icon: Icon }, index) => {
       return (
@@ -42,15 +45,17 @@ const Log = ({ setIsOpen }: LogProps) => {
         >
           <View
             key={index}
-            style={tw`bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl p-4 flex-row gap-6 items-center`}
+            style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
           >
-            <Icon
-              color={Colors.primary}
-              size={24}
-            />
-
+            <View style={tw`bg-primary/10 rounded-xl p-2`}>
+              <Icon
+                size={20}
+                color={Colors.primary}
+                strokeWidth={1.5}
+              />
+            </View>
             <View style={tw`flex-1`}>
-              <Txt twcn="font-poppinsMedium text-base mb-0.5">{title}</Txt>
+              <Txt twcn="text-base mb-0.5">{title}</Txt>
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                 {description}
               </Txt>
@@ -63,10 +68,8 @@ const Log = ({ setIsOpen }: LogProps) => {
 
   return (
     <>
-      <Txt twcn="text-xl text-center font-poppinsSemiBold">
-        What would you like to log?
-      </Txt>
-      <View style={tw`flex-col gap-3`}>{renderedElements}</View>
+      <Txt twcn="text-base font-poppinsMedium">What would you like to log?</Txt>
+      <View style={tw`flex-col`}>{renderedElements}</View>
     </>
   )
 }

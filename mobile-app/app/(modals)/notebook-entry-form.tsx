@@ -21,11 +21,9 @@ const NotebookEntryForm = () => {
   const colorScheme = useColorScheme() ?? 'light'
   const theme = Colors[colorScheme] ?? Colors.light
   const { addEntry, updateEntry } = useNotebook()
-
   const { tags, entryId, entryTitle, entryBody, entryDate, entryTags } =
-    useLocalSearchParams()
+    useLocalSearchParams() // tags = sent back from tag selector, entryTags = existing tags for entry to edit
   const isEditing = !!entryId
-
   const [data, setData] = useState({
     date: entryDate
       ? (() => {
@@ -49,13 +47,32 @@ const NotebookEntryForm = () => {
   } | null>(null)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [maxHeight, setMaxHeight] = useState<number | null>(null)
+  const [userTags, setUserTags] = useState<
+    (Tag & {
+      used: number
+    })[]
+  >([])
+  const { fetchTags } = useNotebook()
   const navigation = useNavigation()
   const selectedTags = tags ? JSON.parse(tags as string) : []
 
   useEffect(() => {
     setInitialState({ ...data })
-  }, []) // Only run once on mount
+  }, [])
+
+  // pre-fetch tags for tag selector
+  useEffect(() => {
+    const getTags = async () => {
+      try {
+        const tags = await fetchTags()
+        setUserTags(tags)
+      } catch (error: any) {
+        Alert.alert('Error', error.message)
+      }
+    }
+    getTags()
+  }, [])
+
   const hasChanges = () => {
     if (!isEditing || !initialState) return true // For new entries or before initial state is set, always allow saving if body is not empty
 
@@ -137,6 +154,8 @@ const NotebookEntryForm = () => {
     )
   })
 
+  console.log('user tags ', userTags)
+
   return (
     <SafeView
       keyboardAvoiding
@@ -196,7 +215,11 @@ const NotebookEntryForm = () => {
                 onPress={() => {
                   router.push({
                     pathname: '/tag-selector',
-                    params: { existingTags: JSON.stringify(data.tags) },
+                    params: {
+                      formTags: JSON.stringify(data.tags),
+                      userTags: JSON.stringify(userTags),
+                      type: 'notebook',
+                    },
                   })
                 }}
                 style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
@@ -218,10 +241,14 @@ const NotebookEntryForm = () => {
                 onPress={() => {
                   router.push({
                     pathname: '/tag-selector',
-                    params: { existingTags: JSON.stringify(data.tags) },
+                    params: {
+                      formTags: JSON.stringify(data.tags),
+                      userTags: JSON.stringify(userTags),
+                      type: 'notebook',
+                    },
                   })
                 }}
-                twcn="flex-row items-center gap-2 justify-center p-4 border border-dashed border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg"
+                twcn="flex-row items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
                 twcnText="text-light-grayText dark:text-dark-grayText text-sm "
                 text="Add tags"
               >

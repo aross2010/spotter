@@ -1,6 +1,14 @@
-import { StyleSheet, Text, View, Animated, Alert } from 'react-native'
+import {
+  View,
+  ScrollView,
+  Alert,
+  Keyboard,
+  TextInputProps,
+  TextInput,
+} from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
-import { useWorkoutForm } from '../context/workout-form-context'
+import { ExerciseName, useWorkoutForm } from '../context/workout-form-context'
+import { BlurView } from 'expo-blur'
 import tw from '../tw'
 import Txt from './text'
 import Input from './input'
@@ -13,21 +21,70 @@ import {
 } from 'lucide-react-native'
 import Button from './button'
 import Colors from '../constants/colors'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 
 type ExerciseInputProps = {
   exerciseNumber: number
-}
+} & TextInputProps
 
-const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
+const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const [isExerciseInfoOpen, setIsExerciseInfoOpen] = useState(false)
-  const { workoutData, setWorkoutData } = useWorkoutForm()
+  const [isExerciseNameSelectorOpen, setIsExerciseNameSelectorOpen] =
+    useState(false)
+  const [exerciseNameResults, setExerciseNameResults] = useState<
+    ExerciseName[]
+  >([])
+  const exerciseNameInputRef = useRef<TextInput>(null)
+  const {
+    workoutData,
+    setWorkoutData,
+    exerciseNames,
+    newlyAddedExerciseNumber,
+    setNewlyAddedExerciseNumber,
+  } = useWorkoutForm()
   const { exercises } = workoutData
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
+
+  useEffect(() => {
+    setExerciseNameResults(exerciseNames)
+  }, [exerciseNames])
+
+  // Auto-focus the exercise name input if this is the newly added exercise
+  useEffect(() => {
+    if (
+      newlyAddedExerciseNumber === exerciseNumber &&
+      exerciseNameInputRef.current
+    ) {
+      // Use a small timeout to ensure the component is fully rendered
+      const timeoutId = setTimeout(() => {
+        exerciseNameInputRef.current?.focus()
+        setNewlyAddedExerciseNumber(null) // Clear the flag after focusing
+      }, 100)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [newlyAddedExerciseNumber, exerciseNumber, setNewlyAddedExerciseNumber])
+
+  const isInSuperset = workoutData.setGroupings.some(
+    (grouping) =>
+      grouping.groupingType === 'superset' &&
+      grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber)
+  )
+
+  const isSetInDropset = (setNumber: number) => {
+    return workoutData.setGroupings.some(
+      (grouping) =>
+        grouping.groupingType === 'drop set' &&
+        grouping.groupSets.some(
+          (set) =>
+            set.exerciseNumber === exerciseNumber && set.setNumber === setNumber
+        )
+    )
+  }
 
   const SetInputs = [
     {
@@ -288,12 +345,12 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
 
   const buttons = [
     {
-      name: 'isUnilateral',
+      name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
       icon: SquareSplitHorizontal,
       onPress: handleMakeUnilateral,
     },
     {
-      name: 'View Information', // history & exercise notes
+      name: 'View Information', // history & exercise notes, IF EXISTS BEFORE, else HIDE
       icon: Info,
       onPress: handleDisplayExerciseInfo,
     },
@@ -312,6 +369,65 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
     },
   ]
 
+  const handleSelectExistingExercise = (name: string) => {
+    setWorkoutData((prev) => {
+      const updatedExercises = [...prev.exercises]
+      if (exerciseNumber) {
+        updatedExercises[exerciseNumber - 1] = {
+          ...updatedExercises[exerciseNumber - 1],
+          name,
+          isUnilateral:
+            exerciseNames.find((ex) => ex.name === name)?.isUnilateral || false,
+          existing: true,
+        }
+      }
+      return {
+        ...prev,
+        exercises: updatedExercises,
+      }
+    })
+    setIsExerciseNameSelectorOpen(false)
+    Keyboard.dismiss()
+  }
+
+  const renderedExerciseNames = exerciseNameResults.map(
+    ({ name, used }, index) => {
+      return (
+        <Button
+          key={name}
+          onPress={() => handleSelectExistingExercise(name)}
+          style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+            index === exerciseNameResults.length - 1
+              ? ''
+              : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'
+          }`}
+        >
+          <Txt>{name}</Txt>
+          <Txt>{used}</Txt>
+        </Button>
+      )
+    }
+  )
+
+  const handleChange = (text: string) => {
+    const updatedExercises = [...workoutData.exercises]
+    updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0] = {
+      ...updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0],
+      name: text,
+    }
+    setWorkoutData({
+      ...workoutData,
+      exercises: updatedExercises,
+    })
+    const filtered = exerciseNames.filter((workout) =>
+      workout.name.toLowerCase().includes(text.toLowerCase())
+    )
+    setExerciseNameResults(filtered)
+    if (!isExerciseNameSelectorOpen) {
+      setIsExerciseNameSelectorOpen(true)
+    }
+  }
+
   const renderedExerciseButtons = buttons.map(
     ({ name, icon: Icon, onPress }) => {
       const isActive =
@@ -321,11 +437,19 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
       if (name === 'Delete Exercise' && exercises.length <= 1) {
         return null
       }
+      if (name === 'isUnilateral' && exercise.existing) {
+        return null
+      }
+
+      if (name === 'View Information' && !exercise.existing) {
+        return null
+      }
+
       return (
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-2 rounded-xl ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'}`}
+          twcn={`p-2 rounded-xl ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'} border border-light-grayTertiary dark:border-dark-grayTertiary`}
         >
           <Icon
             strokeWidth={1.5}
@@ -343,11 +467,11 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs uppercase text-primary"
-        twcn={`p-2 flex-row flex-1 items-center justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+        twcnText="text-xs uppercase text-primary font-poppinsMedium"
+        twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
         <Icon
-          strokeWidth={1.5}
+          strokeWidth={1.75}
           size={16}
           color={Colors.primary}
         />
@@ -372,11 +496,10 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
 
   const renderedSetInputs = sets.map((set, setIndex) => {
     if (isUnilateral) {
-      // For unilateral exercises, wrap both left and right rows together
       const setContent = (
         <View>
           <View
-            style={tw`flex-row flex-wrap border-b bg-light-background dark:bg-dark-background border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
           >
             {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
               let displayValue = ''
@@ -412,7 +535,7 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
             })}
           </View>
           <View
-            style={tw`flex-row flex-wrap border-b bg-light-background dark:bg-dark-background border-light-grayTertiary  dark:border-dark-grayTertiary py-1`}
+            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary  dark:border-dark-grayTertiary py-1`}
           >
             {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
               let displayValue = ''
@@ -475,7 +598,7 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
       // For regular exercises, wrap single row
       const setContent = (
         <View
-          style={tw`flex-row flex-wrap bg-light-background dark:bg-dark-background border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             return (
@@ -531,7 +654,9 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
           {exerciseNumber ?? '+'}
         </Txt>
       </View>
-      <View style={tw`flex-1 w-1 bg-primary rounded-full`} />
+      <View
+        style={tw`flex-1 w-1 ${isInSuperset ? 'bg-secondary' : 'bg-primary'} rounded-full`}
+      />
     </View>
   )
 
@@ -543,6 +668,7 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
             style={tw`flex-1 shrink pb-2 border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
           >
             <Input
+              ref={exerciseNameInputRef}
               placeholder={`${`Exercise ${exerciseNumber}`}`}
               noBorder
               twcnInput="py-0 flex-1"
@@ -550,18 +676,31 @@ const ExerciseInput = ({ exerciseNumber }: ExerciseInputProps) => {
                 workoutData.exercises[exerciseNumber ? exerciseNumber - 1 : 0]
                   ?.name
               }
-              onChange={(e) => {
-                const updatedExercises = [...workoutData.exercises]
-                updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0] = {
-                  ...updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0],
-                  name: e.nativeEvent.text,
-                }
-                setWorkoutData({
-                  ...workoutData,
-                  exercises: updatedExercises,
-                })
+              onPress={() => {
+                setIsExerciseNameSelectorOpen(!isExerciseNameSelectorOpen)
               }}
+              onChange={(e) => handleChange(e.nativeEvent.text)}
+              onFocus={() => setIsExerciseNameSelectorOpen(true)}
+              onBlur={() => setIsExerciseNameSelectorOpen(false)}
+              {...rest}
             />
+            {isExerciseNameSelectorOpen && exerciseNameResults.length > 0 && (
+              <BlurView
+                intensity={50}
+                tint="default"
+                style={[
+                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-3 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
+                ]}
+              >
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  style={tw`max-h-44`}
+                >
+                  {renderedExerciseNames}
+                </ScrollView>
+              </BlurView>
+            )}
           </View>
           <View style={tw`flex-row gap-2 items-center`}>
             {renderedExerciseButtons}

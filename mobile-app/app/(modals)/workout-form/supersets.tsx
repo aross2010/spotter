@@ -11,17 +11,9 @@ import {
 import { capString } from '../../../functions/cap-string'
 import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
-import { Circle, CheckCircle } from 'lucide-react-native'
+import { Ellipsis, Trash } from 'lucide-react-native'
+import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
-import Accordion from '../../../components/accordion'
-
-// when create is pressed, gray out sets/exercises that are already in a superset
-// show at the top an accordion with the current superset sets – swipe left to delete it. (no editing, yet)
-// in the create superset, use the selected sets to add to the setGroupings array in workoutData
-// on the exercise screen, change the color of the timeline for superseted exercises, in the normal view, specifiy which exact sets are supersetted
-// only show exercises that have a name
-// leave all accordion expanded by default (maybe dont use them at all?)
-// scroll down to new exercise after adding it
 
 const Supersets = () => {
   const navigation = useNavigation()
@@ -31,6 +23,63 @@ const Supersets = () => {
     new Set()
   )
   const [selectedSets, setSelectedSets] = useState<Set<string>>(new Set())
+  const [isSupersetOptionsOpen, setIsSupersetOptionsOpen] =
+    useState<boolean>(false)
+  const [selectedSuperset, setSelectedSuperset] = useState<number | null>(null)
+
+  // delete supersets for the exercise grouping
+  const deleteSuperset = () => {
+    if (selectedSuperset !== null) {
+      const selectedGrouping = workoutData.setGroupings[selectedSuperset]
+      if (!selectedGrouping || selectedGrouping.groupingType !== 'superset') {
+        setIsSupersetOptionsOpen(false)
+        setSelectedSuperset(null)
+        return
+      }
+
+      // Create a key based on the exercises involved, sorted by exercise number
+      const selectedExerciseData = selectedGrouping.groupSets
+        .map((set) => ({
+          name: workoutData.exercises[set.exerciseNumber - 1]?.name,
+          exerciseNumber: set.exerciseNumber,
+        }))
+        .filter((ex) => ex.name)
+        .sort((a, b) => a.exerciseNumber - b.exerciseNumber)
+
+      const selectedNames = selectedExerciseData
+        .map((ex) => ex.name)
+        .join(' → ')
+
+      const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
+        if (grouping.groupingType !== 'superset') return true
+
+        const exerciseData = grouping.groupSets
+          .map((set) => ({
+            name: workoutData.exercises[set.exerciseNumber - 1]?.name,
+            exerciseNumber: set.exerciseNumber,
+          }))
+          .filter((ex) => ex.name)
+          .sort((a, b) => a.exerciseNumber - b.exerciseNumber)
+
+        const names = exerciseData.map((ex) => ex.name).join(' → ')
+
+        return names !== selectedNames
+      })
+
+      setWorkoutData({
+        ...workoutData,
+        setGroupings: updatedGroupings,
+      })
+
+      setIsSupersetOptionsOpen(false)
+      setSelectedSuperset(null)
+    }
+  }
+
+  const openSupersetOptions = (supersetIndex: number) => {
+    setSelectedSuperset(supersetIndex)
+    setIsSupersetOptionsOpen(true)
+  }
 
   const createSuperSet = () => {
     const validation = validateSuperset()
@@ -38,8 +87,6 @@ const Supersets = () => {
       Alert.alert('Invalid Superset', validation.message)
       return
     }
-
-    console.log('Creating superset with sets:', Array.from(selectedSets))
 
     const setGroupings = {
       groupingType: 'superset' as SetGroupingType,
@@ -55,6 +102,8 @@ const Supersets = () => {
       ...workoutData,
       setGroupings: [...workoutData.setGroupings, setGroupings],
     })
+
+    setSelectedSets(new Set())
   }
 
   useEffect(() => {
@@ -66,6 +115,7 @@ const Supersets = () => {
           accessibilityLabel="create superset"
           twcnText="font-poppinsSemiBold text-primary dark:text-primary"
           text="Create"
+          disabled={selectedSets.size < 2}
         />
       ),
       headerBackTitle: workoutData.name
@@ -91,26 +141,27 @@ const Supersets = () => {
   }, [selectedSets, expandedExercises])
 
   const formatSetDisplay = (set: any, weightUnit: string) => {
-    let display = `Set ${set.setNumber}`
+    const parts = []
 
     const weight = weightUnit === 'lbs' ? set.weightLbs : set.weightKg
     if (weight) {
-      display += ` • ${weight}${weightUnit === 'lbs' ? 'lbs' : 'kg'}`
+      parts.push(`${weight}${weightUnit === 'lbs' ? 'lbs' : 'kg'}`)
     }
 
     if (set.leftReps && set.rightReps) {
       if (set.leftReps === set.rightReps) {
-        display += ` • ${set.leftReps} reps`
+        parts.push(`${set.leftReps} reps`)
       } else {
-        display += ` • ${Math.min(set.leftReps, set.rightReps)}-${Math.max(set.leftReps, set.rightReps)} reps`
+        parts.push(
+          `${Math.min(set.leftReps, set.rightReps)}-${Math.max(set.leftReps, set.rightReps)} reps`
+        )
       }
     } else if (set.reps) {
-      display += ` • ${set.reps} reps`
+      parts.push(`${set.reps} reps`)
     } else if (set.lowReps && set.highReps) {
-      display += ` • ${set.lowReps}-${set.highReps} reps`
+      parts.push(`${set.lowReps}-${set.highReps} reps`)
     }
-
-    return display
+    return parts.join(' • ')
   }
 
   const getExerciseSetCounts = () => {
@@ -143,14 +194,6 @@ const Supersets = () => {
       }
     }
     return true
-  }
-
-  const haveEqualSetCounts = (exerciseCounts: Map<number, number>) => {
-    const counts = Array.from(exerciseCounts.values())
-    if (counts.length <= 1) return true
-
-    const firstCount = counts[0]
-    return counts.every((count) => count === firstCount)
   }
 
   const isValidSetProgression = () => {
@@ -210,18 +253,6 @@ const Supersets = () => {
     }
   }
 
-  const toggleExercise = (exerciseIndex: number) => {
-    const newExpanded = new Set(expandedExercises)
-
-    if (expandedExercises.has(exerciseIndex)) {
-      newExpanded.delete(exerciseIndex)
-    } else {
-      newExpanded.add(exerciseIndex)
-    }
-
-    setExpandedExercises(newExpanded)
-  }
-
   const toggleSet = (exerciseIndex: number, setIndex: number) => {
     const setId = `${exerciseIndex}-${setIndex}`
     const newSelected = new Set(selectedSets)
@@ -272,78 +303,221 @@ const Supersets = () => {
     return !areExercisesAdjacent(allExercises)
   }
 
-  const renderedExercises = workoutData.exercises.map((ex, exerciseIndex) => (
-    <Accordion
-      key={exerciseIndex}
-      title={ex.name || `Exercise ${exerciseIndex + 1}`}
-      isExpanded={expandedExercises.has(exerciseIndex)}
-      onToggle={() => toggleExercise(exerciseIndex)}
-      disabled={isExerciseDisabled(exerciseIndex)}
-      twcn="border-b border-light-grayTertiary dark:border-dark-grayTertiary"
-    >
-      <View style={tw`pb-2 px-2`}>
-        {ex.sets.map((set: any, setIndex: number) => {
-          const setId = `${exerciseIndex}-${setIndex}`
-          const isSelected = selectedSets.has(setId)
-          const exerciseDisabled = isExerciseDisabled(exerciseIndex)
+  const renderedExercises = workoutData.exercises.map((ex, exerciseIndex) => {
+    if (!ex.name) return null
+    return (
+      <View
+        key={exerciseIndex}
+        style={tw`flex-row flex-wrap gap-4 py-3 border-b border-light-graySecondary dark:border-dark-graySecondary`}
+      >
+        <Txt twcn="w-full text-sm">
+          {exerciseIndex + 1}. {capString(ex.name, 30)}
+        </Txt>
+        <View style={tw`w-full flex-row items-center mb-2 gap-3`}>
+          {ex.sets.map((set: any, setIndex: number) => {
+            const hasRepsOrWeight =
+              set.reps ||
+              set.leftReps ||
+              set.rightReps ||
+              set.weightLbs ||
+              set.weightKg
+            if (!hasRepsOrWeight) return null
+            const setId = `${exerciseIndex}-${setIndex}`
+            const isSelected = selectedSets.has(setId)
+            const exerciseDisabled = isExerciseDisabled(exerciseIndex)
+            const isPartOfAnotherSuperset = workoutData.setGroupings.some(
+              (grouping) =>
+                grouping.groupingType === 'superset' &&
+                grouping.groupSets.some(
+                  (s) =>
+                    s.exerciseNumber === exerciseIndex + 1 &&
+                    s.setNumber === setIndex + 1
+                )
+            )
 
-          // Check if another set from this exercise is already selected
-          const hasOtherSetSelected = Array.from(selectedSets).some(
-            (selectedSetId) => {
-              const [selectedExerciseIndex] = selectedSetId
-                .split('-')
-                .map(Number)
-              return (
-                selectedExerciseIndex === exerciseIndex &&
-                selectedSetId !== setId
-              )
-            }
-          )
+            // Check if this set is part of a dropset
+            const isPartOfADropset = workoutData.setGroupings.some(
+              (grouping) =>
+                grouping.groupingType === 'drop set' &&
+                grouping.groupSets.some(
+                  (s) =>
+                    s.exerciseNumber === exerciseIndex + 1 &&
+                    s.setNumber === setIndex + 1
+                )
+            )
 
-          const isSetDisabled =
-            exerciseDisabled || (!isSelected && hasOtherSetSelected)
-
-          return (
-            <Button
-              key={setIndex}
-              onPress={() =>
-                !isSetDisabled && toggleSet(exerciseIndex, setIndex)
+            // Check if another set from this exercise is already selected
+            const hasOtherSetSelected = Array.from(selectedSets).some(
+              (selectedSetId) => {
+                const [selectedExerciseIndex] = selectedSetId
+                  .split('-')
+                  .map(Number)
+                return (
+                  selectedExerciseIndex === exerciseIndex &&
+                  selectedSetId !== setId
+                )
               }
-              twcn={`flex-row items-center gap-2 p-2 rounded-lg ${
-                isSetDisabled ? 'opacity-40' : ''
-              }`}
-              disabled={isSetDisabled}
-            >
-              {isSelected ? (
-                <CheckCircle
-                  size={15}
-                  color={isSetDisabled ? theme.graySecondary : Colors.primary}
-                />
-              ) : (
-                <Circle
-                  size={15}
-                  color={isSetDisabled ? theme.graySecondary : theme.grayText}
-                />
-              )}
-              <Txt
-                twcn={`text-xs uppercase tracking-wider ${
-                  isSetDisabled
-                    ? 'text-light-graySecondary dark:text-dark-graySecondary'
-                    : 'text-light-grayText dark:text-dark-grayText'
-                } ${isSelected ? 'text-primary' : ''}`}
+            )
+
+            const isSetDisabled =
+              exerciseDisabled ||
+              (!isSelected && hasOtherSetSelected) ||
+              isPartOfAnotherSuperset ||
+              isPartOfADropset
+
+            return (
+              <Button
+                key={setIndex}
+                onPress={() =>
+                  !isSetDisabled && toggleSet(exerciseIndex, setIndex)
+                }
+                twcn={`relative flex-row items-center gap-2 p-1 rounded-lg ${isSelected ? 'bg-primary/25 border-primary' : 'bg-light-grayPrimary dark:bg-dark-graySecondary border-light-grayTertiary dark:border-dark-grayTertiary'} border`}
+                disabled={isSetDisabled}
               >
-                {formatSetDisplay(set, workoutData.weightUnit || 'lbs')}
-              </Txt>
-            </Button>
-          )
-        })}
+                <Txt
+                  twcn={`text-xs uppercase tracking-wider ${
+                    isSetDisabled
+                      ? 'text-light-graySecondary dark:text-dark-graySecondary'
+                      : 'text-light-grayText dark:text-dark-grayText'
+                  } ${isSelected ? 'text-primary' : ''}`}
+                >
+                  {formatSetDisplay(set, workoutData.weightUnit || 'lbs')}
+                </Txt>
+              </Button>
+            )
+          })}
+        </View>
       </View>
-    </Accordion>
-  ))
+    )
+  })
+
+  const getExerciseGroupings = () => {
+    const groupings = new Map<string, any[]>()
+
+    workoutData.setGroupings.forEach((grouping, groupIndex) => {
+      if (grouping.groupingType === 'superset') {
+        // Create a key based on the exercises involved, sorted by exercise number (not alphabetically)
+        const exerciseData = grouping.groupSets
+          .map((set) => ({
+            name: workoutData.exercises[set.exerciseNumber - 1]?.name,
+            exerciseNumber: set.exerciseNumber,
+          }))
+          .filter((ex) => ex.name)
+          .sort((a, b) => a.exerciseNumber - b.exerciseNumber) // Sort by exercise number
+
+        const exerciseNames = exerciseData.map((ex) => ex.name).join(' → ')
+
+        if (!groupings.has(exerciseNames)) {
+          groupings.set(exerciseNames, [])
+        }
+
+        groupings.get(exerciseNames)!.push({
+          ...grouping,
+          supersetIndex: groupIndex + 1,
+        })
+      }
+    })
+
+    return groupings
+  }
+
+  const exerciseGroupings = getExerciseGroupings()
+
+  const renderedSuperSets = Array.from(exerciseGroupings.entries()).map(
+    ([exerciseCombo, supersets]) => {
+      return (
+        <View
+          key={exerciseCombo}
+          style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl p-4`}
+        >
+          <View style={tw`flex-row items-start justify-between gap-4 mb-4`}>
+            <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">
+              {exerciseCombo}
+            </Txt>
+            <Button
+              onPress={() =>
+                openSupersetOptions(supersets[0].supersetIndex - 1)
+              }
+            >
+              <Ellipsis
+                size={20}
+                color={theme.grayText}
+              />
+            </Button>
+          </View>
+
+          {supersets.map((superset, index) => (
+            <View
+              key={index}
+              style={tw`flex-row items-start gap-3`}
+            >
+              <View style={tw`flex-row items-center flex-wrap`}>
+                {superset.groupSets.map((set: any, setIndex: number) => {
+                  return (
+                    <View
+                      key={setIndex}
+                      style={tw`flex-row items-center`}
+                    >
+                      <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                        {set.setNumber}{' '}
+                      </Txt>
+
+                      {setIndex < superset.groupSets.length - 1 && (
+                        <Txt twcn="text-light-grayText dark:text-dark-grayText mx-2">
+                          →
+                        </Txt>
+                      )}
+                    </View>
+                  )
+                })}
+              </View>
+            </View>
+          ))}
+        </View>
+      )
+    }
+  )
 
   return (
     <SafeView scroll={false}>
-      <View style={tw`gap-2 w-full flex-1`}>{renderedExercises}</View>
+      {workoutData.setGroupings.length > 0 && (
+        <View style={tw`mb-4 w-full`}>
+          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+            Supersets
+          </Txt>
+          <View style={tw`gap-2`}>{renderedSuperSets}</View>
+        </View>
+      )}
+      <View style={tw`w-full flex-1`}>
+        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+          Exercises
+        </Txt>
+        {renderedExercises}
+      </View>
+      <MyModal
+        isOpen={isSupersetOptionsOpen}
+        setIsOpen={setIsSupersetOptionsOpen}
+      >
+        <Txt twcn="text-base font-poppinsMedium">Superset Options</Txt>
+        <Button onPress={deleteSuperset}>
+          <View style={tw`flex-row gap-6 p-3 items-center rounded-xl`}>
+            <View style={tw`bg-primary/10 rounded-xl p-2`}>
+              <Trash
+                size={20}
+                color={Colors.primary}
+                strokeWidth={1.5}
+              />
+            </View>
+            <View style={tw`flex-1`}>
+              <Txt twcn="text-base">Delete</Txt>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                Remove the superset link between these exercises. This will not
+                delete the exercises or their sets.
+              </Txt>
+            </View>
+          </View>
+        </Button>
+      </MyModal>
     </SafeView>
   )
 }

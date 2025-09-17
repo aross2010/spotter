@@ -37,7 +37,6 @@ const TabsLayout = () => {
             {...props}
             height={90}
             paddingTop={10}
-            barColor={theme.background}
             indicatorColor={theme.text}
           />
         )}
@@ -53,6 +52,15 @@ const TabsLayout = () => {
             fontSize: 20,
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
+          },
+          tabBarStyle: {
+            backgroundColor: 'transparent',
+            position: 'absolute',
+            borderTopWidth: 0,
+            elevation: 0,
+          },
+          sceneStyle: {
+            backgroundColor: 'transparent',
           },
         }}
       >

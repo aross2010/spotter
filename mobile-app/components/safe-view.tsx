@@ -36,6 +36,7 @@ const SafeView = ({
   if (keyboardAvoiding && scroll) {
     return (
       <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
         style={tw`flex-1 bg-light-background dark:bg-dark-background`}
         contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
         bottomOffset={bottomOffset}

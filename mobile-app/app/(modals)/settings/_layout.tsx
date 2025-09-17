@@ -14,7 +14,7 @@ const SettingsLayout = () => {
       screenOptions={{
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: 'Geologica_600SemiBold',
+          fontFamily: 'Poppins_600SemiBold',
           color: theme.text,
         },
         headerBackButtonDisplayMode: 'default',

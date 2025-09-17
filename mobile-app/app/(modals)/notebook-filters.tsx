@@ -191,11 +191,13 @@ const NotebookFilters = () => {
           {sortOrder === 'desc' ? (
             <CalendarArrowDown
               size={24}
+              strokeWidth={1.5}
               color={theme.grayText}
             />
           ) : (
             <CalendarArrowUp
               size={24}
+              strokeWidth={1.5}
               color={Colors.primary}
             />
           )}

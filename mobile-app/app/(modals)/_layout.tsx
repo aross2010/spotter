@@ -16,7 +16,7 @@ export default function ModalLayout() {
           headerShown: false,
           headerTitleStyle: {
             fontSize: 18,
-            fontFamily: 'Geologica_600SemiBold',
+            fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
           headerBackButtonDisplayMode: 'default',

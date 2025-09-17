@@ -1,50 +1,50 @@
 import { View, Keyboard } from 'react-native'
-import { useState, useEffect, useRef } from 'react'
-import { useWorkout, WorkoutName } from '../context/workout-context'
+import { useState, useEffect } from 'react'
+import { WorkoutName } from '../context/workout-context'
 import tw from '../tw'
 import Txt from './text'
 import Input from './input'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
+import { BlurView } from 'expo-blur'
 
-type WorkoutNameInputProps = {
-  name: string
-  setName: (name: string) => void
-}
-
-const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
+const WorkoutNameInput = () => {
   const [isWorkoutNameSelectorOpen, setIsWorkoutNameSelectorOpen] =
     useState(false)
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
     []
   )
-  const { workoutNames } = useWorkoutForm()
+  const { workoutNames, setWorkoutData, workoutData } = useWorkoutForm()
 
   useEffect(() => {
     setWorkoutNamesResults(workoutNames)
   }, [workoutNames])
 
+  const handleSelectWorkoutName = (name: string) => {
+    setWorkoutData((prev) => ({ ...prev, name }))
+    setIsWorkoutNameSelectorOpen(false)
+    Keyboard.dismiss()
+  }
+
   const renderedWorkoutNames = workoutNamesResults
     .slice(0, 6)
-    .map(({ name, used }, index) => {
-      return (
-        <Button
-          key={name}
-          onPress={() => {
-            setName(name)
-            setIsWorkoutNameSelectorOpen(false)
-            Keyboard.dismiss()
-          }}
-          style={tw`flex-1 bg-light-grayPrimary flex-row items-center justify-between p-3 w-full ${index === workoutNamesResults.length - 1 ? '' : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'}`}
-        >
-          <Txt>{name}</Txt>
-          <Txt>{used}</Txt>
-        </Button>
-      )
-    })
+    .map(({ name, used }, index) => (
+      <Button
+        key={name}
+        onPress={() => handleSelectWorkoutName(name)}
+        style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+          index === workoutNamesResults.length - 1
+            ? ''
+            : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'
+        }`}
+      >
+        <Txt>{name}</Txt>
+        <Txt>{used}</Txt>
+      </Button>
+    ))
 
   const handleChange = (text: string) => {
-    setName(text)
+    setWorkoutData((prev) => ({ ...prev, name: text }))
     const filtered = workoutNames.filter((workout) =>
       workout.name.toLowerCase().includes(text.toLowerCase())
     )
@@ -60,7 +60,7 @@ const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
     >
       <Input
         editable
-        value={name}
+        value={workoutData.name}
         onPress={() => {
           setIsWorkoutNameSelectorOpen(!isWorkoutNameSelectorOpen)
         }}
@@ -73,21 +73,22 @@ const WorkoutNameInput = ({ name, setName }: WorkoutNameInputProps) => {
         placeholder="Legs, Push, Pull, Upper Body, etc..."
         twcnContainer="px-0"
         twcnInput="px-0"
-        twcnLabel="uppercase text-xs tracking-wider font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+        twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         returnKeyType="done"
-        onSubmitEditing={(e) => {
-          setIsWorkoutNameSelectorOpen(false)
-          setName(e.nativeEvent.text)
-        }}
+        onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => setIsWorkoutNameSelectorOpen(true)}
       />
 
       {isWorkoutNameSelectorOpen && (
-        <View
-          style={tw`absolute top-full left-0 right-0 z-10 rounded-xl overflow-hidden mt-3`}
+        <BlurView
+          intensity={50}
+          tint="default"
+          style={[
+            tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-3 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
+          ]}
         >
           {renderedWorkoutNames}
-        </View>
+        </BlurView>
       )}
     </View>
   )

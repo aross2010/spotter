@@ -43,7 +43,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 rounded-lg bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">

@@ -1,33 +1,24 @@
 import SafeView from '../../../components/safe-view'
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { useEffect, useState } from 'react'
-import Input from '../../../components/input'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
-import {
-  ArrowRight,
-  Calendar,
-  Ellipsis,
-  MapPin,
-  Pencil,
-} from 'lucide-react-native'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { Calendar, MapPin } from 'lucide-react-native'
+import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
 import useTheme from '../../hooks/theme'
-import { useWorkout } from '../../../context/workout-context'
-import Txt from '../../../components/text'
 import WorkoutNameInput from '../../../components/workout-name-input'
-import Colors from '../../../constants/colors'
 import { useWorkoutForm } from '../../../context/workout-form-context'
 import Exercises from '../../../components/exercises'
+import WorkoutNotes from '../../../components/workout-notes'
+import WorkoutTags from '../../../components/workout-tags'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const navigation = useNavigation()
   const { theme } = useTheme()
-  const { workoutData, updateWorkoutData } = useWorkoutForm()
+  const { workoutData, setWorkoutData } = useWorkoutForm()
 
   useEffect(() => {
     const saveEnabled = true
@@ -36,7 +27,7 @@ const WorkoutForm = () => {
       headerTitle: 'New Workout',
       headerRight: () => (
         <Button
-          onPress={handleNextStep}
+          onPress={handleSubmitWorkout}
           hitSlop={12}
           accessibilityLabel="Save Workout"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
@@ -47,18 +38,12 @@ const WorkoutForm = () => {
     })
   }, [workoutData])
 
-  const handleNextStep = () => {
-    // if (!workoutData.name) {
-    //   Alert.alert('Error', 'Please enter a workout name before proceeding.')
-    //   return
-    // }
-    // router.push('/workout-form/exercises')
-  }
+  const handleSubmitWorkout = () => {}
 
   return (
     <SafeView
       keyboardAvoiding
-      bottomOffset={125}
+      bottomOffset={200}
     >
       <View style={tw`flex-row gap-2`}>
         <Button
@@ -67,7 +52,7 @@ const WorkoutForm = () => {
             setIsDatePickerOpen(true)
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText="text-xs font-poppinsMedium uppercase text-light-text dark:text-dark-text"
         >
           <Calendar
@@ -85,7 +70,7 @@ const WorkoutForm = () => {
             router.push('/workout-form/location')
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText={`text-xs font-poppinsMedium uppercase ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'
@@ -102,11 +87,10 @@ const WorkoutForm = () => {
       </View>
 
       <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
-        <WorkoutNameInput
-          name={workoutData.name}
-          setName={(name) => updateWorkoutData({ name })}
-        />
+        <WorkoutNameInput />
         <Exercises />
+        <WorkoutNotes />
+        <WorkoutTags />
       </View>
 
       <DatePicker
@@ -115,7 +99,7 @@ const WorkoutForm = () => {
         date={workoutData.date}
         onConfirm={(date) => {
           setIsDatePickerOpen(false)
-          updateWorkoutData({ date })
+          setWorkoutData({ ...workoutData, date })
         }}
         mode="date"
         onCancel={() => {

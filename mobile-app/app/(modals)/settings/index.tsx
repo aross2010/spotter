@@ -153,7 +153,7 @@ const Settings = () => {
             </Txt>
           )}
           <View
-            style={tw`bg-white dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white border border-light-grayPrimary dark:border-dark-graySecondary dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (

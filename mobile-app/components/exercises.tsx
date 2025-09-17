@@ -1,4 +1,4 @@
-import { StyleSheet, Switch, Text, View } from 'react-native'
+import { StyleSheet, ScrollView, View } from 'react-native'
 import React, { useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
@@ -10,13 +10,12 @@ import ExerciseInput from './exercise-input'
 import Colors from '../constants/colors'
 import { nanoid } from 'nanoid/non-secure'
 import MyModal from './modal'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
-import { ScrollView } from 'react-native-gesture-handler'
 import ExerciseOptions from './exercise-options'
 
 const Exercises = () => {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
-  const { workoutData, setWorkoutData } = useWorkoutForm()
+  const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
+    useWorkoutForm()
   const { theme } = useTheme()
 
   const handleAddEmptyExercise = () => {
@@ -31,10 +30,14 @@ const Exercises = () => {
       ],
       setGroupings: [],
     }
+    const newExerciseNumber = workoutData.exercises.length + 1
     setWorkoutData({
       ...workoutData,
       exercises: [...workoutData.exercises, starterExercise],
     })
+
+    // Mark this exercise as newly added so it can be auto-focused
+    setNewlyAddedExerciseNumber(newExerciseNumber)
   }
 
   const renderedExercises = workoutData.exercises.map((exercise, index) => {

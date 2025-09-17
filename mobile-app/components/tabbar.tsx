@@ -59,32 +59,26 @@ export default function TopIndicatorTabBar({
 
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)
 
-  // overlay color with alpha (keeps content opaque)
-  const overlayColor = barColor.startsWith('#')
-    ? hexToRgba(barColor, 0.8)
-    : barColor
-
   return (
-    <View
+    <BlurView
+      intensity={50}
       onLayout={onLayout}
+      experimentalBlurMethod="dimezisBlurView"
       style={[
         styles.container,
         {
-          backgroundColor: 'transparent',
           height,
           paddingTop,
           paddingBottom: Math.max(insets.bottom, 12),
+          zIndex: 10,
+          elevation: 10,
+          backgroundColor: hexToRgba(theme.background, 0.25),
         },
       ]}
     >
-      <BlurView
-        intensity={30}
-        tint="dark"
-        style={StyleSheet.absoluteFill}
-      />
       <View
         pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: overlayColor }]}
+        style={[StyleSheet.absoluteFill]}
       />
 
       <Animated.View
@@ -156,7 +150,7 @@ export default function TopIndicatorTabBar({
           </Pressable>
         )
       })}
-    </View>
+    </BlurView>
   )
 }
 

@@ -30,7 +30,7 @@ const MyModal = ({ isOpen, setIsOpen, children }: ModalProps) => {
       avoidKeyboard={true}
     >
       <View
-        style={tw`bg-light-background dark:bg-dark-background rounded-t-xl px-6 pt-10 pb-12 gap-4 relative`}
+        style={tw`bg-light-background dark:bg-dark-background rounded-t-xl px-4 pt-10 pb-12 gap-4 relative`}
       >
         <DragHandle />
         {children}

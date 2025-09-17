@@ -10,6 +10,7 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
+import { Tag } from '../utils/types'
 
 export type WorkoutName = {
   name: string
@@ -18,6 +19,7 @@ export type WorkoutName = {
 
 export type ExerciseName = {
   name: string
+  isUnilateral: boolean
   used: number
 }
 
@@ -25,7 +27,8 @@ export type SetGroupingType = 'superset' | 'drop set'
 
 export type Set = {
   setNumber: number
-  weight?: number // lbs or kg - depending on user preference
+  weightLbs?: number // lbs or kg - depending on user preference
+  weightKg?: number
   reps?: number
   leftReps?: number
   rightReps?: number
@@ -54,6 +57,7 @@ export type SetGrouping = {
 export type Exercise = {
   name: string
   isUnilateral: boolean
+  existing?: boolean // whether this exercise already exists in the user's exercise names
   sets: Set[]
 }
 
@@ -61,7 +65,7 @@ export type WorkoutFormData = {
   name: string
   date: Date
   location: string
-  tags: string[]
+  tags: Tag[]
   notes: string
   exercises: Exercise[]
   weightUnit: 'lbs' | 'kg'
@@ -76,6 +80,8 @@ type WorkoutFormContextType = {
   resetWorkoutData: () => void
   workoutNames: WorkoutName[]
   exerciseNames: ExerciseName[]
+  newlyAddedExerciseNumber: number | null
+  setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
 }
 
 const starterExercise = {
@@ -96,7 +102,86 @@ const defaultWorkoutData: WorkoutFormData = {
   tags: [],
   notes: '',
   weightUnit: 'lbs',
-  exercises: [starterExercise],
+  exercises: [
+    {
+      name: 'Bulgarian Split Squats Squats',
+      isUnilateral: true,
+      existing: true,
+      sets: [
+        {
+          setNumber: 1,
+          id: nanoid(),
+          weightLbs: 255,
+          leftReps: 6,
+          rightReps: 6,
+        },
+        {
+          setNumber: 2,
+          id: nanoid(),
+          weightLbs: 255,
+          leftReps: 6,
+          rightReps: 6,
+        },
+      ],
+    },
+    {
+      name: 'Leg Extensions',
+      isUnilateral: false,
+      existing: true,
+      sets: [
+        {
+          setNumber: 1,
+          id: nanoid(),
+          weightLbs: 100,
+          reps: 12,
+        },
+        {
+          setNumber: 2,
+          id: nanoid(),
+          weightLbs: 100,
+          reps: 12,
+        },
+      ],
+    },
+    {
+      name: 'Sissy Squats',
+      isUnilateral: false,
+      existing: true,
+      sets: [
+        {
+          setNumber: 1,
+          id: nanoid(),
+          reps: 12,
+        },
+        {
+          setNumber: 2,
+          id: nanoid(),
+          reps: 12,
+        },
+      ],
+    },
+
+    {
+      name: 'Calf Extensions',
+      isUnilateral: false,
+      existing: true,
+      sets: [
+        {
+          setNumber: 1,
+          id: nanoid(),
+          reps: 12,
+          weightLbs: 90,
+        },
+        {
+          setNumber: 2,
+          id: nanoid(),
+          reps: 12,
+          weightLbs: 90,
+        },
+      ],
+    },
+  ],
+
   setGroupings: [],
 }
 
@@ -121,6 +206,9 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     useState<WorkoutFormData>(defaultWorkoutData)
   const [exerciseNames, setExerciseNames] = useState<ExerciseName[]>([])
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
+  const [newlyAddedExerciseNumber, setNewlyAddedExerciseNumber] = useState<
+    number | null
+  >(null)
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
 
@@ -170,6 +258,8 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     exerciseNames,
     updateWorkoutData,
     resetWorkoutData,
+    newlyAddedExerciseNumber,
+    setNewlyAddedExerciseNumber,
   }
 
   return (

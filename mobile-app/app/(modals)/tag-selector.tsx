@@ -3,29 +3,29 @@ import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
 import Input from '../../components/input'
 import { useAuth } from '../../context/auth-context'
-import { Alert } from 'react-native'
 import { Tag } from '../../utils/types'
 import Button from '../../components/button'
-import { ActivityIndicator, View } from 'react-native'
+import { View } from 'react-native'
 import tw from '../../tw'
 import useTheme from '../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import TagView from '../../components/tag'
-import { useNotebook } from '../../context/notebook-context'
 
 const TagSelector = () => {
-  const { existingTags } = useLocalSearchParams()
+  const { formTags, userTags } = useLocalSearchParams() as {
+    formTags?: string // sent in from the form
+    userTags?: string // JSON string of tags user has used in past
+  }
   const [selectedTags, setSelectedTags] = useState<Tag[]>(
-    existingTags ? JSON.parse(existingTags as string) : []
+    formTags ? JSON.parse(formTags as string) : []
   )
   const [tagResults, setTagResults] = useState<(Tag & { used: number })[]>([])
-  const [tags, setTags] = useState<(Tag & { used: number })[]>([])
+  const [tags, setTags] = useState<(Tag & { used: number })[]>(
+    userTags ? JSON.parse(userTags as string) : []
+  )
   const [removedTags, setRemovedTags] = useState<(Tag & { used: number })[]>([])
   const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(true)
   const { authUser } = useAuth()
-  const { theme } = useTheme()
-  const { fetchTags } = useNotebook()
   const navigation = useNavigation()
 
   const handleSaveTags = () => {
@@ -52,15 +52,18 @@ const TagSelector = () => {
   }, [navigation, selectedTags])
 
   useEffect(() => {
+    if (!tags) return
     const filteredQueryResults = tags.filter(
       (tag) =>
         tag.name.toLowerCase().includes(query.toLowerCase()) &&
         !selectedTags.find((t) => t.name === tag.name)
     )
+    console.log('filteredQueryResults', filteredQueryResults)
     setTagResults(filteredQueryResults)
   }, [query])
 
   useEffect(() => {
+    if (!tags) return
     const filteredTags = tags.filter(
       (tag) =>
         !selectedTags.find((t) => t.name === tag.name) &&
@@ -70,22 +73,12 @@ const TagSelector = () => {
   }, [selectedTags, query])
 
   useEffect(() => {
-    const getTags = async () => {
-      try {
-        setLoading(true)
-        const tags = await fetchTags()
-        setTags(tags)
-        const filteredTags = tags.filter(
-          (tag) => !selectedTags.find((t) => t.name === tag.name)
-        )
-        setTagResults(filteredTags)
-      } catch (error: any) {
-        Alert.alert('Error', error.message)
-      } finally {
-        setLoading(false)
-      }
+    if (tags) {
+      const filteredTags = tags.filter(
+        (tag) => !selectedTags.find((t) => t.name === tag.name)
+      )
+      setTagResults(filteredTags)
     }
-    getTags()
   }, [])
 
   const handleSelectTag = (tagName: string) => {
@@ -102,6 +95,16 @@ const TagSelector = () => {
   }
 
   const handleCreateNewTag = () => {
+    if (
+      query.trim() === '' ||
+      selectedTags.find((tag) => tag.name === query.trim()) ||
+      tags.find((tag) => tag.name === query.trim()) ||
+      removedTags.find((tag) => tag.name === query.trim())
+    ) {
+      setQuery('')
+      return
+    }
+
     // create new tag to selected tags
     const newTag = {
       id: Date.now().toString(),
@@ -149,35 +152,26 @@ const TagSelector = () => {
 
   return (
     <SafeView scroll={false}>
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={theme.grayText}
-        />
-      ) : (
-        <>
-          <Input
-            autoCorrect={false}
-            autoCapitalize="none"
-            noBorder
-            placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
-            value={query}
-            onChange={(e) => setQuery(e.nativeEvent.text)}
-            onSubmitEditing={handleCreateNewTag}
-            returnKeyType="done"
-          />
-          {selectedTags.length > 0 && (
-            <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>
-              {renderedSelectedTags}
-            </View>
-          )}
-          <View
-            style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
-          >
-            {renderedResults}
-          </View>
-        </>
+      <Input
+        autoCorrect={false}
+        autoCapitalize="none"
+        noBorder
+        placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
+        value={query}
+        onChange={(e) => setQuery(e.nativeEvent.text)}
+        onSubmitEditing={handleCreateNewTag}
+        returnKeyType="done"
+      />
+      {selectedTags.length > 0 && (
+        <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>
+          {renderedSelectedTags}
+        </View>
       )}
+      <View
+        style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
+      >
+        {renderedResults}
+      </View>
     </SafeView>
   )
 }

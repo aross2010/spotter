@@ -53,21 +53,17 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
             (title === 'Drop Set' && !canCreateDropset)
           }
           key={title}
-          style={tw`flex-row items-center justify-between gap-6 bg-light-grayPrimary dark:bg-dark-grayPrimary p-4 rounded-lg`}
         >
           <View
-            style={tw`w-10 h-10 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary items-center justify-center`}
+            key={index}
+            style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
           >
-            <Icon
-              color={Colors.primary}
-              size={24}
-            />
-          </View>
-          <View style={tw`flex-1`}>
-            <Txt twcn="font-poppinsMedium mb-0.5">{title}</Txt>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-              {description}
-            </Txt>
+            <View style={tw`flex-1`}>
+              <Txt twcn="text-base mb-0.5">{title}</Txt>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                {description}
+              </Txt>
+            </View>
           </View>
         </Button>
       )
@@ -77,7 +73,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   return (
     <>
       <View style={tw`flex-row items-center justify-between`}>
-        <Txt twcn="text-base font-poppinsMedium">Exercise Options</Txt>
+        <Txt twcn="text-base font-poppinsMedium">Exercises Options</Txt>
         <View style={tw`flex-row items-center gap-2`}>
           <Txt
             twcn={`${weightUnit === 'kg' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-poppinsSemiBold uppercase text-xs tracking-wide`}
@@ -107,7 +103,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
           </Txt>
         </View>
       </View>
-      <View style={tw`gap-3`}>{renderedOptions}</View>
+      <View style={tw``}>{renderedOptions}</View>
     </>
   )
 }

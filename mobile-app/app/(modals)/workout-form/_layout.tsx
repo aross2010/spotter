@@ -15,7 +15,7 @@ const WorkoutFormLayout = () => {
         screenOptions={{
           headerTitleStyle: {
             fontSize: 18,
-            fontFamily: 'Geologica_600SemiBold',
+            fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
           headerBackButtonDisplayMode: 'default',
@@ -61,15 +61,9 @@ const WorkoutFormLayout = () => {
           }}
         />
         <Stack.Screen
-          name="notes"
-          options={{
-            headerTitle: 'Workout Notes',
-          }}
-        />
-        <Stack.Screen
           name="supersets"
           options={{
-            headerTitle: 'Create Super Set',
+            headerTitle: 'Super Sets',
           }}
         />
         <Stack.Screen
