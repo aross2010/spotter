@@ -1,9 +1,9 @@
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
-import useTheme from '../hooks/theme'
-import { useUserStore } from '../../stores/user-store'
-import tw from '../../tw'
-import { formattedDate } from '../../functions/formatted-date'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
+import useTheme from '../../hooks/theme'
+import { useUserStore } from '../../../stores/user-store'
+import tw from '../../../tw'
+import { formattedDate } from '../../../functions/formatted-date'
 import { Pressable } from 'react-native'
 
 function getGreeting(d: Date = new Date()) {

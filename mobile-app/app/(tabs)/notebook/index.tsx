@@ -1,7 +1,7 @@
 import { View, Animated, Easing, FlatList, ScrollView } from 'react-native'
 import React, { useEffect, useRef } from 'react'
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
 import {
   Activity,
   Ambulance,
@@ -14,15 +14,15 @@ import {
   Plus,
 } from 'lucide-react-native'
 import { Link } from 'expo-router'
-import tw from '../../tw'
-import Colors from '../../constants/colors'
-import Button from '../../components/button'
+import tw from '../../../tw'
+import Colors from '../../../constants/colors'
+import Button from '../../../components/button'
 import { router, useNavigation } from 'expo-router'
-import Spinner from '../../components/activity-indicator'
-import NotebookEntryView from '../../components/notebook-entry'
-import { useNotebook } from '../../context/notebook-context'
-import useTheme from '../hooks/theme'
-import { NotebookEntry } from '../../utils/types'
+import Spinner from '../../../components/activity-indicator'
+import NotebookEntryView from '../../../components/notebook-entry'
+import { useNotebook } from '../../../context/notebook-context'
+import useTheme from '../../hooks/theme'
+import { NotebookEntry } from '../../../utils/types'
 
 const notebookFunctions = [
   {
@@ -78,7 +78,7 @@ const Notebook = () => {
       headerRight: () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
-          <View style={tw`flex-row items-center gap-4 pr-2`}>
+          <View style={tw`flex-row items-center justify-evenly px-2 gap-4`}>
             {hasEntries && (
               <View style={tw`relative`}>
                 <Link href="/notebook-filters">
@@ -113,6 +113,10 @@ const Notebook = () => {
           </View>
         )
       },
+      headerTitle: 'Notebook',
+      headerStyle: { backgroundColor: theme.background },
+      headerShadowVisible: false,
+      headerBackButtonDisplayMode: 'minimal',
     })
   }, [navigation, tagFilters, sortOrder, currentNotebookEntries])
 
