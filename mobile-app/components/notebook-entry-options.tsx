@@ -6,7 +6,7 @@ import Colors from '../constants/colors'
 import tw from '../tw'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import Button from './button'
 import { useNotebook } from '../context/notebook-context'
 import { router } from 'expo-router'
@@ -110,7 +110,7 @@ const NotebookEntryOptions = ({
         {tags.slice(0, 3).map((tag, index) => (
           <Txt
             key={tag.id}
-            twcn="text-xs text-primary font-poppinsMedium"
+            twcn="text-xs text-primary font-medium"
           >
             #{tag.name}
           </Txt>
@@ -134,13 +134,13 @@ const NotebookEntryOptions = ({
             size={14}
             color={theme.grayText}
           />
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium">
             {formatDate(date)}
           </Txt>
         </View>
 
         {title && (
-          <Txt twcn="text-lg font-poppinsSemiBold text-light-text dark:text-dark-text mb-2">
+          <Txt twcn="text-lg font-semibold text-light-text dark:text-dark-text mb-2">
             {title}
           </Txt>
         )}
@@ -156,7 +156,7 @@ const NotebookEntryOptions = ({
       </View>
 
       <View>
-        <Txt twcn="text-xs uppercase font-poppinsMedium text-light-grayText dark:text-dark-grayText mb-3 px-2 tracking-wide">
+        <Txt twcn="text-xs uppercase font-medium text-light-grayText dark:text-dark-grayText mb-3 px-2 tracking-wide">
           Actions
         </Txt>
         <View style={tw``}>{renderedOptions}</View>

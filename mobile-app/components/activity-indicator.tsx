@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { ActivityIndicator } from 'react-native'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import tw from '../tw'
 import SafeView from './safe-view'
 

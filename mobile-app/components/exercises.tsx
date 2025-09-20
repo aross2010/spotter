@@ -1,22 +1,24 @@
-import { StyleSheet, ScrollView, View } from 'react-native'
+import { StyleSheet, ScrollView, View, Switch } from 'react-native'
 import React, { useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
 import { Ellipsis, Plus, SquareStack } from 'lucide-react-native'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import ExerciseInput from './exercise-input'
 import Colors from '../constants/colors'
 import { nanoid } from 'nanoid/non-secure'
-import MyModal from './modal'
-import ExerciseOptions from './exercise-options'
+import DropdownMenu from './dropdown-menu'
+import { router } from 'expo-router'
+import { useUserStore } from '../stores/user-store'
 
 const Exercises = () => {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
   const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
     useWorkoutForm()
   const { theme } = useTheme()
+  const { weightUnit } = workoutData
 
   const handleAddEmptyExercise = () => {
     const starterExercise = {
@@ -52,17 +54,55 @@ const Exercises = () => {
   return (
     <View>
       <View style={tw`flex-row justify-between items-center`}>
-        <Txt twcn="text-xs uppercase tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-xs uppercase tracking-wide font-medium text-light-grayText dark:text-dark-grayText">
           Exercises
         </Txt>
-        <Button onPress={() => setIsOptionsModalOpen(true)}>
-          <Ellipsis
-            size={20}
-            color={theme.grayText}
-            hitSlop={12}
-            strokeWidth={1.5}
+        <View style={tw`flex-row items-center gap-4`}>
+          <View style={tw`flex-row items-center gap-1`}>
+            <Txt
+              twcn={`${weightUnit === 'kg' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-semibold uppercase text-xs tracking-wide`}
+            >
+              Kg.
+            </Txt>
+            <View style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}>
+              <Switch
+                onChange={() => {
+                  setWorkoutData({
+                    ...workoutData,
+                    weightUnit: workoutData.weightUnit === 'lbs' ? 'kg' : 'lbs',
+                  })
+                }}
+                value={workoutData.weightUnit === 'lbs'}
+                trackColor={{
+                  false: theme.grayPrimary,
+                  true: Colors.primary,
+                }}
+              />
+            </View>
+            <Txt
+              twcn={`${weightUnit === 'lbs' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-semibold uppercase text-xs tracking-wide`}
+            >
+              Lbs.
+            </Txt>
+          </View>
+          <DropdownMenu
+            options={[
+              {
+                label: 'Supersets',
+                icon: SquareStack,
+                onPress: () => router.push('/workout-form/supersets'),
+                type: 'button',
+              },
+              {
+                label: 'Dropsets',
+                icon: SquareStack,
+                onPress: () => router.push('/workout-form/dropsets'),
+                type: 'button',
+              },
+            ]}
+            triggerIcon={Ellipsis}
           />
-        </Button>
+        </View>
       </View>
       <View style={tw`mt-4`}>{renderedExercises}</View>
       <View
@@ -79,12 +119,6 @@ const Exercises = () => {
           />
         </Button>
       </View>
-      <MyModal
-        isOpen={isOptionsModalOpen}
-        setIsOpen={setIsOptionsModalOpen}
-      >
-        <ExerciseOptions closeModal={() => setIsOptionsModalOpen(false)} />
-      </MyModal>
     </View>
   )
 }

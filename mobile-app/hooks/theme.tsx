@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useAppColorScheme } from 'twrnc'
-import Colors from '../../constants/colors'
-import { useUserStore } from '../../stores/user-store'
-import tw from '../../tw'
+import Colors from '../constants/colors'
+import { useUserStore } from '../stores/user-store'
+import tw from '../tw'
 
 type Scheme = 'light' | 'dark'
 type PreferenceScheme = 'light' | 'dark' | 'system'

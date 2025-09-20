@@ -39,7 +39,7 @@ const LocationSelector = () => {
           onPress={() => handleSaveLocation(query)}
           hitSlop={12}
           accessibilityLabel="save selected location"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           text="Save"
         />
       ),

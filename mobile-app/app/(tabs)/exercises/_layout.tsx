@@ -1,15 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native'
-import { Link, Stack } from 'expo-router'
-import Button from '../../../components/button'
-import TextLogo from '../../../assets/spotter-text-logo.svg'
-import { SymbolView, SymbolViewProps, SFSymbol } from 'expo-symbols'
-import { Settings } from 'lucide-react-native'
-import Colors from '../../../constants/colors'
+import React from 'react'
+import { Stack } from 'expo-router'
 import useTheme from '../../../hooks/theme'
-import { Icon } from 'expo-router/unstable-native-tabs'
-import tw from '../../../tw'
 
-const NotebookLayout = () => {
+const ExercisesLayout = () => {
   const { theme } = useTheme()
 
   return (
@@ -23,11 +17,12 @@ const NotebookLayout = () => {
           fontSize: 22,
           color: theme.text,
         },
+        headerTitle: 'Exercises',
       }}
     />
   )
 }
 
-export default NotebookLayout
+export default ExercisesLayout
 
 const styles = StyleSheet.create({})

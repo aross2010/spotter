@@ -10,7 +10,7 @@ import Animated, {
 import Button from './button'
 import Txt from './text'
 import { ChevronDown } from 'lucide-react-native'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 
 type AccordionProps = {
   title: string

@@ -24,6 +24,8 @@ import Colors from '../constants/colors'
 import { useState, useEffect, useRef } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
+import { GlassView } from 'expo-glass-effect'
+import useTheme from '../hooks/theme'
 
 type ExerciseInputProps = {
   exerciseNumber: number
@@ -44,6 +46,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
   } = useWorkoutForm()
+  const { theme } = useTheme()
   const { exercises } = workoutData
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
@@ -449,7 +452,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-2 rounded-xl ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'} border border-light-grayTertiary dark:border-dark-grayTertiary`}
+          twcn={`p-2 rounded-2xl ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'} border border-light-grayTertiary dark:border-dark-grayTertiary`}
         >
           <Icon
             strokeWidth={1.5}
@@ -467,13 +470,13 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs uppercase text-primary font-poppinsMedium"
-        twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+        twcnText="text-xs uppercase tracking-tight font-medium text-light-grayText dark:text-dark-grayText"
+        twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-2xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
         <Icon
           strokeWidth={1.75}
           size={16}
-          color={Colors.primary}
+          color={theme.grayText}
         />
       </Button>
     )
@@ -485,7 +488,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={value}
         style={tw`w-1/5 items-center`}
       >
-        <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-xs font-medium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
           {label}
         </Txt>
       </View>
@@ -650,7 +653,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
       <View
         style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full bg-primary items-center justify-center`}
       >
-        <Txt twcn="text-sm text-dark-text font-poppinsSemiBold">
+        <Txt twcn="text-sm text-dark-text font-semibold">
           {exerciseNumber ?? '+'}
         </Txt>
       </View>
@@ -685,9 +688,8 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
               {...rest}
             />
             {isExerciseNameSelectorOpen && exerciseNameResults.length > 0 && (
-              <BlurView
-                intensity={50}
-                tint="default"
+              <GlassView
+                isInteractive
                 style={[
                   tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-3 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
                 ]}
@@ -695,11 +697,11 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
                 <ScrollView
                   keyboardShouldPersistTaps="handled"
                   showsVerticalScrollIndicator={false}
-                  style={tw`max-h-44`}
+                  style={tw`max-h-42`}
                 >
                   {renderedExerciseNames}
                 </ScrollView>
-              </BlurView>
+              </GlassView>
             )}
           </View>
           <View style={tw`flex-row gap-2 items-center`}>

@@ -1,7 +1,7 @@
 import SafeView from '../../../components/safe-view'
 import Button from '../../../components/button'
 import Txt from '../../../components/text'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 import { View, Animated, Pressable } from 'react-native'
@@ -79,7 +79,7 @@ const UserPreferences = () => {
         style={tw`gap-4`}
       >
         <View>
-          <Txt twcn="text-base font-poppinsMedium">{pref.title}</Txt>
+          <Txt twcn="text-base font-medium">{pref.title}</Txt>
           {pref.subtitle && (
             <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mt-1">
               {pref.subtitle}
@@ -123,7 +123,7 @@ const UserPreferences = () => {
                     ? 'bg-primary'
                     : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'
                 }`}
-                twcnText={`text-center text-sm ${isSelected ? 'text-white font-poppinsSemiBold' : ''}`}
+                twcnText={`text-center text-sm ${isSelected ? 'text-white font-semibold' : ''}`}
               />
             )
           })}
@@ -132,7 +132,7 @@ const UserPreferences = () => {
     )
   })
 
-  return <SafeView twcnInnerView="gap-8">{renderedPreferenceOptions}</SafeView>
+  return <SafeView>{renderedPreferenceOptions}</SafeView>
 }
 
 export default UserPreferences

@@ -66,9 +66,7 @@ const LocationSelector = ({
 
   return (
     <View style={tw`max-h-80`}>
-      <Txt twcn="text-xl text-center font-poppinsSemiBold mb-4">
-        Select Location
-      </Txt>
+      <Txt twcn="text-xl text-center font-semibold mb-4">Select Location</Txt>
       <Input
         noBorder
         value={query}

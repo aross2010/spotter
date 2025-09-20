@@ -1,4 +1,11 @@
-import { View, Animated, Easing, FlatList, ScrollView } from 'react-native'
+import {
+  View,
+  Animated,
+  Easing,
+  FlatList,
+  ScrollView,
+  Pressable,
+} from 'react-native'
 import React, { useEffect, useRef } from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
@@ -21,7 +28,7 @@ import { router, useNavigation } from 'expo-router'
 import Spinner from '../../../components/activity-indicator'
 import NotebookEntryView from '../../../components/notebook-entry'
 import { useNotebook } from '../../../context/notebook-context'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import { NotebookEntry } from '../../../utils/types'
 
 const notebookFunctions = [
@@ -78,15 +85,24 @@ const Notebook = () => {
       headerRight: () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
-          <View style={tw`flex-row items-center justify-evenly px-2 gap-4`}>
+          <View style={tw`flex-row items-center justify-evenly px-2 gap-2`}>
             {hasEntries && (
               <View style={tw`relative`}>
-                <Link href="/notebook-filters">
-                  <ListFilter
-                    strokeWidth={1.5}
-                    size={24}
-                    color={Colors.primary}
-                  />
+                <Link
+                  href="/notebook-filters"
+                  asChild
+                >
+                  <Pressable
+                    onPress={() => {
+                      console.log('pressed')
+                    }}
+                  >
+                    <ListFilter
+                      strokeWidth={1.5}
+                      size={24}
+                      color={Colors.primary}
+                    />
+                  </Pressable>
                 </Link>
                 {numFilters > 0 && (
                   <View
@@ -95,7 +111,7 @@ const Notebook = () => {
                       { pointerEvents: 'none' }
                     )}
                   >
-                    <Txt twcn="text-xs font-poppinsMedium text-white">
+                    <Txt twcn="text-xs font-medium text-white">
                       {numFilters}
                     </Txt>
                   </View>
@@ -103,12 +119,17 @@ const Notebook = () => {
               </View>
             )}
 
-            <Link href="/notebook-entry-form">
-              <Plus
-                strokeWidth={1.5}
-                size={24}
-                color={Colors.primary}
-              />
+            <Link
+              asChild
+              href="/notebook-entry-form"
+            >
+              <Pressable>
+                <Plus
+                  strokeWidth={1.5}
+                  size={24}
+                  color={Colors.primary}
+                />
+              </Pressable>
             </Link>
           </View>
         )
@@ -181,7 +202,7 @@ const Notebook = () => {
             />
           </View>
           <View style={tw`flex-1 gap-0.5`}>
-            <Txt twcn="font-poppinsMedium text-base">{title}</Txt>
+            <Txt twcn="font-medium text-base">{title}</Txt>
             <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
               {description}
             </Txt>
@@ -197,7 +218,7 @@ const Notebook = () => {
         size={16}
         color={theme.grayText}
       />
-      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-medium">
         Pinned
       </Txt>
     </View>
@@ -237,7 +258,7 @@ const Notebook = () => {
 
     const monthTitle = addMonth && (
       <View style={tw`flex-row items-center gap-2 my-4`}>
-        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-medium">
           {month}
         </Txt>
         <View
@@ -281,7 +302,7 @@ const Notebook = () => {
           <Button
             onPress={() => router.push('/notebook-entry-form')}
             twcn="w-full bg-primary justify-center items-center flex-row gap-2 rounded-full p-4"
-            twcnText="text-light-background font-poppinsMedium text-base"
+            twcnText="text-light-background font-medium text-base"
             text="Log your first entry"
           >
             <PenLine
@@ -301,7 +322,7 @@ const Notebook = () => {
       </View>
     </SafeView>
   ) : (
-    <View style={tw`flex-1`}>
+    <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
       <FlatList
         data={currentNotebookEntries}
         renderItem={renderEntry}
@@ -309,7 +330,7 @@ const Notebook = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4 gap-4`}
+        contentContainerStyle={tw`p-4 gap-2 bg-light-background dark:bg-dark-background`}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
         disableVirtualization={true}

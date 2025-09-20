@@ -29,7 +29,7 @@ const Auth = () => {
               color={Colors.primary}
             />
           </View>
-          <Txt className="text-2xl font-poppinsMedium text-center">
+          <Txt className="text-2xl font-medium text-center">
             assisting your daily lifts
           </Txt>
           <BackgroundDots

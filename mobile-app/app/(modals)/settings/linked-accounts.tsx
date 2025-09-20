@@ -47,7 +47,7 @@ const LinkedAccounts = () => {
 
     return (
       <View key={provider}>
-        <Txt twcn="text-lg font-poppinsMedium mb-2">{title}</Txt>
+        <Txt twcn="text-lg font-medium mb-2">{title}</Txt>
         {isLinked ? (
           <View style={tw`flex-row items-center gap-4`}>
             <CircleCheck
@@ -61,7 +61,7 @@ const LinkedAccounts = () => {
         ) : (
           <Button
             text="Link Account"
-            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+            twcnText="font-medium text-primary dark:text-primary"
             onPress={() => handleLinking(provider)}
           />
         )}

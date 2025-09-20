@@ -49,13 +49,15 @@ const SafeView = ({
 
   if (keyboardAvoiding && !scroll) {
     return (
-      <KeyboardAvoidingView
-        behavior="padding"
-        style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-12' : 'mb-4'}`}
-        keyboardVerticalOffset={140}
-      >
-        {children}
-      </KeyboardAvoidingView>
+      <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={tw`flex-1`}
+          keyboardVerticalOffset={100}
+        >
+          <View style={tw`flex-1 ${paddingClasses}`}>{children}</View>
+        </KeyboardAvoidingView>
+      </View>
     )
   }
 

@@ -33,7 +33,7 @@ export const toastConfig = {
         <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-success" />
         <CircleCheck color={Colors.success} />
         <View className="flex-col gap-0.5 flex-1">
-          <Txt className="font-poppinsSemiBold ">{props.header}</Txt>
+          <Txt className="font-semibold ">{props.header}</Txt>
           <Txt className="text-sm">{props.text}</Txt>
         </View>
       </View>
@@ -46,7 +46,7 @@ export const toastConfig = {
         <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-alert" />
         <CircleAlert color={Colors.alert} />
         <View className="flex-col gap-0.5 flex-1">
-          <Txt className="font-poppinsSemiBold ">{props.header}</Txt>
+          <Txt className="font-semibold ">{props.header}</Txt>
           <Txt className="text-sm ">{props.text}</Txt>
         </View>
       </View>

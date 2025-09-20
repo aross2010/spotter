@@ -20,7 +20,7 @@ const WorkoutNotes = () => {
         numberOfLines={6}
         textAlignVertical="top"
         noBorder
-        twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+        twcnLabel="uppercase text-xs tracking-wide font-medium text-light-grayText dark:text-dark-grayText"
         twcnInput="mt-2 text-sm border border-light-grayTertiary dark:border-dark-grayTertiary p-3"
       />
     </View>

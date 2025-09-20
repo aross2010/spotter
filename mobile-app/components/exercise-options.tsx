@@ -1,7 +1,7 @@
 import { View, Switch } from 'react-native'
 import tw from '../tw'
 import Txt from './text'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import Colors from '../constants/colors'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
@@ -73,10 +73,10 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   return (
     <>
       <View style={tw`flex-row items-center justify-between`}>
-        <Txt twcn="text-base font-poppinsMedium">Exercises Options</Txt>
+        <Txt twcn="text-base font-medium">Exercises Options</Txt>
         <View style={tw`flex-row items-center gap-2`}>
           <Txt
-            twcn={`${weightUnit === 'kg' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-poppinsSemiBold uppercase text-xs tracking-wide`}
+            twcn={`${weightUnit === 'kg' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-semibold uppercase text-xs tracking-wide`}
           >
             Kg.
           </Txt>
@@ -97,7 +97,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
             />
           </View>
           <Txt
-            twcn={`${weightUnit === 'lbs' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-poppinsSemiBold uppercase text-xs tracking-wide`}
+            twcn={`${weightUnit === 'lbs' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-semibold uppercase text-xs tracking-wide`}
           >
             Lbs.
           </Txt>

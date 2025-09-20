@@ -7,6 +7,7 @@ import Input from './input'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
 import { BlurView } from 'expo-blur'
+import { GlassView } from 'expo-glass-effect'
 
 const WorkoutNameInput = () => {
   const [isWorkoutNameSelectorOpen, setIsWorkoutNameSelectorOpen] =
@@ -73,22 +74,21 @@ const WorkoutNameInput = () => {
         placeholder="Legs, Push, Pull, Upper Body, etc..."
         twcnContainer="px-0"
         twcnInput="px-0"
-        twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+        twcnLabel="uppercase text-xs tracking-wide font-medium text-light-grayText dark:text-dark-grayText"
         returnKeyType="done"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => setIsWorkoutNameSelectorOpen(true)}
       />
 
       {isWorkoutNameSelectorOpen && (
-        <BlurView
-          intensity={50}
-          tint="default"
+        <GlassView
+          isInteractive
           style={[
             tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-3 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
           ]}
         >
           {renderedWorkoutNames}
-        </BlurView>
+        </GlassView>
       )}
     </View>
   )

@@ -11,9 +11,9 @@ import TagView from '../../components/tag'
 import SafeView from '../../components/safe-view'
 import { router, useNavigation } from 'expo-router'
 import Button from '../../components/button'
-import { CalendarArrowDown, CalendarArrowUp } from 'lucide-react-native'
+import { CalendarArrowDown, CalendarArrowUp, Check } from 'lucide-react-native'
 import Colors from '../../constants/colors'
-import useTheme from '../hooks/theme'
+import useTheme from '../../hooks/theme'
 
 type TagWithCount = Tag & { used: number }
 
@@ -59,10 +59,13 @@ const NotebookFilters = () => {
             onPress={changesExist ? handleApplyFiltersAndSort : undefined}
             hitSlop={12}
             accessibilityLabel="apply filters and sort method"
-            twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-            text="Apply"
             disabled={!changesExist}
-          />
+          >
+            <Check
+              size={36}
+              color={Colors.primary}
+            />
+          </Button>
         )
       },
     })

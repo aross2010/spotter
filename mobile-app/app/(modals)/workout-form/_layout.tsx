@@ -3,8 +3,9 @@ import React from 'react'
 import { router, Stack } from 'expo-router'
 import Button from '../../../components/button'
 import Colors from '../../../constants/colors'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import { WorkoutFormProvider } from '../../../context/workout-form-context'
+import { Check, X } from 'lucide-react-native'
 
 const WorkoutFormLayout = () => {
   const { theme } = useTheme()
@@ -14,18 +15,13 @@ const WorkoutFormLayout = () => {
       <Stack
         screenOptions={{
           headerTitleStyle: {
-            fontSize: 18,
-            fontFamily: 'Poppins_600SemiBold',
+            fontSize: 22,
             color: theme.text,
           },
-          headerBackButtonDisplayMode: 'default',
+          headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,
-          },
-          headerBackTitleStyle: {
-            fontSize: 16,
-            fontFamily: 'Poppins_500Medium',
           },
           headerTintColor: Colors.primary,
         }}
@@ -34,23 +30,17 @@ const WorkoutFormLayout = () => {
           name="index"
           options={{
             headerTitle: 'New Workout',
-            headerRight: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close modal"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Close"
-              />
-            ),
             headerLeft: () => (
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
                 accessibilityLabel="close workout form"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
+              >
+                <X
+                  size={36}
+                  color={theme.grayText}
+                />
+              </Button>
             ),
           }}
         />

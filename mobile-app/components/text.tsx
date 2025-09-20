@@ -11,10 +11,7 @@ const Txt = ({ children, twcn, ...props }: TxtProps) => {
   return (
     <Text
       {...props}
-      style={tw.style(
-        'font-poppins light:text-light-text dark:text-dark-text',
-        twcn ?? ''
-      )}
+      style={tw.style('light:text-light-text dark:text-dark-text', twcn ?? '')}
     >
       {children}
     </Text>

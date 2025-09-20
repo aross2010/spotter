@@ -9,11 +9,11 @@ import {
   useWorkoutForm,
 } from '../../../context/workout-form-context'
 import { capString } from '../../../functions/cap-string'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import tw from '../../../tw'
 import { Ellipsis, Trash } from 'lucide-react-native'
-import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
+import DropdownMenu from '../../../components/dropdown-menu'
 
 const Supersets = () => {
   const navigation = useNavigation()
@@ -23,21 +23,12 @@ const Supersets = () => {
     new Set()
   )
   const [selectedSets, setSelectedSets] = useState<Set<string>>(new Set())
-  const [isSupersetOptionsOpen, setIsSupersetOptionsOpen] =
-    useState<boolean>(false)
-  const [selectedSuperset, setSelectedSuperset] = useState<number | null>(null)
 
   // delete supersets for the exercise grouping
-  const deleteSuperset = () => {
-    if (selectedSuperset !== null) {
-      const selectedGrouping = workoutData.setGroupings[selectedSuperset]
-      if (!selectedGrouping || selectedGrouping.groupingType !== 'superset') {
-        setIsSupersetOptionsOpen(false)
-        setSelectedSuperset(null)
-        return
-      }
+  const deleteSuperset = (supersetIndex: number) => {
+    if (supersetIndex !== null) {
+      const selectedGrouping = workoutData.setGroupings[supersetIndex]
 
-      // Create a key based on the exercises involved, sorted by exercise number
       const selectedExerciseData = selectedGrouping.groupSets
         .map((set) => ({
           name: workoutData.exercises[set.exerciseNumber - 1]?.name,
@@ -70,15 +61,7 @@ const Supersets = () => {
         ...workoutData,
         setGroupings: updatedGroupings,
       })
-
-      setIsSupersetOptionsOpen(false)
-      setSelectedSuperset(null)
     }
-  }
-
-  const openSupersetOptions = (supersetIndex: number) => {
-    setSelectedSuperset(supersetIndex)
-    setIsSupersetOptionsOpen(true)
   }
 
   const createSuperSet = () => {
@@ -113,7 +96,7 @@ const Supersets = () => {
           onPress={createSuperSet}
           hitSlop={12}
           accessibilityLabel="create superset"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           text="Create"
           disabled={selectedSets.size < 2}
         />
@@ -282,8 +265,6 @@ const Supersets = () => {
       }
     }
 
-    console.log('Selected sets: ', Array.from(newSelected))
-
     setSelectedSets(newSelected)
   }
 
@@ -335,7 +316,6 @@ const Supersets = () => {
                 )
             )
 
-            // Check if this set is part of a dropset
             const isPartOfADropset = workoutData.setGroupings.some(
               (grouping) =>
                 grouping.groupingType === 'drop set' &&
@@ -346,7 +326,6 @@ const Supersets = () => {
                 )
             )
 
-            // Check if another set from this exercise is already selected
             const hasOtherSetSelected = Array.from(selectedSets).some(
               (selectedSetId) => {
                 const [selectedExerciseIndex] = selectedSetId
@@ -434,16 +413,18 @@ const Supersets = () => {
             <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">
               {exerciseCombo}
             </Txt>
-            <Button
-              onPress={() =>
-                openSupersetOptions(supersets[0].supersetIndex - 1)
-              }
-            >
-              <Ellipsis
-                size={20}
-                color={theme.grayText}
-              />
-            </Button>
+            <DropdownMenu
+              options={[
+                {
+                  label: 'Delete Superset',
+                  icon: Trash,
+                  onPress: () => deleteSuperset(supersets[0].supersetIndex - 1),
+                  type: 'button',
+                  destructive: true,
+                },
+              ]}
+              triggerIcon={Ellipsis}
+            />
           </View>
 
           {supersets.map((superset, index) => (
@@ -482,42 +463,18 @@ const Supersets = () => {
     <SafeView scroll={false}>
       {workoutData.setGroupings.length > 0 && (
         <View style={tw`mb-4 w-full`}>
-          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-medium tracking-wider">
             Supersets
           </Txt>
           <View style={tw`gap-2`}>{renderedSuperSets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-medium tracking-wider">
           Exercises
         </Txt>
         {renderedExercises}
       </View>
-      <MyModal
-        isOpen={isSupersetOptionsOpen}
-        setIsOpen={setIsSupersetOptionsOpen}
-      >
-        <Txt twcn="text-base font-poppinsMedium">Superset Options</Txt>
-        <Button onPress={deleteSuperset}>
-          <View style={tw`flex-row gap-6 p-3 items-center rounded-xl`}>
-            <View style={tw`bg-primary/10 rounded-xl p-2`}>
-              <Trash
-                size={20}
-                color={Colors.primary}
-                strokeWidth={1.5}
-              />
-            </View>
-            <View style={tw`flex-1`}>
-              <Txt twcn="text-base">Delete</Txt>
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                Remove the superset link between these exercises. This will not
-                delete the exercises or their sets.
-              </Txt>
-            </View>
-          </View>
-        </Button>
-      </MyModal>
     </SafeView>
   )
 }

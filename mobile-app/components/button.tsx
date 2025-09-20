@@ -10,6 +10,7 @@ type ButtonProps = {
   twcn?: string
   loading?: boolean
   loadingText?: string
+  liquidGlass?: boolean
 } & PressableProps
 
 const Button = ({
@@ -20,6 +21,7 @@ const Button = ({
   loading,
   loadingText = 'Loading...',
   disabled,
+  liquidGlass,
   ...props
 }: ButtonProps) => {
   const isDisabled = disabled || loading

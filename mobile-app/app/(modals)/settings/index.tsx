@@ -4,10 +4,10 @@ import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
-import { useUserStore } from '../../../stores/user-store'
+
 import tw from '../../../tw'
 
 const settingsData = [
@@ -148,7 +148,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="uppercase text-xs tracking-wider font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+            <Txt twcn="uppercase text-xs tracking-tight font-medium text-light-grayText dark:text-dark-grayText">
               {sectionTitle}
             </Txt>
           )}
@@ -160,9 +160,14 @@ const Settings = () => {
                 <Button
                   key={index}
                   onPress={onPress ? onPress : promptSignOut}
-                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayPrimary dark:border-dark-graySecondary'}`}
+                  twcn="flex-row items-center justify-between p-4"
+                  style={
+                    index === options.length - 1
+                      ? undefined
+                      : tw`border-b border-light-grayPrimary dark:border-dark-graySecondary`
+                  }
                 >
-                  <Txt twcn="font-poppinsRegular">{label}</Txt>
+                  <Txt>{label}</Txt>
                   <ChevronRight
                     strokeWidth={1.5}
                     color={theme.grayTertiary}
@@ -184,7 +189,7 @@ const Settings = () => {
           onPress={promptDeleteAccount}
           style={tw`px-2 py-4`}
           text="Delete Account"
-          twcnText="font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+          twcnText="font-medium text-alert dark:text-alert"
         />
       </View>
     </SafeView>

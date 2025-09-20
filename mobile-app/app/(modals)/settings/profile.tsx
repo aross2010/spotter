@@ -9,6 +9,9 @@ import { BASE_URL } from '../../../constants/auth'
 import { toast } from '../../../utils/toast'
 import { useUserStore } from '../../../stores/user-store'
 import { tokenCache } from '../../../utils/cache'
+import { useNavigation } from 'expo-router'
+import { Check } from 'lucide-react-native'
+import Colors from '../../../constants/colors'
 
 const profileFields = [
   {
@@ -44,6 +47,27 @@ const Profile = () => {
   })
   const [loading, setLoading] = useState(false)
   const [canSubmit, setCanSubmit] = useState(false)
+  const navigation = useNavigation()
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => {
+        return (
+          <Button
+            onPress={updateProfile}
+            hitSlop={12}
+            accessibilityLabel="apply filters and sort method"
+            disabled={!canSubmit || loading}
+          >
+            <Check
+              size={36}
+              color={Colors.primary}
+            />
+          </Button>
+        )
+      },
+    })
+  }, [userData, canSubmit])
 
   useEffect(() => {
     const hasChanges =
@@ -112,16 +136,11 @@ const Profile = () => {
   })
 
   return (
-    <SafeView noScroll>
+    <SafeView
+      scroll={false}
+      keyboardAvoiding
+    >
       <View className="flex-col gap-4">{renderedFields}</View>
-      <Button
-        twcnText="text-light-background dark:text-light-background font-poppinsSemiBold"
-        twcn="bg-primary rounded-full p-4 w-full items-center justify-center mt-auto"
-        onPress={updateProfile}
-        loading={loading}
-        disabled={!canSubmit || loading}
-        text="Save Changes"
-      />
     </SafeView>
   )
 }

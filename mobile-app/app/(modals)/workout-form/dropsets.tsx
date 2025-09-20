@@ -9,11 +9,11 @@ import {
   useWorkoutForm,
 } from '../../../context/workout-form-context'
 import { capString } from '../../../functions/cap-string'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import tw from '../../../tw'
 import { Ellipsis, Trash } from 'lucide-react-native'
-import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
+import DropdownMenu from '../../../components/dropdown-menu'
 
 const Dropsets = () => {
   const navigation = useNavigation()
@@ -23,19 +23,11 @@ const Dropsets = () => {
     new Set()
   )
   const [selectedSets, setSelectedSets] = useState<Set<string>>(new Set())
-  const [isDropsetOptionsOpen, setIsDropsetOptionsOpen] =
-    useState<boolean>(false)
-  const [selectedDropset, setSelectedDropset] = useState<number | null>(null)
 
   // delete dropsets for the exercise grouping
-  const deleteDropset = () => {
-    if (selectedDropset !== null) {
-      const selectedGrouping = workoutData.setGroupings[selectedDropset]
-      if (!selectedGrouping || selectedGrouping.groupingType !== 'drop set') {
-        setIsDropsetOptionsOpen(false)
-        setSelectedDropset(null)
-        return
-      }
+  const deleteDropset = (dropsetIndex: number) => {
+    if (dropsetIndex !== null) {
+      const selectedGrouping = workoutData.setGroupings[dropsetIndex]
 
       const selectedExerciseData = selectedGrouping.groupSets
         .map((set) => ({
@@ -70,15 +62,7 @@ const Dropsets = () => {
         ...workoutData,
         setGroupings: updatedGroupings,
       })
-
-      setIsDropsetOptionsOpen(false)
-      setSelectedDropset(null)
     }
-  }
-
-  const openDropsetOptions = (dropsetIndex: number) => {
-    setSelectedDropset(dropsetIndex)
-    setIsDropsetOptionsOpen(true)
   }
 
   const createDropset = () => {
@@ -113,7 +97,7 @@ const Dropsets = () => {
           onPress={createDropset}
           hitSlop={12}
           accessibilityLabel="create dropset"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           text="Create"
           disabled={selectedSets.size < 2}
         />
@@ -395,14 +379,18 @@ const Dropsets = () => {
             <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">
               {exerciseName}
             </Txt>
-            <Button
-              onPress={() => openDropsetOptions(dropsets[0].dropsetIndex - 1)}
-            >
-              <Ellipsis
-                size={20}
-                color={theme.grayText}
-              />
-            </Button>
+            <DropdownMenu
+              options={[
+                {
+                  label: 'Delete Superset',
+                  icon: Trash,
+                  onPress: () => deleteDropset(dropsets[0].supersetIndex - 1),
+                  type: 'button',
+                  destructive: true,
+                },
+              ]}
+              triggerIcon={Ellipsis}
+            />
           </View>
 
           {dropsets.map((dropset, index) => (
@@ -441,23 +429,23 @@ const Dropsets = () => {
     <SafeView scroll={false}>
       {workoutData.setGroupings.some((g) => g.groupingType === 'drop set') && (
         <View style={tw`mb-4 w-full`}>
-          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-medium tracking-wider">
             Dropsets
           </Txt>
           <View style={tw`gap-2`}>{renderedDropsets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
+        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-medium tracking-wider">
           Exercises
         </Txt>
         {renderedExercises}
       </View>
-      <MyModal
+      {/* <MyModal
         isOpen={isDropsetOptionsOpen}
         setIsOpen={setIsDropsetOptionsOpen}
       >
-        <Txt twcn="text-base font-poppinsMedium">Dropset Options</Txt>
+        <Txt twcn="text-base font-medium">Dropset Options</Txt>
         <Button onPress={deleteDropset}>
           <View style={tw`flex-row gap-6 p-3 items-center rounded-xl`}>
             <View style={tw`bg-primary/10 rounded-xl p-2`}>
@@ -476,7 +464,7 @@ const Dropsets = () => {
             </View>
           </View>
         </Button>
-      </MyModal>
+      </MyModal> */}
     </SafeView>
   )
 }

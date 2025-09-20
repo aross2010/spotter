@@ -15,8 +15,7 @@ import Colors from '../../constants/colors'
 import TopIndicatorTabBar from '../../components/tabbar'
 import TextLogo from '../../assets/spotter-text-logo.svg'
 import Log from '../../components/log'
-import MyModal from '../../components/modal'
-import useTheme from '../hooks/theme'
+import useTheme from '../../hooks/theme'
 import Button from '../../components/button'
 import tw from '../../tw'
 import { NativeTabs, Label, Icon } from 'expo-router/unstable-native-tabs'
@@ -29,6 +28,7 @@ const TabsLayout = () => {
 
   return (
     <NativeTabs
+      backgroundColor={Colors.primary}
       minimizeBehavior="onScrollDown"
       tintColor={Colors.primary}
     >
@@ -44,17 +44,15 @@ const TabsLayout = () => {
         <Label>Exercises</Label>
         <Icon sf={'dumbbell.fill'} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notebook">
+      <NativeTabs.Trigger
+        options={{
+          title: 'Notebook',
+        }}
+        name="notebook"
+      >
         <Label>Notebook</Label>
         <Icon sf={'book.fill'} />
       </NativeTabs.Trigger>
-      {/* <NativeTabs.Trigger
-        name="search"
-        role="search"
-      >
-        <Label>Search</Label>
-        <Icon sf={'plus.circle.fill'} />
-      </NativeTabs.Trigger> */}
     </NativeTabs>
   )
 }

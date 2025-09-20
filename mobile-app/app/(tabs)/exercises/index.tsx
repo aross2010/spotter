@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
 
 const Exercises = () => {
   return (

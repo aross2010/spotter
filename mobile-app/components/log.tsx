@@ -6,7 +6,7 @@ import Button from './button'
 import { router } from 'expo-router'
 import tw from '../tw'
 import { theme } from '../twrnc.config'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 
 type LogProps = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -68,7 +68,7 @@ const Log = ({ setIsOpen }: LogProps) => {
 
   return (
     <>
-      <Txt twcn="text-base font-poppinsMedium">What would you like to log?</Txt>
+      <Txt twcn="text-base font-medium">What would you like to log?</Txt>
       <View style={tw`flex-col`}>{renderedElements}</View>
     </>
   )

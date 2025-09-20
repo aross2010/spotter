@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BlurView } from 'expo-blur'
 import Colors from '../constants/colors'
 import Txt from './text'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import tw from '../tw'
 
 type Props = BottomTabBarProps & {

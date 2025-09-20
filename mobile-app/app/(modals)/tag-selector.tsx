@@ -7,9 +7,11 @@ import { Tag } from '../../utils/types'
 import Button from '../../components/button'
 import { View } from 'react-native'
 import tw from '../../tw'
-import useTheme from '../hooks/theme'
+import useTheme from '../../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import TagView from '../../components/tag'
+import { Check } from 'lucide-react-native'
+import Colors from '../../constants/colors'
 
 const TagSelector = () => {
   const { formTags, userTags } = useLocalSearchParams() as {
@@ -44,9 +46,12 @@ const TagSelector = () => {
           onPress={handleSaveTags}
           hitSlop={12}
           accessibilityLabel="save selected tags"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-          text="Done"
-        />
+        >
+          <Check
+            color={Colors.primary}
+            size={36}
+          />
+        </Button>
       ),
     })
   }, [navigation, selectedTags])

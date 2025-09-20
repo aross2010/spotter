@@ -4,15 +4,16 @@ import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { useEffect, useState } from 'react'
-import { Calendar, MapPin } from 'lucide-react-native'
+import { Calendar, Check, MapPin } from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
 import { useWorkoutForm } from '../../../context/workout-form-context'
 import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
+import Colors from '../../../constants/colors'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -29,11 +30,13 @@ const WorkoutForm = () => {
         <Button
           onPress={handleSubmitWorkout}
           hitSlop={12}
-          accessibilityLabel="Save Workout"
-          twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text="Save"
-          disabled={!saveEnabled}
-        />
+          accessibilityLabel="close modal"
+        >
+          <Check
+            size={36}
+            color={Colors.primary}
+          />
+        </Button>
       ),
     })
   }, [workoutData])
@@ -52,8 +55,8 @@ const WorkoutForm = () => {
             setIsDatePickerOpen(true)
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText="text-xs font-poppinsMedium uppercase text-light-text dark:text-dark-text"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-2xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcnText="text-xs font-medium uppercase text-light-text dark:text-dark-text"
         >
           <Calendar
             size={16}
@@ -70,8 +73,8 @@ const WorkoutForm = () => {
             router.push('/workout-form/location')
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText={`text-xs font-poppinsMedium uppercase ${
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-2xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcnText={`text-xs font-medium uppercase ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'
               : 'text-light-grayText dark:text-dark-grayText'

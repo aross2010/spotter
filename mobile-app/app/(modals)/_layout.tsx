@@ -1,8 +1,9 @@
 import { router, Stack } from 'expo-router'
-import useTheme from '../hooks/theme'
+import useTheme from '../../hooks/theme'
 import ThemedStatusBar from '../../components/status-bar'
 import Button from '../../components/button'
 import Colors from '../../constants/colors'
+import { X } from 'lucide-react-native'
 
 export default function ModalLayout() {
   const { theme, colorScheme } = useTheme()
@@ -15,18 +16,13 @@ export default function ModalLayout() {
           presentation: 'modal',
           headerShown: false,
           headerTitleStyle: {
-            fontSize: 18,
-            fontFamily: 'Poppins_600SemiBold',
+            fontSize: 22,
             color: theme.text,
           },
-          headerBackButtonDisplayMode: 'default',
+          headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,
-          },
-          headerBackTitleStyle: {
-            fontSize: 16,
-            fontFamily: 'Poppins_500Medium',
           },
           headerTintColor: Colors.primary,
         }}
@@ -44,23 +40,17 @@ export default function ModalLayout() {
             title: 'Notebook Entry',
             headerTitle: 'Notebook Entry',
             headerShown: true,
-            headerRight: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="save notebook entry"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Save"
-              />
-            ),
             headerLeft: () => (
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
                 accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
+              >
+                <X
+                  size={36}
+                  color={theme.grayTertiary}
+                />
+              </Button>
             ),
           }}
         />
@@ -75,10 +65,13 @@ export default function ModalLayout() {
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
-                accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
+                accessibilityLabel="close notebook filters"
+              >
+                <X
+                  size={36}
+                  color={theme.grayTertiary}
+                />
+              </Button>
             ),
           }}
         />
@@ -93,18 +86,24 @@ export default function ModalLayout() {
                 onPress={() => router.back()}
                 hitSlop={12}
                 accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
+              >
+                <X
+                  size={36}
+                  color={theme.grayText}
+                />
+              </Button>
             ),
             headerRight: () => (
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
                 accessibilityLabel="save notebook entry"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Save"
-              />
+              >
+                <X
+                  size={36}
+                  color={Colors.primary}
+                />
+              </Button>
             ),
           }}
         />

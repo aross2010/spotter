@@ -1,6 +1,6 @@
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import useTheme from '../../hooks/theme'
+import useTheme from '../../../hooks/theme'
 import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 import { formattedDate } from '../../../functions/formatted-date'
@@ -22,10 +22,10 @@ const Home = () => {
   const greeting = getGreeting()
   return (
     <SafeView>
-      <Txt twcn="text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+      <Txt twcn="text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText font-medium">
         {formattedDate}
       </Txt>
-      <Txt twcn="text-xl font-poppinsMedium">
+      <Txt twcn="text-xl font-medium">
         {greeting}, {user?.firstName} 👋
       </Txt>
     </SafeView>

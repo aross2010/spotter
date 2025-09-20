@@ -1,6 +1,6 @@
 import React from 'react'
 import { StatusBar } from 'expo-status-bar'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 
 type ThemedStatusBarProps = {
   override?: 'light' | 'dark' | 'auto'

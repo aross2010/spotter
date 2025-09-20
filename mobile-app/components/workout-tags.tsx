@@ -6,7 +6,7 @@ import Colors from '../constants/colors'
 import Button from './button'
 import TagView from './tag'
 import tw from '../tw'
-import useTheme from '../app/hooks/theme'
+import useTheme from '../hooks/theme'
 import { useWorkoutForm } from '../context/workout-form-context'
 
 const WorkoutTags = () => {

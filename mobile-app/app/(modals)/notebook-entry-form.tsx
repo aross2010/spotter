@@ -7,7 +7,7 @@ import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
-import { ArrowRight, Plus } from 'lucide-react-native'
+import { ArrowRight, Check, Plus } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import { useColorScheme } from 'react-native'
 import { useState, useEffect } from 'react'
@@ -16,6 +16,7 @@ import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
 import TagView from '../../components/tag'
 import { Tag as TagIcon } from 'lucide-react-native'
+import { GlassView } from 'expo-glass-effect'
 
 const NotebookEntryForm = () => {
   const colorScheme = useColorScheme() ?? 'light'
@@ -104,10 +105,13 @@ const NotebookEntryForm = () => {
           onPress={saveEnabled ? handleSubmitEntry : undefined}
           hitSlop={12}
           accessibilityLabel="submit notebook entry"
-          twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text="Save"
           disabled={!saveEnabled}
-        />
+        >
+          <Check
+            color={Colors.primary}
+            size={36}
+          />
+        </Button>
       ),
     })
   }, [navigation, isSaving, data, initialState])
@@ -169,7 +173,7 @@ const NotebookEntryForm = () => {
               setIsDatePickerOpen(true)
             }}
             hitSlop={12}
-            twcnText="text-xs font-poppinsMedium text-primary uppercase"
+            twcnText="text-xs font-bold tracking-tight uppercase text-primary dark:text-primary"
           />
         </View>
 
@@ -236,29 +240,32 @@ const NotebookEntryForm = () => {
               </Txt>
             </View>
           ) : (
-            <View style={tw`gap-4`}>
-              <Button
-                onPress={() => {
-                  router.push({
-                    pathname: '/tag-selector',
-                    params: {
-                      formTags: JSON.stringify(data.tags),
-                      userTags: JSON.stringify(userTags),
-                      type: 'notebook',
-                    },
-                  })
-                }}
-                twcn="flex-row items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
-                twcnText="text-light-grayText dark:text-dark-grayText text-sm "
-                text="Add tags"
+            <Button
+              onPress={() => {
+                router.push({
+                  pathname: '/tag-selector',
+                  params: {
+                    formTags: JSON.stringify(data.tags),
+                    userTags: JSON.stringify(userTags),
+                    type: 'notebook',
+                  },
+                })
+              }}
+            >
+              <GlassView
+                style={tw`flex-row items-center gap-2 rounded-xl justify-center p-4`}
+                glassEffectStyle="clear"
               >
+                <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm">
+                  Add tags
+                </Txt>
                 <ArrowRight
                   size={16}
                   color={theme.grayText}
                   strokeWidth={1.5}
                 />
-              </Button>
-            </View>
+              </GlassView>
+            </Button>
           )}
         </View>
       </View>
