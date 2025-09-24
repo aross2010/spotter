@@ -23,7 +23,7 @@ export type ExerciseName = {
   used: number
 }
 
-export type SetGroupingType = 'superset' | 'drop set'
+export type SetGroupingType = 'superset' | 'dropset'
 
 export type Set = {
   setNumber: number
@@ -82,6 +82,7 @@ type WorkoutFormContextType = {
   exerciseNames: ExerciseName[]
   newlyAddedExerciseNumber: number | null
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
+  addWorkout: () => Promise<void>
 }
 
 const starterExercise = {
@@ -103,83 +104,83 @@ const defaultWorkoutData: WorkoutFormData = {
   notes: '',
   weightUnit: 'lbs',
   exercises: [
-    {
-      name: 'Bulgarian Split Squats Squats',
-      isUnilateral: true,
-      existing: true,
-      sets: [
-        {
-          setNumber: 1,
-          id: nanoid(),
-          weightLbs: 255,
-          leftReps: 6,
-          rightReps: 6,
-        },
-        {
-          setNumber: 2,
-          id: nanoid(),
-          weightLbs: 255,
-          leftReps: 6,
-          rightReps: 6,
-        },
-      ],
-    },
-    {
-      name: 'Leg Extensions',
-      isUnilateral: false,
-      existing: true,
-      sets: [
-        {
-          setNumber: 1,
-          id: nanoid(),
-          weightLbs: 100,
-          reps: 12,
-        },
-        {
-          setNumber: 2,
-          id: nanoid(),
-          weightLbs: 100,
-          reps: 12,
-        },
-      ],
-    },
-    {
-      name: 'Sissy Squats',
-      isUnilateral: false,
-      existing: true,
-      sets: [
-        {
-          setNumber: 1,
-          id: nanoid(),
-          reps: 12,
-        },
-        {
-          setNumber: 2,
-          id: nanoid(),
-          reps: 12,
-        },
-      ],
-    },
-
-    {
-      name: 'Calf Extensions',
-      isUnilateral: false,
-      existing: true,
-      sets: [
-        {
-          setNumber: 1,
-          id: nanoid(),
-          reps: 12,
-          weightLbs: 90,
-        },
-        {
-          setNumber: 2,
-          id: nanoid(),
-          reps: 12,
-          weightLbs: 90,
-        },
-      ],
-    },
+    starterExercise,
+    // {
+    //   name: 'Bulgarian Split Squats Squats',
+    //   isUnilateral: true,
+    //   existing: true,
+    //   sets: [
+    //     {
+    //       setNumber: 1,
+    //       id: nanoid(),
+    //       weightLbs: 255,
+    //       leftReps: 6,
+    //       rightReps: 6,
+    //     },
+    //     {
+    //       setNumber: 2,
+    //       id: nanoid(),
+    //       weightLbs: 255,
+    //       leftReps: 6,
+    //       rightReps: 6,
+    //     },
+    //   ],
+    // },
+    // {
+    //   name: 'Leg Extensions',
+    //   isUnilateral: false,
+    //   existing: true,
+    //   sets: [
+    //     {
+    //       setNumber: 1,
+    //       id: nanoid(),
+    //       weightLbs: 100,
+    //       reps: 12,
+    //     },
+    //     {
+    //       setNumber: 2,
+    //       id: nanoid(),
+    //       weightLbs: 100,
+    //       reps: 12,
+    //     },
+    //   ],
+    // },
+    // {
+    //   name: 'Sissy Squats',
+    //   isUnilateral: false,
+    //   existing: true,
+    //   sets: [
+    //     {
+    //       setNumber: 1,
+    //       id: nanoid(),
+    //       reps: 12,
+    //     },
+    //     {
+    //       setNumber: 2,
+    //       id: nanoid(),
+    //       reps: 12,
+    //     },
+    //   ],
+    // },
+    // {
+    //   name: 'Calf Extensions',
+    //   isUnilateral: false,
+    //   existing: true,
+    //   sets: [
+    //     {
+    //       setNumber: 1,
+    //       id: nanoid(),
+    //       reps: 12,
+    //       weightLbs: 90,
+    //     },
+    //     {
+    //       setNumber: 2,
+    //       id: nanoid(),
+    //       reps: 12,
+    //       weightLbs: 90,
+    //     },
+    //   ],
+    // },
   ],
 
   setGroupings: [],
@@ -219,6 +220,23 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   useEffect(() => {
     getNames()
   }, []) // add workouts dependency
+
+  const addWorkout = async () => {
+    console.log('Adding workout...')
+    console.log('Adding workout entry: ', JSON.stringify(workoutData, null, 2))
+    const response = await fetchWithAuth(`${BASE_URL}/api/workouts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...workoutData,
+        tags: workoutData.tags.map((tag) => tag.name),
+        date: workoutData.date.toISOString(),
+      }),
+    })
+    // await refreshEntries()
+  }
 
   const updateWorkoutData = (updates: Partial<WorkoutFormData>) => {
     setWorkoutData((prev) => ({ ...prev, ...updates }))
@@ -260,6 +278,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     resetWorkoutData,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
+    addWorkout,
   }
 
   return (

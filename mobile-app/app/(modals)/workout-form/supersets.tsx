@@ -338,7 +338,7 @@ const Supersets = () => {
             // Check if this set is part of a dropset
             const isPartOfADropset = workoutData.setGroupings.some(
               (grouping) =>
-                grouping.groupingType === 'drop set' &&
+                grouping.groupingType === 'dropset' &&
                 grouping.groupSets.some(
                   (s) =>
                     s.exerciseNumber === exerciseIndex + 1 &&

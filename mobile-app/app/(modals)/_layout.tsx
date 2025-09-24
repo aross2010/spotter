@@ -36,6 +36,7 @@ export default function ModalLayout() {
           options={{
             title: 'Settings',
             headerTitle: 'Settings',
+            presentation: 'fullScreenModal',
           }}
         />
         <Stack.Screen
@@ -62,6 +63,7 @@ export default function ModalLayout() {
                 text="Cancel"
               />
             ),
+            presentation: 'fullScreenModal',
           }}
         />
 
@@ -113,6 +115,7 @@ export default function ModalLayout() {
           options={{
             title: 'Workout',
             headerTitle: 'New Workout',
+            presentation: 'fullScreenModal',
           }}
         />
       </Stack>

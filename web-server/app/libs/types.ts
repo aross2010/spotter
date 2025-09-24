@@ -6,7 +6,8 @@ export type Set = InferInsertModel<typeof sets>
 
 export type ExercisePayload = {
   name: string
-  exerciseSets: Set[]
+  isUnilateral: boolean
+  sets: Set[]
 }
 
 export type AuthUser = {

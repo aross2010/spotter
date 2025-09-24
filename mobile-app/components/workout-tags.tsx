@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import { TagIcon, ArrowRight } from 'lucide-react-native'
+import { TagIcon, ArrowRight, Tag } from 'lucide-react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect } from 'react'
 import Colors from '../constants/colors'
@@ -57,11 +57,11 @@ const WorkoutTags = () => {
       ) : (
         <Button
           onPress={handleAddTags}
-          twcn="flex-row items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
+          twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
           twcnText="text-light-grayText dark:text-dark-grayText text-sm "
           text="Add tags"
         >
-          <ArrowRight
+          <Tag
             size={16}
             color={theme.grayText}
             strokeWidth={1.5}

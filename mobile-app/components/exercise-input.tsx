@@ -78,7 +78,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const isSetInDropset = (setNumber: number) => {
     return workoutData.setGroupings.some(
       (grouping) =>
-        grouping.groupingType === 'drop set' &&
+        grouping.groupingType === 'dropset' &&
         grouping.groupSets.some(
           (set) =>
             set.exerciseNumber === exerciseNumber && set.setNumber === setNumber
@@ -283,12 +283,15 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     }
 
     // convert to number immediately (or keep as undefined if empty)
+    // but avoid converting incomplete decimals that end with '.'
     const finalValue =
       s === ''
         ? undefined
-        : inputMode === 'decimal'
-          ? parseFloat(s)
-          : parseInt(s, 10)
+        : inputMode === 'decimal' && s.endsWith('.')
+          ? s // keep as string if it ends with decimal
+          : inputMode === 'decimal'
+            ? parseFloat(s)
+            : parseInt(s, 10)
 
     const updatedExercises = [...workoutData.exercises]
     const updatedSets = [...(updatedExercises[exerciseNumber - 1]?.sets || [])]
@@ -507,20 +510,39 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
               if (value === 'setNumber') {
                 displayValue = `${set.setNumber}L.`
               } else if (value === 'reps') {
-                displayValue = set.leftReps?.toString() || ''
+                displayValue =
+                  typeof set.leftReps === 'string'
+                    ? set.leftReps
+                    : set.leftReps?.toString() || ''
               } else if (value === 'partials') {
-                displayValue = set.leftPartialReps?.toString() || ''
+                displayValue =
+                  typeof set.leftPartialReps === 'string'
+                    ? set.leftPartialReps
+                    : set.leftPartialReps?.toString() || ''
               } else if (value === 'rpe') {
-                displayValue = set.leftRpe?.toString() || ''
+                displayValue =
+                  typeof set.leftRpe === 'string'
+                    ? set.leftRpe
+                    : set.leftRpe?.toString() || ''
               } else {
-                displayValue = set[value as keyof typeof set]?.toString() || ''
+                const fieldValue = set[value as keyof typeof set]
+                displayValue =
+                  typeof fieldValue === 'string'
+                    ? fieldValue
+                    : fieldValue?.toString() || ''
               }
 
               return (
                 <Input
                   editable={value !== 'setNumber'}
                   noBorder
-                  keyboardType={'numeric'}
+                  keyboardType={
+                    value === 'rpe' ||
+                    value === 'weightLbs' ||
+                    value === 'weightKg'
+                      ? 'decimal-pad'
+                      : 'numeric'
+                  }
                   inputMode={inputMode}
                   maxLength={value === 'rpe' ? 4 : 5}
                   key={`${set.id}-${value}-left`}
@@ -543,20 +565,39 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
               if (value === 'setNumber') {
                 displayValue = `${set.setNumber}R.`
               } else if (value === 'reps') {
-                displayValue = set.rightReps?.toString() || ''
+                displayValue =
+                  typeof set.rightReps === 'string'
+                    ? set.rightReps
+                    : set.rightReps?.toString() || ''
               } else if (value === 'partials') {
-                displayValue = set.rightPartialReps?.toString() || ''
+                displayValue =
+                  typeof set.rightPartialReps === 'string'
+                    ? set.rightPartialReps
+                    : set.rightPartialReps?.toString() || ''
               } else if (value === 'rpe') {
-                displayValue = set.rightRpe?.toString() || ''
+                displayValue =
+                  typeof set.rightRpe === 'string'
+                    ? set.rightRpe
+                    : set.rightRpe?.toString() || ''
               } else {
-                displayValue = set[value as keyof typeof set]?.toString() || ''
+                const fieldValue = set[value as keyof typeof set]
+                displayValue =
+                  typeof fieldValue === 'string'
+                    ? fieldValue
+                    : fieldValue?.toString() || ''
               }
 
               return (
                 <Input
                   editable={value !== 'setNumber'}
                   noBorder
-                  keyboardType={'numeric'}
+                  keyboardType={
+                    value === 'rpe' ||
+                    value === 'weightLbs' ||
+                    value === 'weightKg'
+                      ? 'decimal-pad'
+                      : 'numeric'
+                  }
                   inputMode={inputMode}
                   maxLength={value === 'rpe' ? 4 : 5}
                   key={`${set.id}-${value}-right`}
@@ -605,13 +646,23 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
               <Input
                 editable={value !== 'setNumber'}
                 noBorder
-                keyboardType={'numeric'}
+                keyboardType={
+                  value === 'rpe' ||
+                  value === 'weightLbs' ||
+                  value === 'weightKg'
+                    ? 'decimal-pad'
+                    : 'numeric'
+                }
                 inputMode={inputMode}
                 maxLength={value === 'rpe' ? 4 : 5}
                 key={`${set.id}-${value}-base`}
                 placeholder="-"
                 twcnInput="w-1/5 text-center py-1 text-light-text dark:text-dark-text"
-                value={set[value as keyof typeof set]?.toString() || ''}
+                value={
+                  typeof set[value as keyof typeof set] === 'string'
+                    ? (set[value as keyof typeof set] as string)
+                    : set[value as keyof typeof set]?.toString() || ''
+                }
                 onChangeText={(text) => {
                   handleInputChange(setIndex, value, text, inputMode)
                 }}

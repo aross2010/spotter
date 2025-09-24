@@ -36,7 +36,7 @@ const Exercises = () => {
       exercises: [...workoutData.exercises, starterExercise],
     })
 
-    // Mark this exercise as newly added so it can be auto-focused
+    // for autofocus
     setNewlyAddedExerciseNumber(newExerciseNumber)
   }
 

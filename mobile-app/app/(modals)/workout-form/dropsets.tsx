@@ -31,7 +31,7 @@ const Dropsets = () => {
   const deleteDropset = () => {
     if (selectedDropset !== null) {
       const selectedGrouping = workoutData.setGroupings[selectedDropset]
-      if (!selectedGrouping || selectedGrouping.groupingType !== 'drop set') {
+      if (!selectedGrouping || selectedGrouping.groupingType !== 'dropset') {
         setIsDropsetOptionsOpen(false)
         setSelectedDropset(null)
         return
@@ -48,7 +48,7 @@ const Dropsets = () => {
       const selectedExerciseNumber = selectedExerciseData[0]?.exerciseNumber
 
       const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
-        if (grouping.groupingType !== 'drop set') return true
+        if (grouping.groupingType !== 'dropset') return true
 
         const exerciseData = grouping.groupSets
           .map((set) => ({
@@ -89,7 +89,7 @@ const Dropsets = () => {
     }
 
     const setGroupings = {
-      groupingType: 'drop set' as SetGroupingType,
+      groupingType: 'dropset' as SetGroupingType,
       groupSets: Array.from(selectedSets).map((set) => {
         return {
           exerciseNumber: parseInt(set.split('-')[0]) + 1,
@@ -305,7 +305,7 @@ const Dropsets = () => {
             const exerciseDisabled = isExerciseDisabled(exerciseIndex)
             const isPartOfAnotherDropset = workoutData.setGroupings.some(
               (grouping) =>
-                grouping.groupingType === 'drop set' &&
+                grouping.groupingType === 'dropset' &&
                 grouping.groupSets.some(
                   (s) =>
                     s.exerciseNumber === exerciseIndex + 1 &&
@@ -357,7 +357,7 @@ const Dropsets = () => {
     const groupings = new Map<string, any[]>()
 
     workoutData.setGroupings.forEach((grouping, groupIndex) => {
-      if (grouping.groupingType === 'drop set') {
+      if (grouping.groupingType === 'dropset') {
         // Create a key based on the exercise involved
         const exerciseData = grouping.groupSets
           .map((set) => ({
@@ -439,7 +439,7 @@ const Dropsets = () => {
 
   return (
     <SafeView scroll={false}>
-      {workoutData.setGroupings.some((g) => g.groupingType === 'drop set') && (
+      {workoutData.setGroupings.some((g) => g.groupingType === 'dropset') && (
         <View style={tw`mb-4 w-full`}>
           <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
             Dropsets

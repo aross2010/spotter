@@ -13,6 +13,7 @@ import {
 } from '@/src/db/schema'
 import { eq } from 'drizzle-orm'
 import { ExercisePayload } from '@/app/libs/types'
+import { withAuth } from '../middleware'
 
 type GroupingType = 'superset' | 'dropset'
 type GroupSets = {
@@ -20,7 +21,12 @@ type GroupSets = {
   setNumber: number
 }[]
 
-export const getExerciseId = async (name: string, userId: string, tx: any) => {
+export const getExerciseId = async (
+  name: string,
+  userId: string,
+  isUnilateral: boolean,
+  tx: any
+) => {
   // check if exists
   const existingExercise = await tx.query.exercises.findFirst({
     where: (
@@ -38,6 +44,7 @@ export const getExerciseId = async (name: string, userId: string, tx: any) => {
     .values({
       name,
       userId,
+      isUnilateral,
     })
     .returning()
 
@@ -134,6 +141,8 @@ export const setSuperOrDropsets = async (
           'Each set grouping must have exerciseNumber and setNumber'
         )
       }
+      console.log(setIdMap)
+      console.log('set:', set)
       const setId = setIdMap.get(`${exerciseNumber}-${setNumber}`)
       if (!setId) {
         throw new Error(
@@ -208,7 +217,12 @@ export const setExercise = async (
   workoutId: string,
   tx: any
 ) => {
-  const exerciseId = await getExerciseId(exercise.name, userId, tx)
+  const exerciseId = await getExerciseId(
+    exercise.name,
+    userId,
+    exercise.isUnilateral,
+    tx
+  )
   const [workoutExercise] = await tx
     .insert(workoutExercises)
     .values({
@@ -219,39 +233,52 @@ export const setExercise = async (
     .returning()
 
   let setNum = 1
-  const { exerciseSets } = exercise
+  const { sets: exerciseSets } = exercise
 
   for (const set of exerciseSets) {
     const {
-      weight,
+      weightLbs,
+      weightKg,
       reps,
+      leftReps,
+      rightReps,
       rpe,
+      leftRpe,
+      rightRpe,
       rir,
+      leftRir,
+      rightRir,
       partialReps,
-      cheatReps,
-      lowReps,
-      highReps,
     } = set
 
-    if (status === 'completed' && (lowReps || highReps)) {
-      throw new Error('Rep ranges are only allowed for planned workouts')
-    }
+    console.log('Processing set: ', set)
 
-    if (reps && (lowReps || highReps)) {
-      throw new Error('Cannot specify both exact reps and rep ranges for a set')
-    }
-
-    if ((lowReps || highReps) && (!lowReps || !highReps)) {
-      throw new Error('Both lowReps and highReps must be specified for ranges')
+    if (!reps && !(leftReps && rightReps)) {
+      throw new Error('Must specify reps or both left and right reps for a set')
     }
 
     if (rpe && rir) {
       throw new Error('Cannot specify both RPE and RIR for a set')
     }
 
-    if (cheatReps && partialReps) {
+    if (rir && (leftRir || rightRir)) {
+      throw new Error('Cannot specify both RIR and left/right RIR for a set')
+    }
+
+    if (rpe && (leftRpe || rightRpe)) {
+      throw new Error('Cannot specify both RPE and left/right RPE for a set')
+    }
+
+    if (reps && (leftReps || rightReps)) {
+      throw new Error('Cannot specify both reps and left/right reps for a set')
+    }
+
+    if (
+      exercise.isUnilateral == false &&
+      (leftReps || rightReps || leftRpe || rightRpe || leftRir || rightRir)
+    ) {
       throw new Error(
-        'Cannot specify both cheat reps and partial reps for a set'
+        `Exercise ${exercise.name} is not unilateral, so left/right fields are not applicable`
       )
     }
 
@@ -260,14 +287,18 @@ export const setExercise = async (
       .values({
         workoutExerciseId: workoutExercise.id,
         setNumber: setNum.toString(),
-        weight: weight ? weight.toString() : null,
-        reps: reps ? reps.toString() : null,
-        rpe: rpe ? rpe.toString() : null,
-        rir: rir ? rir.toString() : null,
-        partialReps: partialReps ? partialReps.toString() : null,
-        cheatReps: cheatReps ? cheatReps.toString() : null,
-        lowReps: lowReps ? lowReps.toString() : null,
-        highReps: highReps ? highReps.toString() : null,
+        weightLbs: weightLbs ?? null,
+        weightKg: weightKg ?? null,
+        reps: reps ?? null,
+        leftReps: leftReps ?? null,
+        rightReps: rightReps ?? null,
+        rpe: rpe ?? null,
+        leftRpe: leftRpe ?? null,
+        rightRpe: rightRpe ?? null,
+        rir: rir ?? null,
+        leftRir: leftRir ?? null,
+        rightRir: rightRir ?? null,
+        partialReps: partialReps ?? null,
       })
       .returning({ id: sets.id, setNumber: sets.setNumber })
 
@@ -280,29 +311,21 @@ export const setExercise = async (
     )
     setNum++
   }
-  exNum++
 }
-
 // upload workout data, then exercises (exercise then workout exercises), then sets, then any dropsets/supersets, then tags
-export async function POST(req: Request) {
+export const POST = withAuth(async (req, user) => {
   const data = await req.json()
 
   const setIdMap = new Map<string, string>()
   let exNum = 1
 
-  let {
-    date,
-    userId,
-    name,
-    location,
-    exercises,
-    setGroupings,
-    tags,
-    notes,
-    status,
-  } = data
+  let { date, name, location, exercises, setGroupings, tags, notes, status } =
+    data
+
+  const userId = user.id
 
   if (!userId || !date || !name || !exercises) {
+    console.error('Missing required fields:', { userId, date, name, exercises })
     return NextResponse.json(
       { error: 'Missing required fields' },
       { status: 400 }
@@ -398,6 +421,7 @@ export async function POST(req: Request) {
           workout.id,
           tx
         )
+        exNum++
       }
 
       if (setGroupings && setGroupings.length > 0) {
@@ -426,4 +450,4 @@ export async function POST(req: Request) {
     console.error('Error processing workout data:', error)
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})

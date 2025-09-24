@@ -154,8 +154,6 @@ const NotebookEntryForm = () => {
     )
   })
 
-  console.log('user tags ', userTags)
-
   return (
     <SafeView
       keyboardAvoiding
@@ -248,11 +246,11 @@ const NotebookEntryForm = () => {
                     },
                   })
                 }}
-                twcn="flex-row items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
+                twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
                 twcnText="text-light-grayText dark:text-dark-grayText text-sm "
                 text="Add tags"
               >
-                <ArrowRight
+                <TagIcon
                   size={16}
                   color={theme.grayText}
                   strokeWidth={1.5}

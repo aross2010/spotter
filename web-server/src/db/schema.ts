@@ -248,11 +248,6 @@ export const sets = pgTable(
       'right_cheat_xor_right_partial',
       sql`cheat_reps IS NULL OR right_partial_reps IS NULL`
     ),
-    // for planned sets: allow either reps or both low/high reps, but not both or neither
-    check(
-      'reps_or_low_high',
-      sql`((reps IS NOT NULL AND low_reps IS NULL AND high_reps IS NULL) OR (reps IS NULL AND low_reps IS NOT NULL AND high_reps IS NOT NULL))`
-    ),
     // for completed sets: allow either reps or both left/right reps, but not both or neither
     check(
       'reps_or_left_right',

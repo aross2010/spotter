@@ -13,12 +13,15 @@ import { useWorkoutForm } from '../../../context/workout-form-context'
 import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
+import { Alert } from 'react-native'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const navigation = useNavigation()
   const { theme } = useTheme()
-  const { workoutData, setWorkoutData } = useWorkoutForm()
+  const { workoutData, setWorkoutData, addWorkout } = useWorkoutForm()
+  const isEditing = false
 
   useEffect(() => {
     const saveEnabled = true
@@ -32,13 +35,34 @@ const WorkoutForm = () => {
           accessibilityLabel="Save Workout"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
           text="Save"
-          disabled={!saveEnabled}
+          disabled={!saveEnabled || isSaving}
         />
       ),
     })
-  }, [workoutData])
+  }, [workoutData, isSaving])
 
-  const handleSubmitWorkout = () => {}
+  const handleSubmitWorkout = async () => {
+    setIsSaving(true)
+    try {
+      if (isEditing) {
+        // await updateEntry(entryId as string, {
+        //   ...data,
+        //   date: data.date.toISOString(),
+        // })
+      } else {
+        console.log(
+          'Submitting workout entry: ',
+          JSON.stringify(workoutData, null, 2)
+        )
+        await addWorkout()
+      }
+      router.replace('/workouts')
+    } catch (error: any) {
+      Alert.alert('Error', error.message ?? 'Something went wrong')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <SafeView

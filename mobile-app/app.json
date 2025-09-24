@@ -18,7 +18,8 @@
       "bundleIdentifier": "app.aross.spotter",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIDesignRequiresCompatibility": true
       }
     },
     "android": {

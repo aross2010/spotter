@@ -19,6 +19,8 @@ const Home = () => {
   const { user } = useUserStore()
   const { theme } = useTheme()
 
+  console.log(user)
+
   const greeting = getGreeting()
   return (
     <SafeView>
