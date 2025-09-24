@@ -414,19 +414,61 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
 
   const handleChange = (text: string) => {
     const updatedExercises = [...workoutData.exercises]
-    updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0] = {
-      ...updatedExercises[exerciseNumber ? exerciseNumber - 1 : 0],
+    const exerciseIndex = exerciseNumber ? exerciseNumber - 1 : 0
+    const currentExercise = updatedExercises[exerciseIndex]
+
+    const isEditing =
+      currentExercise.name !== text && currentExercise.name !== ''
+
+    updatedExercises[exerciseIndex] = {
+      ...currentExercise,
       name: text,
+      existing: false,
     }
+
+    if (isEditing && currentExercise.existing) {
+      updatedExercises[exerciseIndex].sets = [
+        {
+          setNumber: 1,
+          id: nanoid(),
+        },
+      ]
+    }
+
     setWorkoutData({
       ...workoutData,
       exercises: updatedExercises,
     })
+
+    const matchingExercise = exerciseNames.find(
+      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim()
+    )
+    if (matchingExercise && text.trim() !== '') {
+      updatedExercises[exerciseIndex] = {
+        ...updatedExercises[exerciseIndex],
+        name: matchingExercise.name,
+        isUnilateral: matchingExercise.isUnilateral || false,
+        existing: true,
+      }
+
+      setWorkoutData({
+        ...workoutData,
+        exercises: updatedExercises,
+      })
+
+      setIsExerciseNameSelectorOpen(false)
+      Keyboard.dismiss()
+      return
+    }
+
     const filtered = exerciseNames.filter((workout) =>
       workout.name.toLowerCase().includes(text.toLowerCase())
     )
     setExerciseNameResults(filtered)
-    if (!isExerciseNameSelectorOpen) {
+
+    if (text.trim() === '') {
+      setIsExerciseNameSelectorOpen(false)
+    } else if (!isExerciseNameSelectorOpen) {
       setIsExerciseNameSelectorOpen(true)
     }
   }
@@ -440,7 +482,12 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
       if (name === 'Delete Exercise' && exercises.length <= 1) {
         return null
       }
-      if (name === 'isUnilateral' && exercise.existing) {
+
+      if (
+        name === 'isUnilateral' &&
+        exercise.existing &&
+        !exercise.isUnilateral
+      ) {
         return null
       }
 

@@ -1,19 +1,73 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
-import { Workout } from '../utils/types'
 import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
+import { Tag } from '../utils/types'
+import { Set, SetGrouping } from './workout-form-context'
 
-type WorkoutData = Omit<Workout, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+// export type NotebookEntry = {
+//   id: string
+//   userId: string
+//   title?: string
+//   body: string
+//   date: string
+//   createdAt: string
+//   updatedAt?: string
+//   pinned: boolean
+//   tags: Tag[]
+// }
+
+type Exercise = {
+  name: string
+  isUnilateral: boolean
+  sets: Set[]
+}
+
+export type Workout = {
+  id: string
+  userId: string
+  date: string
+  createdAt: string
+  updatedAt?: string
+  pinned: boolean
+  tags: Tag[]
+  name: string
+  exercises: Exercise[]
+  setGroupings: SetGrouping[]
+  notes?: string
+  location?: string
+}
+
+export type WorkoutMinimal = {
+  id: string
+  date: string
+  location: string
+  notes: string
+  tags: string[]
+  pinned: boolean
+  name: string
+  exercises: {
+    name: string
+    sets: number // 2 sets, 3 sets, etc.
+    lowRepRange: number
+    highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
+  }[]
+}
 
 export type WorkoutName = {
   name: string
   used: number
 }
 
+type WorkoutFilters = {
+  tags: Tag[]
+  workoutNames: string[]
+  exerciseNames: string[]
+}
+
 type WorkoutContextType = {
-  currentWorkouts: Workout[]
+  currentWorkouts: WorkoutMinimal[]
   isLoading: boolean
   isLoadingMore: boolean
   hasLoaded: boolean
@@ -21,20 +75,18 @@ type WorkoutContextType = {
   initializeWorkouts: () => Promise<void>
   refreshWorkouts: () => Promise<void>
   loadMoreWorkouts: () => Promise<void>
-  updateWorkout: (
-    workoutId: string,
-    workoutToUpdate: WorkoutData
-  ) => Promise<void>
-  deleteWorkout: (workoutId: string) => Promise<void>
-  addWorkout: (newWorkout: WorkoutData) => Promise<void>
-  fetchWorkoutNames: () => Promise<WorkoutName[]>
   applyFiltersAndSort: (
     status?: string,
     order?: 'asc' | 'desc'
   ) => Promise<void>
+  applyFilters: () => Promise<void>
   statusFilter: string | null
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
+  filters: WorkoutFilters
+  setFilters: (filters: WorkoutFilters) => void
+  updateFilters: (updates: Partial<WorkoutFilters>) => void
+  clearFilters: () => void
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -44,7 +96,7 @@ type WorkoutProviderProps = {
 }
 
 export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
-  const [currentWorkouts, setCurrentWorkouts] = useState<Workout[]>([])
+  const [currentWorkouts, setCurrentWorkouts] = useState<WorkoutMinimal[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -52,22 +104,92 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [filters, setFilters] = useState<WorkoutFilters>({
+    tags: [],
+    workoutNames: [],
+    exerciseNames: [],
+  })
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
 
-  const initializeWorkouts = async () => {}
+  const PAGE_SIZE = 25
 
-  const refreshWorkouts = async () => {}
+  // Filter helper methods
+  const updateFilters = (updates: Partial<WorkoutFilters>) => {
+    setFilters((prev) => ({ ...prev, ...updates }))
+  }
 
-  const loadMoreWorkouts = async () => {}
+  const clearFilters = () => {
+    setFilters({
+      tags: [],
+      workoutNames: [],
+      exerciseNames: [],
+    })
+  }
 
-  const fetchWorkoutNames = async (): Promise<WorkoutName[]> => {
-    if (!user?.id) {
-      return []
+  const buildQueryParams = (
+    page: number,
+    tags: Tag[] = filters.tags,
+    workoutNames: string[] = filters.workoutNames,
+    exerciseNames: string[] = filters.exerciseNames,
+    status: string | null = statusFilter,
+    order: 'asc' | 'desc' = sortOrder,
+    resetFilters: boolean = false
+  ) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: PAGE_SIZE.toString(),
+      sortBy: 'date',
+      sortOrder: order,
+    })
+
+    if (!resetFilters) {
+      if (tags.length > 0) {
+        const tagNames = tags.map((tag) => tag.name)
+        params.append('tags', JSON.stringify(tagNames))
+      }
+      if (workoutNames.length > 0) {
+        params.append('workoutNames', JSON.stringify(workoutNames))
+      }
+      if (exerciseNames.length > 0) {
+        params.append('exerciseNames', JSON.stringify(exerciseNames))
+      }
+      if (status) {
+        params.append('status', status)
+      }
     }
+
+    return params.toString()
+  }
+
+  const fetchWorkouts = async (
+    page: number = 1,
+    append: boolean = false,
+    tags: Tag[] = filters.tags,
+    workoutNames: string[] = filters.workoutNames,
+    exerciseNames: string[] = filters.exerciseNames,
+    status: string | null = statusFilter,
+    order: 'asc' | 'desc' = sortOrder
+  ) => {
+    if (!user) return
+
+    if (append) {
+      setIsLoadingMore(true)
+    } else {
+      setIsLoading(true)
+    }
+
     try {
+      const queryParams = buildQueryParams(
+        page,
+        tags,
+        workoutNames,
+        exerciseNames,
+        status,
+        order
+      )
       const response = await fetchWithAuth(
-        `${BASE_URL}/api/workouts/names/${user.id}`,
+        `${BASE_URL}/api/workouts/user/${user.id}?${queryParams}`,
         {
           method: 'GET',
           headers: {
@@ -75,28 +197,67 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           },
         }
       )
-      const workoutNames = (await response.json()) as WorkoutName[]
-      return workoutNames
+
+      const data = await response.json()
+
+      if (append) {
+        setCurrentWorkouts((prev) => [...prev, ...data.workouts])
+      } else {
+        setCurrentWorkouts(data.workouts)
+      }
+
+      setHasMore(data.pagination.hasNextPage)
+      setCurrentPage(data.pagination.page)
+      setHasLoaded(true)
     } catch (error: any) {
       Alert.alert('Error', error.message)
+    } finally {
+      setIsLoading(false)
+      setIsLoadingMore(false)
     }
+  }
 
-    return []
+  const initializeWorkouts = async () => {
+    if (!hasLoaded && !isLoading) {
+      await fetchWorkouts(1, false)
+    }
+  }
+
+  const refreshWorkouts = async () => {
+    setCurrentPage(1)
+    setHasMore(true)
+    await fetchWorkouts(1, false)
+  }
+
+  const loadMoreWorkouts = async () => {
+    if (!hasMore || isLoadingMore) return
+    await fetchWorkouts(currentPage + 1, true)
   }
 
   const applyFiltersAndSort = async (
     status?: string,
     order?: 'asc' | 'desc'
-  ) => {}
+  ) => {
+    setStatusFilter(status || null)
+    setSortOrder(order || 'desc')
+    setCurrentPage(1)
+    setHasMore(true)
+    await fetchWorkouts(
+      1,
+      false,
+      filters.tags,
+      filters.workoutNames,
+      filters.exerciseNames,
+      status || null,
+      order || 'desc'
+    )
+  }
 
-  const updateWorkout = async (
-    workoutId: string,
-    workoutToUpdate: WorkoutData
-  ) => {}
-
-  const deleteWorkout = async (workoutId: string) => {}
-
-  const addWorkout = async (newWorkout: WorkoutData) => {}
+  const applyFilters = async () => {
+    setCurrentPage(1)
+    setHasMore(true)
+    await fetchWorkouts(1, false)
+  }
 
   const value: WorkoutContextType = {
     currentWorkouts,
@@ -107,14 +268,15 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     initializeWorkouts,
     refreshWorkouts,
     loadMoreWorkouts,
-    updateWorkout,
-    deleteWorkout,
-    addWorkout,
-    fetchWorkoutNames,
     applyFiltersAndSort,
+    applyFilters,
     statusFilter,
     sortOrder,
     setSortOrder,
+    filters,
+    setFilters,
+    updateFilters,
+    clearFilters,
   }
 
   return (

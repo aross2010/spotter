@@ -12,6 +12,7 @@ import {
   Utensils,
   ListFilter,
   Plus,
+  BookOpen,
 } from 'lucide-react-native'
 import { Link } from 'expo-router'
 import tw from '../../tw'
@@ -23,39 +24,6 @@ import NotebookEntryView from '../../components/notebook-entry'
 import { useNotebook } from '../../context/notebook-context'
 import useTheme from '../hooks/theme'
 import { NotebookEntry } from '../../utils/types'
-
-const notebookFunctions = [
-  {
-    title: 'Injuries',
-    description:
-      'Keep track of your health and roadblocks along your fitness journey',
-    icon: Ambulance,
-  },
-  {
-    title: 'Warm-ups',
-    description:
-      'Never forget the warm-up routine that prepares your body for your workouts',
-    icon: Activity,
-  },
-  {
-    title: 'Goals',
-    description:
-      'Set, track, and achieve your fitness milestones with clear, actionable goals',
-    icon: Target,
-  },
-  {
-    title: 'Diet',
-    description:
-      'Note when you begin or end diets to see how they are affecting your performance',
-    icon: Utensils,
-  },
-  {
-    title: 'Mindset',
-    description:
-      'Reflect on how you feel about your workouts, progress, and fitness journey at large',
-    icon: Smile,
-  },
-]
 
 const Notebook = () => {
   const {
@@ -119,73 +87,6 @@ const Notebook = () => {
   useEffect(() => {
     initializeNotebook()
   }, [])
-
-  useEffect(() => {
-    const animations = animatedValues.map((animValue, index) => {
-      return Animated.parallel([
-        Animated.timing(animValue.translateX, {
-          toValue: 0,
-          duration: 500,
-          delay: index * 25,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(animValue.opacity, {
-          toValue: 1,
-          duration: 500,
-          delay: index * 25,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ])
-    })
-
-    // Start all animations
-    Animated.stagger(0, animations).start()
-  }, [])
-
-  const animatedValues = useRef(
-    notebookFunctions.map(() => ({
-      translateX: new Animated.Value(-50),
-      opacity: new Animated.Value(0),
-    }))
-  ).current
-
-  const renderedNotebookFunctions = notebookFunctions.map(
-    ({ icon, title, description }, index) => {
-      const Icon = icon
-      const animValue = animatedValues[index]
-
-      return (
-        <Animated.View
-          key={title}
-          style={[
-            tw`flex-row items-center gap-6 rounded-2xl p-4 bg-white dark:bg-dark-grayPrimary border border-light-grayPrimary dark:border-dark-graySecondary`,
-            {
-              transform: [{ translateX: animValue.translateX }],
-              opacity: animValue.opacity,
-            },
-          ]}
-        >
-          <View
-            style={tw`p-2 rounded-full bg-primary/15 dark:bg-dark-primary/50`}
-          >
-            <Icon
-              size={24}
-              color={Colors.primary}
-              strokeWidth={1.5}
-            />
-          </View>
-          <View style={tw`flex-1 gap-0.5`}>
-            <Txt twcn="font-poppinsMedium text-base">{title}</Txt>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-              {description}
-            </Txt>
-          </View>
-        </Animated.View>
-      )
-    }
-  )
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
@@ -265,27 +166,34 @@ const Notebook = () => {
   }
 
   const notebookPrompt = (
-    <SafeView hasTabBar>
-      <View style={tw`flex-1 justify-between`}>
-        <View>
-          <Txt twcn="text-center text-base mb-6 opacity-60">
-            Capture everything beyond your workouts
-          </Txt>
-          <View style={tw`gap-2`}>{renderedNotebookFunctions}</View>
-        </View>
-        <View>
-          <Button
-            onPress={() => router.push('/notebook-entry-form')}
-            twcn="w-full bg-primary justify-center items-center flex-row gap-2 rounded-full p-4"
-            twcnText="text-light-background font-poppinsMedium text-base"
-            text="Log your first entry"
-          >
-            <PenLine
-              size={20}
-              color={Colors.light.background}
-            />
-          </Button>
-        </View>
+    <SafeView
+      hasTabBar
+      scroll={false}
+    >
+      <View style={tw`flex-1 items-center justify-center px-16`}>
+        <BookOpen
+          color={Colors.primary}
+          strokeWidth={1}
+          size={64}
+        />
+        <Txt twcn="text-xl font-poppinsMedium text-center mt-6 mb-3">
+          Your Notebook
+        </Txt>
+        <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
+          Capture everything beyond your workouts
+        </Txt>
+        <Button
+          onPress={() => router.push('/notebook-entry-form')}
+          text="Start Writing"
+          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
+          twcnText="font-poppinsMedium text-dark-text"
+        >
+          <PenLine
+            color={Colors.dark.text}
+            size={16}
+            style={tw`ml-2`}
+          />
+        </Button>
       </View>
     </SafeView>
   )
@@ -305,7 +213,7 @@ const Notebook = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4 gap-4`}
+        contentContainerStyle={tw`p-4 gap-2`}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
         disableVirtualization={true}
