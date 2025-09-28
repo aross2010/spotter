@@ -15,9 +15,7 @@ import { capString } from '../functions/cap-string'
 const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { theme } = useTheme()
-  const { date, tags, notes, exercises, id, pinned, name, location } = workout
-
-  console.log(JSON.stringify(workout, null, 2))
+  const { date, tags, name, location, exercises } = workout
 
   const renderedTags = tags.map((tag) => {
     return (
@@ -29,6 +27,24 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
       </Txt>
     )
   })
+
+  const renderedExercises = exercises.map(
+    ({ name, sets, lowRepRange, highRepRange }) => {
+      return (
+        <View
+          style={tw`flex-row items-center justify-between gap-2`}
+          key={name}
+        >
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs">
+            {name}
+          </Txt>
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs">
+            {sets} x {lowRepRange}-{highRepRange}
+          </Txt>
+        </View>
+      )
+    }
+  )
 
   return (
     <Fragment>
@@ -55,13 +71,9 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
           </Button>
         </View>
 
-        <View style={tw``}>
-          <Txt twcn="font-poppinsMedium text-base">{name}</Txt>
-          {notes && (
-            <Txt twcn="text-xs mt-1 text-light-grayText dark:text-dark-grayText font-poppinsItalic">
-              {notes}
-            </Txt>
-          )}
+        <View>
+          <Txt twcn="font-poppinsMedium">{name}</Txt>
+          <View style={tw`mt-2 gap-1`}>{renderedExercises}</View>
         </View>
         {tags.length > 0 && (
           <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>

@@ -14,41 +14,170 @@ import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
 import { Alert } from 'react-native'
+import { useWorkout } from '../../../context/workout-context'
+import { useLocalSearchParams } from 'expo-router'
+import { useAuth } from '../../../context/auth-context'
+import { BASE_URL } from '../../../constants/auth'
+import Spinner from '../../../components/activity-indicator'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const navigation = useNavigation()
   const { theme } = useTheme()
   const { workoutData, setWorkoutData, addWorkout } = useWorkoutForm()
-  const isEditing = false
+  const { updateWorkout } = useWorkout()
+  const { fetchWithAuth } = useAuth()
+  const { id } = useLocalSearchParams<{ id?: string }>()
+  const isEditing = !!id
+  const [initialState, setInitialState] = useState<typeof workoutData | null>(
+    null
+  )
+
+  const hasChanges = () => {
+    if (!isEditing || !initialState) return true // For new workouts or before initial state is set, always allow saving
+
+    const dateChanged =
+      workoutData.date.getTime() !== initialState.date.getTime()
+    const nameChanged = workoutData.name.trim() !== initialState.name.trim()
+    const locationChanged =
+      workoutData.location.trim() !== initialState.location.trim()
+    const notesChanged = workoutData.notes.trim() !== initialState.notes.trim()
+    const statusChanged = workoutData.status !== initialState.status
+
+    // Check if tags changed
+    const tagsChanged =
+      workoutData.tags.length !== initialState.tags.length ||
+      workoutData.tags.some(
+        (tag) => !initialState.tags.some((initial) => initial.name === tag.name)
+      )
+
+    // Check if exercises changed
+    const exercisesChanged =
+      workoutData.exercises.length !== initialState.exercises.length ||
+      workoutData.exercises.some((exercise, index) => {
+        const initialExercise = initialState.exercises[index]
+        if (!initialExercise) return true
+
+        const exerciseNameChanged = exercise.name !== initialExercise.name
+        const isUnilateralChanged =
+          exercise.isUnilateral !== initialExercise.isUnilateral
+        const setsChanged =
+          exercise.sets.length !== initialExercise.sets.length ||
+          exercise.sets.some((set, setIndex) => {
+            const initialSet = initialExercise.sets[setIndex]
+            if (!initialSet) return true
+
+            return (
+              set.setNumber !== initialSet.setNumber ||
+              set.weightLbs !== initialSet.weightLbs ||
+              set.weightKg !== initialSet.weightKg ||
+              set.reps !== initialSet.reps ||
+              set.leftReps !== initialSet.leftReps ||
+              set.rightReps !== initialSet.rightReps ||
+              set.rpe !== initialSet.rpe ||
+              set.leftRpe !== initialSet.leftRpe ||
+              set.rightRpe !== initialSet.rightRpe ||
+              set.rir !== initialSet.rir ||
+              set.leftRir !== initialSet.leftRir ||
+              set.rightRir !== initialSet.rightRir ||
+              set.partialReps !== initialSet.partialReps ||
+              set.leftPartialReps !== initialSet.leftPartialReps ||
+              set.rightPartialReps !== initialSet.rightPartialReps ||
+              set.cheatReps !== initialSet.cheatReps
+            )
+          })
+
+        return exerciseNameChanged || isUnilateralChanged || setsChanged
+      })
+
+    // Check if set groupings changed
+    const setGroupingsChanged =
+      workoutData.setGroupings.length !== initialState.setGroupings.length ||
+      workoutData.setGroupings.some((grouping, index) => {
+        const initialGrouping = initialState.setGroupings[index]
+        if (!initialGrouping) return true
+
+        const groupingTypeChanged =
+          grouping.groupingType !== initialGrouping.groupingType
+        const groupSetsChanged =
+          grouping.groupSets.length !== initialGrouping.groupSets.length ||
+          grouping.groupSets.some((groupSet, groupSetIndex) => {
+            const initialGroupSet = initialGrouping.groupSets[groupSetIndex]
+            if (!initialGroupSet) return true
+
+            return (
+              groupSet.exerciseNumber !== initialGroupSet.exerciseNumber ||
+              groupSet.setNumber !== initialGroupSet.setNumber
+            )
+          })
+
+        return groupingTypeChanged || groupSetsChanged
+      })
+
+    return (
+      dateChanged ||
+      nameChanged ||
+      locationChanged ||
+      notesChanged ||
+      statusChanged ||
+      tagsChanged ||
+      exercisesChanged ||
+      setGroupingsChanged
+    )
+  }
 
   useEffect(() => {
-    const saveEnabled = true
+    const getWorkoutData = async () => {
+      setIsLoading(true)
+      try {
+        const response = await fetchWithAuth(`${BASE_URL}/api/workouts/${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        const workout = await response.json()
+        console.log('Workout Data: ', JSON.stringify(workout, null, 2))
+        const workoutData = {
+          ...workout,
+          date: new Date(workout.date + 'T00:00:00'),
+        }
+        setWorkoutData(workoutData)
+        setInitialState(workoutData)
+      } catch (error: any) {
+        Alert.alert('Error', error.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    if (isEditing) getWorkoutData()
+  }, [isEditing])
+
+  useEffect(() => {
+    const saveEnabled = hasChanges()
 
     navigation.setOptions({
-      headerTitle: 'New Workout',
+      headerTitle: isEditing ? 'Edit Workout' : 'New Workout',
       headerRight: () => (
         <Button
           onPress={handleSubmitWorkout}
           hitSlop={12}
           accessibilityLabel="Save Workout"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text="Save"
-          disabled={!saveEnabled || isSaving}
+          text={isEditing ? 'Update' : 'Save'}
+          disabled={isSaving || !saveEnabled}
         />
       ),
     })
-  }, [workoutData, isSaving])
+  }, [workoutData, isSaving, isEditing])
 
   const handleSubmitWorkout = async () => {
     setIsSaving(true)
     try {
       if (isEditing) {
-        // await updateEntry(entryId as string, {
-        //   ...data,
-        //   date: data.date.toISOString(),
-        // })
+        await updateWorkout(id, workoutData)
       } else {
         console.log(
           'Submitting workout entry: ',
@@ -64,7 +193,9 @@ const WorkoutForm = () => {
     }
   }
 
-  return (
+  return isLoading ? (
+    <Spinner />
+  ) : (
     <SafeView
       keyboardAvoiding
       bottomOffset={200}

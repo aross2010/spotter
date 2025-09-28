@@ -268,7 +268,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
   const pinEntry = async (entryId: string) => {
     try {
       await fetchWithAuth(`${BASE_URL}/api/notebookEntries/${entryId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -284,7 +284,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
   const unpinEntry = async (entryId: string) => {
     try {
       await fetchWithAuth(`${BASE_URL}/api/notebookEntries/${entryId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },

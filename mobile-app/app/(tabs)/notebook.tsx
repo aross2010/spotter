@@ -134,7 +134,7 @@ const Notebook = () => {
 
     const monthTitle = addMonth && (
       <View style={tw`flex-row items-center gap-2 my-4`}>
-        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium tracking-wide">
           {month}
         </Txt>
         <View

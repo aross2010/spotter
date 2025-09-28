@@ -4,19 +4,7 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { Tag } from '../utils/types'
-import { Set, SetGrouping } from './workout-form-context'
-
-// export type NotebookEntry = {
-//   id: string
-//   userId: string
-//   title?: string
-//   body: string
-//   date: string
-//   createdAt: string
-//   updatedAt?: string
-//   pinned: boolean
-//   tags: Tag[]
-// }
+import { Set, SetGrouping, WorkoutFormData } from './workout-form-context'
 
 type Exercise = {
   name: string
@@ -39,11 +27,23 @@ export type Workout = {
   location?: string
 }
 
+type WorkoutInfo = Workout & {
+  analytics: {
+    prs: {
+      exerciseNumber: number
+      setNumber: number
+    }[]
+    totalVolume: number
+    totalSets: number
+    totalReps: number
+    totalWeightLifted: number
+  }
+}
+
 export type WorkoutMinimal = {
   id: string
   date: string
   location: string
-  notes: string
   tags: string[]
   pinned: boolean
   name: string
@@ -87,6 +87,13 @@ type WorkoutContextType = {
   setFilters: (filters: WorkoutFilters) => void
   updateFilters: (updates: Partial<WorkoutFilters>) => void
   clearFilters: () => void
+  pinWorkout: (workoutId: string) => Promise<void>
+  unpinWorkout: (workoutId: string) => Promise<void>
+  deleteWorkout: (workoutId: string) => Promise<void>
+  updateWorkout: (
+    workoutId: string,
+    workoutData: WorkoutFormData
+  ) => Promise<void>
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -259,6 +266,131 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     await fetchWorkouts(1, false)
   }
 
+  const updateCurrentWorkouts = (
+    workoutId: string,
+    updates: Partial<WorkoutMinimal>
+  ) => {
+    setCurrentWorkouts((prev) => {
+      const updatedWorkouts = prev.map((workout) =>
+        workout.id === workoutId ? { ...workout, ...updates } : workout
+      )
+
+      // Sort: pinned first, then by date according to current sort order
+      return updatedWorkouts.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1
+        if (!a.pinned && b.pinned) return 1
+
+        const dateA = new Date(a.date)
+        const dateB = new Date(b.date)
+
+        return sortOrder === 'desc'
+          ? dateB.getTime() - dateA.getTime()
+          : dateA.getTime() - dateB.getTime()
+      })
+    })
+  }
+
+  const pinWorkout = async (workoutId: string) => {
+    try {
+      await fetchWithAuth(`${BASE_URL}/api/workouts/${workoutId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pinned: true }),
+      })
+
+      updateCurrentWorkouts(workoutId, { pinned: true })
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  const unpinWorkout = async (workoutId: string) => {
+    try {
+      await fetchWithAuth(`${BASE_URL}/api/workouts/${workoutId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pinned: false }),
+      })
+
+      updateCurrentWorkouts(workoutId, { pinned: false })
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  const deleteWorkout = async (workoutId: string) => {
+    Alert.alert(
+      'Delete Workout',
+      'Are you sure you want to delete this workout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            setIsLoading(true)
+            try {
+              const response = await fetchWithAuth(
+                `${BASE_URL}/api/workouts/${workoutId}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }
+              )
+              if (response.ok) {
+                setCurrentWorkouts((prev) =>
+                  prev.filter((workout) => workout.id !== workoutId)
+                )
+              }
+            } catch (error: any) {
+              Alert.alert('Error', error.message)
+            } finally {
+              setIsLoading(false)
+            }
+          },
+          style: 'destructive',
+        },
+      ]
+    )
+  }
+
+  const updateWorkout = async (
+    workoutId: string,
+    workoutData: WorkoutFormData
+  ) => {
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/workouts/${workoutId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...workoutData,
+            tags: workoutData.tags.map((tag: any) => tag.name),
+            date: workoutData.date.toISOString(),
+          }),
+        }
+      )
+
+      if (response.ok) {
+        // Refresh the workouts list to show updated data
+        await refreshWorkouts()
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
   const value: WorkoutContextType = {
     currentWorkouts,
     isLoading,
@@ -277,6 +409,10 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     setFilters,
     updateFilters,
     clearFilters,
+    pinWorkout,
+    unpinWorkout,
+    deleteWorkout,
+    updateWorkout,
   }
 
   return (

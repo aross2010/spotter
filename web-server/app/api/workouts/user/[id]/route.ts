@@ -10,7 +10,7 @@ import {
   workoutTags,
   setGroupings,
 } from '@/src/db/schema'
-import { desc, asc, eq, and, inArray, sql } from 'drizzle-orm'
+import { desc, asc, eq, and, inArray, sql, min, max, count } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
@@ -171,12 +171,8 @@ export const GET = withAuth(async (req, user) => {
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
-          notes: workouts.notes,
           date: workouts.date,
           location: workouts.location,
-          status: workouts.status,
-          createdAt: workouts.createdAt,
-          updatedAt: workouts.updatedAt,
         })
         .from(workouts)
         .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
@@ -221,12 +217,8 @@ export const GET = withAuth(async (req, user) => {
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
-          notes: workouts.notes,
           date: workouts.date,
           location: workouts.location,
-          status: workouts.status,
-          createdAt: workouts.createdAt,
-          updatedAt: workouts.updatedAt,
         })
         .from(workouts)
         .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
@@ -261,12 +253,8 @@ export const GET = withAuth(async (req, user) => {
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
-          notes: workouts.notes,
           date: workouts.date,
           location: workouts.location,
-          status: workouts.status,
-          createdAt: workouts.createdAt,
-          updatedAt: workouts.updatedAt,
         })
         .from(workouts)
         .innerJoin(
@@ -365,9 +353,21 @@ export const GET = withAuth(async (req, user) => {
               .select({
                 workoutId: workoutExercises.workoutId,
                 exerciseName: exercises.name,
-                setsCount: sql<number>`count(${sets.id})`,
-                lowRepRange: sql<number>`min(${sets.lowReps})`,
-                highRepRange: sql<number>`max(${sets.highReps})`,
+                setsCount: count(sets.id),
+                lowRepRange: min(
+                  sql`CASE 
+                    WHEN ${sets.leftReps} IS NOT NULL AND ${sets.rightReps} IS NOT NULL 
+                    THEN LEAST(${sets.leftReps}, ${sets.rightReps})
+                    ELSE ${sets.reps}
+                  END`
+                ),
+                highRepRange: max(
+                  sql`CASE 
+                    WHEN ${sets.leftReps} IS NOT NULL AND ${sets.rightReps} IS NOT NULL 
+                    THEN GREATEST(${sets.leftReps}, ${sets.rightReps})
+                    ELSE ${sets.reps}
+                  END`
+                ),
               })
               .from(workoutExercises)
               .innerJoin(
@@ -415,7 +415,6 @@ export const GET = withAuth(async (req, user) => {
         id: workout.id,
         date: workout.date,
         location: workout.location || '',
-        notes: workout.notes || '',
         tags: tagsByWorkout[workout.id] || [],
         pinned: (workout as any).pinned || false,
         name: workout.name,

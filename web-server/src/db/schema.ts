@@ -177,6 +177,7 @@ export const exercises = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 100 }).notNull(),
     isUnilateral: boolean('is_unilateral').notNull().default(false),
+    pr: numeric('pr', { precision: 4, scale: 1 }), // in lbs
   },
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )

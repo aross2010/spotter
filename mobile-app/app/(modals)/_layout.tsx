@@ -118,6 +118,13 @@ export default function ModalLayout() {
             presentation: 'fullScreenModal',
           }}
         />
+        <Stack.Screen
+          name="workout-details"
+          options={{
+            title: 'Workout Details',
+            presentation: 'fullScreenModal',
+          }}
+        />
       </Stack>
     </>
   )

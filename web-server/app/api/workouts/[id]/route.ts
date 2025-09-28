@@ -8,10 +8,11 @@ import {
   workoutExercises,
   sets,
   workoutTagLinks,
+  users,
 } from '@/src/db/schema'
 import { setExercise, setSuperOrDropsets, setTags } from '../route'
 import { eq, and, sql } from 'drizzle-orm'
-import { getFullWorkout } from '@/app/functions/getFullWorkout'
+import { withAuth } from '../../middleware'
 
 // clear data not in the workout table – tags, then set groups, then exercises (which will delete sets)
 const clearWorkoutChildren = async (workoutId: string, tx: any) => {
@@ -32,17 +33,23 @@ const clearWorkoutChildren = async (workoutId: string, tx: any) => {
 }
 
 // clear sub-data and re-insert + update workout base data
-export async function PUT(req: Request, props: { params: Params }) {
+export const PUT = withAuth(async (req: Request, user: any) => {
   const data = await req.json()
-  const params = await props.params
-  const id = params.id as string
+  const url = new URL(req.url)
+  const id = url.pathname.split('/').pop()
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Workout ID is required' },
+      { status: 400 }
+    )
+  }
 
   const setIdMap = new Map<string, string>()
   let exNum = 1
 
   let {
     date,
-    userId,
     name,
     location,
     exercises,
@@ -50,9 +57,13 @@ export async function PUT(req: Request, props: { params: Params }) {
     tags,
     notes,
     status,
+    pinned,
   } = data
 
+  const userId = user.id
+
   if (!userId || !date || !name || !exercises) {
+    console.error('Missing required fields:', { userId, date, name, exercises })
     return NextResponse.json(
       { error: 'Missing required fields' },
       { status: 400 }
@@ -63,16 +74,16 @@ export async function PUT(req: Request, props: { params: Params }) {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
   }
 
-  if (typeof name !== 'string' || name.length > 100) {
+  if (typeof name !== 'string' || name.length > 25) {
     return NextResponse.json(
-      { error: 'Workout name must be a string under 100 characters' },
+      { error: 'Workout name must be a string under 25 characters' },
       { status: 400 }
     )
   }
 
   if (location && (typeof location !== 'string' || location.length > 100)) {
     return NextResponse.json(
-      { error: 'Location must be a string' },
+      { error: 'Location must be a string under 100 characters' },
       { status: 400 }
     )
   }
@@ -107,13 +118,28 @@ export async function PUT(req: Request, props: { params: Params }) {
 
   if (status && !['completed', 'planned'].includes(status)) {
     return NextResponse.json(
-      { error: 'Status must be one of: completed, in-progress, planned' },
+      { error: 'Status must be one of: completed, planned' },
+      { status: 400 }
+    )
+  }
+
+  if (pinned !== undefined && typeof pinned !== 'boolean') {
+    return NextResponse.json(
+      { error: 'Pinned must be a boolean value' },
       { status: 400 }
     )
   }
 
   try {
     const result = await db.transaction(async (tx) => {
+      const existingUser = await tx.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId),
+      })
+
+      if (!existingUser) {
+        throw new Error('User not found')
+      }
+
       const existingWorkout = await tx.query.workouts.findFirst({
         where: (workouts, { eq }) =>
           and(eq(workouts.id, id), eq(workouts.userId, userId)),
@@ -134,6 +160,8 @@ export async function PUT(req: Request, props: { params: Params }) {
           location: location || null,
           notes: notes || null,
           status: status || 'completed',
+          pinned: pinned !== undefined ? pinned : existingWorkout.pinned,
+          updatedAt: new Date(),
         })
         .where(eq(workouts.id, id))
         .returning()
@@ -145,13 +173,14 @@ export async function PUT(req: Request, props: { params: Params }) {
       for (const exercise of exercises) {
         await setExercise(
           exercise,
-          status,
+          status || 'completed',
           setIdMap,
           exNum,
           userId,
           updatedWorkout.id,
           tx
         )
+        exNum++
       }
 
       if (setGroupings && setGroupings.length > 0) {
@@ -172,14 +201,16 @@ export async function PUT(req: Request, props: { params: Params }) {
       },
       { status: 200 }
     )
-  } catch (error) {
+  } catch (error: any) {
     const msg =
       error instanceof Error ? error.message : 'Unexpected error occurred'
-    const status = msg.includes('not found') ? 404 : 500
+    const status =
+      msg === 'User not found' || msg === 'Workout not found' ? 404 : 500
+
     console.error('Error processing workout data:', error)
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})
 
 export async function DELETE(req: Request, props: { params: Params }) {
   const params = await props.params
@@ -227,13 +258,109 @@ export async function GET(req: Request, props: { params: Params }) {
   }
 
   try {
-    const workout = await getFullWorkout(id)
+    const workout = await db.query.workouts.findFirst({
+      where: eq(workouts.id, id),
+      with: {
+        workoutExercises: {
+          with: {
+            exercise: true,
+            sets: {
+              with: {
+                setGrouping: true,
+              },
+            },
+          },
+        },
+        workoutTagLinks: {
+          with: {
+            workoutTag: true,
+          },
+        },
+      },
+    })
 
     if (!workout) {
       return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
     }
 
-    return NextResponse.json(workout, { status: 200 })
+    const tags = workout.workoutTagLinks.map((l) => ({
+      name: l.workoutTag.name,
+    }))
+
+    // Build set groupings map
+    const groupingMap = new Map<
+      string,
+      {
+        id: string
+        groupingType: string
+        groupSets: { exerciseNumber: number; setNumber: number }[]
+      }
+    >()
+
+    const exercises = workout.workoutExercises.map((we) => {
+      const exerciseNumber = Number(we.exerciseNumber)
+
+      const sets = we.sets.map((s) => {
+        const setNumber = Number(s.setNumber)
+        const grouping = s.setGrouping
+
+        if (grouping) {
+          if (!groupingMap.has(grouping.id)) {
+            groupingMap.set(grouping.id, {
+              id: grouping.id,
+              groupingType: grouping.type,
+              groupSets: [],
+            })
+          }
+          groupingMap.get(grouping.id)!.groupSets.push({
+            exerciseNumber,
+            setNumber,
+          })
+        }
+
+        return {
+          setNumber,
+          weightLbs: s.weightLbs ? Number(s.weightLbs) : null,
+          weightKg: s.weightKg ? Number(s.weightKg) : null,
+          reps: s.reps ? Number(s.reps) : null,
+          leftReps: s.leftReps ? Number(s.leftReps) : null,
+          rightReps: s.rightReps ? Number(s.rightReps) : null,
+          rpe: s.rpe ? Number(s.rpe) : null,
+          leftRpe: s.leftRpe ? Number(s.leftRpe) : null,
+          rightRpe: s.rightRpe ? Number(s.rightRpe) : null,
+          rir: s.rir ? Number(s.rir) : null,
+          leftRir: s.leftRir ? Number(s.leftRir) : null,
+          rightRir: s.rightRir ? Number(s.rightRir) : null,
+          partialReps: s.partialReps ? Number(s.partialReps) : null,
+          leftPartialReps: s.leftPartialReps ? Number(s.leftPartialReps) : null,
+          rightPartialReps: s.rightPartialReps
+            ? Number(s.rightPartialReps)
+            : null,
+          cheatReps: s.cheatReps ? Number(s.cheatReps) : null,
+          id: `${exerciseNumber}-${setNumber}`,
+        }
+      })
+
+      return {
+        name: we.exercise.name,
+        isUnilateral: we.exercise.isUnilateral,
+        sets,
+      }
+    })
+
+    const workoutData = {
+      name: workout.name,
+      date: workout.date,
+      location: workout.location || '',
+      notes: workout.notes || '',
+      tags,
+      exercises,
+      weightUnit: 'lbs' as const,
+      setGroupings: Array.from(groupingMap.values()),
+      status: workout.status,
+    }
+
+    return NextResponse.json(workoutData, { status: 200 })
   } catch (error) {
     console.error('Error fetching workout:', error)
     return NextResponse.json(
