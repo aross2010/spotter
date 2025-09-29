@@ -17,6 +17,30 @@ import { sql, relations } from 'drizzle-orm'
 
 export const authProvider = pgEnum('auth_provider', ['google', 'apple'])
 
+export const muscleGroup = pgEnum('muscle_group', [
+  'quadriceps',
+  'hamstrings',
+  'calves',
+  'hip adductors',
+  'hip abductors',
+  'hip flexors',
+  'glutes',
+  'front delts',
+  'rear delts',
+  'side delts',
+  'chest',
+  'lats',
+  'upper back',
+  'lower back',
+  'traps',
+  'biceps',
+  'triceps',
+  'forearms',
+  'upper abs',
+  'lower abs',
+  'obliques',
+])
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   firstName: varchar('first_name', { length: 75 }).notNull(),
@@ -177,7 +201,8 @@ export const exercises = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 100 }).notNull(),
     isUnilateral: boolean('is_unilateral').notNull().default(false),
-    pr: numeric('pr', { precision: 4, scale: 1 }), // in lbs
+    primaryMuscleGroup: muscleGroup('primary_muscle_group'),
+    secondaryMuscleGroups: muscleGroup('secondary_muscle_groups').array(),
   },
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )

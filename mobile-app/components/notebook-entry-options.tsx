@@ -47,21 +47,16 @@ const NotebookEntryOptions = ({
   const options = [
     {
       title: pinned ? 'Unpin' : 'Pin',
-      description: pinned
-        ? 'Remove this entry from the top'
-        : 'Keep this entry at the top',
       onPress: handlePinToggle,
       icon: pinned ? PinOff : Pin,
     },
     {
       title: 'Edit',
-      description: 'Modify title, content, or tags',
       onPress: handleEdit,
       icon: Pencil,
     },
     {
       title: 'Delete',
-      description: 'Remove this entry permanently',
       onPress: () => {
         deleteEntry(id)
         setIsOptionsOpen(false)
@@ -71,7 +66,7 @@ const NotebookEntryOptions = ({
   ]
 
   const renderedOptions = options.map(
-    ({ title, description, onPress, icon: Icon }, index) => {
+    ({ title, onPress, icon: Icon }, index) => {
       return (
         <Button
           onPress={onPress}
@@ -79,20 +74,16 @@ const NotebookEntryOptions = ({
         >
           <View
             key={index}
-            style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
+            style={tw`flex-row gap-6 p-3 items-center`}
           >
-            <View style={tw`bg-primary/10 rounded-xl p-2`}>
-              <Icon
-                size={20}
-                color={Colors.primary}
-                strokeWidth={1.5}
-              />
-            </View>
+            <Icon
+              size={18}
+              color={theme.grayText}
+              strokeWidth={1.5}
+            />
+
             <View style={tw`flex-1`}>
-              <Txt twcn="text-base mb-0.5">{title}</Txt>
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                {description}
-              </Txt>
+              <Txt>{title}</Txt>
             </View>
           </View>
         </Button>
@@ -126,40 +117,8 @@ const NotebookEntryOptions = ({
 
   return (
     <Fragment>
-      <View
-        style={tw`px-2 pb-4 border-b border-light-graySecondary dark:border-dark-graySecondary`}
-      >
-        <View style={tw`flex-row items-center gap-2 mb-2`}>
-          <Calendar
-            size={14}
-            color={theme.grayText}
-          />
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
-            {formatDate(date)}
-          </Txt>
-        </View>
-
-        {title && (
-          <Txt twcn="text-lg font-poppinsSemiBold text-light-text dark:text-dark-text mb-2">
-            {title}
-          </Txt>
-        )}
-
-        <Txt
-          twcn="text-sm text-light-grayText dark:text-dark-grayText leading-relaxed"
-          numberOfLines={2}
-        >
-          {body}
-        </Txt>
-
-        {renderedTags}
-      </View>
-
-      <View>
-        <Txt twcn="text-xs uppercase font-poppinsMedium text-light-grayText dark:text-dark-grayText mb-3 px-2 tracking-wide">
-          Actions
-        </Txt>
-        <View style={tw``}>{renderedOptions}</View>
+      <View style={tw`rounded-3xl bg-white dark:bg-dark-grayPrimary p-2`}>
+        {renderedOptions}
       </View>
     </Fragment>
   )

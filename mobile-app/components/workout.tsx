@@ -35,11 +35,14 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
           style={tw`flex-row items-center justify-between gap-2`}
           key={name}
         >
-          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs">
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm">
             {name}
           </Txt>
-          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs">
-            {sets} x {lowRepRange}-{highRepRange}
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm">
+            {sets} x{' '}
+            {lowRepRange === highRepRange
+              ? lowRepRange
+              : `${lowRepRange}-${highRepRange}`}
           </Txt>
         </View>
       )
@@ -49,11 +52,11 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 rounded-3xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText ">
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
               {capString(
                 `${formatDate(date)}${location ? ` @ ${location}` : ''}`,
                 40
@@ -72,8 +75,8 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
         </View>
 
         <View>
-          <Txt twcn="font-poppinsMedium">{name}</Txt>
-          <View style={tw`mt-2 gap-1`}>{renderedExercises}</View>
+          <Txt twcn="font-poppinsMedium text-base -mt-1">{name}</Txt>
+          <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>
         </View>
         {tags.length > 0 && (
           <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>

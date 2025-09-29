@@ -24,6 +24,7 @@ import Colors from '../constants/colors'
 import { useState, useEffect, useRef } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
+import useTheme from '../app/hooks/theme'
 
 type ExerciseInputProps = {
   exerciseNumber: number
@@ -45,6 +46,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     setNewlyAddedExerciseNumber,
   } = useWorkoutForm()
   const { exercises } = workoutData
+  const { theme } = useTheme()
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
@@ -517,13 +519,13 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs uppercase text-primary font-poppinsMedium"
+        twcnText="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium"
         twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
         <Icon
           strokeWidth={1.75}
           size={16}
-          color={Colors.primary}
+          color={theme.grayText}
         />
       </Button>
     )

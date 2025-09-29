@@ -6,6 +6,12 @@ import tw from '../../tw'
 import { formattedDate } from '../../functions/formatted-date'
 import { Pressable } from 'react-native'
 
+// structure:
+// main stats at top (# workouts, sets, reps, and total weight lifted)
+// calendar/grid heat map view by month
+// todays workout (if any)
+// INSIGHTS Section: one graph (activity over time), link in header to view more insights
+
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
   if (h >= 5 && h < 12) return 'Good Morning'

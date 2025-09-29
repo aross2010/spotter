@@ -14,6 +14,7 @@ import {
 import { eq } from 'drizzle-orm'
 import { ExercisePayload } from '@/app/libs/types'
 import { withAuth } from '../middleware'
+import { detectMuscleGroups } from '@/app/functions/detectMuscleGroups'
 
 type GroupingType = 'superset' | 'dropset'
 type GroupSets = {
@@ -38,6 +39,10 @@ export const getExerciseId = async (
     return existingExercise.id
   }
 
+  // if not exists, detect muscle groups using AI
+  const { primaryMuscleGroup, secondaryMuscleGroups } =
+    await detectMuscleGroups(name)
+
   // if not exists, create exercise
   const [exercise] = await tx
     .insert(exercises)
@@ -45,6 +50,8 @@ export const getExerciseId = async (
       name,
       userId,
       isUnilateral,
+      primaryMuscleGroup,
+      secondaryMuscleGroups,
     })
     .returning()
 

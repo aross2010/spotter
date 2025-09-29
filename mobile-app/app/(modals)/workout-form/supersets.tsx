@@ -37,7 +37,6 @@ const Supersets = () => {
         return
       }
 
-      // Create a key based on the exercises involved, sorted by exercise number
       const selectedExerciseData = selectedGrouping.groupSets
         .map((set) => ({
           name: workoutData.exercises[set.exerciseNumber - 1]?.name,
