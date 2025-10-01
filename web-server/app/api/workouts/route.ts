@@ -42,6 +42,8 @@ export const getExerciseId = async (
   // if not exists, detect muscle groups using AI
   const { primaryMuscleGroup, secondaryMuscleGroups } =
     await detectMuscleGroups(name)
+  // const primaryMuscleGroup = null
+  // const secondaryMuscleGroups = null
 
   // if not exists, create exercise
   const [exercise] = await tx
@@ -419,6 +421,9 @@ export const POST = withAuth(async (req, user) => {
       }
 
       for (const exercise of exercises) {
+        if (exercise.name.length > 50) {
+          throw new Error('Exercise name must be under 50 characters')
+        }
         await setExercise(
           exercise,
           status,

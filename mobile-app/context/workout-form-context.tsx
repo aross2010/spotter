@@ -11,6 +11,8 @@ import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
 import { Tag } from '../utils/types'
+import { useWorkout } from './workout-context'
+import { toLocalDateString } from '../functions/formatted-date'
 
 export type WorkoutName = {
   name: string
@@ -212,6 +214,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   >(null)
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
+  const { refreshWorkouts } = useWorkout()
 
   useEffect(() => {
     console.log('Workout Data Updated:', JSON.stringify(workoutData))
@@ -232,10 +235,10 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
       body: JSON.stringify({
         ...workoutData,
         tags: workoutData.tags.map((tag) => tag.name),
-        date: workoutData.date.toISOString(),
+        date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
       }),
     })
-    // await refreshEntries()
+    await refreshWorkouts()
   }
 
   const updateWorkoutData = (updates: Partial<WorkoutFormData>) => {

@@ -166,7 +166,15 @@ const WorkoutForm = () => {
           hitSlop={12}
           accessibilityLabel="Save Workout"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text={isEditing ? 'Update' : 'Save'}
+          text={
+            isEditing && isSaving
+              ? 'Updating...'
+              : isEditing
+                ? 'Update'
+                : isSaving
+                  ? 'Saving...'
+                  : 'Save'
+          }
           disabled={isSaving || !saveEnabled}
         />
       ),

@@ -98,6 +98,8 @@ const LocationSelector = () => {
           handleSaveLocation(newLocation)
         }}
         returnKeyType="done"
+        maxLength={50}
+        autoFocus
       />
 
       <View

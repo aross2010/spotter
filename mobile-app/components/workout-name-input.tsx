@@ -72,6 +72,7 @@ const WorkoutNameInput = () => {
         label="Name"
         placeholder="Legs, Push, Pull, Upper Body, etc..."
         twcnContainer="px-0"
+        maxLength={50}
         twcnInput="px-0"
         twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         returnKeyType="done"
@@ -79,7 +80,7 @@ const WorkoutNameInput = () => {
         onFocus={() => setIsWorkoutNameSelectorOpen(true)}
       />
 
-      {isWorkoutNameSelectorOpen && (
+      {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (
         <BlurView
           intensity={50}
           tint="default"

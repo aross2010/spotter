@@ -55,6 +55,8 @@ export const POST = withAuth(async (req, user) => {
     )
   }
 
+  console.log('date', date)
+
   if (!isISO8601(date)) {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
   }

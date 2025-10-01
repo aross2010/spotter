@@ -1,7 +1,7 @@
 import { Alert, KeyboardAvoidingView, Platform } from 'react-native'
 import SafeView from '../../components/safe-view'
 import Button from '../../components/button'
-import { formatDate } from '../../functions/formatted-date'
+import { formatDate, toLocalDateString } from '../../functions/formatted-date'
 import Input from '../../components/input'
 import { View } from 'react-native'
 import Txt from '../../components/text'
@@ -105,7 +105,15 @@ const NotebookEntryForm = () => {
           hitSlop={12}
           accessibilityLabel="submit notebook entry"
           twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text="Save"
+          text={
+            isEditing && isSaving
+              ? 'Updating...'
+              : isEditing
+                ? 'Update'
+                : isSaving
+                  ? 'Saving...'
+                  : 'Save'
+          }
           disabled={!saveEnabled}
         />
       ),
@@ -122,18 +130,22 @@ const NotebookEntryForm = () => {
     }
   }, [tags, isEditing])
 
+  useEffect(() => {
+    console.log('data', data)
+  }, [data])
+
   const handleSubmitEntry = async () => {
     setIsSaving(true)
     try {
       if (isEditing) {
         await updateEntry(entryId as string, {
           ...data,
-          date: data.date.toISOString(),
+          date: toLocalDateString(data.date), // Send local date (YYYY-MM-DD)
         })
       } else {
         await addEntry({
           ...data,
-          date: data.date.toISOString(),
+          date: toLocalDateString(data.date), // Send local date (YYYY-MM-DD)
         })
       }
 

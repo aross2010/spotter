@@ -5,7 +5,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_KEY,
 })
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
+const redis = new Redis(process.env.REDIS_DB_URL as string)
 
 type MuscleGroup =
   | 'quadriceps'
@@ -30,6 +30,30 @@ type MuscleGroup =
   | 'lower abs'
   | 'obliques'
 
+const ALLOWED_MUSCLE_GROUPS = [
+  'quadriceps',
+  'hamstrings',
+  'calves',
+  'hip adductors',
+  'hip abductors',
+  'hip flexors',
+  'glutes',
+  'front delts',
+  'rear delts',
+  'side delts',
+  'chest',
+  'lats',
+  'upper back',
+  'lower back',
+  'traps',
+  'biceps',
+  'triceps',
+  'forearms',
+  'upper abs',
+  'lower abs',
+  'obliques',
+] as const
+
 export async function detectMuscleGroups(exerciseName: string): Promise<{
   primaryMuscleGroup: MuscleGroup | null
   secondaryMuscleGroups: MuscleGroup[]
@@ -39,6 +63,7 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
 
   try {
     // Check Redis cache first
+    console.log(`Checking cache for: ${normalizedName}`)
     const cached = await redis.get(cacheKey)
     if (cached) {
       console.log(`Cache hit for: ${normalizedName}`)
@@ -49,36 +74,46 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 80,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'exercise_muscle_analysis',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              primaryMuscleGroup: {
+                type: ['string', 'null'],
+                enum: [null, ...ALLOWED_MUSCLE_GROUPS],
+                nullable: true,
+              },
+              secondaryMuscleGroups: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  enum: ALLOWED_MUSCLE_GROUPS as unknown as string[],
+                },
+                maxItems: 3,
+              },
+            },
+            required: ['primaryMuscleGroup', 'secondaryMuscleGroups'],
+          },
+        },
+      },
       messages: [
         {
           role: 'system',
-          content: `You are fitness influencer and expert Jeff Nippard. Analyze exercise names and determine the primary and secondary muscle groups worked, according to his muscle group analysis.
-
-Available muscle groups:
-- quadriceps, hamstrings, calves, hip adductors, hip abductors, hip flexors, glutes
-- front delts, rear delts, side delts, chest, lats, upper back, lower back, traps
-- biceps, triceps, forearms, upper abs, lower abs, obliques
-
-Rules:
-1. Return ONLY the muscle groups from the list above
-2. Identify the PRIMARY muscle group (most worked)
-3. Identify SECONDARY muscle groups (also worked but less) if there are any
-4. If you cannot determine muscle groups, return null for primary and empty array for secondary
-5. Return in JSON format: {"primaryMuscleGroup": "muscle_group_name", "secondaryMuscleGroups": ["muscle1", "muscle2"]}
-
-Examples:
-- "Bench Press" → {"primaryMuscleGroup": "chest", "secondaryMuscleGroups": ["front delts", "triceps"]}
-- "Squat" → {"primaryMuscleGroup": "quadriceps", "secondaryMuscleGroups": ["glutes"]}
-- "Pull-ups" → {"primaryMuscleGroup": "lats", "secondaryMuscleGroups": ["biceps", "upper back"]}
-- "Unknown Exercise" → {"primaryMuscleGroup": null, "secondaryMuscleGroups": []}`,
+          content:
+            'Classify the exercise into muscle groups from the allowed list only. If uncertain, use null and [].',
         },
         {
           role: 'user',
-          content: `Analyze this exercise: "${exerciseName}"`,
+          content: `Exercise: ${exerciseName}`,
         },
       ],
-      temperature: 0.1,
-      max_tokens: 200,
     })
 
     const content = response.choices[0]?.message?.content

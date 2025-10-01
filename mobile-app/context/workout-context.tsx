@@ -3,6 +3,7 @@ import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
+import { toLocalDateString } from '../functions/formatted-date'
 import { Tag } from '../utils/types'
 import { Set, SetGrouping, WorkoutFormData } from './workout-form-context'
 
@@ -377,7 +378,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           body: JSON.stringify({
             ...workoutData,
             tags: workoutData.tags.map((tag: any) => tag.name),
-            date: workoutData.date.toISOString(),
+            date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
           }),
         }
       )

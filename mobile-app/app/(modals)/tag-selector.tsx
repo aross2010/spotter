@@ -161,6 +161,8 @@ const TagSelector = () => {
         onChange={(e) => setQuery(e.nativeEvent.text)}
         onSubmitEditing={handleCreateNewTag}
         returnKeyType="done"
+        maxLength={50}
+        autoFocus
       />
       {selectedTags.length > 0 && (
         <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>

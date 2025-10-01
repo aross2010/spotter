@@ -38,6 +38,9 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     ExerciseName[]
   >([])
   const exerciseNameInputRef = useRef<TextInput>(null)
+  const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
+  const weightInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const leftWeightInputRefs = useRef<Map<string, TextInput>>(new Map())
   const {
     workoutData,
     setWorkoutData,
@@ -50,6 +53,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
+  const isUnilateral = exercise?.isUnilateral || false
 
   useEffect(() => {
     setExerciseNameResults(exerciseNames)
@@ -70,6 +74,34 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
       return () => clearTimeout(timeoutId)
     }
   }, [newlyAddedExerciseNumber, exerciseNumber, setNewlyAddedExerciseNumber])
+
+  useEffect(() => {
+    if (newlyAddedSetId) {
+      // Use requestAnimationFrame to ensure the DOM is updated before focusing
+      const focusInput = () => {
+        // For unilateral exercises, focus the left weight input first
+        if (isUnilateral) {
+          const leftWeightInput =
+            leftWeightInputRefs.current.get(newlyAddedSetId)
+          if (leftWeightInput) {
+            leftWeightInput.focus()
+            setNewlyAddedSetId(null) // Clear the flag after focusing
+            return
+          }
+        }
+
+        // For bilateral exercises, focus the regular weight input
+        const weightInput = weightInputRefs.current.get(newlyAddedSetId)
+        if (weightInput) {
+          weightInput.focus()
+          setNewlyAddedSetId(null) // Clear the flag after focusing
+        }
+      }
+
+      // Use requestAnimationFrame to ensure the component is rendered
+      requestAnimationFrame(focusInput)
+    }
+  }, [newlyAddedSetId, isUnilateral])
 
   const isInSuperset = workoutData.setGroupings.some(
     (grouping) =>
@@ -123,21 +155,88 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         updatedExercises[exerciseNumber - 1]?.isUnilateral || false
 
       if (currentValue) {
-        const resetSets =
-          updatedExercises[exerciseNumber - 1]?.sets.map((set, index) => ({
-            id: set.id ?? nanoid(),
-            setNumber: index + 1,
-          })) || []
+        // Switching from unilateral to bilateral
+        const updatedSets =
+          updatedExercises[exerciseNumber - 1]?.sets.map((set) => {
+            const newSet = { ...set }
+
+            // Convert leftReps/rightReps to reps (use leftReps as the main reps value)
+            if (set.leftReps !== undefined) {
+              newSet.reps = set.leftReps
+              delete newSet.leftReps
+              delete newSet.rightReps
+            }
+
+            // Convert leftRpe/rightRpe to rpe
+            if (set.leftRpe !== undefined) {
+              newSet.rpe = set.leftRpe
+              delete newSet.leftRpe
+              delete newSet.rightRpe
+            }
+
+            // Convert leftRir/rightRir to rir
+            if (set.leftRir !== undefined) {
+              newSet.rir = set.leftRir
+              delete newSet.leftRir
+              delete newSet.rightRir
+            }
+
+            // Convert leftPartialReps/rightPartialReps to partialReps
+            if (set.leftPartialReps !== undefined) {
+              newSet.partialReps = set.leftPartialReps
+              delete newSet.leftPartialReps
+              delete newSet.rightPartialReps
+            }
+
+            return newSet
+          }) || []
 
         updatedExercises[exerciseNumber - 1] = {
           ...updatedExercises[exerciseNumber - 1],
           isUnilateral: false,
-          sets: resetSets,
+          sets: updatedSets,
         }
       } else {
+        // Switching from bilateral to unilateral
+        const updatedSets =
+          updatedExercises[exerciseNumber - 1]?.sets.map((set) => {
+            const newSet = { ...set }
+
+            // Convert reps to leftReps/rightReps
+            if (set.reps !== undefined) {
+              newSet.leftReps = set.reps
+              newSet.rightReps = set.reps
+              delete newSet.reps
+            }
+
+            // Convert rpe to leftRpe/rightRpe
+            if (set.rpe !== undefined) {
+              newSet.leftRpe = set.rpe
+              newSet.rightRpe = set.rpe
+              delete newSet.rpe
+            }
+
+            // Convert rir to leftRir/rightRir
+            if (set.rir !== undefined) {
+              newSet.leftRir = set.rir
+              newSet.rightRir = set.rir
+              delete newSet.rir
+            }
+
+            // Convert partialReps to leftPartialReps/rightPartialReps
+            if (set.partialReps !== undefined) {
+              newSet.leftPartialReps = set.partialReps
+              newSet.rightPartialReps = set.partialReps
+              delete newSet.partialReps
+            }
+
+            return newSet
+          }) || []
+
         updatedExercises[exerciseNumber - 1] = {
           ...updatedExercises[exerciseNumber - 1],
           isUnilateral: true,
+          sets: updatedSets,
         }
       }
 
@@ -172,6 +271,9 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
       ...workoutData,
       exercises: updatedExercises,
     })
+
+    // Set the newly added set ID for autofocus
+    setNewlyAddedSetId(newSet.id)
   }
 
   const handleDeleteSet = (setIndex: number) => {
@@ -544,8 +646,6 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     )
   })
 
-  const isUnilateral = exercise?.isUnilateral || false
-
   const renderedSetInputs = sets.map((set, setIndex) => {
     if (isUnilateral) {
       const setContent = (
@@ -583,6 +683,14 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
 
               return (
                 <Input
+                  ref={(ref) => {
+                    if (
+                      ref &&
+                      (value === 'weightLbs' || value === 'weightKg')
+                    ) {
+                      leftWeightInputRefs.current.set(set.id, ref)
+                    }
+                  }}
                   editable={value !== 'setNumber'}
                   noBorder
                   keyboardType={
@@ -638,6 +746,14 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
 
               return (
                 <Input
+                  ref={(ref) => {
+                    if (
+                      ref &&
+                      (value === 'weightLbs' || value === 'weightKg')
+                    ) {
+                      weightInputRefs.current.set(set.id, ref)
+                    }
+                  }}
                   editable={value !== 'setNumber'}
                   noBorder
                   keyboardType={
@@ -693,6 +809,11 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             return (
               <Input
+                ref={(ref) => {
+                  if (ref && (value === 'weightLbs' || value === 'weightKg')) {
+                    weightInputRefs.current.set(set.id, ref)
+                  }
+                }}
                 editable={value !== 'setNumber'}
                 noBorder
                 keyboardType={
@@ -771,6 +892,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
               ref={exerciseNameInputRef}
               placeholder={`${`Exercise ${exerciseNumber}`}`}
               noBorder
+              maxLength={50}
               twcnInput="py-0 flex-1"
               value={
                 workoutData.exercises[exerciseNumber ? exerciseNumber - 1 : 0]

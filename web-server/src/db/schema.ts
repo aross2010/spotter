@@ -166,10 +166,10 @@ export const workouts = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    name: varchar('name', { length: 25 }).notNull(),
+    name: varchar('name', { length: 50 }).notNull(),
     notes: text('notes'), // limit to n words in business logic
     date: date('date').notNull().defaultNow(),
-    location: varchar('location', { length: 100 }),
+    location: varchar('location', { length: 50 }),
     status: varchar('status', { length: 20 }).notNull().default('completed'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }),
@@ -199,7 +199,7 @@ export const exercises = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    name: varchar('name', { length: 100 }).notNull(),
+    name: varchar('name', { length: 50 }).notNull(),
     isUnilateral: boolean('is_unilateral').notNull().default(false),
     primaryMuscleGroup: muscleGroup('primary_muscle_group'),
     secondaryMuscleGroups: muscleGroup('secondary_muscle_groups').array(),
