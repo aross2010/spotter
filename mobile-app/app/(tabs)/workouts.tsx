@@ -42,18 +42,31 @@ const Workouts = () => {
         const numFilters = 0
 
         return (
-          <View style={tw`flex-row items-center gap-4 pr-2`}>
-            {numFilters > 0 && (
+          <View style={tw`flex-row items-center gap-4 mr-4`}>
+            {hasWorkouts && (
               <View style={tw`relative`}>
-                <Link href="/notebook-filters">
+                <Link href="/workout-filters">
                   <ListFilter
                     strokeWidth={1.5}
                     size={24}
                     color={Colors.primary}
                   />
                 </Link>
+                {numFilters > 0 && (
+                  <View
+                    style={tw.style(
+                      'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
+                      { pointerEvents: 'none' }
+                    )}
+                  >
+                    <Txt twcn="text-xs font-poppinsMedium text-white">
+                      {numFilters}
+                    </Txt>
+                  </View>
+                )}
               </View>
             )}
+
             <Link href="/workout-form">
               <Plus
                 strokeWidth={1.5}

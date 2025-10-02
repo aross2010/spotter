@@ -123,6 +123,16 @@ export default function ModalLayout() {
           options={{
             title: 'Workout Details',
             presentation: 'fullScreenModal',
+
+            headerRight: () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close workout details"
+                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+                text="Close"
+              />
+            ),
           }}
         />
       </Stack>

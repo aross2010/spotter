@@ -24,6 +24,7 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
   const { theme } = useTheme()
 
   const handleViewDetails = () => {
+    setIsOptionsOpen(false)
     router.push({
       pathname: '/workout-details',
       params: {

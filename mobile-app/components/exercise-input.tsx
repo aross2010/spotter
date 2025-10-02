@@ -621,11 +621,11 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium"
+        twcnText="text-xs uppercase text-light-grayText dark:text-dark-grayText"
         twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
         <Icon
-          strokeWidth={1.75}
+          strokeWidth={1.5}
           size={16}
           color={theme.grayText}
         />
@@ -804,7 +804,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
       // For regular exercises, wrap single row
       const setContent = (
         <View
-          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-1`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             return (

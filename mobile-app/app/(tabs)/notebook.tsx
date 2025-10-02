@@ -46,7 +46,7 @@ const Notebook = () => {
       headerRight: () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
-          <View style={tw`flex-row items-center gap-4 pr-2`}>
+          <View style={tw`flex-row items-center gap-4 mr-4`}>
             {hasEntries && (
               <View style={tw`relative`}>
                 <Link href="/notebook-filters">

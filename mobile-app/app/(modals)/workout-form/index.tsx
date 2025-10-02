@@ -216,7 +216,7 @@ const WorkoutForm = () => {
           }}
           hitSlop={12}
           twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText="text-xs font-poppinsMedium uppercase text-light-text dark:text-dark-text"
+          twcnText="text-xs font-poppinsMedium uppercase tracking-wide text-light-text dark:text-dark-text"
         >
           <Calendar
             size={16}
@@ -234,7 +234,7 @@ const WorkoutForm = () => {
           }}
           hitSlop={12}
           twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText={`text-xs font-poppinsMedium uppercase ${
+          twcnText={`text-xs font-poppinsMedium uppercase tracking-wide ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'
               : 'text-light-grayText dark:text-dark-grayText'

@@ -91,11 +91,11 @@ const TabsLayout = () => {
                 />
               </View>
             ),
-            headerLeft: () => (
+            headerRight: () => (
               <Link
                 href="/settings"
                 accessibilityLabel="settings"
-                className="p-2"
+                className="mr-4"
               >
                 <Settings
                   height={24}

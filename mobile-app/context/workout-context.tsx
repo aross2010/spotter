@@ -28,17 +28,11 @@ export type Workout = {
   location?: string
 }
 
-type WorkoutInfo = Workout & {
-  analytics: {
-    prs: {
-      exerciseNumber: number
-      setNumber: number
-    }[]
-    totalVolume: number
-    totalSets: number
-    totalReps: number
-    totalWeightLifted: number
-  }
+export type WorkoutDetails = Workout & {
+  muscleGroupAnalysis: {
+    muscleGroup: string
+    percentage: number
+  }[]
 }
 
 export type WorkoutMinimal = {
