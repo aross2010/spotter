@@ -35,10 +35,8 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
           style={tw`flex-row items-center justify-between gap-2`}
           key={name}
         >
-          <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm">
-            {name}
-          </Txt>
-          <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm">
+          <Txt twcn="text-sm">{name}</Txt>
+          <Txt twcn="text-sm">
             {sets} x{' '}
             {lowRepRange === highRepRange
               ? lowRepRange
@@ -75,7 +73,7 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
         </View>
 
         <View>
-          <Txt twcn="font-poppinsMedium text-base -mt-1">{name}</Txt>
+          <Txt twcn="font-poppinsSemiBold text-base -mt-1">{name}</Txt>
           <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>
         </View>
         {tags.length > 0 && (

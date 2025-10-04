@@ -9,24 +9,20 @@ export default function ModalLayout() {
 
   return (
     <>
-      <ThemedStatusBar override="light" />
+      <ThemedStatusBar />
       <Stack
         screenOptions={{
           presentation: 'fullScreenModal',
           headerShown: false,
           headerTitleStyle: {
-            fontSize: 18,
+            fontSize: 20,
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
-          headerBackButtonDisplayMode: 'default',
+          headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,
-          },
-          headerBackTitleStyle: {
-            fontSize: 16,
-            fontFamily: 'Poppins_500Medium',
           },
           headerTintColor: Colors.primary,
         }}

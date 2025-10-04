@@ -40,7 +40,6 @@ import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import { NotebookProvider } from '../context/notebook-context'
-import '../global.css'
 import { useDeviceContext } from 'twrnc'
 import tw from '../tw'
 import ThemedStatusBar from '../components/status-bar'
@@ -112,7 +111,7 @@ const RootLayout = () => {
                   <Stack.Screen
                     name="(modals)"
                     options={{
-                      presentation: 'modal',
+                      presentation: 'fullScreenModal',
                     }}
                   />
                 </Stack>

@@ -49,7 +49,7 @@ const TabsLayout = () => {
             },
           ] as any,
           headerTitleStyle: {
-            fontSize: 24,
+            fontSize: 26,
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },

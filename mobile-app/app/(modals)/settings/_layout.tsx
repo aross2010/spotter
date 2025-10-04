@@ -34,7 +34,7 @@ const SettingsLayout = () => {
         name="index"
         options={{
           headerTitle: 'Settings',
-          headerRight: () => (
+          headerLeft: () => (
             <Button
               onPress={() => router.back()}
               hitSlop={12}

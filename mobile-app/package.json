@@ -23,6 +23,7 @@
     "expo-constants": "~17.1.6",
     "expo-crypto": "~14.1.5",
     "expo-font": "~13.3.1",
+    "expo-linear-gradient": "~14.1.5",
     "expo-linking": "~7.1.5",
     "expo-router": "5.1.1",
     "expo-secure-store": "~14.2.3",
@@ -36,6 +37,8 @@
     "react-native": "0.79.4",
     "react-native-date-picker": "^5.0.12",
     "react-native-dotenv": "^3.4.11",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-gifted-charts": "^1.4.64",
     "react-native-keyboard-controller": "^1.17.5",
     "react-native-mmkv": "^3.3.0",
     "react-native-modal": "^14.0.0-rc.1",
@@ -48,7 +51,7 @@
     "react-native-web": "^0.20.0",
     "twrnc": "^4.9.1",
     "zustand": "^5.0.7",
-    "react-native-gesture-handler": "~2.24.0"
+    "expo-symbols": "~0.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
