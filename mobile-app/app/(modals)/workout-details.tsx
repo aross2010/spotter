@@ -1,6 +1,6 @@
 import { Alert, StyleSheet, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useLocalSearchParams, useNavigation } from 'expo-router'
+import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
 import { WorkoutDetails as WorkoutDetailsType } from '../../context/workout-context'
@@ -8,9 +8,13 @@ import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import tw from '../../tw'
 import useTheme from '../hooks/theme'
-import { Calendar, MapPin } from 'lucide-react-native'
+import { Calendar, MapPin, Pencil, Share } from 'lucide-react-native'
 import { formatDate } from '../../functions/formatted-date'
 import Spinner from '../../components/activity-indicator'
+import Button from '../../components/button'
+import Colors from '../../constants/colors'
+import { capString } from '../../functions/cap-string'
+import BarGraph from '../../components/bar-graph'
 
 // display at the header level: location, date, sets
 // then notes
@@ -48,10 +52,41 @@ const WorkoutDetails = () => {
     getWorkoutDetails()
   }, [])
 
+  const handleShareWorkout = async () => {}
+
   useEffect(() => {
     navigation.setOptions({
       headerTitle: workout?.name || 'Workout Details',
       headerShown: true,
+      headerRight: () => (
+        <View style={tw`flex-row items-center gap-2`}>
+          <Button
+            onPress={() =>
+              router.push({
+                pathname: '/workout-form',
+                params: {
+                  id: workout?.id,
+                },
+              })
+            }
+            twcn="bg-primary/10 rounded-2xl p-2"
+          >
+            <Pencil
+              size={20}
+              color={Colors.primary}
+            />
+          </Button>
+          <Button
+            onPress={handleShareWorkout}
+            twcn="bg-primary/10 rounded-2xl p-2"
+          >
+            <Share
+              size={20}
+              color={Colors.primary}
+            />
+          </Button>
+        </View>
+      ),
     })
   }, [navigation, workout?.name])
 
@@ -59,20 +94,25 @@ const WorkoutDetails = () => {
     <Spinner />
   ) : (
     <SafeView>
-      <View style={tw`flex-row gap-2 items-center`}>
-        <Calendar
-          size={16}
-          color={theme.text}
+      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
+        {capString(
+          `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
+          40
+        )}
+      </Txt>
+      {workout.notes && (
+        <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mt-4">
+          {workout.notes}
+        </Txt>
+      )}
+      {workout.muscleGroupAnalysis.length > 0 && (
+        <BarGraph
+          data={workout.muscleGroupAnalysis.map((item) => ({
+            label: item.muscleGroup,
+            value: item.percentage,
+          }))}
         />
-        <Txt>{formatDate(workout.date)}</Txt>
-      </View>
-      <View style={tw`flex-row gap-2 items-center`}>
-        <MapPin
-          size={16}
-          color={theme.text}
-        />
-        <Txt>{workout.location}</Txt>
-      </View>
+      )}
     </SafeView>
   )
 }

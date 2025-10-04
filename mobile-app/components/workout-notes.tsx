@@ -21,7 +21,7 @@ const WorkoutNotes = () => {
         textAlignVertical="top"
         noBorder
         twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
-        twcnInput="mt-2 text-sm border border-light-grayTertiary dark:border-dark-grayTertiary p-3"
+        twcnInput="mt-2 text-sm border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 p-3"
       />
     </View>
   )

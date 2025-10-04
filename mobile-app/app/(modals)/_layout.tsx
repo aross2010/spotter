@@ -12,7 +12,7 @@ export default function ModalLayout() {
       <ThemedStatusBar override="light" />
       <Stack
         screenOptions={{
-          presentation: 'modal',
+          presentation: 'fullScreenModal',
           headerShown: false,
           headerTitleStyle: {
             fontSize: 18,
@@ -123,8 +123,8 @@ export default function ModalLayout() {
           options={{
             title: 'Workout Details',
             presentation: 'fullScreenModal',
-
-            headerRight: () => (
+            headerTitleAlign: 'left',
+            headerLeft: () => (
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}

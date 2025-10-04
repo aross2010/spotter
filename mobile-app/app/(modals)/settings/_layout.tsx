@@ -26,6 +26,7 @@ const SettingsLayout = () => {
           fontSize: 16,
           fontFamily: 'Poppins_500Medium',
         },
+        headerTitleAlign: 'left',
         headerTintColor: Colors.primary,
       }}
     >

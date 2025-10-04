@@ -42,13 +42,15 @@ const Workouts = () => {
         const numFilters = 0
 
         return (
-          <View style={tw`flex-row items-center gap-4 mr-4`}>
+          <View style={tw`flex-row items-center gap-2 mr-4`}>
             {hasWorkouts && (
               <View style={tw`relative`}>
-                <Link href="/workout-filters">
+                <Link
+                  href="/workout-filters"
+                  style={tw` bg-primary/10 rounded-2xl p-2`}
+                >
                   <ListFilter
-                    strokeWidth={1.5}
-                    size={24}
+                    size={20}
                     color={Colors.primary}
                   />
                 </Link>
@@ -67,10 +69,12 @@ const Workouts = () => {
               </View>
             )}
 
-            <Link href="/workout-form">
+            <Link
+              href="/workout-form"
+              style={tw` bg-primary/10 rounded-2xl p-2`}
+            >
               <Plus
-                strokeWidth={1.5}
-                size={24}
+                size={20}
                 color={Colors.primary}
               />
             </Link>
@@ -78,7 +82,7 @@ const Workouts = () => {
         )
       },
     })
-  }, [])
+  }, [currentWorkouts, filters])
 
   const handleLoadMore = () => {
     if (hasMore && !isLoadingMore) {
@@ -164,13 +168,12 @@ const Workouts = () => {
     }
 
     const monthTitle = addMonth && (
-      <View style={tw`flex-row items-center gap-2 my-4`}>
+      <View
+        style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
+      >
         <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium tracking-wide">
           {month}
         </Txt>
-        <View
-          style={tw`flex-1 h-px bg-light-grayPrimary dark:bg-dark-graySecondary ml-2`}
-        />
       </View>
     )
 

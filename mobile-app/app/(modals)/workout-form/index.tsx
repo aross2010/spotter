@@ -215,7 +215,7 @@ const WorkoutForm = () => {
             setIsDatePickerOpen(true)
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText="text-xs font-poppinsMedium uppercase tracking-wide text-light-text dark:text-dark-text"
         >
           <Calendar
@@ -233,7 +233,7 @@ const WorkoutForm = () => {
             router.push('/workout-form/location')
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText={`text-xs font-poppinsMedium uppercase tracking-wide ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'

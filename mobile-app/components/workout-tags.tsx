@@ -57,7 +57,7 @@ const WorkoutTags = () => {
       ) : (
         <Button
           onPress={handleAddTags}
-          twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
+          twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-2xl"
           twcnText="text-light-grayText dark:text-dark-grayText text-sm "
           text="Add tags"
         >

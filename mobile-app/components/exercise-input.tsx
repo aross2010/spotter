@@ -603,12 +603,11 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-2 rounded-xl ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'} border border-light-grayTertiary dark:border-dark-grayTertiary`}
+          twcn={`p-2 rounded-xl border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
         >
           <Icon
-            strokeWidth={1.5}
             size={16}
-            color={Colors.primary}
+            color={isActive ? Colors.primary : theme.grayText}
           />
         </Button>
       )
@@ -621,11 +620,10 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs uppercase text-light-grayText dark:text-dark-grayText"
-        twcn={`p-2 flex-row flex-1 items-center border border-light-grayTertiary dark:border-dark-grayTertiary justify-center gap-2 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+        twcnText="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium"
+        twcn={`p-2 flex-row-reverse flex-1 items-center justify-center gap-1 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
       >
-        <Icon
-          strokeWidth={1.5}
+        <Plus
           size={16}
           color={theme.grayText}
         />

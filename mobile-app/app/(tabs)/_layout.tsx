@@ -49,10 +49,11 @@ const TabsLayout = () => {
             },
           ] as any,
           headerTitleStyle: {
-            fontSize: 20,
+            fontSize: 24,
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
+          headerTitleAlign: 'left',
           tabBarStyle: {
             backgroundColor: 'transparent',
             position: 'absolute',
@@ -68,20 +69,13 @@ const TabsLayout = () => {
           name="home"
           options={{
             title: 'Home',
-            tabBarIcon: ({ focused }) =>
-              focused ? (
-                <Home
-                  strokeWidth={1.5}
-                  size={28}
-                  color={theme.text}
-                />
-              ) : (
-                <Home
-                  strokeWidth={1.5}
-                  size={28}
-                  color={theme.grayText}
-                />
-              ),
+            tabBarIcon: ({ focused }) => (
+              <Home
+                strokeWidth={1.5}
+                size={28}
+                color={focused ? theme.text : theme.grayText}
+              />
+            ),
             headerTitle: () => (
               <View style={{ height: '100%', aspectRatio: 135 / 57 }}>
                 <TextLogo
@@ -95,12 +89,12 @@ const TabsLayout = () => {
               <Link
                 href="/settings"
                 accessibilityLabel="settings"
-                className="mr-4"
+                style={tw` mr-4 bg-primary/10 rounded-2xl p-2`}
               >
                 <Settings
                   height={24}
                   width={24}
-                  color={theme.grayText}
+                  color={Colors.primary}
                 />
               </Link>
             ),
