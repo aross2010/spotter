@@ -34,6 +34,7 @@ module.exports = {
         warn: '#ca8a04',
         alert: '#dc2626',
         success: '#16a34a',
+        blue: '#3b82f6',
 
         dark: {
           text: '#f0f0f0',

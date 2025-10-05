@@ -101,14 +101,28 @@ export const GET = withAuth(async (req, user) => {
     let countQuery
 
     if (tagIds.length > 0) {
-      // query with tags
+      // query with tags - AND logic: entries must have ALL selected tags
       const baseConditions = and(
         eq(notebookEntries.userId, userId),
         inArray(notebookEntryTagLinks.tagId, tagIds)
       )
 
+      // Subquery to find entries that have ALL the selected tags
+      const entriesWithAllTags = db
+        .select({
+          entryId: notebookEntryTagLinks.entryId,
+          tagCount: sql<number>`count(distinct ${notebookEntryTagLinks.tagId})`,
+        })
+        .from(notebookEntryTagLinks)
+        .where(inArray(notebookEntryTagLinks.tagId, tagIds))
+        .groupBy(notebookEntryTagLinks.entryId)
+        .having(
+          sql`count(distinct ${notebookEntryTagLinks.tagId}) = ${tagIds.length}`
+        )
+        .as('entries_with_all_tags')
+
       entriesQuery = db
-        .selectDistinct({
+        .select({
           id: notebookEntries.id,
           userId: notebookEntries.userId,
           title: notebookEntries.title,
@@ -120,10 +134,10 @@ export const GET = withAuth(async (req, user) => {
         })
         .from(notebookEntries)
         .innerJoin(
-          notebookEntryTagLinks,
-          eq(notebookEntries.id, notebookEntryTagLinks.entryId)
+          entriesWithAllTags,
+          eq(notebookEntries.id, entriesWithAllTags.entryId)
         )
-        .where(baseConditions)
+        .where(eq(notebookEntries.userId, userId))
         .orderBy(
           ...[
             desc(notebookEntries.pinned),
@@ -132,18 +146,17 @@ export const GET = withAuth(async (req, user) => {
               : asc(notebookEntries.date),
           ]
         )
-
         .limit(limit)
         .offset(offset)
 
       countQuery = db
-        .select({ count: sql<number>`count(distinct ${notebookEntries.id})` })
+        .select({ count: sql<number>`count(*)` })
         .from(notebookEntries)
         .innerJoin(
-          notebookEntryTagLinks,
-          eq(notebookEntries.id, notebookEntryTagLinks.entryId)
+          entriesWithAllTags,
+          eq(notebookEntries.id, entriesWithAllTags.entryId)
         )
-        .where(baseConditions)
+        .where(eq(notebookEntries.userId, userId))
     } else {
       // no tags
       const orderBy = useDefaultSort

@@ -11,7 +11,11 @@ import TagView from '../../components/tag'
 import SafeView from '../../components/safe-view'
 import { router, useNavigation } from 'expo-router'
 import Button from '../../components/button'
-import { CalendarArrowDown, CalendarArrowUp } from 'lucide-react-native'
+import {
+  CalendarArrowDown,
+  CalendarArrowUp,
+  RotateCcw,
+} from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import useTheme from '../hooks/theme'
 
@@ -32,8 +36,13 @@ const NotebookFilters = () => {
     selectedTags: [],
     sortOrder: 'desc',
   })
-  const { applyFiltersAndSort, tagFilters, setSortOrder, sortOrder } =
-    useNotebook() // use notebook entries to show the length, results will be on notebook page
+  const {
+    applyFiltersAndSort,
+    tagFilters,
+    setSortOrder,
+    sortOrder,
+    isLoading,
+  } = useNotebook() // use notebook entries to show the length, results will be on notebook page
   const { fetchTags } = useNotebook()
   const navigation = useNavigation()
   const { theme } = useTheme()
@@ -60,13 +69,13 @@ const NotebookFilters = () => {
             hitSlop={12}
             accessibilityLabel="apply filters and sort method"
             twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-            text="Apply"
-            disabled={!changesExist}
+            text={isLoading ? 'Applying...' : 'Apply'}
+            disabled={!changesExist || isLoading}
           />
         )
       },
     })
-  }, [navigation, selectedTags, sortOrder, initialState])
+  }, [navigation, selectedTags, sortOrder, initialState, isLoading])
 
   useEffect(() => {
     const getTags = async () => {
@@ -128,11 +137,19 @@ const NotebookFilters = () => {
 
   const handleDeselectTag = (tag: TagWithCount) => {
     setSelectedTags((prev) => prev.filter((t) => t.id !== tag.id))
-    setResultTags((prev) => [...prev, tag])
+    // Find the correct position in tags to maintain order
+    setResultTags((prev) => {
+      const newResults = [...prev, tag]
+      // Sort by original tags order
+      return newResults.sort(
+        (a, b) =>
+          tags.findIndex((t) => t.id === a.id) -
+          tags.findIndex((t) => t.id === b.id)
+      )
+    })
   }
 
   const handleApplyFiltersAndSort = () => {
-    console.log('applying filters and sort:', selectedTags, sortOrder)
     applyFiltersAndSort(selectedTags, sortOrder)
     router.back()
   }
@@ -174,45 +191,49 @@ const NotebookFilters = () => {
     <Spinner />
   ) : (
     <SafeView>
-      <View style={tw`flex-row justify-end gap-4 items-center mb-2`}>
-        <Button
-          hitSlop={12}
-          onPress={handleResetAll}
-        >
-          <Txt twcn="text-light-grayText dark:text-dark-grayText">
-            Reset All
-          </Txt>
-        </Button>
-
-        <Button
-          hitSlop={12}
-          onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-        >
-          {sortOrder === 'desc' ? (
-            <CalendarArrowDown
-              size={24}
-              strokeWidth={1.5}
-              color={theme.grayText}
-            />
-          ) : (
-            <CalendarArrowUp
-              size={24}
-              strokeWidth={1.5}
-              color={Colors.primary}
-            />
-          )}
-        </Button>
-      </View>
       {tags.length > 0 ? (
         <Fragment>
-          <Input
-            autoCorrect={false}
-            autoCapitalize="none"
-            noBorder
-            placeholder="Filter by tags..."
-            value={query}
-            onChange={(e) => handleChange(e.nativeEvent.text)}
-          />
+          <View style={tw`flex-row gap-2 items-center mt-2`}>
+            <View style={tw`flex-1`}>
+              <Input
+                autoCorrect={false}
+                autoCapitalize="none"
+                noBorder
+                placeholder="Search tags..."
+                value={query}
+                onChange={(e) => handleChange(e.nativeEvent.text)}
+              />
+            </View>
+
+            <Button
+              hitSlop={12}
+              onPress={handleResetAll}
+              twcn="bg-primary/10 rounded-xl p-2"
+            >
+              <RotateCcw
+                size={16}
+                color={Colors.primary}
+              />
+            </Button>
+
+            <Button
+              hitSlop={12}
+              twcn="bg-primary/10 rounded-xl p-2"
+              onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            >
+              {sortOrder === 'desc' ? (
+                <CalendarArrowDown
+                  size={16}
+                  color={Colors.primary}
+                />
+              ) : (
+                <CalendarArrowUp
+                  size={24}
+                  color={Colors.primary}
+                />
+              )}
+            </Button>
+          </View>
           {selectedTags.length > 0 && (
             <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>
               {renderedSelectedTags}

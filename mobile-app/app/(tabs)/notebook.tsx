@@ -2,18 +2,7 @@ import { View, Animated, Easing, FlatList, ScrollView } from 'react-native'
 import React, { useEffect, useRef } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
-import {
-  Activity,
-  Ambulance,
-  PenLine,
-  Pin,
-  Smile,
-  Target,
-  Utensils,
-  ListFilter,
-  Plus,
-  BookOpen,
-} from 'lucide-react-native'
+import { PenLine, Pin, ListFilter, Plus, BookOpen } from 'lucide-react-native'
 import { Link } from 'expo-router'
 import tw from '../../tw'
 import Colors from '../../constants/colors'
@@ -46,13 +35,15 @@ const Notebook = () => {
       headerRight: () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
         return (
-          <View style={tw`flex-row items-center gap-4 mr-4`}>
-            {hasEntries && (
+          <View style={tw`flex-row items-center gap-2 mr-4`}>
+            {(hasEntries || noResults) && (
               <View style={tw`relative`}>
-                <Link href="/notebook-filters">
+                <Link
+                  href="/notebook-filters"
+                  style={tw` bg-primary/10 rounded-2xl p-2`}
+                >
                   <ListFilter
-                    strokeWidth={1.5}
-                    size={24}
+                    size={20}
                     color={Colors.primary}
                   />
                 </Link>
@@ -71,10 +62,12 @@ const Notebook = () => {
               </View>
             )}
 
-            <Link href="/notebook-entry-form">
+            <Link
+              href="/notebook-entry-form"
+              style={tw`bg-primary/10 rounded-2xl p-2`}
+            >
               <Plus
-                strokeWidth={1.5}
-                size={24}
+                size={20}
                 color={Colors.primary}
               />
             </Link>
@@ -200,7 +193,13 @@ const Notebook = () => {
   const notebookView = noResults ? (
     <SafeView>
       <View style={tw`flex-1 items-center justify-center`}>
-        <Txt twcn="text-center text-base opacity-60">No results found</Txt>
+        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+          No results found
+        </Txt>
+        <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
+          Try adjusting your filters or sort method to find what you're looking
+          for.
+        </Txt>
       </View>
     </SafeView>
   ) : (
@@ -222,7 +221,13 @@ const Notebook = () => {
     </View>
   )
 
-  return isLoading ? <Spinner /> : hasEntries ? notebookView : notebookPrompt
+  return isLoading ? (
+    <Spinner />
+  ) : hasEntries || noResults ? (
+    notebookView
+  ) : (
+    notebookPrompt
+  )
 }
 
 export default Notebook

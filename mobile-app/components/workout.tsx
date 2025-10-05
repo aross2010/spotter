@@ -8,35 +8,46 @@ import { Ellipsis, ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
 import MyModal from './modal'
-import { Workout, WorkoutMinimal } from '../context/workout-context'
+import { Workout, WorkoutMinimal, useWorkout } from '../context/workout-context'
 import WorkoutOptions from './workout-options'
 import { capString } from '../functions/cap-string'
 
 const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { theme } = useTheme()
+  const { filters } = useWorkout()
   const { date, tags, name, location, exercises } = workout
 
+  const isTagFiltered = (tag: string) =>
+    filters.tags.some((t) => t === tag) || false
+  const isWorkoutNameFiltered = filters.workoutNames.includes(name) || false
+  const isLocationFiltered =
+    (location && filters.locations.includes(location)) || false
+  const isExerciseFiltered = (exerciseName: string) =>
+    filters.exerciseNames.includes(exerciseName) || false
+
   const renderedTags = tags.map((tag) => {
+    const isFiltered = isTagFiltered(tag)
     return (
-      <Txt
+      <View
         key={tag}
-        twcn="text-xs text-primary"
+        style={tw`${isFiltered ? 'bg-primary/10 px-2 py-1 rounded-full' : ''}`}
       >
-        #{tag}
-      </Txt>
+        <Txt twcn="text-xs text-primary">#{tag}</Txt>
+      </View>
     )
   })
 
   const renderedExercises = exercises.map(
     ({ name, sets, lowRepRange, highRepRange }) => {
+      const isFiltered = isExerciseFiltered(name)
       return (
         <View
           style={tw`flex-row items-center justify-between gap-2`}
           key={name}
         >
-          <Txt twcn="text-sm">{name}</Txt>
-          <Txt twcn="text-sm">
+          <Txt twcn={`text-sm ${isFiltered ? 'text-primary' : ''}`}>{name}</Txt>
+          <Txt twcn={`text-sm ${isFiltered ? 'text-primary' : ''}`}>
             {sets} x{' '}
             {lowRepRange === highRepRange
               ? lowRepRange
@@ -55,9 +66,14 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>
             <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
-              {capString(
-                `${formatDate(date)}${location ? ` @ ${location}` : ''}`,
-                40
+              {formatDate(date)}
+              {location && (
+                <Txt
+                  twcn={`text-xs uppercase font-poppinsMedium tracking-wide ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+                >
+                  {' '}
+                  @ {location}
+                </Txt>
               )}
             </Txt>
           </View>
@@ -73,7 +89,11 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
         </View>
 
         <View>
-          <Txt twcn="font-poppinsSemiBold text-base -mt-1">{name}</Txt>
+          <Txt
+            twcn={`font-poppinsSemiBold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+          >
+            {name}
+          </Txt>
           <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>
         </View>
         {tags.length > 0 && (

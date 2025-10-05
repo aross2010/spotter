@@ -27,10 +27,16 @@ const Workouts = () => {
     hasMore,
     initializeWorkouts,
     loadMoreWorkouts,
+    sortOrder,
   } = useWorkout()
   const { theme } = useTheme()
   const hasWorkouts = currentWorkouts.length > 0
-  const noResults = currentWorkouts.length === 0 && !filters
+  const numActiveFilters =
+    Object.keys(filters).reduce((acc: number, key) => {
+      const filterLength = filters[key as keyof typeof filters]?.length || 0
+      return Number(acc) + Number(filterLength)
+    }, 0 as number) + (sortOrder == 'asc' ? 1 : 0)
+  const noResults = currentWorkouts.length === 0 && numActiveFilters > 0
 
   useEffect(() => {
     initializeWorkouts()
@@ -39,11 +45,9 @@ const Workouts = () => {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => {
-        const numFilters = 0
-
         return (
           <View style={tw`flex-row items-center gap-2 mr-4`}>
-            {hasWorkouts && (
+            {(hasWorkouts || noResults) && (
               <View style={tw`relative`}>
                 <Link
                   href="/workout-filters"
@@ -54,7 +58,7 @@ const Workouts = () => {
                     color={Colors.primary}
                   />
                 </Link>
-                {numFilters > 0 && (
+                {numActiveFilters > 0 && (
                   <View
                     style={tw.style(
                       'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
@@ -62,7 +66,7 @@ const Workouts = () => {
                     )}
                   >
                     <Txt twcn="text-xs font-poppinsMedium text-white">
-                      {numFilters}
+                      {numActiveFilters}
                     </Txt>
                   </View>
                 )}
@@ -196,7 +200,13 @@ const Workouts = () => {
   const workoutsView = noResults ? (
     <SafeView>
       <View style={tw`flex-1 items-center justify-center`}>
-        <Txt twcn="text-center text-base">No results found</Txt>
+        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+          No results found
+        </Txt>
+        <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
+          Try adjusting your filters or sort method to find what you're looking
+          for.
+        </Txt>
       </View>
     </SafeView>
   ) : (
@@ -218,7 +228,13 @@ const Workouts = () => {
     </View>
   )
 
-  return isLoading ? <Spinner /> : hasWorkouts ? workoutsView : workoutPrompt
+  return isLoading ? (
+    <Spinner />
+  ) : hasWorkouts || noResults ? (
+    workoutsView
+  ) : (
+    workoutPrompt
+  )
 }
 
 export default Workouts

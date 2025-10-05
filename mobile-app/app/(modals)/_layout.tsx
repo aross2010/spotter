@@ -120,6 +120,7 @@ export default function ModalLayout() {
             title: 'Workout Details',
             presentation: 'fullScreenModal',
             headerTitleAlign: 'left',
+
             headerLeft: () => (
               <Button
                 onPress={() => router.back()}
@@ -129,6 +130,15 @@ export default function ModalLayout() {
                 text="Close"
               />
             ),
+          }}
+        />
+        <Stack.Screen
+          name="workout-filters"
+          options={{
+            title: 'Workout Filters',
+            presentation: 'fullScreenModal',
+            headerShown: true,
+            headerTitle: 'Filter Workouts',
           }}
         />
       </Stack>

@@ -938,7 +938,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   )
 
   return (
-    <View style={tw`flex-row gap-4 items-start`}>
+    <View style={tw`flex-row gap-2 items-start`}>
       {timelineComponent}
       {formComponent}
     </View>

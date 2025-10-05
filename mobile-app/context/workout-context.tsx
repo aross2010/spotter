@@ -56,10 +56,17 @@ export type WorkoutName = {
 }
 
 type WorkoutFilters = {
-  tags: Tag[]
+  tags: string[]
   workoutNames: string[]
   exerciseNames: string[]
+  locations: string[]
 }
+
+export type FilterOptions = {
+  label: string
+  type: 'tags' | 'workoutNames' | 'exerciseNames' | 'locations'
+  used: number
+}[]
 
 type WorkoutContextType = {
   currentWorkouts: WorkoutMinimal[]
@@ -74,21 +81,21 @@ type WorkoutContextType = {
     status?: string,
     order?: 'asc' | 'desc'
   ) => Promise<void>
-  applyFilters: () => Promise<void>
-  statusFilter: string | null
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
   filters: WorkoutFilters
-  setFilters: (filters: WorkoutFilters) => void
-  updateFilters: (updates: Partial<WorkoutFilters>) => void
+  updateFilters: (
+    filterOption: FilterOptions[number],
+    action: 'add' | 'remove'
+  ) => void
   clearFilters: () => void
-  pinWorkout: (workoutId: string) => Promise<void>
-  unpinWorkout: (workoutId: string) => Promise<void>
   deleteWorkout: (workoutId: string) => Promise<void>
   updateWorkout: (
     workoutId: string,
     workoutData: WorkoutFormData
   ) => Promise<void>
+  getFilterOptions: () => Promise<void>
+  filterOptions: FilterOptions
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -110,15 +117,59 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     tags: [],
     workoutNames: [],
     exerciseNames: [],
+    locations: [],
   })
+  const [filterOptions, setFilterOptions] = useState<FilterOptions>([])
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
 
   const PAGE_SIZE = 25
 
-  // Filter helper methods
-  const updateFilters = (updates: Partial<WorkoutFilters>) => {
-    setFilters((prev) => ({ ...prev, ...updates }))
+  const getFilterOptions = async () => {
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/workouts/filters/${user?.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = await response.json()
+      setFilterOptions(data)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    }
+  }
+
+  const updateFilters = (
+    filterOption: FilterOptions[number],
+    action: 'add' | 'remove'
+  ) => {
+    setFilters((prev) => {
+      const { type, label } = filterOption
+      const filterKey =
+        type === 'tags'
+          ? 'tags'
+          : type === 'workoutNames'
+            ? 'workoutNames'
+            : type === 'exerciseNames'
+              ? 'exerciseNames'
+              : 'locations'
+
+      if (action === 'add') {
+        return {
+          ...prev,
+          [filterKey]: [...prev[filterKey], label],
+        }
+      } else {
+        return {
+          ...prev,
+          [filterKey]: prev[filterKey].filter((item) => item !== label),
+        }
+      }
+    })
   }
 
   const clearFilters = () => {
@@ -126,14 +177,16 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       tags: [],
       workoutNames: [],
       exerciseNames: [],
+      locations: [],
     })
   }
 
   const buildQueryParams = (
     page: number,
-    tags: Tag[] = filters.tags,
+    tags: string[] = filters.tags,
     workoutNames: string[] = filters.workoutNames,
     exerciseNames: string[] = filters.exerciseNames,
+    locations: string[] = filters.locations,
     status: string | null = statusFilter,
     order: 'asc' | 'desc' = sortOrder,
     resetFilters: boolean = false
@@ -147,14 +200,16 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
     if (!resetFilters) {
       if (tags.length > 0) {
-        const tagNames = tags.map((tag) => tag.name)
-        params.append('tags', JSON.stringify(tagNames))
+        params.append('tags', JSON.stringify(tags))
       }
       if (workoutNames.length > 0) {
         params.append('workoutNames', JSON.stringify(workoutNames))
       }
       if (exerciseNames.length > 0) {
         params.append('exerciseNames', JSON.stringify(exerciseNames))
+      }
+      if (locations.length > 0) {
+        params.append('locations', JSON.stringify(locations))
       }
       if (status) {
         params.append('status', status)
@@ -167,9 +222,10 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const fetchWorkouts = async (
     page: number = 1,
     append: boolean = false,
-    tags: Tag[] = filters.tags,
+    tags: string[] = filters.tags,
     workoutNames: string[] = filters.workoutNames,
     exerciseNames: string[] = filters.exerciseNames,
+    locations: string[] = filters.locations,
     status: string | null = statusFilter,
     order: 'asc' | 'desc' = sortOrder
   ) => {
@@ -187,6 +243,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
         tags,
         workoutNames,
         exerciseNames,
+        locations,
         status,
         order
       )
@@ -236,12 +293,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     await fetchWorkouts(currentPage + 1, true)
   }
 
-  const applyFiltersAndSort = async (
-    status?: string,
-    order?: 'asc' | 'desc'
-  ) => {
-    setStatusFilter(status || null)
-    setSortOrder(order || 'desc')
+  const applyFiltersAndSort = async () => {
     setCurrentPage(1)
     setHasMore(true)
     await fetchWorkouts(
@@ -250,72 +302,35 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       filters.tags,
       filters.workoutNames,
       filters.exerciseNames,
-      status || null,
-      order || 'desc'
+      filters.locations,
+      statusFilter,
+      sortOrder
     )
   }
 
-  const applyFilters = async () => {
-    setCurrentPage(1)
-    setHasMore(true)
-    await fetchWorkouts(1, false)
-  }
+  // const updateCurrentWorkouts = (
+  //   workoutId: string,
+  //   updates: Partial<WorkoutMinimal>
+  // ) => {
+  //   setCurrentWorkouts((prev) => {
+  //     const updatedWorkouts = prev.map((workout) =>
+  //       workout.id === workoutId ? { ...workout, ...updates } : workout
+  //     )
 
-  const updateCurrentWorkouts = (
-    workoutId: string,
-    updates: Partial<WorkoutMinimal>
-  ) => {
-    setCurrentWorkouts((prev) => {
-      const updatedWorkouts = prev.map((workout) =>
-        workout.id === workoutId ? { ...workout, ...updates } : workout
-      )
+  //     // Sort: pinned first, then by date according to current sort order
+  //     return updatedWorkouts.sort((a, b) => {
+  //       if (a.pinned && !b.pinned) return -1
+  //       if (!a.pinned && b.pinned) return 1
 
-      // Sort: pinned first, then by date according to current sort order
-      return updatedWorkouts.sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1
-        if (!a.pinned && b.pinned) return 1
+  //       const dateA = new Date(a.date)
+  //       const dateB = new Date(b.date)
 
-        const dateA = new Date(a.date)
-        const dateB = new Date(b.date)
-
-        return sortOrder === 'desc'
-          ? dateB.getTime() - dateA.getTime()
-          : dateA.getTime() - dateB.getTime()
-      })
-    })
-  }
-
-  const pinWorkout = async (workoutId: string) => {
-    try {
-      await fetchWithAuth(`${BASE_URL}/api/workouts/${workoutId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pinned: true }),
-      })
-
-      updateCurrentWorkouts(workoutId, { pinned: true })
-    } catch (error: any) {
-      Alert.alert('Error', error.message)
-    }
-  }
-
-  const unpinWorkout = async (workoutId: string) => {
-    try {
-      await fetchWithAuth(`${BASE_URL}/api/workouts/${workoutId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ pinned: false }),
-      })
-
-      updateCurrentWorkouts(workoutId, { pinned: false })
-    } catch (error: any) {
-      Alert.alert('Error', error.message)
-    }
-  }
+  //       return sortOrder === 'desc'
+  //         ? dateB.getTime() - dateA.getTime()
+  //         : dateA.getTime() - dateB.getTime()
+  //     })
+  //   })
+  // }
 
   const deleteWorkout = async (workoutId: string) => {
     Alert.alert(
@@ -396,18 +411,15 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     refreshWorkouts,
     loadMoreWorkouts,
     applyFiltersAndSort,
-    applyFilters,
-    statusFilter,
     sortOrder,
     setSortOrder,
     filters,
-    setFilters,
     updateFilters,
     clearFilters,
-    pinWorkout,
-    unpinWorkout,
     deleteWorkout,
     updateWorkout,
+    getFilterOptions,
+    filterOptions,
   }
 
   return (

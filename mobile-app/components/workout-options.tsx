@@ -1,17 +1,15 @@
 import { StyleSheet, View } from 'react-native'
 import Txt from './text'
 import { WorkoutMinimal } from '../context/workout-context'
-import { MapPin, PinOff, Share } from 'lucide-react-native'
+import { PinOff, Share } from 'lucide-react-native'
 import { Info, Pin, Pencil, Trash } from 'lucide-react-native'
 import Button from './button'
 import tw from '../tw'
-import Colors from '../constants/colors'
 import { Fragment } from 'react'
-import { Calendar } from 'lucide-react-native'
-import { formatDate } from '../functions/formatted-date'
 import useTheme from '../app/hooks/theme'
 import { router } from 'expo-router'
 import { useWorkout } from '../context/workout-context'
+import { handleShareWorkout } from '../functions/workout-message'
 
 type WorkoutOptionsProps = {
   workout: WorkoutMinimal
@@ -20,7 +18,7 @@ type WorkoutOptionsProps = {
 
 const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
   const { pinned, id, name, date, location } = workout
-  const { unpinWorkout, pinWorkout, deleteWorkout } = useWorkout()
+  const { deleteWorkout } = useWorkout()
   const { theme } = useTheme()
 
   const handleViewDetails = () => {
@@ -31,12 +29,6 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
         id: id,
       },
     })
-  }
-
-  const handlePinToggle = async () => {
-    if (pinned) await unpinWorkout(id)
-    else await pinWorkout(id)
-    setIsOptionsOpen(false)
   }
 
   const handleEdit = () => {
@@ -54,24 +46,22 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
     setIsOptionsOpen(false)
   }
 
-  const handleShareWorkout = async () => {}
-
   const options = [
     {
       title: 'Details',
       onPress: handleViewDetails,
       icon: Info,
     },
-    {
-      title: 'Share',
-      onPress: handleShareWorkout,
-      icon: Share,
-    },
-    {
-      title: pinned ? 'Unpin' : 'Pin',
-      onPress: handlePinToggle,
-      icon: pinned ? PinOff : Pin,
-    },
+    // {
+    //   title: 'Share',
+    //   onPress: () => handleShareWorkout(workout),
+    //   icon: Share,
+    // },
+    // {
+    //   title: pinned ? 'Unpin' : 'Pin',
+    //   onPress: handlePinToggle,
+    //   icon: pinned ? PinOff : Pin,
+    // },
     {
       title: 'Edit',
       onPress: handleEdit,

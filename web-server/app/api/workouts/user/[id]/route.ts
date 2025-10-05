@@ -28,6 +28,7 @@ export const GET = withAuth(async (req, user) => {
   const tags = url.searchParams.get('tags') // string of tag names
   const workoutNames = url.searchParams.get('workoutNames') // string of workout names
   const exerciseNames = url.searchParams.get('exerciseNames') // string of exercise names
+  const locations = url.searchParams.get('locations') // string of location names
   const status = url.searchParams.get('status') // 'completed' or 'planned'
 
   if (page < 1 || limit < 1) {
@@ -63,6 +64,7 @@ export const GET = withAuth(async (req, user) => {
     let tagIds: string[] = []
     let workoutNameList: string[] = []
     let exerciseNameList: string[] = []
+    let locationList: string[] = []
 
     if (tags) {
       try {
@@ -140,6 +142,23 @@ export const GET = withAuth(async (req, user) => {
       }
     }
 
+    if (locations) {
+      try {
+        const locs = JSON.parse(locations) as string[]
+        if (Array.isArray(locs) && locs.length > 0) {
+          locationList = locs
+        }
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error:
+              'Invalid locations parameter. Must be a JSON array of location names.',
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     let baseConditions = eq(workouts.userId, userId)
 
     if (status) {
@@ -153,6 +172,12 @@ export const GET = withAuth(async (req, user) => {
         baseConditions
     }
 
+    if (locationList.length > 0) {
+      baseConditions =
+        and(baseConditions, inArray(workouts.location, locationList)) ||
+        baseConditions
+    }
+
     const hasTagFilter = tagIds.length > 0
     const hasExerciseFilter = exerciseNameList.length > 0
 
@@ -160,14 +185,39 @@ export const GET = withAuth(async (req, user) => {
     let countQuery
 
     if (hasTagFilter && hasExerciseFilter) {
-      const joinConditions = and(
-        baseConditions,
-        inArray(workoutTagLinks.tagId, tagIds),
-        inArray(exercises.name, exerciseNameList)
-      )
+      // Subquery for workouts with ALL selected tags (AND logic for tags)
+      const workoutsWithAllTags = db
+        .select({
+          workoutId: workoutTagLinks.workoutId,
+          tagCount: sql<number>`count(distinct ${workoutTagLinks.tagId})`,
+        })
+        .from(workoutTagLinks)
+        .where(inArray(workoutTagLinks.tagId, tagIds))
+        .groupBy(workoutTagLinks.workoutId)
+        .having(
+          sql`count(distinct ${workoutTagLinks.tagId}) = ${tagIds.length}`
+        )
+        .as('workouts_with_all_tags')
+
+      // Subquery for workouts with ALL selected exercises (AND logic for exercises)
+      const workoutsWithAllExercises = db
+        .select({
+          workoutId: workoutExercises.workoutId,
+          exerciseCount: sql<number>`count(distinct ${exercises.id})`,
+        })
+        .from(workoutExercises)
+        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+        .where(inArray(exercises.name, exerciseNameList))
+        .groupBy(workoutExercises.workoutId)
+        .having(
+          sql`count(distinct ${exercises.id}) = ${exerciseNameList.length}`
+        )
+        .as('workouts_with_all_exercises')
+
+      const joinConditions = baseConditions
 
       workoutsQuery = db
-        .selectDistinct({
+        .select({
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
@@ -175,12 +225,14 @@ export const GET = withAuth(async (req, user) => {
           location: workouts.location,
         })
         .from(workouts)
-        .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
         .innerJoin(
-          workoutExercises,
-          eq(workouts.id, workoutExercises.workoutId)
+          workoutsWithAllTags,
+          eq(workouts.id, workoutsWithAllTags.workoutId)
         )
-        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+        .innerJoin(
+          workoutsWithAllExercises,
+          eq(workouts.id, workoutsWithAllExercises.workoutId)
+        )
         .where(joinConditions)
         .orderBy(
           ...[
@@ -197,23 +249,34 @@ export const GET = withAuth(async (req, user) => {
         .offset(offset)
 
       countQuery = db
-        .select({ count: sql<number>`count(distinct ${workouts.id})` })
+        .select({ count: sql<number>`count(*)` })
         .from(workouts)
-        .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
         .innerJoin(
-          workoutExercises,
-          eq(workouts.id, workoutExercises.workoutId)
+          workoutsWithAllTags,
+          eq(workouts.id, workoutsWithAllTags.workoutId)
         )
-        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+        .innerJoin(
+          workoutsWithAllExercises,
+          eq(workouts.id, workoutsWithAllExercises.workoutId)
+        )
         .where(joinConditions)
     } else if (hasTagFilter) {
-      const tagConditions = and(
-        baseConditions,
-        inArray(workoutTagLinks.tagId, tagIds)
-      )
+      // Subquery for workouts with ALL selected tags (AND logic)
+      const workoutsWithAllTags = db
+        .select({
+          workoutId: workoutTagLinks.workoutId,
+          tagCount: sql<number>`count(distinct ${workoutTagLinks.tagId})`,
+        })
+        .from(workoutTagLinks)
+        .where(inArray(workoutTagLinks.tagId, tagIds))
+        .groupBy(workoutTagLinks.workoutId)
+        .having(
+          sql`count(distinct ${workoutTagLinks.tagId}) = ${tagIds.length}`
+        )
+        .as('workouts_with_all_tags')
 
       workoutsQuery = db
-        .selectDistinct({
+        .select({
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
@@ -221,8 +284,11 @@ export const GET = withAuth(async (req, user) => {
           location: workouts.location,
         })
         .from(workouts)
-        .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
-        .where(tagConditions)
+        .innerJoin(
+          workoutsWithAllTags,
+          eq(workouts.id, workoutsWithAllTags.workoutId)
+        )
+        .where(baseConditions)
         .orderBy(
           ...[
             sortBy === 'date'
@@ -238,18 +304,31 @@ export const GET = withAuth(async (req, user) => {
         .offset(offset)
 
       countQuery = db
-        .select({ count: sql<number>`count(distinct ${workouts.id})` })
+        .select({ count: sql<number>`count(*)` })
         .from(workouts)
-        .innerJoin(workoutTagLinks, eq(workouts.id, workoutTagLinks.workoutId))
-        .where(tagConditions)
+        .innerJoin(
+          workoutsWithAllTags,
+          eq(workouts.id, workoutsWithAllTags.workoutId)
+        )
+        .where(baseConditions)
     } else if (hasExerciseFilter) {
-      const exerciseConditions = and(
-        baseConditions,
-        inArray(exercises.name, exerciseNameList)
-      )
+      // Subquery for workouts with ALL selected exercises (AND logic)
+      const workoutsWithAllExercises = db
+        .select({
+          workoutId: workoutExercises.workoutId,
+          exerciseCount: sql<number>`count(distinct ${exercises.id})`,
+        })
+        .from(workoutExercises)
+        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
+        .where(inArray(exercises.name, exerciseNameList))
+        .groupBy(workoutExercises.workoutId)
+        .having(
+          sql`count(distinct ${exercises.id}) = ${exerciseNameList.length}`
+        )
+        .as('workouts_with_all_exercises')
 
       workoutsQuery = db
-        .selectDistinct({
+        .select({
           id: workouts.id,
           userId: workouts.userId,
           name: workouts.name,
@@ -258,11 +337,10 @@ export const GET = withAuth(async (req, user) => {
         })
         .from(workouts)
         .innerJoin(
-          workoutExercises,
-          eq(workouts.id, workoutExercises.workoutId)
+          workoutsWithAllExercises,
+          eq(workouts.id, workoutsWithAllExercises.workoutId)
         )
-        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
-        .where(exerciseConditions)
+        .where(baseConditions)
         .orderBy(
           ...[
             sortBy === 'date'
@@ -278,14 +356,13 @@ export const GET = withAuth(async (req, user) => {
         .offset(offset)
 
       countQuery = db
-        .select({ count: sql<number>`count(distinct ${workouts.id})` })
+        .select({ count: sql<number>`count(*)` })
         .from(workouts)
         .innerJoin(
-          workoutExercises,
-          eq(workouts.id, workoutExercises.workoutId)
+          workoutsWithAllExercises,
+          eq(workouts.id, workoutsWithAllExercises.workoutId)
         )
-        .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
-        .where(exerciseConditions)
+        .where(baseConditions)
     } else {
       const orderBy = [
         sortBy === 'date'
