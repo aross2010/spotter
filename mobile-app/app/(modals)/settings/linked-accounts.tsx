@@ -47,13 +47,10 @@ const LinkedAccounts = () => {
 
     return (
       <View key={provider}>
-        <Txt twcn="text-lg font-poppinsMedium mb-2">{title}</Txt>
+        <Txt twcn="text-lg font-poppinsMedium mb-4">{title}</Txt>
         {isLinked ? (
-          <View style={tw`flex-row items-center gap-4`}>
-            <CircleCheck
-              strokeWidth={1.5}
-              color={Colors.success}
-            />
+          <View style={tw`flex-row items-center gap-2`}>
+            <CircleCheck color={Colors.success} />
             <Txt twcn="text-light-grayText dark:text-dark-grayText">
               {providerEmail}
             </Txt>
@@ -71,11 +68,11 @@ const LinkedAccounts = () => {
 
   return (
     <SafeView>
-      <Txt twcn="text-light-grayText dark:text-dark-grayText mb-8">
+      <Txt twcn="text-light-grayText dark:text-dark-grayText mb-4">
         Securely link multiple sign-in providers (e.g., Apple and Google) to a
-        single account, so you can log in with any of them.
+        single account, so you can log in with any of them across devices.
       </Txt>
-      <View style={tw`gap-8 mb-8`}>{renderedProviders}</View>
+      <View style={tw`gap-4 mb-8`}>{renderedProviders}</View>
       <Loading
         visible={loading}
         label="Linking account..."

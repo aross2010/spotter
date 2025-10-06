@@ -56,7 +56,7 @@ const WorkoutNameInput = () => {
 
   return (
     <View
-      style={tw`relative border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+      style={tw`relative border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
     >
       <Input
         editable
@@ -68,13 +68,9 @@ const WorkoutNameInput = () => {
         onBlur={(e) => {
           setIsWorkoutNameSelectorOpen(false)
         }}
-        noBorder
         label="Name"
         placeholder="Legs, Push, Pull, Upper Body, etc..."
-        twcnContainer="px-0"
         maxLength={50}
-        twcnInput="px-0"
-        twcnLabel="uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText"
         returnKeyType="done"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => setIsWorkoutNameSelectorOpen(true)}

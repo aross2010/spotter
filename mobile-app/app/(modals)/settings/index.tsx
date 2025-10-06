@@ -153,14 +153,14 @@ const Settings = () => {
             </Txt>
           )}
           <View
-            style={tw`bg-white border border-light-grayPrimary dark:border-dark-graySecondary dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (
                 <Button
                   key={index}
                   onPress={onPress ? onPress : promptSignOut}
-                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayPrimary dark:border-dark-graySecondary'}`}
+                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'}`}
                 >
                   <Txt twcn="font-poppinsRegular">{label}</Txt>
                   <ChevronRight

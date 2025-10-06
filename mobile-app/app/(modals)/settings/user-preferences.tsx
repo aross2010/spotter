@@ -6,6 +6,7 @@ import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 import { View, Animated, Pressable } from 'react-native'
 import { useState, useRef, useEffect } from 'react'
+import Selector from '../../../components/selector'
 
 const preferenceOptions = [
   {
@@ -28,7 +29,7 @@ const preferenceOptions = [
     type: 'colorScheme',
   },
   {
-    title: 'Weight Metric',
+    title: 'Weight Unit',
     subtitle: null,
     options: [
       {
@@ -43,7 +44,7 @@ const preferenceOptions = [
     type: 'weightMetric',
   },
   {
-    title: 'Intensity Metric',
+    title: 'Intensity Unit',
     subtitle: null,
     options: [
       {
@@ -57,82 +58,77 @@ const preferenceOptions = [
     ],
     type: 'intensityMetric',
   },
-] as const
+]
+
+type PreferenceKey = 'colorScheme' | 'weightMetric' | 'intensityMetric'
 
 const UserPreferences = () => {
   const { theme, colorScheme, setColorSchemePreference } = useTheme()
   const { preferences, setPreferences } = useUserStore()
-
-  // Local state for immediate UI feedback
   const [localPreferences, setLocalPreferences] = useState({
     colorScheme: preferences?.colorScheme || 'system',
     weightMetric: preferences?.weightMetric || 'lbs',
     intensityMetric: preferences?.intensityMetric || 'rir',
   })
 
-  console.log('Current Preferences:', preferences)
+  const handleSelect = (type: PreferenceKey, value: string) => {
+    // Update local state immediately for instant feedback
+    setLocalPreferences((prev) => ({
+      ...prev,
+      [type]: value,
+    }))
 
-  const renderedPreferenceOptions = preferenceOptions.map((pref) => {
-    return (
-      <View
-        key={pref.type}
-        style={tw`gap-4`}
-      >
-        <View>
-          <Txt twcn="text-base font-poppinsMedium">{pref.title}</Txt>
-          {pref.subtitle && (
-            <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mt-1">
-              {pref.subtitle}
-            </Txt>
-          )}
+    // Then update the actual preferences
+    if (type === 'colorScheme') {
+      setColorSchemePreference(value as 'light' | 'dark' | 'system')
+    } else if (type === 'weightMetric' && preferences) {
+      setPreferences({
+        ...preferences,
+        weightMetric: value as 'lbs' | 'kgs',
+      })
+    } else if (type === 'intensityMetric' && preferences) {
+      setPreferences({
+        ...preferences,
+        intensityMetric: value as 'rir' | 'rpe',
+      })
+    }
+  }
+
+  const renderedPreferenceOptions = preferenceOptions.map(
+    ({ title, subtitle, options, type }) => {
+      return (
+        <View
+          key={type}
+          style={tw`flex-row items-center gap-4 justify-between`}
+        >
+          <Txt>{title}</Txt>
+
+          <Selector
+            options={options}
+            selectedValue={localPreferences[type as PreferenceKey]}
+            onSelect={(value) => {
+              handleSelect(type as PreferenceKey, value)
+            }}
+          />
         </View>
-        <View style={tw`flex-row justify-between gap-3`}>
-          {pref.options.map((option) => {
-            const isSelected = localPreferences[pref.type] === option.value
+      )
+    }
+  )
 
-            return (
-              <Button
-                key={option.value}
-                text={option.label}
-                onPress={() => {
-                  // Update local state immediately for instant feedback
-                  setLocalPreferences((prev) => ({
-                    ...prev,
-                    [pref.type]: option.value,
-                  }))
-
-                  // Then update the actual preferences
-                  if (pref.type === 'colorScheme') {
-                    setColorSchemePreference(
-                      option.value as 'light' | 'dark' | 'system'
-                    )
-                  } else if (pref.type === 'weightMetric' && preferences) {
-                    setPreferences({
-                      ...preferences,
-                      weightMetric: option.value as 'lbs' | 'kgs',
-                    })
-                  } else if (pref.type === 'intensityMetric' && preferences) {
-                    setPreferences({
-                      ...preferences,
-                      intensityMetric: option.value as 'rir' | 'rpe',
-                    })
-                  }
-                }}
-                twcn={`flex-1 items-center justify-center p-2 rounded-full ${
-                  isSelected
-                    ? 'bg-primary'
-                    : 'bg-light-grayPrimary dark:bg-dark-grayPrimary'
-                }`}
-                twcnText={`text-center text-sm ${isSelected ? 'text-white font-poppinsSemiBold' : ''}`}
-              />
-            )
-          })}
-        </View>
-      </View>
-    )
-  })
-
-  return <SafeView twcnInnerView="gap-8">{renderedPreferenceOptions}</SafeView>
+  return (
+    <SafeView twcnContentView="gap-4">
+      {renderedPreferenceOptions}
+      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-2">
+        Weight units can be changed on a per-workout basis. When viewed,
+        workouts will be converted to your preferred unit.
+      </Txt>
+      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+        RIR: Reps in Reserves – how many more full reps you could have
+        performed. RPE: Rate of Perceived Exertion – a scale from 1-10 to rate
+        the difficulty of a set.
+      </Txt>
+    </SafeView>
+  )
 }
 
 export default UserPreferences

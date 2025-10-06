@@ -25,6 +25,7 @@ import {
   getWorkoutMessage,
   handleShareWorkout,
 } from '../../functions/workout-message'
+import { useUserStore } from '../../stores/user-store'
 
 // display at the header level: location, date, sets
 // then notes
@@ -40,6 +41,7 @@ const WorkoutDetails = () => {
   const { id } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
   const { theme } = useTheme()
+  const { preferences } = useUserStore()
 
   useEffect(() => {
     const getWorkoutDetails = async () => {
@@ -146,7 +148,7 @@ const WorkoutDetails = () => {
             </View>
             <View style={tw`w-1/5 items-center`}>
               <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
-                Lbs
+                {preferences?.weightMetric === 'kgs' ? 'Kg' : 'Lbs'}
               </Txt>
             </View>
             <View style={tw`w-1/5 items-center`}>
@@ -188,7 +190,15 @@ const WorkoutDetails = () => {
                     <View style={tw`w-1/5 py-1 items-center justify-center`}>
                       {(set.weightLbs || set.weightKg) && (
                         <Txt twcn="text-center text-light-text dark:text-dark-text">
-                          {set.weightLbs || set.weightKg}
+                          {preferences?.weightMetric === 'kgs'
+                            ? set.weightKg ||
+                              (set.weightLbs
+                                ? (set.weightLbs / 2.205).toFixed(1)
+                                : '')
+                            : set.weightLbs ||
+                              (set.weightKg
+                                ? (set.weightKg * 2.205).toFixed(1)
+                                : '')}
                         </Txt>
                       )}
                     </View>
@@ -235,7 +245,15 @@ const WorkoutDetails = () => {
                     <View style={tw`w-1/5 py-1 items-center justify-center`}>
                       {(set.weightLbs || set.weightKg) && (
                         <Txt twcn="text-center text-light-text dark:text-dark-text">
-                          {set.weightLbs || set.weightKg}
+                          {preferences?.weightMetric === 'kgs'
+                            ? set.weightKg ||
+                              (set.weightLbs
+                                ? (set.weightLbs / 2.205).toFixed(1)
+                                : '')
+                            : set.weightLbs ||
+                              (set.weightKg
+                                ? (set.weightKg * 2.205).toFixed(1)
+                                : '')}
                         </Txt>
                       )}
                     </View>

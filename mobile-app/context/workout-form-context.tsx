@@ -70,7 +70,7 @@ export type WorkoutFormData = {
   tags: Tag[]
   notes: string
   exercises: Exercise[]
-  weightUnit: 'lbs' | 'kg'
+  weightUnit: 'lbs' | 'kgs'
   setGroupings: SetGrouping[]
   status?: 'completed' | 'planned'
 }
@@ -85,6 +85,12 @@ type WorkoutFormContextType = {
   newlyAddedExerciseNumber: number | null
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
   addWorkout: () => Promise<void>
+  locations: UsedLocations[]
+}
+
+type UsedLocations = {
+  location: string
+  used: number
 }
 
 const starterExercise = {
@@ -96,96 +102,6 @@ const starterExercise = {
       id: nanoid(),
     },
   ],
-}
-
-const defaultWorkoutData: WorkoutFormData = {
-  name: '',
-  date: new Date(),
-  location: '',
-  tags: [],
-  notes: '',
-  weightUnit: 'lbs',
-  exercises: [
-    starterExercise,
-    // {
-    //   name: 'Bulgarian Split Squats Squats',
-    //   isUnilateral: true,
-    //   existing: true,
-    //   sets: [
-    //     {
-    //       setNumber: 1,
-    //       id: nanoid(),
-    //       weightLbs: 255,
-    //       leftReps: 6,
-    //       rightReps: 6,
-    //     },
-    //     {
-    //       setNumber: 2,
-    //       id: nanoid(),
-    //       weightLbs: 255,
-    //       leftReps: 6,
-    //       rightReps: 6,
-    //     },
-    //   ],
-    // },
-    // {
-    //   name: 'Leg Extensions',
-    //   isUnilateral: false,
-    //   existing: true,
-    //   sets: [
-    //     {
-    //       setNumber: 1,
-    //       id: nanoid(),
-    //       weightLbs: 100,
-    //       reps: 12,
-    //     },
-    //     {
-    //       setNumber: 2,
-    //       id: nanoid(),
-    //       weightLbs: 100,
-    //       reps: 12,
-    //     },
-    //   ],
-    // },
-    // {
-    //   name: 'Sissy Squats',
-    //   isUnilateral: false,
-    //   existing: true,
-    //   sets: [
-    //     {
-    //       setNumber: 1,
-    //       id: nanoid(),
-    //       reps: 12,
-    //     },
-    //     {
-    //       setNumber: 2,
-    //       id: nanoid(),
-    //       reps: 12,
-    //     },
-    //   ],
-    // },
-    // {
-    //   name: 'Calf Extensions',
-    //   isUnilateral: false,
-    //   existing: true,
-    //   sets: [
-    //     {
-    //       setNumber: 1,
-    //       id: nanoid(),
-    //       reps: 12,
-    //       weightLbs: 90,
-    //     },
-    //     {
-    //       setNumber: 2,
-    //       id: nanoid(),
-    //       reps: 12,
-    //       weightLbs: 90,
-    //     },
-    //   ],
-    // },
-  ],
-
-  setGroupings: [],
 }
 
 const WorkoutFormContext = createContext<WorkoutFormContextType | undefined>(
@@ -205,14 +121,24 @@ type WorkoutFormProviderProps = {
 }
 
 export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
-  const [workoutData, setWorkoutData] =
-    useState<WorkoutFormData>(defaultWorkoutData)
+  const { user, preferences } = useUserStore()
+  const defaultWeightMetric = preferences?.weightMetric || 'lbs'
+  const [workoutData, setWorkoutData] = useState<WorkoutFormData>({
+    name: '',
+    date: new Date(),
+    location: '',
+    tags: [],
+    notes: '',
+    weightUnit: defaultWeightMetric,
+    exercises: [starterExercise],
+    setGroupings: [],
+  })
   const [exerciseNames, setExerciseNames] = useState<ExerciseName[]>([])
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
+  const [locations, setLocations] = useState<UsedLocations[]>([])
   const [newlyAddedExerciseNumber, setNewlyAddedExerciseNumber] = useState<
     number | null
   >(null)
-  const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
   const { refreshWorkouts } = useWorkout()
 
@@ -225,20 +151,22 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   }, []) // add workouts dependency
 
   const addWorkout = async () => {
-    console.log('Adding workout...')
-    console.log('Adding workout entry: ', JSON.stringify(workoutData, null, 2))
-    const response = await fetchWithAuth(`${BASE_URL}/api/workouts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...workoutData,
-        tags: workoutData.tags.map((tag) => tag.name),
-        date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
-      }),
-    })
-    await refreshWorkouts()
+    try {
+      const response = await fetchWithAuth(`${BASE_URL}/api/workouts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...workoutData,
+          tags: workoutData.tags.map((tag) => tag.name),
+          date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
+        }),
+      })
+      await refreshWorkouts()
+    } catch (error: any) {
+      Alert.alert('Error adding workout:', error.message)
+    }
   }
 
   const updateWorkoutData = (updates: Partial<WorkoutFormData>) => {
@@ -246,7 +174,16 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   }
 
   const resetWorkoutData = () => {
-    setWorkoutData(defaultWorkoutData)
+    setWorkoutData({
+      name: '',
+      date: new Date(),
+      location: '',
+      tags: [],
+      notes: '',
+      weightUnit: defaultWeightMetric,
+      exercises: [starterExercise],
+      setGroupings: [],
+    })
   }
 
   const getNames = async () => {
@@ -263,9 +200,10 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
         }
       )
 
-      const { exerciseNames, workoutNames } = await response.json()
+      const { exerciseNames, workoutNames, locations } = await response.json()
       setExerciseNames(exerciseNames)
       setWorkoutNames(workoutNames)
+      setLocations(locations)
     } catch (error: any) {
       console.error('Error fetching exercise names:', error)
       Alert.alert('Error fetching exercise names:', error.message)
@@ -282,6 +220,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
     addWorkout,
+    locations,
   }
 
   return (

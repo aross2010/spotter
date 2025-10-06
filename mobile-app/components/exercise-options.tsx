@@ -5,9 +5,9 @@ import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
-import { ArrowLeft, SquareStack } from 'lucide-react-native'
-import { useState } from 'react'
+import { SquareStack } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
+import Selector from './selector'
 
 type ExerciseOptionsProps = {
   closeModal: () => void
@@ -69,38 +69,25 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
       )
     }
   )
-
+  console.log('weight metric, ', workoutData.weightUnit)
   return (
     <>
       <View style={tw`flex-row items-center justify-between`}>
         <Txt twcn="text-base font-poppinsMedium">Exercises Options</Txt>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt
-            twcn={`${weightUnit === 'kg' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-poppinsSemiBold uppercase text-xs tracking-wide`}
-          >
-            Kg.
-          </Txt>
-          <View style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}>
-            <Switch
-              onChange={() => {
-                setWorkoutData({
-                  ...workoutData,
-                  weightUnit: workoutData.weightUnit === 'lbs' ? 'kg' : 'lbs',
-                })
-              }}
-              value={workoutData.weightUnit === 'lbs'}
-              thumbColor={Colors.primary}
-              trackColor={{
-                false: theme.grayPrimary,
-                true: theme.grayPrimary,
-              }}
-            />
-          </View>
-          <Txt
-            twcn={`${weightUnit === 'lbs' ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'} font-poppinsSemiBold uppercase text-xs tracking-wide`}
-          >
-            Lbs.
-          </Txt>
+          <Selector
+            selectedValue={workoutData.weightUnit}
+            onSelect={(value: string) =>
+              setWorkoutData({
+                ...workoutData,
+                weightUnit: value as 'kgs' | 'lbs',
+              })
+            }
+            options={[
+              { label: 'Kg', value: 'kgs' },
+              { label: 'Lbs', value: 'lbs' },
+            ]}
+          />
         </View>
       </View>
       <View style={tw``}>{renderedOptions}</View>

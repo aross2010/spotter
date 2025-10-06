@@ -13,32 +13,56 @@ export const GET = withAuth(async (req, user) => {
   }
 
   try {
-    const workoutNameResults = await db
-      .select({
-        name: workouts.name,
-        used: sql<number>`count(*)::int`.as('used'),
-      })
-      .from(workouts)
-      .where(eq(workouts.userId, userId))
-      .groupBy(workouts.name)
-      .orderBy(desc(sql`count(*)`))
+    const [workoutNameResults, exerciseNameResults, locationResults] =
+      await Promise.all([
+        db
+          .select({
+            name: workouts.name,
+            used: sql<number>`count(*)::int`.as('used'),
+          })
+          .from(workouts)
+          .where(eq(workouts.userId, userId))
+          .groupBy(workouts.name)
+          .orderBy(desc(sql`count(*)`)),
 
-    const exerciseNameResults = await db
-      .select({
-        name: exercises.name,
-        used: sql<number>`count(${workoutExercises.id})::int`.as('used'),
-        isUnilateral: exercises.isUnilateral,
-      })
-      .from(exercises)
-      .leftJoin(workoutExercises, eq(exercises.id, workoutExercises.exerciseId))
-      .where(eq(exercises.userId, userId))
-      .groupBy(exercises.name, exercises.isUnilateral)
-      .orderBy(desc(sql`count(${workoutExercises.id})`))
+        db
+          .select({
+            name: exercises.name,
+            used: sql<number>`count(${workoutExercises.id})::int`.as('used'),
+            isUnilateral: exercises.isUnilateral,
+          })
+          .from(exercises)
+          .leftJoin(
+            workoutExercises,
+            eq(exercises.id, workoutExercises.exerciseId)
+          )
+          .where(eq(exercises.userId, userId))
+          .groupBy(exercises.name, exercises.isUnilateral)
+          .orderBy(desc(sql`count(${workoutExercises.id})`)),
+
+        db
+          .select({
+            location: workouts.location,
+            used: sql<number>`count(*)::int`.as('used'),
+          })
+          .from(workouts)
+          .where(eq(workouts.userId, userId))
+          .groupBy(workouts.location)
+          .orderBy(desc(sql`count(*)`)),
+      ])
 
     const workoutNames = workoutNameResults
     const exerciseNames = exerciseNameResults
+    const locations = locationResults.filter(
+      (loc) => loc.location !== null && loc.location !== ''
+    )
 
-    return NextResponse.json({ workoutNames, exerciseNames }, { status: 200 })
+    console.log('locations: ', locations)
+
+    return NextResponse.json(
+      { workoutNames, exerciseNames, locations },
+      { status: 200 }
+    )
   } catch (error: any) {
     console.error('Error fetching workout and exercise names:', error)
     return NextResponse.json(

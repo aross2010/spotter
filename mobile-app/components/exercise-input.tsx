@@ -690,7 +690,6 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
                     }
                   }}
                   editable={value !== 'setNumber'}
-                  noBorder
                   keyboardType={
                     value === 'rpe' ||
                     value === 'weightLbs' ||
@@ -753,7 +752,6 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
                     }
                   }}
                   editable={value !== 'setNumber'}
-                  noBorder
                   keyboardType={
                     value === 'rpe' ||
                     value === 'weightLbs' ||
@@ -813,7 +811,6 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
                   }
                 }}
                 editable={value !== 'setNumber'}
-                noBorder
                 keyboardType={
                   value === 'rpe' ||
                   value === 'weightLbs' ||
@@ -882,16 +879,14 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const formComponent = (
     <View style={tw`flex-1 mb-4 ${exerciseNumber != 1 ? 'mt-1' : ''}`}>
       <View style={tw`flex-row flex-1`}>
-        <View style={tw`flex-row gap-2 items-center flex-1`}>
+        <View style={tw`flex-row gap-2 items-center flex-1 -mt-1.5`}>
           <View
-            style={tw`flex-1 shrink pb-2 border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
+            style={tw`flex-1 shrink border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
           >
             <Input
               ref={exerciseNameInputRef}
               placeholder={`${`Exercise ${exerciseNumber}`}`}
-              noBorder
               maxLength={50}
-              twcnInput="py-0 flex-1"
               value={
                 workoutData.exercises[exerciseNumber ? exerciseNumber - 1 : 0]
                   ?.name
@@ -909,7 +904,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
                 intensity={50}
                 tint="default"
                 style={[
-                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-3 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
+                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
                 ]}
               >
                 <ScrollView

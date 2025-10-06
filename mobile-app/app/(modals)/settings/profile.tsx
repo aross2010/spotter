@@ -9,6 +9,8 @@ import { BASE_URL } from '../../../constants/auth'
 import { toast } from '../../../utils/toast'
 import { useUserStore } from '../../../stores/user-store'
 import { tokenCache } from '../../../utils/cache'
+import { useNavigation } from 'expo-router'
+import tw from '../../../tw'
 
 const profileFields = [
   {
@@ -44,7 +46,7 @@ const Profile = () => {
   })
   const [loading, setLoading] = useState(false)
   const [canSubmit, setCanSubmit] = useState(false)
-
+  const navigation = useNavigation()
   useEffect(() => {
     const hasChanges =
       user?.firstName !== userData.firstName ||
@@ -53,6 +55,22 @@ const Profile = () => {
     if (hasChanges) setCanSubmit(true)
     else setCanSubmit(false)
   }, [userData])
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => {
+        return (
+          <Button
+            twcnText="text-primary font-poppinsSemiBold"
+            onPress={updateProfile}
+            loading={loading}
+            disabled={!canSubmit || loading}
+            text="Save"
+          />
+        )
+      },
+    })
+  }, [navigation, canSubmit, loading])
 
   const updateProfile = async () => {
     // ensure that user data is valid and has been changed
@@ -97,31 +115,22 @@ const Profile = () => {
 
   const renderedFields = profileFields.map((field, index) => {
     return (
-      <Fragment key={field.name}>
-        <Input
-          key={index}
-          value={userData[field.name]}
-          onChangeText={(text) =>
-            setUserData({ ...userData, [field.name]: text })
-          }
-          editable={field.name !== 'email'}
-          {...field}
-        />
-      </Fragment>
+      <Input
+        key={index}
+        value={userData[field.name]}
+        onChangeText={(text) =>
+          setUserData({ ...userData, [field.name]: text })
+        }
+        editable={field.name !== 'email'}
+        twcnInput="border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50"
+        {...field}
+      />
     )
   })
 
   return (
-    <SafeView noScroll>
-      <View className="flex-col gap-4">{renderedFields}</View>
-      <Button
-        twcnText="text-light-background dark:text-light-background font-poppinsSemiBold"
-        twcn="bg-primary rounded-full p-4 w-full items-center justify-center mt-auto"
-        onPress={updateProfile}
-        loading={loading}
-        disabled={!canSubmit || loading}
-        text="Save Changes"
-      />
+    <SafeView scroll={false}>
+      <View style={tw`gap-4`}>{renderedFields}</View>
     </SafeView>
   )
 }

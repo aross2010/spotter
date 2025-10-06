@@ -4,33 +4,22 @@ import Txt from '../../../components/text'
 import Input from '../../../components/input'
 import Button from '../../../components/button'
 import tw from '../../../tw'
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
+import { useNavigation, useRouter } from 'expo-router'
 import SafeView from '../../../components/safe-view'
 import { capString } from '../../../functions/cap-string'
 import { useWorkoutForm } from '../../../context/workout-form-context'
 
 type UsedLocations = {
-  id: number
-  name: string
+  location: string
   used: number
 }
 
-// load after new workout form has been rendered
-const usedLocations: UsedLocations[] = [
-  { id: 1, name: 'Gym', used: 35 },
-  { id: 2, name: 'Park', used: 21 },
-  { id: 3, name: 'Home', used: 12 },
-  { id: 4, name: 'Office', used: 2 },
-  { id: 5, name: 'Other', used: 5 },
-]
-
 const LocationSelector = () => {
-  const [locations, setLocations] = useState<UsedLocations[]>(usedLocations)
   const [locationResults, setLocationResults] = useState<UsedLocations[]>([])
   const [query, setQuery] = useState<string>('')
   const router = useRouter()
   const navigation = useNavigation()
-  const { workoutData, updateWorkoutData } = useWorkoutForm()
+  const { workoutData, updateWorkoutData, locations } = useWorkoutForm()
 
   useEffect(() => {
     navigation.setOptions({
@@ -55,10 +44,10 @@ const LocationSelector = () => {
 
   useEffect(() => {
     if (query.trim() === '') {
-      setLocationResults(usedLocations)
+      setLocationResults(locations)
     } else {
-      const filtered = usedLocations.filter((location) =>
-        location.name.toLowerCase().includes(query.toLowerCase())
+      const filtered = locations.filter((l) =>
+        l.location.toLowerCase().includes(query.toLowerCase())
       )
       setLocationResults(filtered)
     }
@@ -71,16 +60,16 @@ const LocationSelector = () => {
     }
   }
 
-  const renderedResults = locationResults.map(({ id, name, used }) => {
+  const renderedResults = locationResults.map(({ location, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary justify-between flex-row px-2 py-3 items-center`}
-        key={id}
+        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-2 py-3 items-center`}
+        key={location}
         onPress={() => {
-          handleSaveLocation(name)
+          handleSaveLocation(location)
         }}
       >
-        <Txt>{name}</Txt>
+        <Txt>{location}</Txt>
         <Txt>{used}</Txt>
       </Button>
     )
@@ -89,7 +78,6 @@ const LocationSelector = () => {
   return (
     <SafeView>
       <Input
-        noBorder
         value={query}
         onChange={(e) => setQuery(e.nativeEvent.text)}
         placeholder="Enter location..."
@@ -103,7 +91,7 @@ const LocationSelector = () => {
       />
 
       <View
-        style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary flex-1`}
+        style={tw`flex-col border-t border-light-grayTertiary dark:border-dark-grayTertiary flex-1`}
       >
         {renderedResults}
       </View>

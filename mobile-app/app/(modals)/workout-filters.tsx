@@ -338,12 +338,11 @@ const WorkoutFilters = () => {
     <Spinner />
   ) : (
     <SafeView>
-      <View style={tw`flex-row gap-2 items-center mt-2`}>
-        <View style={tw`flex-1`}>
+      <View style={tw`flex-row gap-2 items-center`}>
+        <View style={tw`flex-1 mt-2`}>
           <Input
             autoCorrect={false}
             autoCapitalize="none"
-            noBorder
             placeholder="Search filters..."
             value={query}
             onChange={(e) => handleChange(e.nativeEvent.text)}
@@ -381,13 +380,13 @@ const WorkoutFilters = () => {
       </View>
 
       {selectedOptions.length > 0 && (
-        <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>
+        <View style={tw`flex-row flex-wrap items-center gap-1 py-2`}>
           {renderedSelectedOptions}
         </View>
       )}
 
       <View
-        style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
+        style={tw`flex-col border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
       >
         {renderedResultOptions}
       </View>

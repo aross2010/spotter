@@ -6,7 +6,7 @@ import Txt from './text'
 import tw from '../tw'
 
 type InputProps = {
-  noBorder?: boolean
+  fullBorder?: boolean
   twcnInput?: string
   label?: string
   twcnLabel?: string
@@ -14,7 +14,10 @@ type InputProps = {
 } & TextInputProps
 
 const Input = forwardRef<TextInput, InputProps>(
-  ({ noBorder, twcnInput, label, twcnLabel, twcnContainer, ...props }, ref) => {
+  (
+    { fullBorder, twcnInput, label, twcnLabel, twcnContainer, ...props },
+    ref
+  ) => {
     const colorScheme = useColorScheme() ?? 'light'
     const theme = Colors[colorScheme] ?? Colors.light
 
@@ -31,7 +34,7 @@ const Input = forwardRef<TextInput, InputProps>(
       <TextInput
         ref={ref}
         style={[
-          tw`font-poppins text-sm text-light-text dark:text-dark-text ${noBorder ? 'border-0 px-0 py-2 focus:border-0' : 'w-full border-b border-light-grayTertiary dark:border-dark-grayTertiary focus:border-primary dark:focus:border-primary px-2 py-3'} rounded-lg ${twcnInput ?? ''}`,
+          tw`font-poppins text-sm text-light-text dark:text-dark-text py-2 ${fullBorder ? 'border border-light-grayTertiary dark:border-dark-grayTertiary rounded-2xl p-2' : ''} ${twcnInput ?? ''}`,
           props.numberOfLines
             ? {
                 height: getMultilineHeight(),
@@ -48,7 +51,11 @@ const Input = forwardRef<TextInput, InputProps>(
     if (label) {
       return (
         <View style={tw`flex flex-col ${twcnContainer ?? ''}`}>
-          <Txt twcn={`${twcnLabel}`}>{label}</Txt>
+          <Txt
+            twcn={`uppercase text-xs tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText ${twcnLabel}`}
+          >
+            {label}
+          </Txt>
           {standardInput}
         </View>
       )
