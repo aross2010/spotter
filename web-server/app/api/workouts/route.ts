@@ -331,6 +331,8 @@ export const POST = withAuth(async (req, user) => {
   let { date, name, location, exercises, setGroupings, tags, notes, status } =
     data
 
+  console.log('status:', status)
+
   const userId = user.id
 
   if (!userId || !date || !name || !exercises) {
@@ -387,9 +389,9 @@ export const POST = withAuth(async (req, user) => {
     )
   }
 
-  if (status && !['completed', 'planned'].includes(status)) {
+  if (status && !['completed', 'planned', 'active'].includes(status)) {
     return NextResponse.json(
-      { error: 'Status must be one of: completed, in-progress, planned' },
+      { error: 'Status must be one of: completed, planned, active' },
       { status: 400 }
     )
   }

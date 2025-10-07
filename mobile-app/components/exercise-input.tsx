@@ -253,6 +253,13 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     const updatedExercises = [...workoutData.exercises]
     const currentExercise = updatedExercises[exerciseNumber - 1]
     if (!currentExercise) return
+    if (currentExercise.sets.length >= 20) {
+      Alert.alert(
+        'Limit Reached',
+        'You can only add up to 20 sets per exercise.'
+      )
+      return
+    }
 
     const currentSets = currentExercise.sets || []
     const newSetNumber = currentSets.length + 1
@@ -305,6 +312,13 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     const updatedExercises = [...workoutData.exercises]
     const currentExercise = updatedExercises[exerciseNumber - 1]
     if (!currentExercise || !currentExercise.sets) return
+    if (currentExercise.sets.length >= 20) {
+      Alert.alert(
+        'Limit Reached',
+        'You can only add up to 20 sets per exercise.'
+      )
+      return
+    }
 
     const setToCopy = currentExercise.sets[setIndex]
     const currentSets = currentExercise.sets
@@ -620,7 +634,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium"
+        twcnText="text-xs text-light-grayText dark:text-dark-grayText font-poppinsMedium"
         twcn={`p-2 flex-row-reverse flex-1 items-center justify-center gap-1 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
       >
         <Plus

@@ -64,10 +64,10 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
       >
         <Button
           onPress={() => onSelect(option.value)}
-          style={tw`py-2 px-4 rounded-xl`}
+          style={tw`py-1.5 px-3 rounded-xl`}
         >
           <Txt
-            twcn={`text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary' : ''}`}
+            twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary' : ''}`}
           >
             {option.label}
           </Txt>
@@ -78,7 +78,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
 
   return (
     <View
-      style={tw`flex-row items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-xl relative`}
+      style={tw`flex-row self-start items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-xl relative`}
     >
       {buttonLayouts.length === options.length && (
         <Animated.View

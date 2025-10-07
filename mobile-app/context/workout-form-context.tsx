@@ -72,19 +72,18 @@ export type WorkoutFormData = {
   exercises: Exercise[]
   weightUnit: 'lbs' | 'kgs'
   setGroupings: SetGrouping[]
-  status?: 'completed' | 'planned'
+  status: 'completed' | 'planned' | 'active'
 }
 
 type WorkoutFormContextType = {
   workoutData: WorkoutFormData
   setWorkoutData: React.Dispatch<React.SetStateAction<WorkoutFormData>>
   updateWorkoutData: (updates: Partial<WorkoutFormData>) => void
-  resetWorkoutData: () => void
   workoutNames: WorkoutName[]
   exerciseNames: ExerciseName[]
   newlyAddedExerciseNumber: number | null
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
-  addWorkout: () => Promise<void>
+  addWorkout: () => Promise<{ id: string; message: string } | undefined>
   locations: UsedLocations[]
 }
 
@@ -132,6 +131,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     weightUnit: defaultWeightMetric,
     exercises: [starterExercise],
     setGroupings: [],
+    status: 'completed',
   })
   const [exerciseNames, setExerciseNames] = useState<ExerciseName[]>([])
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
@@ -163,7 +163,9 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
           date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
         }),
       })
+      const workout = await response.json()
       await refreshWorkouts()
+      return workout
     } catch (error: any) {
       Alert.alert('Error adding workout:', error.message)
     }
@@ -171,19 +173,6 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
 
   const updateWorkoutData = (updates: Partial<WorkoutFormData>) => {
     setWorkoutData((prev) => ({ ...prev, ...updates }))
-  }
-
-  const resetWorkoutData = () => {
-    setWorkoutData({
-      name: '',
-      date: new Date(),
-      location: '',
-      tags: [],
-      notes: '',
-      weightUnit: defaultWeightMetric,
-      exercises: [starterExercise],
-      setGroupings: [],
-    })
   }
 
   const getNames = async () => {
@@ -216,7 +205,6 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     workoutNames,
     exerciseNames,
     updateWorkoutData,
-    resetWorkoutData,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
     addWorkout,

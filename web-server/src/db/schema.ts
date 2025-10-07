@@ -175,7 +175,9 @@ export const workouts = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }),
     pinned: boolean('pinned').notNull().default(false),
   },
-  (t) => [check('valid_status', sql`status IN ('completed', 'planned')`)]
+  (t) => [
+    check('valid_status', sql`status IN ('completed', 'active', 'planned')`),
+  ]
 )
 
 export const workoutExercises = pgTable('workout_exercises', {

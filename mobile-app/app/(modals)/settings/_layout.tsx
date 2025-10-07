@@ -4,7 +4,6 @@ import { router, Stack } from 'expo-router'
 import Button from '../../../components/button'
 import Colors from '../../../constants/colors'
 import useTheme from '../../hooks/theme'
-import tw from '../../../tw'
 
 const SettingsLayout = () => {
   const { theme } = useTheme()

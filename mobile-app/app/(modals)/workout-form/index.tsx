@@ -4,12 +4,22 @@ import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { useEffect, useState } from 'react'
-import { Calendar, MapPin } from 'lucide-react-native'
+import {
+  Calendar,
+  MapPin,
+  Check,
+  Circle,
+  CircleDot,
+  CircleCheck,
+} from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
 import useTheme from '../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
-import { useWorkoutForm } from '../../../context/workout-form-context'
+import {
+  useWorkoutForm,
+  WorkoutFormData,
+} from '../../../context/workout-form-context'
 import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
@@ -19,24 +29,62 @@ import { useLocalSearchParams } from 'expo-router'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
+import Selector from '../../../components/selector'
+import Txt from '../../../components/text'
+import MyModal from '../../../components/modal'
+import Colors from '../../../constants/colors'
+
+const statusOptions = [
+  {
+    value: 'completed' as const,
+    label: 'Completed',
+    icon: CircleCheck,
+  },
+  {
+    value: 'planned' as const,
+    label: 'Planned',
+    icon: Circle,
+  },
+  {
+    value: 'active' as const,
+    label: 'Active',
+    icon: CircleDot,
+  },
+]
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
   const navigation = useNavigation()
   const { theme } = useTheme()
   const { workoutData, setWorkoutData, addWorkout } = useWorkoutForm()
   const { updateWorkout } = useWorkout()
   const { fetchWithAuth } = useAuth()
-  const { id } = useLocalSearchParams<{ id?: string }>()
-  const isEditing = !!id
+  const { id, cloneId } = useLocalSearchParams()
+  const [mode, setMode] = useState<'create' | 'edit' | 'clone'>(
+    id ? 'edit' : cloneId ? 'clone' : 'create'
+  )
+  const [workoutId, setWorkoutId] = useState<string | null>(
+    (id as string) || null
+  )
   const [initialState, setInitialState] = useState<typeof workoutData | null>(
     null
   )
 
+  useEffect(() => {
+    if (cloneId) {
+      setWorkoutId(cloneId as string)
+      setMode('clone')
+    } else if (id) {
+      setWorkoutId(id as string)
+      setMode('edit')
+    }
+  }, [])
+
   const hasChanges = () => {
-    if (!isEditing || !initialState) return true // For new workouts or before initial state is set, always allow saving
+    if (!initialState) return true // Brand new workout, no changes to compare against
 
     const dateChanged =
       workoutData.date.getTime() !== initialState.date.getTime()
@@ -128,22 +176,52 @@ const WorkoutForm = () => {
     )
   }
 
+  const isValidWorkout = () => {
+    // Must have a date
+    if (!workoutData.date) return false
+
+    // Must have a workout name
+    if (!workoutData.name || workoutData.name.trim() === '') return false
+
+    // Must have at least one exercise
+    if (workoutData.exercises.length === 0) return false
+
+    // Each exercise must have at least one set
+    for (const exercise of workoutData.exercises) {
+      if (exercise.sets.length === 0) return false
+
+      // Each set must have reps (for unilateral: leftReps or rightReps)
+      for (const set of exercise.sets) {
+        if (exercise.isUnilateral) {
+          if (!set.leftReps && !set.rightReps) return false
+        } else {
+          if (!set.reps) return false
+        }
+      }
+    }
+
+    return true
+  }
+
   useEffect(() => {
     const getWorkoutData = async () => {
       setIsLoading(true)
       try {
-        const response = await fetchWithAuth(`${BASE_URL}/api/workouts/${id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        const response = await fetchWithAuth(
+          `${BASE_URL}/api/workouts/${mode === 'edit' ? id : cloneId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
         const workout = await response.json()
-        console.log('Workout Data: ', JSON.stringify(workout, null, 2))
         const workoutData = {
           ...workout,
-          date: new Date(workout.date + 'T00:00:00'),
-        }
+          date:
+            mode === 'edit' ? new Date(workout.date + 'T00:00:00') : new Date(),
+        } as WorkoutFormData
         setWorkoutData(workoutData)
         setInitialState(workoutData)
       } catch (error: any) {
@@ -152,53 +230,92 @@ const WorkoutForm = () => {
         setIsLoading(false)
       }
     }
-    if (isEditing) getWorkoutData()
-  }, [isEditing])
+    if (mode === 'edit' || mode === 'clone') getWorkoutData()
+  }, [])
 
   useEffect(() => {
-    const saveEnabled = hasChanges()
+    const isValid = isValidWorkout()
+    const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
 
     navigation.setOptions({
-      headerTitle: isEditing ? 'Edit Workout' : 'New Workout',
+      headerTitle:
+        mode === 'edit'
+          ? 'Edit Workout'
+          : mode === 'clone'
+            ? 'Clone Workout'
+            : 'New Workout',
       headerRight: () => (
-        <Button
-          onPress={handleSubmitWorkout}
-          hitSlop={12}
-          accessibilityLabel="Save Workout"
-          twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-          text={
-            isEditing && isSaving
-              ? 'Updating...'
-              : isEditing
-                ? 'Update'
-                : isSaving
-                  ? 'Saving...'
-                  : 'Save'
-          }
-          disabled={isSaving || !saveEnabled}
-        />
+        <View style={tw`flex-row items-center gap-2`}>
+          {!isLoading && (
+            <Button
+              onPress={() => setShowStatusMenu(true)}
+              hitSlop={12}
+              twcn="p-1.5 rounded-xl bg-primary/10"
+            >
+              {(() => {
+                const StatusIcon = statusOptions.find(
+                  (opt) => opt.value === workoutData.status
+                )?.icon
+                return StatusIcon ? (
+                  <StatusIcon
+                    size={16}
+                    color={Colors.primary}
+                  />
+                ) : null
+              })()}
+            </Button>
+          )}
+
+          <Button
+            onPress={handleSubmitWorkout}
+            hitSlop={12}
+            accessibilityLabel="Save Workout"
+            twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+            text={
+              mode !== 'create' && isSaving
+                ? 'Updating...'
+                : mode === 'edit'
+                  ? 'Update'
+                  : isSaving
+                    ? 'Saving...'
+                    : 'Save'
+            }
+            disabled={isSaving || !saveEnabled}
+          />
+        </View>
       ),
     })
-  }, [workoutData, isSaving, isEditing])
+  }, [workoutData, isSaving, mode, isLoading, initialState, workoutId])
 
   const handleSubmitWorkout = async () => {
     setIsSaving(true)
     try {
-      if (isEditing) {
-        await updateWorkout(id, workoutData)
-      } else {
-        console.log(
-          'Submitting workout entry: ',
-          JSON.stringify(workoutData, null, 2)
-        )
-        await addWorkout()
+      let res
+      if (mode === 'create') {
+        const res = await addWorkout()
+        if (workoutData.status === 'active') {
+          setInitialState({ ...workoutData })
+          if (res?.id) {
+            setWorkoutId(res.id)
+            setMode('edit') // Transition to edit mode after first save
+          }
+        } else router.replace('/workouts')
+      } else if (mode === 'edit' && workoutId) {
+        await updateWorkout(workoutId, workoutData)
+        if (workoutData.status === 'active') {
+          setInitialState({ ...workoutData })
+        } else router.replace('/workouts')
       }
-      router.replace('/workouts')
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleStatusChange = (status: 'completed' | 'planned' | 'active') => {
+    setWorkoutData({ ...workoutData, status })
+    setShowStatusMenu(false)
   }
 
   return isLoading ? (
@@ -215,8 +332,8 @@ const WorkoutForm = () => {
             setIsDatePickerOpen(true)
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText="text-xs font-poppinsMedium uppercase tracking-wide text-light-text dark:text-dark-text"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcnText="text-xs  text-light-text dark:text-dark-text"
         >
           <Calendar
             size={16}
@@ -233,8 +350,8 @@ const WorkoutForm = () => {
             router.push('/workout-form/location')
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2.5 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText={`text-xs font-poppinsMedium uppercase tracking-wide ${
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcnText={`text-xs ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'
               : 'text-light-grayText dark:text-dark-grayText'
@@ -269,6 +386,37 @@ const WorkoutForm = () => {
           setIsDatePickerOpen(false)
         }}
       />
+
+      <MyModal
+        isOpen={showStatusMenu}
+        setIsOpen={setShowStatusMenu}
+      >
+        <Txt twcn="font-poppinsMedium text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText">
+          Workout Status
+        </Txt>
+        <View style={tw``}>
+          {statusOptions.map((option) => {
+            const isSelected = workoutData.status === option.value
+            const StatusIcon = option.icon
+
+            return (
+              <Button
+                key={option.value}
+                onPress={() => handleStatusChange(option.value)}
+                twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
+                  isSelected ? 'bg-primary/10' : ''
+                }`}
+              >
+                <StatusIcon
+                  size={20}
+                  color={isSelected ? Colors.primary : theme.text}
+                />
+                <Txt twcn="text-sm">{option.label}</Txt>
+              </Button>
+            )
+          })}
+        </View>
+      </MyModal>
     </SafeView>
   )
 }

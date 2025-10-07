@@ -32,7 +32,6 @@ export default function ModalLayout() {
           options={{
             title: 'Settings',
             headerTitle: 'Settings',
-            presentation: 'fullScreenModal',
           }}
         />
         <Stack.Screen

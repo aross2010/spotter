@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View } from 'react-native'
+import { StyleSheet, ScrollView, View, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
@@ -19,6 +19,13 @@ const Exercises = () => {
   const { theme } = useTheme()
 
   const handleAddEmptyExercise = () => {
+    if (workoutData.exercises.length >= 25) {
+      Alert.alert(
+        'Limit Reached',
+        'You can only add up to 25 exercises per workout.'
+      )
+      return
+    }
     const starterExercise = {
       name: '',
       isUnilateral: false,

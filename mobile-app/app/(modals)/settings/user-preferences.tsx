@@ -124,8 +124,11 @@ const UserPreferences = () => {
       </Txt>
       <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
         RIR: Reps in Reserves – how many more full reps you could have
-        performed. RPE: Rate of Perceived Exertion – a scale from 1-10 to rate
-        the difficulty of a set.
+        performed.
+      </Txt>
+      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+        RPE: Rate of Perceived Exertion – a scale from 1-10 to rate the
+        difficulty of a set.
       </Txt>
     </SafeView>
   )

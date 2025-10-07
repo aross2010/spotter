@@ -90,10 +90,17 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
 
         <View>
           <Txt
+            numberOfLines={1}
             twcn={`font-poppinsSemiBold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
           >
             {name}
           </Txt>
+          {(workout.status === 'planned' || workout.status === 'active') && (
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText font-poppinsItalic">
+              {workout.status}
+            </Txt>
+          )}
+
           <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>
         </View>
         {tags.length > 0 && (

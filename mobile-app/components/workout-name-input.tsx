@@ -56,7 +56,7 @@ const WorkoutNameInput = () => {
 
   return (
     <View
-      style={tw`relative border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
+      style={tw`relative border-b border-light-grayTertiary flex-1 dark:border-dark-grayTertiary`}
     >
       <Input
         editable
@@ -72,6 +72,7 @@ const WorkoutNameInput = () => {
         placeholder="Legs, Push, Pull, Upper Body, etc..."
         maxLength={50}
         returnKeyType="done"
+        twcnInput="font-poppinsMedium text-light-text dark:text-dark-text"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => setIsWorkoutNameSelectorOpen(true)}
       />

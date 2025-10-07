@@ -16,6 +16,7 @@ import {
 import Spinner from '../../components/activity-indicator'
 import useTheme from '../hooks/theme'
 import WorkoutView from '../../components/workout'
+import Selector from '../../components/selector'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -27,20 +28,33 @@ const Workouts = () => {
     hasMore,
     initializeWorkouts,
     loadMoreWorkouts,
+    applyFiltersAndSort,
     sortOrder,
+    statusFilter,
+    setStatusFilter,
   } = useWorkout()
   const { theme } = useTheme()
+
   const hasWorkouts = currentWorkouts.length > 0
   const numActiveFilters =
     Object.keys(filters).reduce((acc: number, key) => {
       const filterLength = filters[key as keyof typeof filters]?.length || 0
       return Number(acc) + Number(filterLength)
     }, 0 as number) + (sortOrder == 'asc' ? 1 : 0)
-  const noResults = currentWorkouts.length === 0 && numActiveFilters > 0
+  const noResults =
+    currentWorkouts.length === 0 &&
+    (numActiveFilters > 0 || statusFilter != 'all')
 
   useEffect(() => {
     initializeWorkouts()
   }, [])
+
+  // Apply status filter through API when tab changes
+  useEffect(() => {
+    const status =
+      statusFilter === 'all' || statusFilter === null ? undefined : statusFilter
+    applyFiltersAndSort(status)
+  }, [statusFilter])
 
   useEffect(() => {
     navigation.setOptions({
@@ -153,7 +167,6 @@ const Workouts = () => {
       year: 'numeric',
     })
 
-    // Check if we need to show month header
     if (index > 0) {
       const prevEntry = currentWorkouts[index - 1]
       const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
@@ -197,44 +210,72 @@ const Workouts = () => {
     return <Spinner />
   }
 
-  const workoutsView = noResults ? (
-    <SafeView>
-      <View style={tw`flex-1 items-center justify-center`}>
-        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
-          No results found
-        </Txt>
-        <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
-          Try adjusting your filters or sort method to find what you're looking
-          for.
-        </Txt>
-      </View>
-    </SafeView>
-  ) : (
+  const workoutsView = (
     <View style={tw`flex-1`}>
-      <FlatList
-        data={currentWorkouts}
-        renderItem={renderEntry}
-        keyExtractor={(item) => item.id}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4 gap-2`}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={false}
-        disableVirtualization={true}
-        initialNumToRender={currentWorkouts.length}
-        maxToRenderPerBatch={currentWorkouts.length}
-      />
+      <View style={tw`px-4 py-2`}>
+        <Selector
+          selectedValue={statusFilter || 'all'}
+          onSelect={(value) => {
+            const status = value === 'all' ? null : value
+            setStatusFilter(status)
+          }}
+          options={[
+            {
+              label: 'All',
+              value: 'all',
+            },
+            {
+              label: 'Completed',
+              value: 'completed',
+            },
+            {
+              label: 'Planned',
+              value: 'planned',
+            },
+            {
+              label: 'Active',
+              value: 'active',
+            },
+          ]}
+        />
+      </View>
+
+      {isLoading ? (
+        <View style={tw`flex-1 items-center justify-center`}>
+          <Spinner />
+        </View>
+      ) : noResults ? (
+        <View style={tw`flex-1 items-center justify-center`}>
+          <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+            No results found
+          </Txt>
+          <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
+            Try adjusting your filters or sort method to find what you're
+            looking for.
+          </Txt>
+        </View>
+      ) : (
+        <FlatList
+          data={currentWorkouts}
+          renderItem={renderEntry}
+          keyExtractor={(item) => item.id}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
+          contentContainerStyle={tw`p-4 gap-2`}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews={false}
+          disableVirtualization={true}
+          initialNumToRender={currentWorkouts.length}
+          maxToRenderPerBatch={currentWorkouts.length}
+        />
+      )}
     </View>
   )
 
-  return isLoading ? (
-    <Spinner />
-  ) : hasWorkouts || noResults ? (
-    workoutsView
-  ) : (
-    workoutPrompt
-  )
+  return hasWorkouts || noResults || statusFilter != 'all' || isLoading
+    ? workoutsView
+    : workoutPrompt
 }
 
 export default Workouts

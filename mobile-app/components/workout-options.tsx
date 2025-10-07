@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native'
 import Txt from './text'
 import { WorkoutMinimal } from '../context/workout-context'
-import { PinOff, Share } from 'lucide-react-native'
+import { Copy, PinOff, Share } from 'lucide-react-native'
 import { Info, Pin, Pencil, Trash } from 'lucide-react-native'
 import Button from './button'
 import tw from '../tw'
@@ -46,22 +46,30 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
     setIsOptionsOpen(false)
   }
 
+  const handleCloneWorkout = () => {
+    // keep the location, workout name, tags, exercise names, sets, reps, setgroupings, rpe/rir, and weight unit
+    // change to current date
+    // leave out the weights
+    setIsOptionsOpen(false)
+    router.push({
+      pathname: '/workout-form',
+      params: {
+        cloneId: id,
+      },
+    })
+  }
+
   const options = [
     {
-      title: 'Details',
+      title: 'View',
       onPress: handleViewDetails,
       icon: Info,
     },
-    // {
-    //   title: 'Share',
-    //   onPress: () => handleShareWorkout(workout),
-    //   icon: Share,
-    // },
-    // {
-    //   title: pinned ? 'Unpin' : 'Pin',
-    //   onPress: handlePinToggle,
-    //   icon: pinned ? PinOff : Pin,
-    // },
+    {
+      title: 'Clone',
+      onPress: handleCloneWorkout,
+      icon: Copy,
+    },
     {
       title: 'Edit',
       onPress: handleEdit,
@@ -102,6 +110,9 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
 
   return (
     <Fragment>
+      <Txt twcn="font-poppinsMedium text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText">
+        Workout Options
+      </Txt>
       <View style={tw`rounded-3xl bg-white dark:bg-dark-grayPrimary p-2`}>
         {renderedOptions}
       </View>

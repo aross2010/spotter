@@ -48,6 +48,7 @@ export type WorkoutMinimal = {
     lowRepRange: number
     highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
   }[]
+  status: 'completed' | 'planned' | 'active'
 }
 
 export type WorkoutName = {
@@ -83,6 +84,8 @@ type WorkoutContextType = {
   ) => Promise<void>
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
+  statusFilter: string | null
+  setStatusFilter: (status: string | null) => void
   filters: WorkoutFilters
   updateFilters: (
     filterOption: FilterOptions[number],
@@ -391,11 +394,9 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           }),
         }
       )
-
-      if (response.ok) {
-        // Refresh the workouts list to show updated data
-        await refreshWorkouts()
-      }
+      const workout = await response.json()
+      await refreshWorkouts()
+      return workout
     } catch (error: any) {
       Alert.alert('Error', error.message)
     }
@@ -413,6 +414,8 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     applyFiltersAndSort,
     sortOrder,
     setSortOrder,
+    statusFilter,
+    setStatusFilter,
     filters,
     updateFilters,
     clearFilters,

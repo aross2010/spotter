@@ -52,7 +52,7 @@ export const GET = withAuth(async (req, user) => {
     )
   }
 
-  if (status && !['completed', 'planned'].includes(status)) {
+  if (status && !['completed', 'planned', 'active'].includes(status)) {
     return NextResponse.json(
       { error: 'Invalid status parameter. Allowed values: completed, planned' },
       { status: 400 }
@@ -223,6 +223,7 @@ export const GET = withAuth(async (req, user) => {
           name: workouts.name,
           date: workouts.date,
           location: workouts.location,
+          status: workouts.status,
         })
         .from(workouts)
         .innerJoin(
@@ -282,6 +283,7 @@ export const GET = withAuth(async (req, user) => {
           name: workouts.name,
           date: workouts.date,
           location: workouts.location,
+          status: workouts.status,
         })
         .from(workouts)
         .innerJoin(
@@ -334,6 +336,7 @@ export const GET = withAuth(async (req, user) => {
           name: workouts.name,
           date: workouts.date,
           location: workouts.location,
+          status: workouts.status,
         })
         .from(workouts)
         .innerJoin(
@@ -495,6 +498,7 @@ export const GET = withAuth(async (req, user) => {
         tags: tagsByWorkout[workout.id] || [],
         pinned: (workout as any).pinned || false,
         name: workout.name,
+        status: workout.status,
         exercises,
       }
     })

@@ -116,9 +116,9 @@ export const PUT = withAuth(async (req: Request, user: any) => {
     )
   }
 
-  if (status && !['completed', 'planned'].includes(status)) {
+  if (status && !['completed', 'planned', 'active'].includes(status)) {
     return NextResponse.json(
-      { error: 'Status must be one of: completed, planned' },
+      { error: 'Status must be one of: completed, planned, active' },
       { status: 400 }
     )
   }
