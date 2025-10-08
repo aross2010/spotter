@@ -111,7 +111,8 @@ const RootLayout = () => {
                   <Stack.Screen
                     name="(modals)"
                     options={{
-                      presentation: 'fullScreenModal',
+                      presentation: 'card',
+                      headerShown: false,
                     }}
                   />
                 </Stack>

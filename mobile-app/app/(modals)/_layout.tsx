@@ -9,10 +9,8 @@ export default function ModalLayout() {
 
   return (
     <>
-      <ThemedStatusBar />
       <Stack
         screenOptions={{
-          presentation: 'fullScreenModal',
           headerShown: false,
           headerTitleStyle: {
             fontSize: 20,
@@ -58,7 +56,6 @@ export default function ModalLayout() {
                 text="Cancel"
               />
             ),
-            presentation: 'fullScreenModal',
           }}
         />
 
@@ -110,16 +107,14 @@ export default function ModalLayout() {
           options={{
             title: 'Workout',
             headerTitle: 'New Workout',
-            presentation: 'fullScreenModal',
           }}
         />
+
         <Stack.Screen
           name="workout-details"
           options={{
             title: 'Workout Details',
-            presentation: 'fullScreenModal',
             headerTitleAlign: 'left',
-
             headerLeft: () => (
               <Button
                 onPress={() => router.back()}
@@ -135,7 +130,6 @@ export default function ModalLayout() {
           name="workout-filters"
           options={{
             title: 'Workout Filters',
-            presentation: 'fullScreenModal',
             headerShown: true,
             headerTitle: 'Filter Workouts',
           }}

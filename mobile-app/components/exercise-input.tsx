@@ -26,11 +26,20 @@ import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
 
+const MAX_SETS = 20
+
 type ExerciseInputProps = {
   exerciseNumber: number
+  totalExercises?: number
+  onReorderExercises?: (fromIndex: number, toIndex: number) => void
 } & TextInputProps
 
-const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
+const ExerciseInput = ({
+  exerciseNumber,
+  totalExercises,
+  onReorderExercises,
+  ...rest
+}: ExerciseInputProps) => {
   const [isExerciseInfoOpen, setIsExerciseInfoOpen] = useState(false)
   const [isExerciseNameSelectorOpen, setIsExerciseNameSelectorOpen] =
     useState(false)
@@ -41,6 +50,11 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
   const weightInputRefs = useRef<Map<string, TextInput>>(new Map())
   const leftWeightInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const [isEditingExerciseNumber, setIsEditingExerciseNumber] = useState(false)
+  const [exerciseNumberInput, setExerciseNumberInput] = useState(
+    exerciseNumber.toString()
+  )
+  const exerciseNumberInputRef = useRef<TextInput>(null)
   const {
     workoutData,
     setWorkoutData,
@@ -253,7 +267,7 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     const updatedExercises = [...workoutData.exercises]
     const currentExercise = updatedExercises[exerciseNumber - 1]
     if (!currentExercise) return
-    if (currentExercise.sets.length >= 20) {
+    if (currentExercise.sets.length >= MAX_SETS) {
       Alert.alert(
         'Limit Reached',
         'You can only add up to 20 sets per exercise.'
@@ -591,6 +605,54 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
     }
   }
 
+  const handleExerciseNumberEdit = () => {
+    setIsEditingExerciseNumber(true)
+    setExerciseNumberInput(exerciseNumber.toString())
+    // Focus the input after a small delay to ensure it's rendered
+    setTimeout(() => {
+      exerciseNumberInputRef.current?.focus()
+    }, 100)
+  }
+
+  const handleExerciseNumberSubmit = () => {
+    const newNumber = parseInt(exerciseNumberInput, 10)
+
+    // Validate input
+    if (isNaN(newNumber) || newNumber < 1) {
+      // Reset to current number if invalid
+      setExerciseNumberInput(exerciseNumber.toString())
+      setIsEditingExerciseNumber(false)
+      return
+    }
+
+    // Clamp to valid range
+    const maxNumber = totalExercises || workoutData.exercises.length
+    const clampedNumber = Math.min(newNumber, maxNumber)
+
+    if (clampedNumber !== exerciseNumber && onReorderExercises) {
+      // Calculate the target index (0-based)
+      const currentIndex = exerciseNumber - 1
+      const targetIndex = clampedNumber - 1
+
+      // Reorder the exercises
+      onReorderExercises(currentIndex, targetIndex)
+    }
+
+    setIsEditingExerciseNumber(false)
+  }
+
+  const handleExerciseNumberCancel = () => {
+    setExerciseNumberInput(exerciseNumber.toString())
+    setIsEditingExerciseNumber(false)
+  }
+
+  // Update input value when exerciseNumber prop changes
+  React.useEffect(() => {
+    if (!isEditingExerciseNumber) {
+      setExerciseNumberInput(exerciseNumber.toString())
+    }
+  }, [exerciseNumber, isEditingExerciseNumber])
+
   const renderedExerciseButtons = buttons.map(
     ({ name, icon: Icon, onPress }) => {
       const isActive =
@@ -878,11 +940,29 @@ const ExerciseInput = ({ exerciseNumber, ...rest }: ExerciseInputProps) => {
   const timelineComponent = (
     <View style={tw`gap-1 justify-center items-center`}>
       <View
-        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full bg-primary items-center justify-center`}
+        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full ${isEditingExerciseNumber ? 'bg-primary/80 border border-primary' : 'bg-primary'} items-center justify-center`}
       >
-        <Txt twcn="text-sm text-dark-text font-poppinsSemiBold">
-          {exerciseNumber ?? '+'}
-        </Txt>
+        {isEditingExerciseNumber ? (
+          <TextInput
+            ref={exerciseNumberInputRef}
+            style={tw`text-sm text-dark-text font-poppinsSemiBold w-full h-full`}
+            textAlign="center"
+            textAlignVertical="center"
+            value={exerciseNumberInput}
+            onChangeText={setExerciseNumberInput}
+            onSubmitEditing={handleExerciseNumberSubmit}
+            onBlur={handleExerciseNumberCancel}
+            keyboardType="numeric"
+            maxLength={2}
+            selectTextOnFocus={false}
+          />
+        ) : (
+          <Button onPress={handleExerciseNumberEdit}>
+            <Txt twcn="text-sm text-dark-text font-poppinsSemiBold">
+              {exerciseNumber ?? '+'}
+            </Txt>
+          </Button>
+        )}
       </View>
       <View
         style={tw`flex-1 w-1 ${isInSuperset ? 'bg-secondary' : 'bg-primary'} rounded-full`}

@@ -5,6 +5,7 @@ import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
 import { formattedDate } from '../../functions/formatted-date'
 import { Pressable } from 'react-native'
+import { Link } from 'expo-router'
 
 // structure:
 // main stats at top (# workouts, sets, reps, and total weight lifted)

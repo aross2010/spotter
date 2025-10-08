@@ -12,6 +12,8 @@ import { nanoid } from 'nanoid/non-secure'
 import MyModal from './modal'
 import ExerciseOptions from './exercise-options'
 
+const MAX_EXERCISES = 25
+
 const Exercises = () => {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
   const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
@@ -19,7 +21,7 @@ const Exercises = () => {
   const { theme } = useTheme()
 
   const handleAddEmptyExercise = () => {
-    if (workoutData.exercises.length >= 25) {
+    if (workoutData.exercises.length >= MAX_EXERCISES) {
       Alert.alert(
         'Limit Reached',
         'You can only add up to 25 exercises per workout.'
@@ -47,11 +49,24 @@ const Exercises = () => {
     setNewlyAddedExerciseNumber(newExerciseNumber)
   }
 
+  const handleReorderExercises = (fromIndex: number, toIndex: number) => {
+    const updatedExercises = [...workoutData.exercises]
+    const [movedExercise] = updatedExercises.splice(fromIndex, 1)
+    updatedExercises.splice(toIndex, 0, movedExercise)
+
+    setWorkoutData({
+      ...workoutData,
+      exercises: updatedExercises,
+    })
+  }
+
   const renderedExercises = workoutData.exercises.map((exercise, index) => {
     return (
       <ExerciseInput
         key={index}
         exerciseNumber={index + 1}
+        totalExercises={workoutData.exercises.length}
+        onReorderExercises={handleReorderExercises}
       />
     )
   })
