@@ -14,22 +14,24 @@ import { setExercise, setSuperOrDropsets, setTags } from '../route'
 import { eq, and, sql } from 'drizzle-orm'
 import { withAuth } from '../../middleware'
 
-// clear data not in the workout table – tags, then set groups, then exercises (which will delete sets)
+// clear data not in the workout table – tags, then exercises (which will delete sets), then clean up empty set groups
 const clearWorkoutChildren = async (workoutId: string, tx: any) => {
   await tx
     .delete(workoutTagLinks)
     .where(eq(workoutTagLinks.workoutId, workoutId))
-  await tx.delete(setGroupings).where(sql`
-    ${setGroupings.id} IN (
-      SELECT DISTINCT s.set_grouping_id
-      FROM ${sets} s
-      JOIN ${workoutExercises} we ON we.id = s.workout_exercise_id
-      WHERE we.workout_id = ${workoutId}
-    )
-  `)
+
+  // Delete workout exercises first (which will cascade delete sets)
   await tx
     .delete(workoutExercises)
     .where(eq(workoutExercises.workoutId, workoutId))
+
+  // Clean up any set groupings that no longer have any sets
+  await tx.delete(setGroupings).where(sql`
+    NOT EXISTS (
+      SELECT 1 FROM ${sets} 
+      WHERE ${sets.setGroupingId} = ${setGroupings.id}
+    )
+  `)
 }
 
 // clear sub-data and re-insert + update workout base data

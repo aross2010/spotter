@@ -99,6 +99,7 @@ type WorkoutContextType = {
   ) => Promise<void>
   getFilterOptions: () => Promise<void>
   filterOptions: FilterOptions
+  workouts: WorkoutMinimal[] // --- IGNORE ---
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -109,6 +110,7 @@ type WorkoutProviderProps = {
 
 export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const [currentWorkouts, setCurrentWorkouts] = useState<WorkoutMinimal[]>([])
+  const [workouts, setWorkouts] = useState<WorkoutMinimal[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -271,6 +273,8 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       setHasMore(data.pagination.hasNextPage)
       setCurrentPage(data.pagination.page)
       setHasLoaded(true)
+
+      return data.workouts
     } catch (error: any) {
       Alert.alert('Error', error.message)
     } finally {
@@ -281,7 +285,8 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
   const initializeWorkouts = async () => {
     if (!hasLoaded && !isLoading) {
-      await fetchWorkouts(1, false)
+      const workouts = await fetchWorkouts(1, false)
+      setWorkouts(workouts)
     }
   }
 
@@ -423,6 +428,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     updateWorkout,
     getFilterOptions,
     filterOptions,
+    workouts,
   }
 
   return (

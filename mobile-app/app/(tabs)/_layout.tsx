@@ -120,27 +120,6 @@ const TabsLayout = () => {
               ),
           }}
         />
-
-        <Tabs.Screen
-          name="log-placeholder"
-          options={{
-            title: 'Log',
-            tabBarIcon: () => (
-              <CirclePlus
-                strokeWidth={1.5}
-                size={28}
-                color={theme.grayText}
-              />
-            ),
-          }}
-          listeners={{
-            tabPress: (e) => {
-              e.preventDefault()
-              setIsLogModalOpen(true)
-            },
-          }}
-        />
-
         <Tabs.Screen
           name="exercises"
           options={{

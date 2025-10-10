@@ -189,7 +189,6 @@ const NotebookEntryForm = () => {
             value={data.title}
             onChange={(e) => setData({ ...data, title: e.nativeEvent.text })}
             placeholder="Entry title (optional)"
-            noBorder
             twcnInput="text-base h-10"
           />
         </View>
@@ -199,7 +198,6 @@ const NotebookEntryForm = () => {
           value={data.body}
           onChange={(e) => setData({ ...data, body: e.nativeEvent.text })}
           placeholder="Anything on your mind..."
-          noBorder
           autoFocus
           numberOfLines={2}
           multiline

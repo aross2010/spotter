@@ -370,14 +370,14 @@ const Supersets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative flex-row items-center gap-2 p-1 rounded-lg ${isSelected ? 'bg-primary/25 border-primary' : 'bg-light-grayPrimary dark:bg-dark-graySecondary border-light-grayTertiary dark:border-dark-grayTertiary'} border`}
+                twcn={`relative flex-row items-center gap-2 p-1 px-3 py-1.5 bg-white dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isSelected ? 'bg-primary/25 border-primary' : ''}`}
                 disabled={isSetDisabled}
               >
                 <Txt
-                  twcn={`text-xs uppercase tracking-wider ${
+                  twcn={`text-xs text-light-grayText dark:text-dark-grayText ${
                     isSetDisabled
                       ? 'text-light-graySecondary dark:text-dark-graySecondary'
-                      : 'text-light-grayText dark:text-dark-grayText'
+                      : ''
                   } ${isSelected ? 'text-primary' : ''}`}
                 >
                   {formatSetDisplay(set, workoutData.weightUnit || 'lbs')}

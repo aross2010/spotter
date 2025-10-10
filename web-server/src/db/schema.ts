@@ -205,6 +205,7 @@ export const exercises = pgTable(
     isUnilateral: boolean('is_unilateral').notNull().default(false),
     primaryMuscleGroup: muscleGroup('primary_muscle_group'),
     secondaryMuscleGroups: muscleGroup('secondary_muscle_groups').array(),
+    notes: text('notes'), // limit to n words in business logic
   },
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )

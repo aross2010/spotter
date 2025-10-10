@@ -32,10 +32,10 @@ const Workouts = () => {
     sortOrder,
     statusFilter,
     setStatusFilter,
+    workouts,
   } = useWorkout()
   const { theme } = useTheme()
 
-  const hasWorkouts = currentWorkouts.length > 0
   const numActiveFilters =
     Object.keys(filters).reduce((acc: number, key) => {
       const filterLength = filters[key as keyof typeof filters]?.length || 0
@@ -61,7 +61,7 @@ const Workouts = () => {
       headerRight: () => {
         return (
           <View style={tw`flex-row items-center gap-2 mr-4`}>
-            {(hasWorkouts || noResults) && (
+            {workouts.length > 0 && (
               <View style={tw`relative`}>
                 <Link
                   href="/workout-filters"
@@ -273,9 +273,13 @@ const Workouts = () => {
     </View>
   )
 
-  return hasWorkouts || noResults || statusFilter != 'all' || isLoading
-    ? workoutsView
-    : workoutPrompt
+  return isLoading ? (
+    <Spinner />
+  ) : workouts.length > 0 ? (
+    workoutsView
+  ) : (
+    workoutPrompt
+  )
 }
 
 export default Workouts

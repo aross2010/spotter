@@ -113,6 +113,8 @@ const RootLayout = () => {
                     options={{
                       presentation: 'card',
                       headerShown: false,
+                      animation: 'slide_from_bottom',
+                      animationDuration: 250,
                     }}
                   />
                 </Stack>
