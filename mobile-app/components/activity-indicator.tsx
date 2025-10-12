@@ -10,6 +10,7 @@ type SpinnerProps = {
   color?: string
   twcn?: string
   fullScreen?: boolean
+  text?: string
 }
 
 const Spinner = ({
@@ -17,6 +18,7 @@ const Spinner = ({
   color,
   twcn,
   fullScreen = true,
+  text,
 }: SpinnerProps) => {
   const { theme } = useTheme()
 
@@ -31,8 +33,15 @@ const Spinner = ({
   if (fullScreen) {
     return (
       <SafeView>
-        <View style={tw`flex-1 justify-center items-center my-12`}>
+        <View style={tw`flex-1 flex-row justify-center items-center my-12`}>
           {spinner}
+          {text && (
+            <Text
+              style={tw`ml-2 text-sm text-light-grayText dark:text-dark-grayText`}
+            >
+              {text}
+            </Text>
+          )}
         </View>
       </SafeView>
     )

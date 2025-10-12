@@ -9,21 +9,42 @@ import {
   sets,
   workoutTagLinks,
   users,
+  exercises,
 } from '@/src/db/schema'
 import { setExercise, setSuperOrDropsets, setTags } from '../route'
 import { eq, and, sql } from 'drizzle-orm'
 import { withAuth } from '../../middleware'
 
-// clear data not in the workout table – tags, then exercises (which will delete sets), then clean up empty set groups
+// clear data not in the workout table – tags, then exercises (which will delete sets), then clean up empty set groups and unused exercises
 const clearWorkoutChildren = async (workoutId: string, tx: any) => {
   await tx
     .delete(workoutTagLinks)
     .where(eq(workoutTagLinks.workoutId, workoutId))
 
+  // Get exercise IDs that will be orphaned before deleting workout exercises
+  const exerciseIdsToCheck = await tx
+    .select({ exerciseId: workoutExercises.exerciseId })
+    .from(workoutExercises)
+    .where(eq(workoutExercises.workoutId, workoutId))
+
   // Delete workout exercises first (which will cascade delete sets)
   await tx
     .delete(workoutExercises)
     .where(eq(workoutExercises.workoutId, workoutId))
+
+  // Delete exercises that no longer have any workout exercises attached
+  if (exerciseIdsToCheck.length > 0) {
+    await tx.delete(exercises).where(sql`
+      ${exercises.id} IN (${sql.join(
+      exerciseIdsToCheck.map((e: any) => sql`${e.exerciseId}`),
+      sql`, `
+    )})
+      AND NOT EXISTS (
+        SELECT 1 FROM ${workoutExercises} 
+        WHERE ${workoutExercises.exerciseId} = ${exercises.id}
+      )
+    `)
+  }
 
   // Clean up any set groupings that no longer have any sets
   await tx.delete(setGroupings).where(sql`
@@ -226,25 +247,33 @@ export async function DELETE(req: Request, props: { params: Params }) {
   }
 
   try {
-    const [deletedWorkout] = await db
-      .delete(workouts)
-      .where(eq(workouts.id, id))
-      .returning()
+    const result = await db.transaction(async (tx) => {
+      // Clean up workout children and orphaned exercises before deleting the workout
+      await clearWorkoutChildren(id, tx)
 
-    if (!deletedWorkout) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
-    }
+      const [deletedWorkout] = await tx
+        .delete(workouts)
+        .where(eq(workouts.id, id))
+        .returning()
+
+      if (!deletedWorkout) {
+        throw new Error('Workout not found')
+      }
+
+      return deletedWorkout
+    })
 
     return NextResponse.json(
-      { message: 'Workout deleted successfully', id: deletedWorkout.id },
+      { message: 'Workout deleted successfully', id: result.id },
       { status: 200 }
     )
-  } catch (error) {
+  } catch (error: any) {
+    const msg =
+      error instanceof Error ? error.message : 'Unexpected error occurred'
+    const status = msg === 'Workout not found' ? 404 : 500
+
     console.error('Error deleting workout:', error)
-    return NextResponse.json(
-      { error: 'An unexpected error occurred' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: msg }, { status })
   }
 }
 

@@ -273,13 +273,7 @@ const Workouts = () => {
     </View>
   )
 
-  return isLoading ? (
-    <Spinner />
-  ) : workouts.length > 0 ? (
-    workoutsView
-  ) : (
-    workoutPrompt
-  )
+  return workouts.length > 0 || isLoading ? workoutsView : workoutPrompt
 }
 
 export default Workouts

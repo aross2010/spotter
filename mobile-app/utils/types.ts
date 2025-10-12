@@ -1,3 +1,5 @@
+import { MUSCLE_GROUPS } from '../constants/data'
+
 export type Providers = 'apple' | 'google'
 
 export type Provider = {
@@ -57,3 +59,5 @@ export type Workout = {
   createdAt: string
   updatedAt?: string
 }
+
+export type MuscleGroup = (typeof MUSCLE_GROUPS)[number]

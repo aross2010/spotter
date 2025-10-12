@@ -18,7 +18,6 @@ import Input from '../../components/input'
 type ExerciseMinimal = {
   id: string
   name: string
-  used: string
   primaryMuscleGroup: (typeof MUSCLE_GROUPS)[number]
   secondaryMuscleGroups: (typeof MUSCLE_GROUPS)[number][]
 }
@@ -29,6 +28,9 @@ const Exercises = () => {
   const [filteredExercises, setFilteredExercises] = useState<ExerciseMinimal[]>(
     []
   )
+  const [muscleGroupFilters, setMuscleGroupFilters] = useState<
+    (typeof MUSCLE_GROUPS)[number][]
+  >([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const { fetchWithAuth, authUser } = useAuth()
@@ -81,21 +83,63 @@ const Exercises = () => {
     })
   }, [navigation])
 
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text)
-    const filtered = exercises.filter((exercise) =>
-      exercise.name.toLowerCase().includes(text.toLowerCase())
-    )
+  const applyAllFilters = (
+    searchText: string = searchQuery,
+    muscleFilters: (typeof MUSCLE_GROUPS)[number][] = muscleGroupFilters
+  ) => {
+    const filtered = exercises.filter((exercise) => {
+      // Search filter - must match if search text exists
+      const matchesSearch =
+        !searchText.trim() ||
+        exercise.name.toLowerCase().includes(searchText.toLowerCase())
+
+      // Muscle group filter - must match ALL selected muscle groups (AND logic)
+      const allMuscleGroups = [
+        exercise.primaryMuscleGroup,
+        ...(exercise.secondaryMuscleGroups || []),
+      ].map((mg) => mg?.toLowerCase())
+
+      const matchesMuscleGroups =
+        muscleFilters.length === 0 ||
+        muscleFilters.every((filter) =>
+          allMuscleGroups.includes(filter.toLowerCase())
+        )
+
+      return matchesSearch && matchesMuscleGroups
+    })
+
     setFilteredExercises(filtered)
   }
 
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text)
+    applyAllFilters(text, muscleGroupFilters)
+  }
+
+  const handleFilterMuscleGroup = (
+    muscleGroup: (typeof MUSCLE_GROUPS)[number]
+  ) => {
+    let updatedFilters = [...muscleGroupFilters]
+    if (muscleGroupFilters.includes(muscleGroup)) {
+      updatedFilters = updatedFilters.filter((mg) => mg !== muscleGroup)
+    } else {
+      updatedFilters.push(muscleGroup)
+    }
+    setMuscleGroupFilters(updatedFilters)
+    applyAllFilters(searchQuery, updatedFilters)
+  }
+
   const renderedMuscleGroups = MUSCLE_GROUPS.map((m) => {
+    const isSelected = muscleGroupFilters.includes(m)
     return (
       <Button
         key={m}
-        style={tw`px-3 py-1.5 bg-white dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
+        onPress={() => handleFilterMuscleGroup(m)}
+        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 border-primary' : 'bg-white dark:bg-dark-grayPrimary border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'} rounded-lg border`}
       >
-        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+        <Txt
+          twcn={`text-xs ${isSelected ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+        >
           {m}
         </Txt>
       </Button>
@@ -110,17 +154,17 @@ const Exercises = () => {
           key={exercises.id}
           onPress={() => {
             router.push({
-              pathname: '/exercise',
+              pathname: '/exercise-details',
               params: {
-                exerciseId: exercises.id,
+                id: exercises.id,
               },
             })
           }}
           twcn="flex-row items-center justify-between p-4 border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50"
         >
           <View style={tw`gap-0`}>
-            <Txt>{exercises.name}</Txt>
-            <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+            <Txt twcn="text-sm">{exercises.name}</Txt>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
               {exercises.primaryMuscleGroup
                 ?.split(' ')
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

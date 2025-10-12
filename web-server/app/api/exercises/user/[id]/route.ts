@@ -1,8 +1,8 @@
 import { withAuth } from '@/app/api/middleware'
 import db from '@/src'
-import { exercises, workoutExercises } from '@/src/db/schema'
+import { exercises } from '@/src/db/schema'
 import { NextResponse } from 'next/server'
-import { eq, sql, count } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
@@ -13,30 +13,21 @@ export const GET = withAuth(async (req, user) => {
   }
 
   try {
-    // Optimized query to get all user exercises with usage count and muscle groups
+    // Simple query to get all user exercises with muscle groups
     const userExercises = await db
       .select({
         id: exercises.id,
         name: exercises.name,
-        used: count(workoutExercises.id),
         primaryMuscleGroup: exercises.primaryMuscleGroup,
         secondaryMuscleGroups: exercises.secondaryMuscleGroups,
       })
       .from(exercises)
-      .leftJoin(workoutExercises, eq(exercises.id, workoutExercises.exerciseId))
       .where(eq(exercises.userId, userId))
-      .groupBy(
-        exercises.id,
-        exercises.name,
-        exercises.primaryMuscleGroup,
-        exercises.secondaryMuscleGroups
-      )
-      .orderBy(sql`count(${workoutExercises.id}) DESC, ${exercises.name} ASC`)
+      .orderBy(exercises.name)
 
     const result = userExercises.map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
-      used: Number(exercise.used),
       primaryMuscleGroup: exercise.primaryMuscleGroup,
       secondaryMuscleGroups: exercise.secondaryMuscleGroups || [],
     }))

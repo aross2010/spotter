@@ -13,48 +13,45 @@ export const GET = withAuth(async (req, user) => {
   }
 
   try {
-    const [workoutNameResults, exerciseNameResults, locationResults] =
-      await Promise.all([
-        db
-          .select({
-            name: workouts.name,
-            used: sql<number>`count(*)::int`.as('used'),
-          })
-          .from(workouts)
-          .where(eq(workouts.userId, userId))
-          .groupBy(workouts.name)
-          .orderBy(desc(sql`count(*)`)),
+    const [workoutNames, exerciseNames, locationResults] = await Promise.all([
+      db
+        .select({
+          name: workouts.name,
+          used: sql<number>`count(*)::int`.as('used'),
+        })
+        .from(workouts)
+        .where(eq(workouts.userId, userId))
+        .groupBy(workouts.name)
+        .orderBy(desc(sql`count(*)`)),
 
-        db
-          .select({
-            name: exercises.name,
-            used: sql<number>`count(${workoutExercises.id})::int`.as('used'),
-            isUnilateral: exercises.isUnilateral,
-          })
-          .from(exercises)
-          .leftJoin(
-            workoutExercises,
-            eq(exercises.id, workoutExercises.exerciseId)
-          )
-          .where(eq(exercises.userId, userId))
-          .groupBy(exercises.name, exercises.isUnilateral)
-          .orderBy(desc(sql`count(${workoutExercises.id})`)),
+      db
+        .select({
+          name: exercises.name,
+          used: sql<number>`count(${workoutExercises.id})::int`.as('used'),
+          isUnilateral: exercises.isUnilateral,
+        })
+        .from(exercises)
+        .leftJoin(
+          workoutExercises,
+          eq(exercises.id, workoutExercises.exerciseId)
+        )
+        .where(eq(exercises.userId, userId))
+        .groupBy(exercises.name, exercises.isUnilateral)
+        .orderBy(desc(sql`count(${workoutExercises.id})`)),
 
-        db
-          .select({
-            location: workouts.location,
-            used: sql<number>`count(*)::int`.as('used'),
-          })
-          .from(workouts)
-          .where(eq(workouts.userId, userId))
-          .groupBy(workouts.location)
-          .orderBy(desc(sql`count(*)`)),
-      ])
+      db
+        .select({
+          location: workouts.location,
+          used: sql<number>`count(*)::int`.as('used'),
+        })
+        .from(workouts)
+        .where(eq(workouts.userId, userId))
+        .groupBy(workouts.location)
+        .orderBy(desc(sql`count(*)`)),
+    ])
 
-    const workoutNames = workoutNameResults
-    const exerciseNames = exerciseNameResults
     const locations = locationResults.filter(
-      (loc) => loc.location !== null && loc.location !== ''
+      (loc) => loc.location !== null && loc.location !== '' && loc.used > 0
     )
 
     console.log('locations: ', locations)

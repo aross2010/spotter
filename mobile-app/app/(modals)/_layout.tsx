@@ -134,6 +134,22 @@ export default function ModalLayout() {
             headerTitle: 'Filter Workouts',
           }}
         />
+        <Stack.Screen
+          name="exercise-details"
+          options={{
+            title: 'Exercise',
+            headerShown: true,
+            headerLeft: () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close exercise details"
+                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+                text="Close"
+              />
+            ),
+          }}
+        />
       </Stack>
     </>
   )

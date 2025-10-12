@@ -61,7 +61,7 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-3xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 rounded-3xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>
@@ -89,17 +89,19 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
         </View>
 
         <View>
-          <Txt
-            numberOfLines={1}
-            twcn={`font-poppinsSemiBold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
-          >
-            {name}
-          </Txt>
-          {(workout.status === 'planned' || workout.status === 'active') && (
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText font-poppinsItalic">
-              {workout.status}
+          <View style={tw`flex-row items-center gap-1`}>
+            <Txt
+              numberOfLines={1}
+              twcn={`font-poppinsSemiBold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+            >
+              {name}
             </Txt>
-          )}
+            {(workout.status === 'planned' || workout.status === 'active') && (
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText font-poppinsItalic">
+                – {workout.status}
+              </Txt>
+            )}
+          </View>
 
           <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>
         </View>
