@@ -32,7 +32,8 @@ type ExerciseDetails = {
   primaryMuscleGroup: MuscleGroup
   secondaryMuscleGroups: MuscleGroup[]
   isUnilateral: boolean
-  notes?: string
+  description?: string
+  totalUserWorkouts: number
   history: {
     workoutId: string
     workoutName: string
@@ -83,44 +84,59 @@ export const GET = withAuth(async (req, user) => {
       )
     }
 
-    // Get all workout data with sets for this exercise
-    const exerciseHistory = await db
-      .select({
-        workoutId: workouts.id,
-        workoutName: workouts.name,
-        workoutDate: workouts.date,
-        exerciseNumber: workoutExercises.exerciseNumber,
-        setId: sets.id,
-        setNumber: sets.setNumber,
-        weightLbs: sets.weightLbs,
-        weightKg: sets.weightKg,
-        reps: sets.reps,
-        leftReps: sets.leftReps,
-        rightReps: sets.rightReps,
-        rpe: sets.rpe,
-        leftRpe: sets.leftRpe,
-        rightRpe: sets.rightRpe,
-        rir: sets.rir,
-        leftRir: sets.leftRir,
-        rightRir: sets.rightRir,
-        partialReps: sets.partialReps,
-        leftPartialReps: sets.leftPartialReps,
-        rightPartialReps: sets.rightPartialReps,
-        cheatReps: sets.cheatReps,
-      })
-      .from(exercises)
-      .innerJoin(
-        workoutExercises,
-        eq(exercises.id, workoutExercises.exerciseId)
-      )
-      .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-      .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-      .where(eq(exercises.id, exerciseId))
-      .orderBy(
-        desc(workouts.date),
-        workoutExercises.exerciseNumber,
-        sets.setNumber
-      )
+    // Run queries in parallel for better performance
+    const [totalUserWorkoutsResult, exerciseHistory] = await Promise.all([
+      // Get total completed workouts for the user
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(workouts)
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+        ),
+
+      // Get all workout data with sets for this exercise
+      db
+        .select({
+          workoutId: workouts.id,
+          workoutName: workouts.name,
+          workoutDate: workouts.date,
+          exerciseNumber: workoutExercises.exerciseNumber,
+          setId: sets.id,
+          setNumber: sets.setNumber,
+          weightLbs: sets.weightLbs,
+          weightKg: sets.weightKg,
+          reps: sets.reps,
+          leftReps: sets.leftReps,
+          rightReps: sets.rightReps,
+          rpe: sets.rpe,
+          leftRpe: sets.leftRpe,
+          rightRpe: sets.rightRpe,
+          rir: sets.rir,
+          leftRir: sets.leftRir,
+          rightRir: sets.rightRir,
+          partialReps: sets.partialReps,
+          leftPartialReps: sets.leftPartialReps,
+          rightPartialReps: sets.rightPartialReps,
+          cheatReps: sets.cheatReps,
+        })
+        .from(exercises)
+        .innerJoin(
+          workoutExercises,
+          eq(exercises.id, workoutExercises.exerciseId)
+        )
+        .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+        .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
+        .where(
+          and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed'))
+        )
+        .orderBy(
+          desc(workouts.date),
+          workoutExercises.exerciseNumber,
+          sets.setNumber
+        ),
+    ])
+
+    const totalUserWorkouts = totalUserWorkoutsResult[0]?.count || 0
 
     if (exerciseHistory.length === 0) {
       return NextResponse.json(
@@ -272,7 +288,8 @@ export const GET = withAuth(async (req, user) => {
       primaryMuscleGroup: exercise.primaryMuscleGroup || '',
       secondaryMuscleGroups: exercise.secondaryMuscleGroups || [],
       isUnilateral: exercise.isUnilateral,
-      notes: exercise.notes || undefined,
+      description: exercise.description || undefined,
+      totalUserWorkouts,
       history: Array.from(historyMap.values()),
       stats: {
         pr,
