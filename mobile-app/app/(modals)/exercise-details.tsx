@@ -164,14 +164,14 @@ const ExerciseDetails = () => {
     return (
       <View
         key={muscle}
-        style={tw`px-3 py-1 rounded-xl border ${
+        style={tw`px-3 py-1 rounded-lg border ${
           isPrimary
             ? 'border-primary bg-primary/10'
             : 'border-light-grayTertiary dark:border-dark-grayTertiary'
         }`}
       >
         <Txt
-          twcn={`${
+          twcn={`text-xs ${
             isPrimary
               ? 'text-primary'
               : 'text-light-grayText dark:text-dark-grayText'
@@ -254,38 +254,45 @@ const ExerciseDetails = () => {
   const progressionChart =
     exercise &&
     (() => {
+      // Add 50 random test data points
       const allData = [
         ...exercise.stats.progressionChart.map((point) => ({
-          value: point.data.weight,
+          weight: point.data.weight,
           date: point.date,
         })),
-        // Temporary extra data points for testing
+        // add 50 more random points
         ...Array.from({ length: 50 }, (_, i) => ({
-          value: 135 + Math.random() * 50,
+          weight: 135 + Math.random() * 50,
           date: new Date(Date.now() + (i + 1) * 86400000).toISOString(),
         })),
+        {
+          weight: 310,
+          date: new Date(Date.now() + 51 * 86400000).toISOString(),
+        },
       ]
 
-      // Determine how many labels to show based on dataset size
-      const totalPoints = allData.length
-      const maxLabels = 10 // Maximum number of labels to display
-      const labelInterval = Math.ceil(totalPoints / maxLabels)
-
       return (
-        <View>
-          <Txt twcn="font-poppinsMedium mb-4">Progress</Txt>
+        <View style={tw`overflow-visible`}>
+          <Txt twcn="font-poppinsMedium mb-4">Progression</Txt>
           <LineChart
-            data={allData.map((point, index) => ({
-              value: point.value,
-              // Only show label at intervals
-              label:
-                index % labelInterval === 0 || index === totalPoints - 1
-                  ? new Date(point.date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                  : undefined,
-            }))}
+            data={allData}
+            xKey="date"
+            yKey="weight"
+            maxXLabels={5}
+            formatXLabel={(dateStr) => {
+              try {
+                return new Date(dateStr).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: '2-digit',
+                })
+              } catch {
+                return ''
+              }
+            }}
+            formatYLabel={(val) =>
+              `${Math.round(val)} ${preferences?.weightMetric || 'lb'}`
+            }
           />
         </View>
       )

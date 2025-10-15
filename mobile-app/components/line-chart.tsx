@@ -1,84 +1,147 @@
-import { useWindowDimensions, View } from 'react-native'
 import React, { useMemo } from 'react'
-import { LineChart as GiftedLineChart } from 'react-native-gifted-charts'
+import { View } from 'react-native'
+import { Area, CartesianChart, Line, Scatter } from 'victory-native'
+import { Circle, useFont } from '@shopify/react-native-skia'
+import Colors from '../constants/colors'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
-import Colors from '../constants/colors'
+import { Poppins_400Regular } from '@expo-google-fonts/poppins'
 
-type DataPoint = {
-  value: number
-  label?: string
-}
+type DataPoint = Record<string, any>
 
 type LineChartProps = {
   data: DataPoint[]
+  xKey: string
+  yKey: string
+  formatXLabel?: (value: any, index: number) => string
+  formatYLabel?: (value: number) => string
+  maxXLabels?: number // kept for compatibility; we’ll force 5 regardless
 }
 
-const PAD_H = 32 // horizontal padding for the chart
-const INITIAL = 10
-const END = 10
-const Y_AXIS_WIDTH = 20
+const CHART_HEIGHT = 225
 
-const LineChart: React.FC<LineChartProps> = ({ data }) => {
+const LineChart = ({
+  data,
+  xKey,
+  yKey,
+  formatXLabel,
+  formatYLabel,
+}: LineChartProps) => {
   const { theme } = useTheme()
-  const { width: screenW } = useWindowDimensions()
+  const font = useFont(Poppins_400Regular, 10)
 
-  const chartWidth = screenW - PAD_H - Y_AXIS_WIDTH
+  // Map data to numeric x = index (0..N-1)
+  const chartData = useMemo(
+    () =>
+      data.map((point, index) => ({
+        x: index,
+        y: point[yKey],
+        original: point,
+      })),
+    [data, yKey]
+  )
 
-  const spacing = useMemo(() => {
-    const n = Math.max(data.length, 1)
-    if (n <= 1) return 0
-    return Math.max(0, (chartWidth - INITIAL - END) / (n - 1))
-  }, [chartWidth, data.length])
+  const xTickValues = () => {
+    const n = data.length
+    if (n === 0) return []
+    if (n === 1) return [0]
+    if (n <= 5) return Array.from({ length: n }, (_, i) => i)
+
+    const last = n - 1
+    const mid = Math.round(last / 2) // centered middle
+    const q1 = Math.ceil(last / 4) // bias inward (e.g., 1.5 -> 2)
+    const q3 = Math.floor((3 * last) / 4) // bias inward (e.g., 4.5 -> 4)
+
+    // Desired 5 ticks: first, quarter, middle, three-quarters, last
+    let ticks = [0, q1, mid, q3, last]
+
+    // Dedupe + keep 5 by filling from neighbors toward center if needed
+    const set = new Set<number>()
+    for (const t of ticks) set.add(t)
+
+    if (set.size < 5) {
+      const candidates: number[] = []
+      // prefer positions near the middle if we need to fill gaps
+      for (let d = 1; d <= last; d++) {
+        const L = mid - d
+        const R = mid + d
+        if (L > 0) candidates.push(L)
+        if (R < last) candidates.push(R)
+      }
+      for (const c of candidates) {
+        set.add(c)
+        if (set.size === 5) break
+      }
+    }
+
+    return Array.from(set).sort((a, b) => a - b)
+  }
+
+  const xFormatter = (value: number) => {
+    const index = Math.round(value)
+    if (index < 0 || index >= data.length) return ''
+    const raw = data[index]?.[xKey]
+    return formatXLabel ? formatXLabel(raw, index) : String(raw ?? '')
+  }
+
+  const yFormatter = (value: number) =>
+    formatYLabel ? formatYLabel(value) : `${Math.round(value)}`
 
   return (
-    <View style={tw`rounded-2xl overflow-hidden`}>
-      <GiftedLineChart
-        data={data}
-        height={150}
-        width={chartWidth}
-        spacing={spacing}
-        color={Colors.primary}
-        thickness={1.5}
-        startFillColor={Colors.primary}
-        endFillColor={theme.background}
-        startOpacity={0.9}
-        endOpacity={0.2}
-        initialSpacing={INITIAL}
-        endSpacing={END}
-        showVerticalLines={false}
-        xAxisIndicesHeight={0}
-        yAxisIndicesWidth={0}
-        hideDataPoints={false}
-        dataPointsColor={Colors.primary}
-        dataPointsRadius={data.length <= 20 ? 3 : data.length <= 50 ? 2 : 1}
-        hideRules={true}
-        yAxisColor={theme.grayTertiary}
-        xAxisColor={theme.grayTertiary}
-        yAxisThickness={1}
-        xAxisThickness={1}
-        rulesColor={theme.grayTertiary}
-        yAxisTextStyle={{
-          color: theme.grayText,
-          fontSize: 9,
-          fontFamily: 'Poppins-Regular',
+    <View style={tw`w-full h-[${CHART_HEIGHT}px]`}>
+      <CartesianChart
+        data={chartData}
+        xKey="x"
+        yKeys={['y']}
+        domain={{ x: [0, Math.max(0, data.length - 1)] }}
+        domainPadding={{ left: 5, right: 25, top: 20, bottom: 10 }}
+        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        xAxis={{
+          font,
+          tickValues: xTickValues(),
+          formatXLabel: (v: number) => xFormatter(v),
+          labelColor: theme.grayText,
+          lineColor: theme.grayTertiary,
         }}
-        xAxisLabelTextStyle={{
-          color: theme.grayText,
-          fontSize: 9,
-          fontFamily: 'Poppins-Regular',
-          width: 50,
-        }}
-        curved={true}
-        areaChart={true}
-        noOfSections={6}
-        yAxisLabelWidth={Y_AXIS_WIDTH}
-        rotateLabel={true}
-        xAxisTextNumberOfLines={1}
-        isAnimated={true}
-        disableScroll={true}
-        animateOnDataChange={true}
-      />
+        yAxis={[
+          {
+            font,
+            tickCount: 5,
+            formatYLabel: (v: number) => yFormatter(v),
+            labelColor: theme.grayText,
+            lineColor: theme.grayTertiary,
+          },
+        ]}
+      >
+        {({ points, yScale }) => (
+          <>
+            <Area
+              points={points.y}
+              color={Colors.primary}
+              opacity={0.18}
+              curveType="catmullRom"
+              animate={{ type: 'timing', duration: 400 }}
+              y0={CHART_HEIGHT}
+            />
+            <Line
+              points={points.y}
+              color={Colors.primary}
+              strokeWidth={1.5}
+              curveType="catmullRom"
+              animate={{
+                type: 'timing',
+                duration: 400,
+              }}
+            />
+            <Scatter
+              points={points.y}
+              radius={2}
+              color={Colors.primary}
+              animate={{ type: 'timing', duration: 400 }}
+            />
+          </>
+        )}
+      </CartesianChart>
     </View>
   )
 }

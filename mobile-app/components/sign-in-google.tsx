@@ -1,5 +1,7 @@
 import { Pressable, View, Image } from 'react-native'
 import Txt from './text'
+import tw from '../tw'
+import Button from './button'
 
 export default function SignInWithGoogle({
   onPress,
@@ -9,12 +11,12 @@ export default function SignInWithGoogle({
   disabled?: boolean
 }) {
   return (
-    <Pressable
+    <Button
       onPress={onPress}
       disabled={disabled}
-      className="w-full h-[52px] rounded-full justify-center bg-white border border-gray-300"
+      style={tw`w-full h-[52px] rounded-full justify-center bg-white dark:bg-dark-grayPrimary border border-gray-300`}
     >
-      <View className="flex flex-row justify-center items-center">
+      <View style={tw`flex flex-row justify-center items-center`}>
         <Image
           source={require('../assets/google.png')}
           style={{
@@ -23,8 +25,8 @@ export default function SignInWithGoogle({
             marginRight: 6,
           }}
         />
-        <Txt className="text-xl">Continue with Google</Txt>
+        <Txt twcn="text-lg">Continue with Google</Txt>
       </View>
-    </Pressable>
+    </Button>
   )
 }

@@ -17,6 +17,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.aross.spotter",
       "usesAppleSignIn": true,
+      "deploymentTarget": "16.0",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIDesignRequiresCompatibility": true

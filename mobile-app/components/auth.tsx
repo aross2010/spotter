@@ -8,20 +8,24 @@ import { SignInWithAppleIos } from './sign-in-apple.ios'
 import TextLogo from '../assets/spotter-text-logo.svg'
 import Colors from '../constants/colors'
 import { BackgroundDots } from './dots'
+import tw from '../tw'
 
 const Auth = () => {
   const { signIn } = useAuth()
   return (
     <SafeView
-      noHeader
-      noScroll
-      inModal
+      scroll={false}
+      hasHeader={false}
     >
-      <View className="flex-1 justify-between">
-        <View className="flex-1 flex-col items-center relative">
+      <View style={tw`flex-1 justify-between`}>
+        <View style={tw`flex-1 flex-col items-center relative`}>
           <View
-            style={{ height: 80, aspectRatio: 135 / 57 }}
-            className="mb-4 mt-36"
+            style={{
+              height: 80,
+              aspectRatio: 135 / 57,
+              marginBottom: 12,
+              marginTop: 144,
+            }}
           >
             <TextLogo
               width={'100%'}
@@ -29,7 +33,7 @@ const Auth = () => {
               color={Colors.primary}
             />
           </View>
-          <Txt className="text-2xl font-poppinsMedium text-center">
+          <Txt twcn="text-xl font-poppinsMedium text-center">
             assisting your daily lifts
           </Txt>
           <BackgroundDots
@@ -40,9 +44,9 @@ const Auth = () => {
             speedMax={30}
           />
         </View>
-        <View className="items-center flex-col gap-4">
-          <SignInWithAppleIos />
+        <View style={tw`items-center flex-col gap-2`}>
           <SignInWithGoogle onPress={signIn} />
+          <SignInWithAppleIos />
         </View>
       </View>
     </SafeView>

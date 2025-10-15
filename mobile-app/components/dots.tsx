@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   useFrameCallback,
 } from 'react-native-reanimated'
+import tw from '../tw'
 
 // animate them in
 
@@ -87,7 +88,8 @@ function BouncingDot({
   const vy = useSharedValue(Math.sin(angle) * speed)
 
   // per-frame physics
-  const cb = useFrameCallback(({ timeSincePreviousFrame }) => {
+  useFrameCallback(({ timeSincePreviousFrame }) => {
+    'worklet'
     const dt = (timeSincePreviousFrame || 16.67) / 1000 // seconds
 
     // advance
@@ -117,18 +119,19 @@ function BouncingDot({
     }
   }, true)
 
-  React.useEffect(() => () => cb.setActive(false), [])
-
-  const style = useAnimatedStyle(() => ({
-    left: x.value,
-    top: y.value,
-  }))
+  const style = useAnimatedStyle(() => {
+    'worklet'
+    return {
+      left: x.value,
+      top: y.value,
+    }
+  })
 
   return (
     <Animated.View
       pointerEvents="none"
-      className={`absolute rounded-full ${colorClass}`}
       style={[
+        tw`absolute rounded-full ${colorClass}`,
         {
           width: d.size,
           height: d.size,
@@ -169,7 +172,7 @@ export function BackgroundDots({
 
   return (
     <View
-      className="absolute inset-0"
+      style={tw`absolute inset-0`}
       pointerEvents="none"
       onLayout={onLayout}
     >
