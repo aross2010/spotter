@@ -16,6 +16,7 @@ import tw from '../../tw'
 import Button from '../../components/button'
 import { useUserStore } from '../../stores/user-store'
 import LineChart from '../../components/line-chart'
+import { BlurView } from 'expo-blur'
 
 type ExerciseDetails = {
   id: string
@@ -192,7 +193,7 @@ const ExerciseDetails = () => {
         key={s.label}
         style={tw`justify-center items-center flex-1`}
       >
-        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium">
+        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase">
           {s.label}
         </Txt>
         <Txt twcn="font-poppinsSemiBold text-lg">{s.value}</Txt>
@@ -251,6 +252,33 @@ const ExerciseDetails = () => {
     </View>
   )
 
+  const renderedToolTips = exercise?.stats.progressionChart.map((point) => {
+    const { data, date } = point
+    const hasIntensity = data.rpe || data.rir
+    // Parse as UTC to avoid timezone shifting
+    const dateObj = new Date(date)
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(dateObj.getUTCDate()).padStart(2, '0')
+    const year = String(dateObj.getUTCFullYear()).slice(-2)
+    const formattedDate = `${month}/${day}/${year}`
+    return (
+      <BlurView
+        key={date}
+        intensity={50}
+        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl border border-light-grayTertiary dark:border-dark-grayTertiary shadow-md`}
+      >
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
+          {formattedDate}
+        </Txt>
+        <Txt twcn="text-xs">
+          {data.weight} {preferences?.weightMetric || 'lbs'} x {data.reps}{' '}
+          {hasIntensity &&
+            `@ ${data.rir ? `RIR ${data.rir}` : `RPE ${data.rpe}`}`}
+        </Txt>
+      </BlurView>
+    )
+  })
+
   const progressionChart =
     exercise &&
     (() => {
@@ -260,15 +288,6 @@ const ExerciseDetails = () => {
           weight: point.data.weight,
           date: point.date,
         })),
-        // add 50 more random points
-        ...Array.from({ length: 50 }, (_, i) => ({
-          weight: 135 + Math.random() * 50,
-          date: new Date(Date.now() + (i + 1) * 86400000).toISOString(),
-        })),
-        {
-          weight: 310,
-          date: new Date(Date.now() + 51 * 86400000).toISOString(),
-        },
       ]
 
       return (
@@ -281,11 +300,12 @@ const ExerciseDetails = () => {
             maxXLabels={5}
             formatXLabel={(dateStr) => {
               try {
-                return new Date(dateStr).toLocaleDateString('en-US', {
-                  month: '2-digit',
-                  day: '2-digit',
-                  year: '2-digit',
-                })
+                // Parse as UTC to avoid timezone shifting
+                const date = new Date(dateStr)
+                const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+                const day = String(date.getUTCDate()).padStart(2, '0')
+                const year = String(date.getUTCFullYear()).slice(-2)
+                return `${month}/${day}/${year}`
               } catch {
                 return ''
               }
@@ -293,6 +313,7 @@ const ExerciseDetails = () => {
             formatYLabel={(val) =>
               `${Math.round(val)} ${preferences?.weightMetric || 'lb'}`
             }
+            toolTips={renderedToolTips}
           />
         </View>
       )
