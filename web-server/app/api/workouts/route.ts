@@ -270,6 +270,30 @@ export const setExercise = async (
       throw new Error('Cannot specify both RPE and RIR for a set')
     }
 
+    if ((rpe && Number(rpe) < 0.5) || Number(rpe) > 10) {
+      throw new Error('RPE must be between 0.5 and 10')
+    }
+
+    if ((rir && Number(rir) < 0) || Number(rir) > 10) {
+      throw new Error('RIR must be between 0 and 10')
+    }
+
+    if ((leftRir && Number(leftRir) < 0) || Number(leftRir) > 10) {
+      throw new Error('Left RIR must be between 0 and 10')
+    }
+
+    if ((rightRir && Number(rightRir) < 0) || Number(rightRir) > 10) {
+      throw new Error('Right RIR must be between 0 and 10')
+    }
+
+    if ((leftRpe && Number(leftRpe) < 0.5) || Number(leftRpe) > 10) {
+      throw new Error('Left RPE must be between 0.5 and 10')
+    }
+
+    if ((rightRpe && Number(rightRpe) < 0.5) || Number(rightRpe) > 10) {
+      throw new Error('Right RPE must be between 0.5 and 10')
+    }
+
     if (rir && (leftRir || rightRir)) {
       throw new Error('Cannot specify both RIR and left/right RIR for a set')
     }
@@ -330,8 +354,6 @@ export const POST = withAuth(async (req, user) => {
 
   let { date, name, location, exercises, setGroupings, tags, notes, status } =
     data
-
-  console.log('status:', status)
 
   const userId = user.id
 

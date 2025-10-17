@@ -3,6 +3,7 @@ import { withAuth } from '../../middleware'
 import db from '@/src'
 import { exercises, workouts, workoutExercises, sets } from '@/src/db/schema'
 import { eq, and, sql, desc } from 'drizzle-orm'
+import { RirToRpe, rpeToRir, toKg, toLbs } from '@/app/functions/conversions'
 
 type MuscleGroup = string
 
@@ -26,6 +27,7 @@ type Set = {
   id: string
 }
 
+// ALL WEIGHT DETAILS IN LBS, CONVERT ON CLIENT
 type ExerciseDetails = {
   id: string
   name: string
@@ -38,8 +40,14 @@ type ExerciseDetails = {
     workoutId: string
     workoutName: string
     date: string
-    exerciseNumber: number
-    sets: Set[]
+    sets: {
+      // unilateral exercises will have 2x sets
+      setNumber: number
+      weight: number
+      reps: number
+      partials?: number
+      intensity?: number // RPE or RIR based on user preference
+    }[]
   }[]
   stats: {
     pr: number // weight in user pref
@@ -63,6 +71,11 @@ export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
   const exerciseId = url.pathname.split('/').pop()
   const userId = user.id
+
+  const weightMetric =
+    (url.searchParams.get('weight') as 'lbs' | 'kgs') || 'lbs'
+  const intensityMetric =
+    (url.searchParams.get('intensity') as 'rpe' | 'rir') || 'rpe'
 
   if (!exerciseId) {
     return NextResponse.json(
@@ -201,16 +214,22 @@ export const GET = withAuth(async (req, user) => {
       historyMap.get(workoutKey)!.sets.push(setData)
       totalSets++
 
-      // Calculate total reps (handle unilateral exercises)
+      // Calculate total reps (handle unilateral exercises - take lower value)
       if (exercise.isUnilateral) {
-        totalReps += (setData.leftReps || 0) + (setData.rightReps || 0)
+        const leftReps = setData.leftReps || 0
+        const rightReps = setData.rightReps || 0
+        // Take the lower value between left and right, or use whichever is available
+        totalReps +=
+          leftReps && rightReps
+            ? Math.min(leftReps, rightReps)
+            : leftReps || rightReps
       } else {
         totalReps += setData.reps || 0
       }
 
       // Track PR (convert kg to lbs for accurate comparison)
       const weightInLbs =
-        setData.weightLbs || (setData.weightKg ? setData.weightKg * 2.20462 : 0)
+        setData.weightLbs || (setData.weightKg ? toLbs(setData.weightKg) : 0)
       if (weightInLbs > pr) {
         pr = weightInLbs
       }
@@ -239,10 +258,21 @@ export const GET = withAuth(async (req, user) => {
 
       workout.sets.forEach((set) => {
         const weightInLbs =
-          set.weightLbs || (set.weightKg ? set.weightKg * 2.20462 : 0)
-        const reps = exercise.isUnilateral
-          ? (set.leftReps || 0) + (set.rightReps || 0)
-          : set.reps || 0
+          set.weightLbs || (set.weightKg ? toLbs(set.weightKg) : 0)
+
+        // For unilateral exercises, take the lower value between left and right
+        let reps = 0
+        if (exercise.isUnilateral) {
+          const leftReps = set.leftReps || 0
+          const rightReps = set.rightReps || 0
+          // Take the lower value between left and right, or use whichever is available
+          reps =
+            leftReps && rightReps
+              ? Math.min(leftReps, rightReps)
+              : leftReps || rightReps
+        } else {
+          reps = set.reps || 0
+        }
 
         if (
           weightInLbs > bestSet.weight ||
@@ -271,16 +301,178 @@ export const GET = withAuth(async (req, user) => {
 
     const progressionChart = Array.from(workoutProgression.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map((p) => ({
-        date: p.date,
-        data: {
-          workoutId: p.workoutId,
-          weight: p.bestWeight,
-          reps: p.bestReps,
-          rpe: p.rpe,
-          rir: p.rir,
-        },
-      }))
+      .map((p) => {
+        // Convert weight to user preference
+        const weight =
+          weightMetric === 'kgs' ? toKg(p.bestWeight) : p.bestWeight
+
+        // Convert intensity to user preference
+        let intensity: number | undefined
+        if (intensityMetric === 'rpe') {
+          intensity =
+            p.rpe !== undefined
+              ? p.rpe
+              : p.rir !== undefined
+              ? RirToRpe.get(p.rir)
+              : undefined
+        } else {
+          intensity =
+            p.rir !== undefined
+              ? p.rir
+              : p.rpe !== undefined
+              ? rpeToRir.get(p.rpe)
+              : undefined
+        }
+
+        return {
+          date: p.date,
+          data: {
+            workoutId: p.workoutId,
+            weight:
+              weightMetric === 'kgs'
+                ? toKg(weight)
+                : Math.round(weight * 100) / 100,
+            reps: p.bestReps,
+            ...(intensityMetric === 'rpe' &&
+              intensity !== undefined && { rpe: intensity }),
+            ...(intensityMetric === 'rir' &&
+              intensity !== undefined && { rir: intensity }),
+          },
+        }
+      })
+
+    // Transform history for response - convert to unified metrics and split unilateral sets
+    const transformedHistory = Array.from(historyMap.values()).map(
+      (workout) => {
+        const transformedSets: {
+          setNumber: number
+          weight: number
+          reps: number
+          partials?: number
+          intensity?: number
+        }[] = []
+
+        workout.sets.forEach((set) => {
+          // Convert weight to user preference
+          const weightInLbs =
+            set.weightLbs || (set.weightKg ? toLbs(set.weightKg) : 0)
+          const weight =
+            weightMetric === 'kgs' ? toKg(weightInLbs) : weightInLbs
+
+          if (exercise.isUnilateral) {
+            // Create two separate sets for left and right
+            const leftReps = set.leftReps || 0
+            const rightReps = set.rightReps || 0
+            const leftPartials = set.leftPartialReps
+            const rightPartials = set.rightPartialReps
+
+            // Get intensity values
+            const leftIntensityRpe =
+              set.leftRpe ||
+              (set.leftRir !== undefined
+                ? RirToRpe.get(set.leftRir)
+                : undefined)
+            const leftIntensityRir =
+              set.leftRir ||
+              (set.leftRpe !== undefined
+                ? rpeToRir.get(set.leftRpe)
+                : undefined)
+            const rightIntensityRpe =
+              set.rightRpe ||
+              (set.rightRir !== undefined
+                ? RirToRpe.get(set.rightRir)
+                : undefined)
+            const rightIntensityRir =
+              set.rightRir ||
+              (set.rightRpe !== undefined
+                ? rpeToRir.get(set.rightRpe)
+                : undefined)
+
+            // Left side set
+            if (leftReps > 0) {
+              transformedSets.push({
+                setNumber: set.setNumber,
+                weight:
+                  weightMetric === 'kgs'
+                    ? toKg(weight)
+                    : Math.round(weight * 100) / 100,
+                reps: leftReps,
+                ...(leftPartials && { partials: leftPartials }),
+                ...(intensityMetric === 'rpe' &&
+                  leftIntensityRpe !== undefined && {
+                    intensity: leftIntensityRpe,
+                  }),
+                ...(intensityMetric === 'rir' &&
+                  leftIntensityRir !== undefined && {
+                    intensity: leftIntensityRir,
+                  }),
+              })
+            }
+
+            // Right side set (same set number)
+            if (rightReps > 0) {
+              transformedSets.push({
+                setNumber: set.setNumber,
+                weight:
+                  weightMetric === 'kgs'
+                    ? toKg(weight)
+                    : Math.round(weight * 100) / 100,
+                reps: rightReps,
+                ...(rightPartials && { partials: rightPartials }),
+                ...(intensityMetric === 'rpe' &&
+                  rightIntensityRpe !== undefined && {
+                    intensity: rightIntensityRpe,
+                  }),
+                ...(intensityMetric === 'rir' &&
+                  rightIntensityRir !== undefined && {
+                    intensity: rightIntensityRir,
+                  }),
+              })
+            }
+          } else {
+            // Non-unilateral exercise - single set
+            const reps = set.reps || 0
+            const partials = set.partialReps
+
+            // Get intensity value
+            const intensityRpe =
+              set.rpe ||
+              (set.rir !== undefined ? RirToRpe.get(set.rir) : undefined)
+            const intensityRir =
+              set.rir ||
+              (set.rpe !== undefined ? rpeToRir.get(set.rpe) : undefined)
+
+            if (reps > 0) {
+              transformedSets.push({
+                setNumber: set.setNumber,
+                weight:
+                  weightMetric === 'kgs'
+                    ? toKg(weight)
+                    : Math.round(weight * 100) / 100,
+                reps,
+                ...(partials && { partials }),
+                ...(intensityMetric === 'rpe' &&
+                  intensityRpe !== undefined && { intensity: intensityRpe }),
+                ...(intensityMetric === 'rir' &&
+                  intensityRir !== undefined && { intensity: intensityRir }),
+              })
+            }
+          }
+        })
+
+        return {
+          workoutId: workout.workoutId,
+          workoutName: workout.workoutName,
+          date: workout.date,
+          sets: transformedSets,
+        }
+      }
+    )
+
+    // Convert PR to user preference
+    const prConverted = weightMetric === 'kgs' ? toKg(pr) : pr
+
+    console.log(JSON.stringify(transformedHistory))
 
     const result: ExerciseDetails = {
       id: exercise.id,
@@ -290,9 +482,12 @@ export const GET = withAuth(async (req, user) => {
       isUnilateral: exercise.isUnilateral,
       description: exercise.description || undefined,
       totalUserWorkouts,
-      history: Array.from(historyMap.values()),
+      history: transformedHistory,
       stats: {
-        pr,
+        pr:
+          weightMetric === 'kgs'
+            ? toKg(prConverted)
+            : Math.round(prConverted * 100) / 100,
         totalSets,
         totalReps,
         totalWorkouts: historyMap.size,
