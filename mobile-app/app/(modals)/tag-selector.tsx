@@ -155,7 +155,6 @@ const TagSelector = () => {
       <Input
         autoCorrect={false}
         autoCapitalize="none"
-        noBorder
         placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
         value={query}
         onChange={(e) => setQuery(e.nativeEvent.text)}

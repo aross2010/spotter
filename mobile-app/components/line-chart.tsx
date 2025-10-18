@@ -247,8 +247,8 @@ const LineChart = ({
             <Area
               points={points.y}
               color={Colors.primary}
-              opacity={0.18}
-              curveType="catmullRom"
+              opacity={0.1}
+              curveType="linear"
               animate={{ type: 'timing', duration: 400 }}
               y0={CHART_HEIGHT}
             />
@@ -256,7 +256,7 @@ const LineChart = ({
               points={points.y}
               color={Colors.primary}
               strokeWidth={1.5}
-              curveType="catmullRom"
+              curveType="linear"
               animate={{
                 type: 'timing',
                 duration: 400,

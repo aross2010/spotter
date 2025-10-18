@@ -18,7 +18,6 @@ const WorkoutFormLayout = () => {
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
-          headerBackButtonDisplayMode: 'default',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,
@@ -41,15 +40,6 @@ const WorkoutFormLayout = () => {
                 accessibilityLabel="close modal"
                 twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
                 text="Close"
-              />
-            ),
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close workout form"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
               />
             ),
           }}

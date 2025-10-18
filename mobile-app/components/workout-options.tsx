@@ -9,7 +9,7 @@ import { Fragment } from 'react'
 import useTheme from '../app/hooks/theme'
 import { router } from 'expo-router'
 import { useWorkout } from '../context/workout-context'
-import { handleShareWorkout } from '../functions/workout-message'
+import { handleShareWorkout } from '../functions/share'
 
 type WorkoutOptionsProps = {
   workout: WorkoutMinimal

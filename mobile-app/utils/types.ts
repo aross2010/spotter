@@ -61,3 +61,43 @@ export type Workout = {
 }
 
 export type MuscleGroup = (typeof MUSCLE_GROUPS)[number]
+
+export type ExerciseDetails = {
+  id: string
+  name: string
+  primaryMuscleGroup: MuscleGroup
+  secondaryMuscleGroups: MuscleGroup[]
+  isUnilateral: boolean
+  description?: string
+  totalUserWorkouts: number
+  history: {
+    workoutId: string
+    workoutName: string
+    date: string
+    sets: {
+      // unilateral exercises will have 2x sets
+      setNumber: number
+      weight: number
+      reps: number
+      partials?: number
+      intensity?: number // RPE or RIR based on user preference
+    }[]
+  }[]
+  stats: {
+    pr: number // weight in user pref
+    totalSets: number
+    totalReps: number
+    totalWorkouts: number
+    progressionChart: {
+      // best set per workout, start with all time, can change to 1m, 3m, 6m, 1y
+      date: string
+      data: {
+        workoutId: string
+        weight: number // in user pref, y-axis value
+        reps: number
+        rpe?: number
+        rir?: number
+      }
+    }[]
+  }
+}

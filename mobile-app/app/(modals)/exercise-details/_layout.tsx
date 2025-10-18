@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import { router, Stack } from 'expo-router'
+import { Stack, useNavigation } from 'expo-router'
 import Button from '../../../components/button'
-import Colors from '../../../constants/colors'
+import { router } from 'expo-router'
 import useTheme from '../../hooks/theme'
+import Colors from '../../../constants/colors'
 
-const SettingsLayout = () => {
+const ExerciseDetailsLayout = () => {
   const { theme } = useTheme()
 
   return (
@@ -31,12 +32,12 @@ const SettingsLayout = () => {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: 'Settings',
+          title: 'Edit Exercise',
           headerLeft: () => (
             <Button
               onPress={() => router.back()}
               hitSlop={12}
-              accessibilityLabel="close modal"
+              accessibilityLabel="close exercise details"
               twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
               text="Close"
             />
@@ -44,39 +45,17 @@ const SettingsLayout = () => {
         }}
       />
       <Stack.Screen
-        name="profile"
+        name="form"
         options={{
-          headerTitle: 'Edit Profile',
-        }}
-      />
-      <Stack.Screen
-        name="linked-accounts"
-        options={{
-          headerTitle: 'Linked Accounts',
-        }}
-      />
-      <Stack.Screen
-        name="user-preferences"
-        options={{
-          headerTitle: 'Preferences',
-        }}
-      />
-      <Stack.Screen
-        name="faq"
-        options={{
-          headerTitle: 'FAQ',
-        }}
-      />
-      <Stack.Screen
-        name="version-history"
-        options={{
-          headerTitle: 'Version History',
+          title: 'Edit Exercise',
+          headerTitle: 'Edit Exercise',
+          headerShown: true,
         }}
       />
     </Stack>
   )
 }
 
-export default SettingsLayout
+export default ExerciseDetailsLayout
 
 const styles = StyleSheet.create({})

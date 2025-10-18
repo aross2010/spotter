@@ -3,6 +3,7 @@ import { View } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
+import { HeaderBackButton } from '@react-navigation/elements'
 import { useEffect, useState } from 'react'
 import {
   Calendar,
@@ -29,10 +30,10 @@ import { useLocalSearchParams } from 'expo-router'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
-import Selector from '../../../components/selector'
 import Txt from '../../../components/text'
 import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
+import { useWorkoutStore } from '../../../stores/workout-store'
 
 const statusOptions = [
   {
@@ -62,7 +63,7 @@ const WorkoutForm = () => {
   const { workoutData, setWorkoutData, addWorkout } = useWorkoutForm()
   const { updateWorkout } = useWorkout()
   const { fetchWithAuth } = useAuth()
-  const { id, cloneId } = useLocalSearchParams()
+  const { id, cloneId, from } = useLocalSearchParams()
   const [mode, setMode] = useState<'create' | 'edit' | 'clone'>(
     id ? 'edit' : cloneId ? 'clone' : 'create'
   )
@@ -72,6 +73,34 @@ const WorkoutForm = () => {
   const [initialState, setInitialState] = useState<typeof workoutData | null>(
     null
   )
+  const { triggerRefresh } = useWorkoutStore()
+
+  const getWorkoutData = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/workouts/${mode === 'edit' ? id : cloneId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const workout = await response.json()
+      const workoutData = {
+        ...workout,
+        date:
+          mode === 'edit' ? new Date(workout.date + 'T00:00:00') : new Date(),
+      } as WorkoutFormData
+      setWorkoutData(workoutData)
+      setInitialState(workoutData)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (cloneId) {
@@ -204,32 +233,6 @@ const WorkoutForm = () => {
   }
 
   useEffect(() => {
-    const getWorkoutData = async () => {
-      setIsLoading(true)
-      try {
-        const response = await fetchWithAuth(
-          `${BASE_URL}/api/workouts/${mode === 'edit' ? id : cloneId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        )
-        const workout = await response.json()
-        const workoutData = {
-          ...workout,
-          date:
-            mode === 'edit' ? new Date(workout.date + 'T00:00:00') : new Date(),
-        } as WorkoutFormData
-        setWorkoutData(workoutData)
-        setInitialState(workoutData)
-      } catch (error: any) {
-        Alert.alert('Error', error.message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
     if (mode === 'edit' || mode === 'clone') getWorkoutData()
   }, [])
 
@@ -284,13 +287,31 @@ const WorkoutForm = () => {
           />
         </View>
       ),
+      headerLeft:
+        from === 'workout-details'
+          ? () => (
+              <HeaderBackButton
+                displayMode="minimal"
+                tintColor={Colors.primary}
+                onPress={() => router.back()}
+                disabled={isSaving}
+              />
+            )
+          : () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close workout form"
+                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
+                text="Cancel"
+              />
+            ),
     })
   }, [workoutData, isSaving, mode, isLoading, initialState, workoutId])
 
   const handleSubmitWorkout = async () => {
     setIsSaving(true)
     try {
-      let res
       if (mode === 'create') {
         const res = await addWorkout()
         if (workoutData.status === 'active') {
@@ -304,7 +325,12 @@ const WorkoutForm = () => {
         await updateWorkout(workoutId, workoutData)
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
-        } else router.replace('/workouts')
+        } else {
+          if (from === 'workout-details') {
+            triggerRefresh()
+            router.back()
+          } else router.replace('/workouts')
+        }
       }
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')

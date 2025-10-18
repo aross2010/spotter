@@ -1,6 +1,5 @@
-import { router, Stack } from 'expo-router'
+import { router, Stack, useNavigation } from 'expo-router'
 import useTheme from '../hooks/theme'
-import ThemedStatusBar from '../../components/status-bar'
 import Button from '../../components/button'
 import Colors from '../../constants/colors'
 
@@ -17,7 +16,6 @@ export default function ModalLayout() {
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
-          headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,
@@ -138,16 +136,6 @@ export default function ModalLayout() {
           name="exercise-details"
           options={{
             title: 'Exercise',
-            headerShown: true,
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close exercise details"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Close"
-              />
-            ),
           }}
         />
       </Stack>

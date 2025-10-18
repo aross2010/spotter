@@ -95,6 +95,7 @@ const RootLayout = () => {
                 <Stack
                   screenOptions={{
                     headerShown: false,
+                    headerBackButtonDisplayMode: 'minimal',
                   }}
                 >
                   <Stack.Screen
@@ -114,7 +115,7 @@ const RootLayout = () => {
                       presentation: 'card',
                       headerShown: false,
                       animation: 'slide_from_bottom',
-                      animationDuration: 250,
+                      animationDuration: 350,
                     }}
                   />
                 </Stack>

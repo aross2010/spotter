@@ -1,6 +1,8 @@
+import { ExerciseDetails } from '../utils/types'
 import { WorkoutDetails } from '../context/workout-context'
 import { formatDate } from './formatted-date'
 import { Share as RNShare, Alert } from 'react-native'
+import { estimate1RM } from './one-rm'
 
 export const getWorkoutMessage = (workout: WorkoutDetails) => {
   if (!workout) return ''
@@ -106,5 +108,110 @@ export const handleShareWorkout = async (workout: WorkoutDetails) => {
     }
   } catch (error: any) {
     Alert.alert('Error', error.message || 'Failed to share workout')
+  }
+}
+
+const getExerciseMessage = (
+  exercise: ExerciseDetails,
+  weightMetric: 'lbs' | 'kgs',
+  intensityMetric?: 'rpe' | 'rir'
+): string => {
+  if (!exercise) return ''
+
+  const { stats, description, name } = exercise
+  const { totalSets, totalReps, totalWorkouts, pr } = stats
+
+  const progressionChart = stats.progressionChart
+
+  // Find lowest weight with date
+  const lowestWeightPoint = progressionChart.reduce((lowest, current) => {
+    return current.data.weight < lowest.data.weight ? current : lowest
+  })
+
+  const lowestWeight =
+    weightMetric === 'kgs'
+      ? lowestWeightPoint.data.weight.toFixed(1)
+      : lowestWeightPoint.data.weight
+
+  const firstDate = progressionChart[0].date
+  const lastDate = progressionChart[progressionChart.length - 1].date
+  const daysBetween = Math.floor(
+    (new Date(lastDate).getTime() - new Date(firstDate).getTime()) /
+      (1000 * 60 * 60 * 24)
+  )
+
+  // Get the most recent workout sets
+  const lastSession = exercise.history[0]
+  let lastSessionSets = ''
+
+  if (lastSession) {
+    lastSession.sets.forEach((set) => {
+      const weight = weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight
+
+      lastSessionSets += `  Set ${set.setNumber}: ${weight} ${weightMetric} × ${set.reps} reps`
+
+      if (set.partials) {
+        lastSessionSets += ` + ${set.partials} partials`
+      }
+
+      if (set.intensity) {
+        lastSessionSets += ` @ ${intensityMetric?.toUpperCase()} ${set.intensity}`
+      }
+
+      lastSessionSets += '\n'
+    })
+  }
+
+  // Build the exercise summary text
+  let message = `🏋️ ${name}\n`
+  message += `${description ? `📝 ${description}\n` : ''}\n`
+
+  message += `🏆 PR: ${weightMetric === 'kgs' ? pr.toFixed(1) : pr} ${weightMetric}\n`
+  message += `🎯 Est. 1-Rep Max: ${estimate1RM(exercise, weightMetric)}\n`
+  message += `Total Sets: ${totalSets}\n`
+  message += `Total Reps: ${totalReps}\n`
+  message += `Total Workouts: ${totalWorkouts}\n\n`
+  message += `📈 Progress: ${lowestWeight} ${weightMetric} → ${weightMetric === 'kgs' ? pr.toFixed(1) : pr} ${weightMetric} over ${daysBetween} days\n\n`
+
+  message += `🔥 Last Session:\n`
+  message += lastSessionSets
+
+  return message
+}
+
+export const handleShareExercise = async (
+  exercise: ExerciseDetails,
+  weightMetric: 'lbs' | 'kgs',
+  intensityMetric?: 'rpe' | 'rir'
+) => {
+  try {
+    const message = getExerciseMessage(exercise, weightMetric, intensityMetric)
+
+    if (!message) {
+      Alert.alert('Error', 'No exercise data to share')
+      return
+    }
+
+    const result = await RNShare.share(
+      {
+        message: message,
+        title: exercise?.name || 'My Exercise',
+      },
+      {
+        subject: exercise?.name || 'My Exercise',
+      }
+    )
+
+    if (result.action === RNShare.sharedAction) {
+      if (result.activityType) {
+        console.log('Shared with activity type:', result.activityType)
+      } else {
+        console.log('Exercise shared successfully')
+      }
+    } else if (result.action === RNShare.dismissedAction) {
+      console.log('Share dismissed')
+    }
+  } catch (error: any) {
+    Alert.alert('Error', error.message || 'Failed to share exercise')
   }
 }

@@ -436,6 +436,9 @@ const ExerciseInput = ({
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
       else if (fieldValue === 'rpe')
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+    } else {
+      // For non-unilateral exercises, map 'partials' to 'partialReps'
+      if (fieldValue === 'partials') fieldToUpdate = 'partialReps'
     }
 
     updatedSets[setIndex] = {
@@ -879,6 +882,10 @@ const ExerciseInput = ({
           style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-1`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
+            // Map 'partials' to 'partialReps' for display
+            const displayField = value === 'partials' ? 'partialReps' : value
+            const displayValue = set[displayField as keyof typeof set]
+
             return (
               <Input
                 ref={(ref) => {
@@ -900,9 +907,9 @@ const ExerciseInput = ({
                 placeholder="-"
                 twcnInput="w-1/5 text-center py-1 text-light-text dark:text-dark-text"
                 value={
-                  typeof set[value as keyof typeof set] === 'string'
-                    ? (set[value as keyof typeof set] as string)
-                    : set[value as keyof typeof set]?.toString() || ''
+                  typeof displayValue === 'string'
+                    ? displayValue
+                    : displayValue?.toString() || ''
                 }
                 onChangeText={(text) => {
                   handleInputChange(setIndex, value, text, inputMode)

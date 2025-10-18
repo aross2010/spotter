@@ -135,7 +135,7 @@ const Exercises = () => {
       <Button
         key={m}
         onPress={() => handleFilterMuscleGroup(m)}
-        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 border-primary' : 'bg-white dark:bg-dark-grayPrimary border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'} rounded-lg border`}
+        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 border-primary' : 'border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'} rounded-lg border`}
       >
         <Txt
           twcn={`text-xs ${isSelected ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
