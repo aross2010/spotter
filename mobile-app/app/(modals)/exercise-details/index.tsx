@@ -21,7 +21,12 @@ import Button from '../../../components/button'
 import { useUserStore } from '../../../stores/user-store'
 import LineChart from '../../../components/line-chart'
 import { BlurView } from 'expo-blur'
-import { ChevronsLeftRightEllipsis, Pencil, Share } from 'lucide-react-native'
+import {
+  ChevronsLeftRight,
+  ChevronsLeftRightEllipsis,
+  Pencil,
+  Share,
+} from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import { handleShareExercise } from '../../../functions/share'
 import { useExerciseStore } from '../../../stores/exercise-store'
@@ -195,9 +200,9 @@ const ExerciseDetails = () => {
     return (
       <View
         key={muscle}
-        style={tw`px-3 py-1 rounded-lg border border-light-grayTertiary dark:border-dark-grayTertiary`}
+        style={tw`px-3 py-1 rounded-lg border border-primary bg-primary/10`}
       >
-        <Txt twcn={`text-xs text-light-grayText dark:text-dark-grayText`}>
+        <Txt twcn={`text-xs text-primary`}>
           {muscle
             .split(' ')
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -222,7 +227,9 @@ const ExerciseDetails = () => {
   })
 
   const description = exercise?.description && (
-    <Txt twcn="mb-6 font-poppinsItalic">{exercise.description}</Txt>
+    <Txt twcn="text-light-grayText dark:text-dark-grayText">
+      {exercise.description}
+    </Txt>
   )
 
   const keyStats = (
@@ -251,11 +258,23 @@ const ExerciseDetails = () => {
         <View
           style={tw`px-3 py-1 rounded-lg border border-secondary bg-secondary/10 flex-row items-center gap-2`}
         >
-          <Txt twcn={`text-xs text-secondary`}>Unilateral</Txt>
-          <ChevronsLeftRightEllipsis
-            size={16}
-            color={Colors.secondary}
-          />
+          {exercise.isUnilateral ? (
+            <>
+              <Txt twcn={`text-xs text-secondary`}>Unilateral</Txt>
+              <ChevronsLeftRightEllipsis
+                size={16}
+                color={Colors.secondary}
+              />
+            </>
+          ) : (
+            <>
+              <Txt twcn={`text-xs text-secondary`}>Bilateral</Txt>
+              <ChevronsLeftRight
+                size={16}
+                color={Colors.secondary}
+              />
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -333,24 +352,39 @@ const ExerciseDetails = () => {
     let previousDate = null as string | null
     let needsDate = true
 
+    // Convert date from yyyy-mm-dd to mm/dd/yy
+    const formatDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-')
+      return `${month}/${day}/${year.slice(2)}`
+    }
+
     return (
       <Link
         href={`/workout-details?id=${entry.workoutId}&from=exercise`}
         key={entry.workoutId}
         style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
       >
-        {entry.sets.map((set) => {
+        {entry.sets.map((set, index) => {
           if (entry.date === previousDate) needsDate = false
           previousDate = entry.date
 
+          // For unilateral exercises, determine if this is L or R
+          const isUnilateral = exercise.isUnilateral
+          const setLabel = isUnilateral
+            ? `${set.setNumber}${index % 2 === 0 ? 'L' : 'R'}`
+            : set.setNumber.toString()
+
           return (
             <View
-              key={set.setNumber}
+              key={`${entry.workoutId}-${set.setNumber}-${index}`}
               style={tw`flex-row items-center py-0.5`}
             >
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText flex-1">
-                {needsDate ? entry.date : ' '}
+                {needsDate ? formatDate(entry.date) : ' '}
               </Txt>
+              {isUnilateral && (
+                <Txt twcn="text-xs flex-1 text-center">{setLabel}</Txt>
+              )}
               <Txt twcn="text-xs flex-1 text-center">
                 {weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight}
               </Txt>
@@ -377,6 +411,11 @@ const ExerciseDetails = () => {
         <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1">
           Date
         </Txt>
+        {exercise?.isUnilateral && (
+          <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+            Set
+          </Txt>
+        )}
         <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
           {weightMetric}
           {weightMetric === 'lbs' && '.'}

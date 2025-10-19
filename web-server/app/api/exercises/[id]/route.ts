@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { withAuth } from '../../middleware'
 import db from '@/src'
 import { exercises, workouts, workoutExercises, sets } from '@/src/db/schema'
-import { eq, and, sql, desc } from 'drizzle-orm'
+import { eq, and, sql, desc, inArray } from 'drizzle-orm'
 import { RirToRpe, rpeToRir, toKg, toLbs } from '@/app/functions/conversions'
 
 type MuscleGroup = string
@@ -498,6 +498,158 @@ export const GET = withAuth(async (req, user) => {
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
     console.error('Error fetching exercise details:', error)
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    )
+  }
+})
+
+export const PUT = withAuth(async (req, user) => {
+  const url = new URL(req.url)
+  const exerciseId = url.pathname.split('/').pop()
+  const userId = user.id
+
+  if (!exerciseId) {
+    return NextResponse.json(
+      { error: 'Exercise ID is required' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const body = await req.json()
+    const {
+      name,
+      description,
+      primaryMuscleGroup,
+      secondaryMuscleGroups,
+      isUnilateral,
+    } = body
+
+    // Validate required fields
+    if (!name || !primaryMuscleGroup) {
+      return NextResponse.json(
+        { error: 'Name and primary muscle group are required' },
+        { status: 400 }
+      )
+    }
+
+    // First, verify the exercise exists and belongs to the user
+    const existingExercise = await db.query.exercises.findFirst({
+      where: and(eq(exercises.id, exerciseId), eq(exercises.userId, userId)),
+    })
+
+    if (!existingExercise) {
+      return NextResponse.json(
+        { error: 'Exercise not found or access denied' },
+        { status: 404 }
+      )
+    }
+
+    // Check if the exercise type is changing
+    const changingToUnilateral = !existingExercise.isUnilateral && isUnilateral
+    const changingToBilateral = existingExercise.isUnilateral && !isUnilateral
+
+    // Update the exercise
+    await db
+      .update(exercises)
+      .set({
+        name: name.trim(),
+        description: description || null,
+        primaryMuscleGroup,
+        secondaryMuscleGroups: secondaryMuscleGroups || [],
+        isUnilateral: isUnilateral ?? false,
+      })
+      .where(eq(exercises.id, exerciseId))
+
+    // If the exercise type is changing, we need to update all sets
+    if (changingToUnilateral || changingToBilateral) {
+      // Get all workout exercises for this exercise
+      const workoutExercisesForExercise =
+        await db.query.workoutExercises.findMany({
+          where: eq(workoutExercises.exerciseId, exerciseId),
+        })
+
+      const workoutExerciseIds = workoutExercisesForExercise.map((we) => we.id)
+
+      if (workoutExerciseIds.length > 0) {
+        // Get all sets for these workout exercises
+        const allSets = await db.query.sets.findMany({
+          where: inArray(sets.workoutExerciseId, workoutExerciseIds),
+        })
+
+        // Update each set based on the conversion direction
+        for (const set of allSets) {
+          if (changingToUnilateral) {
+            // Converting bilateral → unilateral: Copy bilateral values to both sides, keep originals
+            await db
+              .update(sets)
+              .set({
+                // Copy bilateral values to both left and right sides (if not already set)
+                leftReps: set.leftReps ?? set.reps,
+                rightReps: set.rightReps ?? set.reps,
+                leftRpe: set.leftRpe ?? set.rpe,
+                rightRpe: set.rightRpe ?? set.rpe,
+                leftRir: set.leftRir ?? set.rir,
+                rightRir: set.rightRir ?? set.rir,
+                leftPartialReps: set.leftPartialReps ?? set.partialReps,
+                rightPartialReps: set.rightPartialReps ?? set.partialReps,
+                // Keep bilateral values for potential revert
+              })
+              .where(eq(sets.id, set.id))
+          } else if (changingToBilateral) {
+            // Converting unilateral → bilateral: Use the minimum of left/right, keep originals
+
+            // Helper function to get minimum value, handling nulls
+            const getMin = (left: any, right: any): string | null => {
+              const leftNum = left ? Number(left) : null
+              const rightNum = right ? Number(right) : null
+
+              if (leftNum === null && rightNum === null) return null
+              if (leftNum === null) return String(rightNum)
+              if (rightNum === null) return String(leftNum)
+              return String(Math.min(leftNum, rightNum))
+            }
+
+            await db
+              .update(sets)
+              .set({
+                // Use the minimum of left and right for bilateral values (if not already set)
+                reps: set.reps ?? getMin(set.leftReps, set.rightReps),
+                rpe: set.rpe ?? getMin(set.leftRpe, set.rightRpe),
+                rir: set.rir ?? getMin(set.leftRir, set.rightRir),
+                partialReps:
+                  set.partialReps ??
+                  getMin(set.leftPartialReps, set.rightPartialReps),
+                // Keep unilateral values for potential revert
+              })
+              .where(eq(sets.id, set.id))
+          }
+        }
+      }
+    }
+
+    // Fetch the updated exercise to return
+    const updatedExercise = await db.query.exercises.findFirst({
+      where: eq(exercises.id, exerciseId),
+    })
+
+    return NextResponse.json(
+      {
+        message: 'Exercise updated successfully',
+        exercise: updatedExercise,
+        setsUpdated: changingToUnilateral || changingToBilateral,
+        conversionType: changingToUnilateral
+          ? 'bilateral-to-unilateral'
+          : changingToBilateral
+          ? 'unilateral-to-bilateral'
+          : null,
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error updating exercise:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }

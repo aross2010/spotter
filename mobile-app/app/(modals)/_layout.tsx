@@ -16,6 +16,7 @@ export default function ModalLayout() {
             fontFamily: 'Poppins_600SemiBold',
             color: theme.text,
           },
+          headerBackButtonDisplayMode: 'minimal',
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: theme.background,

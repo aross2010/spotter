@@ -55,8 +55,6 @@ export const POST = withAuth(async (req, user) => {
     )
   }
 
-  console.log('date', date)
-
   if (!isISO8601(date)) {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
   }
@@ -65,7 +63,7 @@ export const POST = withAuth(async (req, user) => {
     const result = await db.transaction(async (tx) => {
       const [notebookEntry] = await tx
         .insert(notebookEntries)
-        .values({ title, body, date, userId })
+        .values({ title: title.trim(), body: body.trim(), date, userId })
         .returning()
 
       const tagsInEntry = []
@@ -80,7 +78,7 @@ export const POST = withAuth(async (req, user) => {
           if (!existingTag) {
             const [newTag] = await tx
               .insert(notebookTags)
-              .values({ name: tag, userId })
+              .values({ name: tag.trim(), userId })
               .returning()
             tagsInEntry.push(newTag)
           } else {
@@ -103,8 +101,6 @@ export const POST = withAuth(async (req, user) => {
 
       return completeNotebookEntry
     })
-
-    console.log('Created notebook entry:', result)
 
     return NextResponse.json(result, { status: 201 })
   } catch (error: any) {

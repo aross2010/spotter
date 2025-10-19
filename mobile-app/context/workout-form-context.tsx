@@ -60,6 +60,7 @@ export type Exercise = {
   name: string
   isUnilateral: boolean
   existing?: boolean // whether this exercise already exists in the user's exercise names
+  id?: string // existing exercise ID
   sets: Set[]
 }
 

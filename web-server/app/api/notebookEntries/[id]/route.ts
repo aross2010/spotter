@@ -11,13 +11,10 @@ import { eq, inArray } from 'drizzle-orm'
 import { withAuth } from '../../middleware'
 
 export const PUT = withAuth(async (req, user) => {
-  console.log('Received request to update notebook entry')
   const id = req.url.split('/').pop()
   const data = await req.json()
-  let { title, body, date, tags, pinned } = data
 
-  console.log('Received data for update:', data)
-  console.log('Updating notebook entry ID:', id)
+  let { title, body, date, tags, pinned } = data
 
   if (!id) {
     return NextResponse.json(
@@ -85,8 +82,8 @@ export const PUT = withAuth(async (req, user) => {
       const [upadatedEntry] = await tx
         .update(notebookEntries)
         .set({
-          ...(title && { title }),
-          ...(body && { body }),
+          ...(title && { title: title.trim() }),
+          ...(body && { body: body.trim() }),
           ...(date && { date }),
           ...(pinned !== undefined && { pinned }),
           updatedAt: new Date(),
@@ -109,7 +106,7 @@ export const PUT = withAuth(async (req, user) => {
           if (!existingTag) {
             const [newTag] = await tx
               .insert(notebookTags)
-              .values({ name: tag, userId: upadatedEntry.userId })
+              .values({ name: tag.trim(), userId: upadatedEntry.userId })
               .returning()
             tagsInEntry.push(newTag)
           } else {

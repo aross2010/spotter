@@ -49,7 +49,7 @@ export const getExerciseId = async (
   const [exercise] = await tx
     .insert(exercises)
     .values({
-      name,
+      name: name.trim(),
       userId,
       isUnilateral,
       primaryMuscleGroup,
@@ -433,9 +433,9 @@ export const POST = withAuth(async (req, user) => {
         .values({
           userId: userId,
           date,
-          name,
-          location: location || null,
-          notes: notes || null,
+          name: name.trim(),
+          location: location ? location.trim() : null,
+          notes: notes.trim() || null,
           status: status || 'completed',
         })
         .returning()

@@ -235,9 +235,9 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   }
 })
 
-export async function DELETE(req: Request, props: { params: Params }) {
-  const params = await props.params
-  const id = params.id as string
+export const DELETE = withAuth(async (req: Request, user: any) => {
+  const url = new URL(req.url)
+  const id = url.pathname.split('/').pop()
 
   if (!id) {
     return NextResponse.json(
@@ -247,6 +247,21 @@ export async function DELETE(req: Request, props: { params: Params }) {
   }
 
   try {
+    const workout = await db.query.workouts.findFirst({
+      where: eq(workouts.id, id),
+    })
+
+    if (!workout) {
+      return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+    }
+
+    if (workout.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Access denied to this workout' },
+        { status: 403 }
+      )
+    }
+
     const result = await db.transaction(async (tx) => {
       // Clean up workout children and orphaned exercises before deleting the workout
       await clearWorkoutChildren(id, tx)
@@ -275,11 +290,11 @@ export async function DELETE(req: Request, props: { params: Params }) {
     console.error('Error deleting workout:', error)
     return NextResponse.json({ error: msg }, { status })
   }
-}
+})
 
-export async function GET(req: Request, props: { params: Params }) {
-  const params = await props.params
-  const id = params.id as string
+export const GET = withAuth(async (req: Request, user: any) => {
+  const url = new URL(req.url)
+  const id = url.pathname.split('/').pop()
 
   if (!id) {
     return NextResponse.json(
@@ -312,6 +327,13 @@ export async function GET(req: Request, props: { params: Params }) {
 
     if (!workout) {
       return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+    }
+
+    if (workout.userId !== user.id) {
+      return NextResponse.json(
+        { error: 'Access denied to this workout' },
+        { status: 403 }
+      )
     }
 
     const tags = workout.workoutTagLinks.map((l) => ({
@@ -376,14 +398,16 @@ export async function GET(req: Request, props: { params: Params }) {
         name: we.exercise.name,
         isUnilateral: we.exercise.isUnilateral,
         sets,
+        existing: true,
+        id: we.exercise.id,
       }
     })
 
     const workoutData = {
-      name: workout.name,
+      name: workout.name.trim(),
       date: workout.date,
-      location: workout.location || '',
-      notes: workout.notes || '',
+      location: workout.location ? workout.location.trim() : '',
+      notes: workout.notes ? workout.notes.trim() : '',
       tags,
       exercises,
       weightUnit: 'lbs' as const,
@@ -399,4 +423,4 @@ export async function GET(req: Request, props: { params: Params }) {
       { status: 500 }
     )
   }
-}
+})

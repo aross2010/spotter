@@ -107,6 +107,7 @@ const RootLayout = () => {
                     options={{
                       animation: 'none',
                       headerShown: false,
+                      headerBackButtonDisplayMode: 'minimal',
                     }}
                   />
                   <Stack.Screen
@@ -116,6 +117,7 @@ const RootLayout = () => {
                       headerShown: false,
                       animation: 'slide_from_bottom',
                       animationDuration: 350,
+                      headerBackButtonDisplayMode: 'minimal',
                     }}
                   />
                 </Stack>

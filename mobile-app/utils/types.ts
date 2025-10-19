@@ -101,3 +101,20 @@ export type ExerciseDetails = {
     }[]
   }
 }
+
+export type ExerciseDetailsMini = {
+  id: string
+  description: string
+  history: {
+    // last 10 workouts with this exercise
+    workoutId: string
+    date: string
+    sets: {
+      setNumber: number
+      weight: number
+      reps: number
+      partials?: number
+      intensity?: number
+    }
+  }
+}

@@ -13,6 +13,7 @@ import tw from '../tw'
 import Txt from './text'
 import Input from './input'
 import {
+  ChevronsLeftRightEllipsis,
   Info,
   Plus,
   Redo,
@@ -25,6 +26,8 @@ import { useState, useEffect, useRef } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
+import MyModal from './modal'
+import ExerciseMiniHistory from './exercise-mini-history'
 
 const MAX_SETS = 20
 
@@ -261,7 +264,9 @@ const ExerciseInput = ({
     }
   }
 
-  const handleDisplayExerciseInfo = () => {}
+  const handleDisplayExerciseInfo = () => {
+    setIsExerciseInfoOpen(true)
+  }
 
   const handleAddNewSet = () => {
     const updatedExercises = [...workoutData.exercises]
@@ -484,7 +489,7 @@ const ExerciseInput = ({
   const buttons = [
     {
       name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
-      icon: SquareSplitHorizontal,
+      icon: ChevronsLeftRightEllipsis,
       onPress: handleMakeUnilateral,
     },
     {
@@ -552,16 +557,23 @@ const ExerciseInput = ({
     const exerciseIndex = exerciseNumber ? exerciseNumber - 1 : 0
     const currentExercise = updatedExercises[exerciseIndex]
 
+    // Check if there's a matching exercise (trimmed comparison)
+    const matchingExercise = exerciseNames.find(
+      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim()
+    )
+
     const isEditing =
       currentExercise.name !== text && currentExercise.name !== ''
 
+    // Only mark as non-existing if trimmed text doesn't match an existing exercise
     updatedExercises[exerciseIndex] = {
       ...currentExercise,
       name: text,
-      existing: false,
+      existing: matchingExercise ? true : false,
     }
 
-    if (isEditing && currentExercise.existing) {
+    if (isEditing && currentExercise.existing && !matchingExercise) {
+      // Only reset sets if we're breaking away from an existing exercise
       updatedExercises[exerciseIndex].sets = [
         {
           setNumber: 1,
@@ -570,18 +582,11 @@ const ExerciseInput = ({
       ]
     }
 
-    setWorkoutData({
-      ...workoutData,
-      exercises: updatedExercises,
-    })
-
-    const matchingExercise = exerciseNames.find(
-      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim()
-    )
     if (matchingExercise && text.trim() !== '') {
+      // Update with matching exercise data
       updatedExercises[exerciseIndex] = {
         ...updatedExercises[exerciseIndex],
-        name: matchingExercise.name,
+        name: text, // Keep the user's typed text (may have trailing spaces)
         isUnilateral: matchingExercise.isUnilateral || false,
         existing: true,
       }
@@ -592,9 +597,14 @@ const ExerciseInput = ({
       })
 
       setIsExerciseNameSelectorOpen(false)
-      Keyboard.dismiss()
+      // Don't dismiss keyboard - allow user to continue typing if they want
       return
     }
+
+    setWorkoutData({
+      ...workoutData,
+      exercises: updatedExercises,
+    })
 
     const filtered = exerciseNames.filter((workout) =>
       workout.name.toLowerCase().includes(text.toLowerCase())
@@ -682,7 +692,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-2 rounded-xl border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+          twcn={`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
         >
           <Icon
             size={16}
@@ -1018,7 +1028,7 @@ const ExerciseInput = ({
               </BlurView>
             )}
           </View>
-          <View style={tw`flex-row gap-2 items-center`}>
+          <View style={tw`flex-row gap-1 items-center`}>
             {renderedExerciseButtons}
           </View>
         </View>
@@ -1037,6 +1047,12 @@ const ExerciseInput = ({
     <View style={tw`flex-row gap-2 items-start`}>
       {timelineComponent}
       {formComponent}
+      <MyModal
+        isOpen={isExerciseInfoOpen}
+        setIsOpen={setIsExerciseInfoOpen}
+      >
+        <ExerciseMiniHistory id={exercise.id as string} />
+      </MyModal>
     </View>
   )
 }

@@ -278,11 +278,6 @@ export const sets = pgTable(
       'right_cheat_xor_right_partial',
       sql`cheat_reps IS NULL OR right_partial_reps IS NULL`
     ),
-    // for completed sets: allow either reps or both left/right reps, but not both or neither
-    check(
-      'reps_or_left_right',
-      sql`((reps IS NOT NULL AND left_reps IS NULL AND right_reps IS NULL) OR (reps IS NULL AND left_reps IS NOT NULL AND right_reps IS NOT NULL))`
-    ),
     // ensure left/right fields are used together for unilateral exercises
     check(
       'left_right_rpe_consistency',
@@ -295,6 +290,10 @@ export const sets = pgTable(
     check(
       'left_right_partial_consistency',
       sql`((left_partial_reps IS NULL AND right_partial_reps IS NULL) OR (left_partial_reps IS NOT NULL AND right_partial_reps IS NOT NULL))`
+    ),
+    check(
+      'left_right_reps_consistency',
+      sql`((left_reps IS NULL AND right_reps IS NULL) OR (left_reps IS NOT NULL AND right_reps IS NOT NULL))`
     ),
     check('lbs_kg_consistency', sql`(weight_lbs IS NULL OR weight_kg IS NULL)`), // either lbs or kg can be used, not both
   ]

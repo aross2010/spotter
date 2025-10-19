@@ -61,7 +61,7 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-3xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
+        style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>

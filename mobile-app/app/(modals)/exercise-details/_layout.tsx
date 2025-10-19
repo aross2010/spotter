@@ -27,12 +27,13 @@ const ExerciseDetailsLayout = () => {
         },
         headerTitleAlign: 'left',
         headerTintColor: Colors.primary,
+        headerBackButtonDisplayMode: 'minimal',
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: 'Edit Exercise',
+          title: 'Exercise Details',
           headerLeft: () => (
             <Button
               onPress={() => router.back()}
