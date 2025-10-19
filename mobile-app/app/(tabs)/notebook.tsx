@@ -13,6 +13,7 @@ import NotebookEntryView from '../../components/notebook-entry'
 import { useNotebook } from '../../context/notebook-context'
 import useTheme from '../hooks/theme'
 import { NotebookEntry } from '../../utils/types'
+import { MONTHS } from '../../constants/data'
 
 const Notebook = () => {
   const {
@@ -103,7 +104,7 @@ const Notebook = () => {
     let addMonth = false
     const { date, pinned, id } = item
     const month = new Date(date).toLocaleString('default', {
-      month: 'long',
+      month: 'numeric',
       year: 'numeric',
     })
 
@@ -111,7 +112,7 @@ const Notebook = () => {
     if (index > 0) {
       const prevEntry = currentNotebookEntries[index - 1]
       const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
-        month: 'long',
+        month: 'numeric',
         year: 'numeric',
       })
 
@@ -125,12 +126,14 @@ const Notebook = () => {
       addMonth = true
     }
 
+    const [monthNum, day] = month.split('/')
+
     const monthTitle = addMonth && (
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
       >
-        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium tracking-wide">
-          {month}
+        <Txt twcn="font-poppinsMedium">
+          {MONTHS.get(monthNum)} {day}
         </Txt>
       </View>
     )

@@ -14,8 +14,6 @@ const WorkoutTags = () => {
   const { workoutData, setWorkoutData } = useWorkoutForm()
   const { tags } = useLocalSearchParams()
 
-  console.log('tags received from params: ', tags)
-
   useEffect(() => {
     setWorkoutData((prev) => {
       return { ...prev, tags: tags ? JSON.parse(tags as string) : [] }
@@ -57,16 +55,10 @@ const WorkoutTags = () => {
       ) : (
         <Button
           onPress={handleAddTags}
-          twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-2xl"
-          twcnText="text-light-grayText dark:text-dark-grayText text-sm "
+          twcnText="font-poppinsSemiBold text-primary"
           text="Add tags"
-        >
-          <Tag
-            size={16}
-            color={theme.grayText}
-            strokeWidth={1.5}
-          />
-        </Button>
+          twcn="mb-4"
+        />
       )}
     </View>
   )

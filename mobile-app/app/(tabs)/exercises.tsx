@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
@@ -196,7 +196,7 @@ const Exercises = () => {
   ) : (
     <SafeView twcnContentView="px-0">
       <View
-        style={tw`p-3 mx-4 my-2 h-10 border border-light-grayTertiary dark:border-dark-grayTertiary rounded-2xl flex-row items-center gap-2 bg-transparent`}
+        style={tw`p-3 mx-4 my-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center gap-2 bg-white`}
       >
         <Search
           size={16}

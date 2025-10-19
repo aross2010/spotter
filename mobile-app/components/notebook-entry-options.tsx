@@ -1,11 +1,9 @@
 import { View } from 'react-native'
 import React, { Fragment } from 'react'
 import { NotebookEntry } from '../utils/types'
-import { Pencil, Pin, Trash, Calendar, Tag, PinOff } from 'lucide-react-native'
-import Colors from '../constants/colors'
+import { Pencil, Pin, Trash, PinOff } from 'lucide-react-native'
 import tw from '../tw'
 import Txt from './text'
-import { formatDate } from '../functions/formatted-date'
 import useTheme from '../app/hooks/theme'
 import Button from './button'
 import { useNotebook } from '../context/notebook-context'
@@ -77,7 +75,7 @@ const NotebookEntryOptions = ({
             style={tw`flex-row gap-6 p-3 items-center`}
           >
             <Icon
-              size={18}
+              size={22}
               color={theme.grayText}
               strokeWidth={1.5}
             />
@@ -91,35 +89,9 @@ const NotebookEntryOptions = ({
     }
   )
 
-  const renderedTags = tags.length > 0 && (
-    <View style={tw`flex-row items-center gap-2 mt-3`}>
-      <Tag
-        size={12}
-        color={theme.grayText}
-      />
-      <View style={tw`flex-row flex-wrap gap-1`}>
-        {tags.slice(0, 3).map((tag, index) => (
-          <Txt
-            key={tag.id}
-            twcn="text-xs text-primary font-poppinsMedium"
-          >
-            #{tag.name}
-          </Txt>
-        ))}
-        {tags.length > 3 && (
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            +{tags.length - 3} more
-          </Txt>
-        )}
-      </View>
-    </View>
-  )
-
   return (
     <Fragment>
-      <View style={tw`rounded-3xl bg-white dark:bg-dark-grayPrimary p-2`}>
-        {renderedOptions}
-      </View>
+      <View>{renderedOptions}</View>
     </Fragment>
   )
 }

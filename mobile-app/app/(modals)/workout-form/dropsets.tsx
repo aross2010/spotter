@@ -266,7 +266,6 @@ const Dropsets = () => {
       }
     }
 
-    console.log('Selected sets: ', Array.from(newSelected))
     setSelectedSets(newSelected)
   }
 
@@ -286,7 +285,7 @@ const Dropsets = () => {
     return (
       <View
         key={exerciseIndex}
-        style={tw`flex-row flex-wrap gap-4 py-3 border-b border-light-graySecondary dark:border-dark-graySecondary`}
+        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
       >
         <Txt twcn="w-full text-sm">
           {exerciseIndex + 1}. {capString(ex.name, 30)}
@@ -333,14 +332,14 @@ const Dropsets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative flex-row items-center gap-2 p-1 rounded-lg ${isSelected ? 'bg-primary/25 border-primary' : 'bg-light-grayPrimary dark:bg-dark-graySecondary border-light-grayTertiary dark:border-dark-grayTertiary'} border`}
+                twcn={`relative px-3 py-1 rounded-lg border dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isSelected ? 'bg-primary/10 border-primary' : ''}`}
                 disabled={isSetDisabled}
               >
                 <Txt
-                  twcn={`text-xs uppercase tracking-wider ${
+                  twcn={`text-xs text-light-grayText dark:text-dark-grayText ${
                     isSetDisabled
                       ? 'text-light-graySecondary dark:text-dark-graySecondary'
-                      : 'text-light-grayText dark:text-dark-grayText'
+                      : ''
                   } ${isSelected ? 'text-primary' : ''}`}
                 >
                   {formatSetDisplay(set, workoutData.weightUnit || 'lbs')}
@@ -438,41 +437,35 @@ const Dropsets = () => {
   )
 
   return (
-    <SafeView scroll={false}>
+    <SafeView
+      scroll={false}
+      twcnContentView="px-0"
+    >
       {workoutData.setGroupings.some((g) => g.groupingType === 'dropset') && (
-        <View style={tw`mb-4 w-full`}>
-          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
-            Dropsets
-          </Txt>
+        <View style={tw`mb-4 w-full px-4`}>
+          <Txt twcn="font-poppinsMedium mb-4">Dropsets</Txt>
           <View style={tw`gap-2`}>{renderedDropsets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
-          Exercises
-        </Txt>
+        <Txt twcn="font-poppinsMedium px-4">Exercises</Txt>
+
         {renderedExercises}
       </View>
       <MyModal
         isOpen={isDropsetOptionsOpen}
         setIsOpen={setIsDropsetOptionsOpen}
       >
-        <Txt twcn="text-base font-poppinsMedium">Dropset Options</Txt>
         <Button onPress={deleteDropset}>
-          <View style={tw`flex-row gap-6 p-3 items-center rounded-xl`}>
-            <View style={tw`bg-primary/10 rounded-xl p-2`}>
-              <Trash
-                size={20}
-                color={Colors.primary}
-                strokeWidth={1.5}
-              />
-            </View>
+          <View style={tw`flex-row gap-6 p-3 items-center`}>
+            <Trash
+              size={22}
+              color={theme.grayText}
+              strokeWidth={1.5}
+            />
+
             <View style={tw`flex-1`}>
-              <Txt twcn="text-base">Delete</Txt>
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                Remove the dropset link between these consecutive sets. This
-                will not delete the exercise or its sets.
-              </Txt>
+              <Txt>Remove Dropset</Txt>
             </View>
           </View>
         </Button>

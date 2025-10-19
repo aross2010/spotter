@@ -260,8 +260,6 @@ export const setExercise = async (
       partialReps,
     } = set
 
-    console.log('Processing set: ', set)
-
     if (!reps && !(leftReps && rightReps)) {
       throw new Error('Must specify reps or both left and right reps for a set')
     }
@@ -292,27 +290,6 @@ export const setExercise = async (
 
     if ((rightRpe && Number(rightRpe) < 0.5) || Number(rightRpe) > 10) {
       throw new Error('Right RPE must be between 0.5 and 10')
-    }
-
-    if (rir && (leftRir || rightRir)) {
-      throw new Error('Cannot specify both RIR and left/right RIR for a set')
-    }
-
-    if (rpe && (leftRpe || rightRpe)) {
-      throw new Error('Cannot specify both RPE and left/right RPE for a set')
-    }
-
-    if (reps && (leftReps || rightReps)) {
-      throw new Error('Cannot specify both reps and left/right reps for a set')
-    }
-
-    if (
-      exercise.isUnilateral == false &&
-      (leftReps || rightReps || leftRpe || rightRpe || leftRir || rightRir)
-    ) {
-      throw new Error(
-        `Exercise ${exercise.name} is not unilateral, so left/right fields are not applicable`
-      )
     }
 
     const [insertedSet] = await tx

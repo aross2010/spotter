@@ -78,12 +78,12 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
 
   return (
     <View
-      style={tw`flex-row self-start items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-xl relative`}
+      style={tw`flex-row self-start items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-lg relative`}
     >
       {buttonLayouts.length === options.length && (
         <Animated.View
           style={[
-            tw`absolute bg-primary/25 rounded-xl`,
+            tw`absolute bg-primary/25 rounded-lg`,
             {
               width: animatedWidth,
               height: '100%',

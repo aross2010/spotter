@@ -91,10 +91,10 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
         >
           <View
             key={index}
-            style={tw`flex-row gap-4 p-3 items-center`}
+            style={tw`flex-row gap-6 p-3 items-center`}
           >
             <Icon
-              size={18}
+              size={22}
               color={theme.grayText}
               strokeWidth={1.5}
             />
@@ -110,12 +110,7 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
 
   return (
     <Fragment>
-      <Txt twcn="font-poppinsMedium text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText">
-        Workout Options
-      </Txt>
-      <View style={tw`rounded-3xl bg-white dark:bg-dark-grayPrimary p-2`}>
-        {renderedOptions}
-      </View>
+      <View>{renderedOptions}</View>
     </Fragment>
   )
 }

@@ -307,12 +307,12 @@ const Supersets = () => {
     return (
       <View
         key={exerciseIndex}
-        style={tw`flex-row flex-wrap gap-4 py-3 border-b border-light-graySecondary dark:border-dark-graySecondary`}
+        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
       >
         <Txt twcn="w-full text-sm">
           {exerciseIndex + 1}. {capString(ex.name, 30)}
         </Txt>
-        <View style={tw`w-full flex-row items-center mb-2 gap-3`}>
+        <View style={tw`w-full flex-row flex-wrap items-center mb-2 gap-2`}>
           {ex.sets.map((set: any, setIndex: number) => {
             const hasRepsOrWeight =
               set.reps ||
@@ -370,7 +370,7 @@ const Supersets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative flex-row items-center gap-2 p-1 px-3 py-1.5 bg-white dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isSelected ? 'bg-primary/25 border-primary' : ''}`}
+                twcn={`relative px-3 py-1 rounded-lg border dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isSelected ? 'bg-primary/10 border-primary' : ''}`}
                 disabled={isSetDisabled}
               >
                 <Txt
@@ -478,41 +478,35 @@ const Supersets = () => {
   )
 
   return (
-    <SafeView scroll={false}>
+    <SafeView
+      scroll={false}
+      twcnContentView="px-0"
+    >
       {workoutData.setGroupings.length > 0 && (
-        <View style={tw`mb-4 w-full`}>
-          <Txt twcn="mb-3 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
-            Supersets
-          </Txt>
+        <View style={tw`mb-4 w-full px-4`}>
+          <Txt twcn="font-poppinsMedium mb-4">Supersets</Txt>
           <View style={tw`gap-2`}>{renderedSuperSets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="mb-1 text-light-grayText dark:text-dark-grayText uppercase text-xs font-poppinsMedium tracking-wider">
-          Exercises
-        </Txt>
+        <Txt twcn="font-poppinsMedium px-4">Exercises</Txt>
+
         {renderedExercises}
       </View>
       <MyModal
         isOpen={isSupersetOptionsOpen}
         setIsOpen={setIsSupersetOptionsOpen}
       >
-        <Txt twcn="text-base font-poppinsMedium">Superset Options</Txt>
         <Button onPress={deleteSuperset}>
-          <View style={tw`flex-row gap-6 p-3 items-center rounded-xl`}>
-            <View style={tw`bg-primary/10 rounded-xl p-2`}>
-              <Trash
-                size={20}
-                color={Colors.primary}
-                strokeWidth={1.5}
-              />
-            </View>
+          <View style={tw`flex-row gap-6 p-3 items-center`}>
+            <Trash
+              size={22}
+              color={theme.grayText}
+              strokeWidth={1.5}
+            />
+
             <View style={tw`flex-1`}>
-              <Txt twcn="text-base">Delete</Txt>
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                Remove the superset link between these exercises. This will not
-                delete the exercises or their sets.
-              </Txt>
+              <Txt>Remove Superset</Txt>
             </View>
           </View>
         </Button>

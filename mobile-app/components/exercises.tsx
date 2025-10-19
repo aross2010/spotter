@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, View, Alert } from 'react-native'
+import { StyleSheet, View, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
@@ -74,9 +74,7 @@ const Exercises = () => {
   return (
     <View>
       <View style={tw`flex-row justify-between items-center`}>
-        <Txt twcn="text-xs uppercase tracking-wide font-poppinsMedium text-light-grayText dark:text-dark-grayText">
-          Exercises
-        </Txt>
+        <Txt twcn="font-poppinsMedium">Exercises</Txt>
         <Button onPress={() => setIsOptionsModalOpen(true)}>
           <Ellipsis
             size={20}

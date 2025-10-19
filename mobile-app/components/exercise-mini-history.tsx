@@ -133,7 +133,8 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
   })
 
   return (
-    <View style={tw`gap-6`}>
+    <View style={tw`gap-4`}>
+      <Txt twcn="font-poppinsMedium text-lg">{exercise.name}</Txt>
       {exercise.description && (
         <Txt twcn="text-light-grayText dark:text-dark-grayText">
           {exercise.description}

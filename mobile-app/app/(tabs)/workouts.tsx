@@ -1,22 +1,19 @@
-import { StyleSheet, Text, TextInput, View, FlatList } from 'react-native'
+import { View, FlatList } from 'react-native'
 import React, { useEffect } from 'react'
 import { useNavigation, router } from 'expo-router'
 import { Link } from 'expo-router'
 import tw from '../../tw'
 import Colors from '../../constants/colors'
-import { ListFilter, Plus, Dumbbell, Calendar, Pin } from 'lucide-react-native'
+import { ListFilter, Plus, Calendar, Pin } from 'lucide-react-native'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import Button from '../../components/button'
-import {
-  useWorkout,
-  Workout,
-  WorkoutMinimal,
-} from '../../context/workout-context'
+import { useWorkout, WorkoutMinimal } from '../../context/workout-context'
 import Spinner from '../../components/activity-indicator'
 import useTheme from '../hooks/theme'
 import WorkoutView from '../../components/workout'
 import Selector from '../../components/selector'
+import { MONTHS } from '../../constants/data'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -163,14 +160,14 @@ const Workouts = () => {
     let addMonth = false
     const { date, pinned, id } = item
     const month = new Date(date).toLocaleString('default', {
-      month: 'long',
+      month: 'numeric',
       year: 'numeric',
     })
 
     if (index > 0) {
       const prevEntry = currentWorkouts[index - 1]
       const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
-        month: 'long',
+        month: 'numeric',
         year: 'numeric',
       })
 
@@ -183,13 +180,14 @@ const Workouts = () => {
     } else if (!pinned) {
       addMonth = true
     }
+    const [monthNum, day] = month.split('/')
 
     const monthTitle = addMonth && (
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
       >
-        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium tracking-wide">
-          {month}
+        <Txt twcn="font-poppinsMedium">
+          {MONTHS.get(monthNum)} {day}
         </Txt>
       </View>
     )

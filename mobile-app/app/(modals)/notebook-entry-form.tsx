@@ -1,4 +1,4 @@
-import { Alert, KeyboardAvoidingView, Platform } from 'react-native'
+import { Alert } from 'react-native'
 import SafeView from '../../components/safe-view'
 import Button from '../../components/button'
 import { formatDate, toLocalDateString } from '../../functions/formatted-date'
@@ -8,7 +8,6 @@ import Txt from '../../components/text'
 import tw from '../../tw'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import Colors from '../../constants/colors'
-import { useColorScheme } from 'react-native'
 import { useState, useEffect } from 'react'
 import { Tag } from '../../utils/types'
 import DatePicker from 'react-native-date-picker'
@@ -17,8 +16,6 @@ import TagView from '../../components/tag'
 import { Tag as TagIcon } from 'lucide-react-native'
 
 const NotebookEntryForm = () => {
-  const colorScheme = useColorScheme() ?? 'light'
-  const theme = Colors[colorScheme] ?? Colors.light
   const { addEntry, updateEntry } = useNotebook()
   const { tags, entryId, entryTitle, entryBody, entryDate, entryTags } =
     useLocalSearchParams() // tags = sent back from tag selector, entryTags = existing tags for entry to edit
@@ -129,10 +126,6 @@ const NotebookEntryForm = () => {
     }
   }, [tags, isEditing])
 
-  useEffect(() => {
-    console.log('data', data)
-  }, [data])
-
   const handleSubmitEntry = async () => {
     setIsSaving(true)
     try {
@@ -164,6 +157,17 @@ const NotebookEntryForm = () => {
       />
     )
   })
+
+  const navToTagSelector = () => {
+    router.push({
+      pathname: '/tag-selector',
+      params: {
+        formTags: JSON.stringify(data.tags),
+        userTags: JSON.stringify(userTags),
+        type: 'notebook',
+      },
+    })
+  }
 
   return (
     <SafeView
@@ -206,68 +210,37 @@ const NotebookEntryForm = () => {
           scrollEnabled
         />
       </View>
-      <View>
-        {data.tags.length == 0 && (
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end mb-2">
-            {data.body.length} / {500}
-          </Txt>
-        )}
 
-        <View>
-          {data.tags.length > 0 ? (
-            <View
-              style={tw`flex-row items-center justify-between border-b pb-2 border-light-grayTertiary dark:border-dark-grayTertiary`}
+      <View>
+        {data.tags.length > 0 ? (
+          <View>
+            <Button
+              onPress={navToTagSelector}
+              style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
             >
-              <Button
-                onPress={() => {
-                  router.push({
-                    pathname: '/tag-selector',
-                    params: {
-                      formTags: JSON.stringify(data.tags),
-                      userTags: JSON.stringify(userTags),
-                      type: 'notebook',
-                    },
-                  })
-                }}
-                style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
-              >
-                <TagIcon
-                  color={Colors.primary}
-                  size={12}
-                  strokeWidth={1.5}
-                />
-                {renderedTags}
-              </Button>
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
-                {data.body.length} / {500}
-              </Txt>
-            </View>
-          ) : (
-            <View style={tw`gap-4`}>
-              <Button
-                onPress={() => {
-                  router.push({
-                    pathname: '/tag-selector',
-                    params: {
-                      formTags: JSON.stringify(data.tags),
-                      userTags: JSON.stringify(userTags),
-                      type: 'notebook',
-                    },
-                  })
-                }}
-                twcn="flex-row flex-row-reverse items-center gap-2 justify-center p-4 border bg-light-grayPrimary dark:bg-dark-grayPrimary border-light-grayTertiary dark:border-dark-grayTertiary rounded-xl"
-                twcnText="text-light-grayText dark:text-dark-grayText text-sm "
-                text="Add tags"
-              >
-                <TagIcon
-                  size={16}
-                  color={theme.grayText}
-                  strokeWidth={1.5}
-                />
-              </Button>
-            </View>
-          )}
-        </View>
+              <TagIcon
+                color={Colors.primary}
+                size={12}
+                strokeWidth={1.5}
+              />
+              {renderedTags}
+            </Button>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
+              {data.body.length} / {500}
+            </Txt>
+          </View>
+        ) : (
+          <View style={tw`flex-row justify-between items-center`}>
+            <Button
+              onPress={navToTagSelector}
+              twcnText="font-poppinsSemiBold text-primary"
+              text="Add tags"
+            />
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+              {data.body.length} / {500}
+            </Txt>
+          </View>
+        )}
       </View>
       <DatePicker
         modal
