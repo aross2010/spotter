@@ -692,7 +692,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/25' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+          twcn={`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
         >
           <Icon
             size={16}
@@ -709,14 +709,10 @@ const ExerciseInput = ({
         key={name}
         onPress={onPress}
         text="Add Set"
-        twcnText="text-xs text-light-grayText dark:text-dark-grayText font-poppinsMedium"
-        twcn={`p-2 flex-row-reverse flex-1 items-center justify-center gap-1 rounded-xl bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
-      >
-        <Plus
-          size={16}
-          color={theme.grayText}
-        />
-      </Button>
+        hitSlop={12}
+        twcnText="text-primary font-poppinsSemiBold"
+        twcn="px-2"
+      />
     )
   })
 
@@ -724,9 +720,9 @@ const ExerciseInput = ({
     return (
       <View
         key={value}
-        style={tw`w-1/5 items-center`}
+        style={tw`flex-1 items-center`}
       >
-        <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
           {label}
         </Txt>
       </View>
@@ -738,7 +734,7 @@ const ExerciseInput = ({
       const setContent = (
         <View>
           <View
-            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary dark:border-dark-grayTertiary py-0.5`}
           >
             {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
               let displayValue = ''
@@ -889,7 +885,7 @@ const ExerciseInput = ({
       // For regular exercises, wrap single row
       const setContent = (
         <View
-          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-1`}
+          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-0.5`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             // Map 'partials' to 'partialReps' for display

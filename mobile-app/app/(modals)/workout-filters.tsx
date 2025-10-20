@@ -8,6 +8,8 @@ import {
   CalendarArrowDown,
   CalendarArrowUp,
   RotateCcw,
+  Search,
+  X,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import useTheme from '../hooks/theme'
@@ -294,7 +296,7 @@ const WorkoutFilters = () => {
         style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
       >
         <Pressable
-          style={tw`justify-between flex-row px-2 py-3 items-center ${isDisabled ? 'opacity-40' : ''}`}
+          style={tw`justify-between flex-row px-4 py-3 items-center ${isDisabled ? 'opacity-40' : ''}`}
           onPress={() => !isDisabled && handleSelectOption(option)}
           disabled={isDisabled}
         >
@@ -337,59 +339,72 @@ const WorkoutFilters = () => {
   return loading ? (
     <Spinner />
   ) : (
-    <SafeView>
-      <View style={tw`flex-row gap-2 items-center`}>
-        <View style={tw`flex-1 mt-2`}>
+    <SafeView twcnContentView="px-0">
+      <View style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}>
+        <View
+          style={tw`px-3 flex-1 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+        >
+          <Search
+            size={16}
+            color={theme.grayText}
+          />
           <Input
             autoCorrect={false}
+            twcnInput="flex-1"
             autoCapitalize="none"
-            placeholder="Search filters..."
+            placeholder={'Search anything...'}
             value={query}
             onChange={(e) => handleChange(e.nativeEvent.text)}
+            maxLength={50}
+            autoFocus
           />
+          <Button onPress={() => setQuery('')}>
+            <X
+              size={16}
+              color={theme.grayText}
+            />
+          </Button>
         </View>
-
-        <Button
-          hitSlop={12}
-          onPress={handleResetAll}
-          twcn="bg-primary/10 rounded-xl p-2"
-        >
-          <RotateCcw
-            size={16}
-            color={Colors.primary}
-          />
-        </Button>
-
-        <Button
-          hitSlop={12}
-          twcn={`${sortOrder === 'desc' ? 'bg-primary/10' : 'bg-primary/25'} rounded-xl p-2`}
-          onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-        >
-          {sortOrder === 'desc' ? (
-            <CalendarArrowDown
+        <View style={tw`flex-row items-center gap-2`}>
+          <Button
+            hitSlop={12}
+            onPress={handleResetAll}
+            twcn="bg-primary/10 rounded-xl p-2"
+          >
+            <RotateCcw
               size={16}
               color={Colors.primary}
             />
-          ) : (
-            <CalendarArrowUp
-              size={16}
-              color={Colors.primary}
-            />
-          )}
-        </Button>
+          </Button>
+          <Button
+            hitSlop={12}
+            twcn="bg-primary/10 rounded-xl p-2"
+            onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            {sortOrder === 'desc' ? (
+              <CalendarArrowDown
+                size={16}
+                color={Colors.primary}
+              />
+            ) : (
+              <CalendarArrowUp
+                size={24}
+                color={Colors.primary}
+              />
+            )}
+          </Button>
+        </View>
       </View>
 
       {selectedOptions.length > 0 && (
-        <View style={tw`flex-row flex-wrap items-center gap-1 py-2`}>
+        <View
+          style={tw`flex-row flex-wrap border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 pb-2 items-center gap-1 pt-2 px-4`}
+        >
           {renderedSelectedOptions}
         </View>
       )}
 
-      <View
-        style={tw`flex-col border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
-      >
-        {renderedResultOptions}
-      </View>
+      <View>{renderedResultOptions}</View>
     </SafeView>
   )
 }

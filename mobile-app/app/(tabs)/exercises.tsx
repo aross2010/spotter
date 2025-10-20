@@ -196,14 +196,14 @@ const Exercises = () => {
   ) : (
     <SafeView twcnContentView="px-0">
       <View
-        style={tw`p-3 mx-4 my-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center gap-2 bg-white`}
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
       >
         <Search
           size={16}
           color={theme.grayText}
         />
         <Input
-          style={tw`flex-1`}
+          twcnInput="flex-1"
           placeholder="Search exercises..."
           value={searchQuery}
           onChangeText={handleSearchChange}

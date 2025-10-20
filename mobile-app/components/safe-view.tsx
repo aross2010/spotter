@@ -16,6 +16,7 @@ type SafeViewProps = {
   twcnContentView?: string
   hasHeader?: boolean
   scroll?: boolean
+  keyboardVerticalOffset?: number
 } & ViewProps
 
 const SafeView = ({
@@ -27,6 +28,7 @@ const SafeView = ({
   twcnContentView,
   hasHeader = true,
   scroll = true,
+  keyboardVerticalOffset = 115,
   ...rest
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()
@@ -51,8 +53,8 @@ const SafeView = ({
     return (
       <KeyboardAvoidingView
         behavior="padding"
-        style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-12' : 'mb-4'}`}
-        keyboardVerticalOffset={140}
+        style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-16' : 'mb-4'}`}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         {children}
       </KeyboardAvoidingView>

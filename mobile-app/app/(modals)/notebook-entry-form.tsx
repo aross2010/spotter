@@ -6,7 +6,7 @@ import Input from '../../components/input'
 import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import { Link, router, useLocalSearchParams, useNavigation } from 'expo-router'
 import Colors from '../../constants/colors'
 import { useState, useEffect } from 'react'
 import { Tag } from '../../utils/types'
@@ -158,17 +158,6 @@ const NotebookEntryForm = () => {
     )
   })
 
-  const navToTagSelector = () => {
-    router.push({
-      pathname: '/tag-selector',
-      params: {
-        formTags: JSON.stringify(data.tags),
-        userTags: JSON.stringify(userTags),
-        type: 'notebook',
-      },
-    })
-  }
-
   return (
     <SafeView
       keyboardAvoiding
@@ -211,37 +200,51 @@ const NotebookEntryForm = () => {
         />
       </View>
 
-      <View>
-        {data.tags.length > 0 ? (
-          <View>
-            <Button
-              onPress={navToTagSelector}
-              style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
-            >
-              <TagIcon
-                color={Colors.primary}
-                size={12}
-                strokeWidth={1.5}
-              />
-              {renderedTags}
-            </Button>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
-              {data.body.length} / {500}
-            </Txt>
-          </View>
-        ) : (
-          <View style={tw`flex-row justify-between items-center`}>
-            <Button
-              onPress={navToTagSelector}
-              twcnText="font-poppinsSemiBold text-primary"
-              text="Add tags"
+      {data.tags.length > 0 ? (
+        <View>
+          <Link
+            href={{
+              pathname: '/tag-selector',
+              params: {
+                formTags: JSON.stringify(data.tags),
+                userTags: JSON.stringify(userTags),
+                type: 'notebook',
+              },
+            }}
+            prefetch
+            style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
+          >
+            <TagIcon
+              color={Colors.primary}
+              size={12}
+              strokeWidth={1.5}
             />
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-              {data.body.length} / {500}
-            </Txt>
-          </View>
-        )}
-      </View>
+            {renderedTags}
+          </Link>
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
+            {data.body.length} / {500}
+          </Txt>
+        </View>
+      ) : (
+        <View style={tw`flex-row justify-between items-center`}>
+          <Link
+            href={{
+              pathname: '/tag-selector',
+              params: {
+                formTags: JSON.stringify(data.tags),
+                userTags: JSON.stringify(userTags),
+                type: 'notebook',
+              },
+            }}
+            prefetch
+          >
+            <Txt twcn="font-poppinsSemiBold text-primary">Add tags</Txt>
+          </Link>
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+            {data.body.length} / {500}
+          </Txt>
+        </View>
+      )}
       <DatePicker
         modal
         open={isDatePickerOpen}

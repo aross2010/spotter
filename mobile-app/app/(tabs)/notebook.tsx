@@ -84,13 +84,7 @@ const Notebook = () => {
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
-      <Pin
-        size={16}
-        color={theme.grayText}
-      />
-      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-poppinsMedium">
-        Pinned
-      </Txt>
+      <Txt twcn="font-poppinsMedium">📌 Pinned</Txt>
     </View>
   )
 

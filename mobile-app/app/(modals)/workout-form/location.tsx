@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { View } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import Txt from '../../../components/text'
 import Input from '../../../components/input'
@@ -8,6 +8,8 @@ import { useNavigation, useRouter } from 'expo-router'
 import SafeView from '../../../components/safe-view'
 import { capString } from '../../../functions/cap-string'
 import { useWorkoutForm } from '../../../context/workout-form-context'
+import { Search, X } from 'lucide-react-native'
+import useTheme from '../../hooks/theme'
 
 type UsedLocations = {
   location: string
@@ -20,6 +22,7 @@ const LocationSelector = () => {
   const router = useRouter()
   const navigation = useNavigation()
   const { workoutData, updateWorkoutData, locations } = useWorkoutForm()
+  const { theme } = useTheme()
 
   useEffect(() => {
     navigation.setOptions({
@@ -63,7 +66,7 @@ const LocationSelector = () => {
   const renderedResults = locationResults.map(({ location, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-2 py-3 items-center`}
+        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-4 py-3 items-center`}
         key={location}
         onPress={() => {
           handleSaveLocation(location)
@@ -76,25 +79,38 @@ const LocationSelector = () => {
   })
 
   return (
-    <SafeView>
-      <Input
-        value={query}
-        onChange={(e) => setQuery(e.nativeEvent.text)}
-        placeholder="Enter location..."
-        onSubmitEditing={(e) => {
-          const newLocation = e.nativeEvent.text
-          handleSaveLocation(newLocation)
-        }}
-        returnKeyType="done"
-        maxLength={50}
-        autoFocus
-      />
-
+    <SafeView twcnContentView="px-0">
       <View
-        style={tw`flex-col border-t border-light-grayTertiary dark:border-dark-grayTertiary flex-1`}
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
       >
-        {renderedResults}
+        <Search
+          size={16}
+          color={theme.grayText}
+        />
+        <Input
+          autoCorrect={false}
+          twcnInput="flex-1"
+          autoCapitalize="none"
+          placeholder={'Search locations...'}
+          value={query}
+          onChange={(e) => setQuery(e.nativeEvent.text)}
+          returnKeyType="done"
+          onSubmitEditing={(e) => {
+            const newLocation = e.nativeEvent.text
+            handleSaveLocation(newLocation)
+          }}
+          maxLength={50}
+          autoFocus
+        />
+        <Button onPress={() => setQuery('')}>
+          <X
+            size={16}
+            color={theme.grayText}
+          />
+        </Button>
       </View>
+
+      <View>{renderedResults}</View>
     </SafeView>
   )
 }

@@ -10,6 +10,7 @@ import tw from '../../tw'
 import useTheme from '../hooks/theme'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import TagView from '../../components/tag'
+import { Search, X } from 'lucide-react-native'
 
 const TagSelector = () => {
   const { formTags, userTags } = useLocalSearchParams() as {
@@ -27,6 +28,7 @@ const TagSelector = () => {
   const [query, setQuery] = useState('')
   const { authUser } = useAuth()
   const navigation = useNavigation()
+  const { theme } = useTheme()
 
   const handleSaveTags = () => {
     if (router.canGoBack()) {
@@ -38,17 +40,22 @@ const TagSelector = () => {
   }
 
   useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Button
-          onPress={handleSaveTags}
-          hitSlop={12}
-          accessibilityLabel="save selected tags"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-          text="Done"
-        />
-      ),
+    // Don't set options if navigation isn't ready (e.g., when prefetching)
+    const unsubscribe = navigation.addListener('focus', () => {
+      navigation.setOptions({
+        headerRight: () => (
+          <Button
+            onPress={handleSaveTags}
+            hitSlop={12}
+            accessibilityLabel="save selected tags"
+            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+            text="Done"
+          />
+        ),
+      })
     })
+
+    return unsubscribe
   }, [navigation, selectedTags])
 
   useEffect(() => {
@@ -128,7 +135,7 @@ const TagSelector = () => {
   const renderedResults = tagResults.map(({ id, name, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary justify-between flex-row px-2 py-3 items-center`}
+        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-4 py-3 items-center`}
         key={id}
         onPress={() => handleSelectTag(name)}
       >
@@ -151,28 +158,42 @@ const TagSelector = () => {
   })
 
   return (
-    <SafeView scroll={false}>
-      <Input
-        autoCorrect={false}
-        autoCapitalize="none"
-        placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
-        value={query}
-        onChange={(e) => setQuery(e.nativeEvent.text)}
-        onSubmitEditing={handleCreateNewTag}
-        returnKeyType="done"
-        maxLength={50}
-        autoFocus
-      />
+    <SafeView twcnContentView="px-0">
+      <View
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+      >
+        <Search
+          size={16}
+          color={theme.grayText}
+        />
+        <Input
+          autoCorrect={false}
+          twcnInput="flex-1"
+          autoCapitalize="none"
+          placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
+          value={query}
+          onChange={(e) => setQuery(e.nativeEvent.text)}
+          returnKeyType="done"
+          onSubmitEditing={handleCreateNewTag}
+          maxLength={50}
+          autoFocus
+        />
+        <Button onPress={() => setQuery('')}>
+          <X
+            size={16}
+            color={theme.grayText}
+          />
+        </Button>
+      </View>
+
       {selectedTags.length > 0 && (
-        <View style={tw`flex-row flex-wrap items-center gap-1 pt-2`}>
+        <View
+          style={tw`flex-row flex-wrap border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 pb-2 items-center gap-1 pt-2 px-4`}
+        >
           {renderedSelectedTags}
         </View>
       )}
-      <View
-        style={tw`flex-col mt-2 border-t border-light-grayTertiary dark:border-dark-grayTertiary`}
-      >
-        {renderedResults}
-      </View>
+      <View>{renderedResults}</View>
     </SafeView>
   )
 }

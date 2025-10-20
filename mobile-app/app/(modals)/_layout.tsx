@@ -81,15 +81,7 @@ export default function ModalLayout() {
             title: 'Tag Selector',
             headerTitle: 'Add Tags',
             headerShown: true,
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
-            ),
+
             headerRight: () => (
               <Button
                 onPress={() => router.back()}

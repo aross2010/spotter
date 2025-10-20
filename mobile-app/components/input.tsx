@@ -39,6 +39,7 @@ const Input = forwardRef<TextInput, InputProps>(
             ? {
                 height: getMultilineHeight(),
                 textAlignVertical: 'top' as const,
+                lineHeight: 20,
               }
             : undefined,
         ]}
