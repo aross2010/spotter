@@ -30,6 +30,7 @@ const Workouts = () => {
     statusFilter,
     setStatusFilter,
     workouts,
+    hasLoaded,
   } = useWorkout()
   const { theme } = useTheme()
 
@@ -271,7 +272,21 @@ const Workouts = () => {
     </View>
   )
 
-  return workouts.length > 0 || isLoading ? workoutsView : workoutPrompt
+  // Show loading spinner on first load, then show either workoutsView or workoutPrompt
+  if (!hasLoaded) {
+    return (
+      <SafeView
+        hasTabBar
+        scroll={false}
+      >
+        <View style={tw`flex-1 items-center justify-center`}>
+          <Spinner />
+        </View>
+      </SafeView>
+    )
+  }
+
+  return workouts.length > 0 ? workoutsView : workoutPrompt
 }
 
 export default Workouts

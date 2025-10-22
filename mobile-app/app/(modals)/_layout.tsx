@@ -81,7 +81,6 @@ export default function ModalLayout() {
             title: 'Tag Selector',
             headerTitle: 'Add Tags',
             headerShown: true,
-
             headerRight: () => (
               <Button
                 onPress={() => router.back()}

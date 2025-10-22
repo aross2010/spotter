@@ -1,4 +1,5 @@
 import { MUSCLE_GROUPS } from '../constants/data'
+import { WorkoutMinimal } from '../context/workout-context'
 
 export type Providers = 'apple' | 'google'
 
@@ -117,4 +118,25 @@ export type ExerciseDetailsMini = {
       intensity?: number
     }
   }
+}
+
+export type ActivityCalendar = {
+  [date: string]: {
+    workouts: {
+      status: 'completed' | 'planned' | 'active'
+      workoutId: string
+    }[]
+  }
+}
+
+export type HomeData = {
+  totalWorkouts: number
+  totalReps: number
+  totalSets: number
+  totalExercises: number
+  featuredWorkout: {
+    workout: WorkoutMinimal | null
+    status: 'none' | 'most recent' | 'upcoming' | 'current' // try to get current workout first (active and same day), then upcoming (any workout marked as planned in the future or today), then most recent (last completed wotkout), else none (prompt to create)
+  }
+  activityCalendar: ActivityCalendar
 }
