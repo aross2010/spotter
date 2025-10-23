@@ -18,6 +18,11 @@
       "bundleIdentifier": "app.aross.spotter",
       "usesAppleSignIn": true,
       "deploymentTarget": "16.0",
+      "icon": {
+        "dark": "./assets/icons/ios-dark.png",
+        "light": "./assets/icons/ios-light.png",
+        "tinted": "./assets/icons/ios-tinted.png"
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIDesignRequiresCompatibility": true
@@ -44,6 +49,19 @@
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.216743842353-e8ab810c68h93uuc3crkqjqgrj6qiqnj"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-icon-light.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#807BCF",
+          "dark": {
+            "image": "./assets/icons/splash-icon-dark.png",
+            "backgroundColor": "#1E1E1E"
+          }
         }
       ],
       "expo-secure-store",

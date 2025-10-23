@@ -84,7 +84,7 @@ const Notebook = () => {
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
-      <Txt twcn="font-poppinsMedium">📌 Pinned</Txt>
+      <Txt twcn="font-poppinsSemiBold text-base">📌 Pinned</Txt>
     </View>
   )
 
@@ -96,6 +96,9 @@ const Notebook = () => {
     index: number
   }) => {
     let addMonth = false
+    let lastInMonth = false
+    let roundTop = false
+    let roundBottom = false
     const { date, pinned, id } = item
     const month = new Date(date).toLocaleString('default', {
       month: 'numeric',
@@ -110,14 +113,45 @@ const Notebook = () => {
         year: 'numeric',
       })
 
+      const nextEntry = currentNotebookEntries[index + 1]
+      const nextMonth = nextEntry
+        ? new Date(nextEntry.date).toLocaleString('default', {
+            month: 'numeric',
+            year: 'numeric',
+          })
+        : null
+
+      if (nextMonth && month !== nextMonth && !pinned) {
+        lastInMonth = true
+      }
+
       if (
         !pinned &&
         (prevEntry.pinned || (month !== prevMonth && !prevEntry.pinned))
       ) {
         addMonth = true
       }
+
+      // Handle pinned entries rounding
+      if (pinned && !prevEntry.pinned) {
+        roundTop = true
+      }
+      if (pinned && nextEntry && !nextEntry.pinned) {
+        roundBottom = true
+      }
     } else if (!pinned) {
       addMonth = true
+    } else if (pinned) {
+      // First entry and it's pinned
+      roundTop = true
+    }
+
+    // Check if this is the last pinned entry
+    if (pinned) {
+      const nextEntry = currentNotebookEntries[index + 1]
+      if (!nextEntry || !nextEntry.pinned) {
+        roundBottom = true
+      }
     }
 
     const [monthNum, day] = month.split('/')
@@ -126,19 +160,27 @@ const Notebook = () => {
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
       >
-        <Txt twcn="font-poppinsMedium">
+        <Txt twcn="font-poppinsSemiBold text-base">
           {MONTHS.get(monthNum)} {day}
         </Txt>
       </View>
     )
 
     const showPinnedHeader = index === 0 && pinned
+    if (index === currentNotebookEntries.length - 1) {
+      lastInMonth = true
+      if (pinned) roundBottom = true
+    }
 
     return (
       <View>
         {showPinnedHeader && pinnedTitle}
         {monthTitle}
-        <NotebookEntryView entry={item} />
+        <NotebookEntryView
+          entry={item}
+          roundBottom={pinned ? roundBottom : lastInMonth}
+          roundTop={pinned ? roundTop : addMonth}
+        />
       </View>
     )
   }
@@ -208,7 +250,7 @@ const Notebook = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4 gap-2`}
+        contentContainerStyle={tw`p-4`}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
         disableVirtualization={true}

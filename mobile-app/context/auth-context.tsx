@@ -128,6 +128,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     restoreSession()
   }, [])
 
+  // Sync authUser to Zustand user store
+  useEffect(() => {
+    if (authUser) {
+      setUser({
+        id: authUser.id,
+        email: authUser.email,
+        firstName: authUser.firstName,
+        lastName: authUser.lastName || '',
+        providers: [
+          {
+            id: authUser.providerId,
+            name: authUser.provider,
+            email: authUser.email,
+          },
+        ],
+      })
+    } else {
+      clearUserStore()
+    }
+  }, [authUser])
+
   useEffect(() => {
     // case where user is just linking their account and has accessToken, do not complete sign in
     if (!accessToken) handleResponse()

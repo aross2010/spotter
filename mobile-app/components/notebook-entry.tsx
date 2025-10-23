@@ -13,9 +13,15 @@ import Colors from '../constants/colors'
 
 type NotebookEntryProps = {
   entry: NotebookEntry
+  roundTop: boolean
+  roundBottom: boolean
 }
 
-const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
+const NotebookEntryView = ({
+  entry,
+  roundTop,
+  roundBottom,
+}: NotebookEntryProps) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const { theme } = useTheme()
@@ -43,7 +49,7 @@ const NotebookEntryView = ({ entry }: NotebookEntryProps) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">

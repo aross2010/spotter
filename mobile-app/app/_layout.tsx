@@ -1,6 +1,7 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import React from 'react'
 import { Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
 import {
   Poppins_100Thin,
@@ -45,6 +46,11 @@ import tw from '../tw'
 import ThemedStatusBar from '../components/status-bar'
 import { WorkoutProvider } from '../context/workout-context'
 
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+})
+
 const RootLayout = () => {
   useDeviceContext(tw, {
     observeDeviceColorSchemeChanges: false,
@@ -79,10 +85,6 @@ const RootLayout = () => {
     Geologica_800ExtraBold,
     Geologica_900Black,
   })
-
-  if (!fontsLoaded) {
-    return <Loading visible />
-  }
 
   return (
     <AuthProvider>

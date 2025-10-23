@@ -121,7 +121,7 @@ const Workouts = () => {
           Your Workouts
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
-          Capture everything beyond your workouts
+          Stay in control of your progress
         </Txt>
         <Button
           onPress={() => router.push('/workout-form')}
@@ -159,6 +159,7 @@ const Workouts = () => {
     index: number
   }) => {
     let addMonth = false
+    let lastInMonth = false
     const { date, pinned, id } = item
     const month = new Date(date).toLocaleString('default', {
       month: 'numeric',
@@ -171,6 +172,18 @@ const Workouts = () => {
         month: 'numeric',
         year: 'numeric',
       })
+
+      const nextEntry = currentWorkouts[index + 1]
+      const nextMonth = nextEntry
+        ? new Date(nextEntry.date).toLocaleString('default', {
+            month: 'numeric',
+            year: 'numeric',
+          })
+        : null
+
+      if (nextMonth && month !== nextMonth && !pinned) {
+        lastInMonth = true
+      }
 
       if (
         !pinned &&
@@ -187,19 +200,26 @@ const Workouts = () => {
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
       >
-        <Txt twcn="font-poppinsMedium">
+        <Txt twcn="font-poppinsSemiBold text-base">
           {MONTHS.get(monthNum)} {day}
         </Txt>
       </View>
     )
 
     const showPinnedHeader = index === 0 && pinned
+    if (index === currentWorkouts.length - 1) {
+      lastInMonth = true
+    }
 
     return (
       <View>
         {showPinnedHeader && pinnedTitle}
         {monthTitle}
-        <WorkoutView workout={item} />
+        <WorkoutView
+          workout={item}
+          roundTop={addMonth}
+          roundBottom={lastInMonth}
+        />
       </View>
     )
   }
@@ -261,7 +281,7 @@ const Workouts = () => {
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.1}
           ListFooterComponent={renderFooter}
-          contentContainerStyle={tw`p-4 gap-2`}
+          contentContainerStyle={tw`p-4`}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews={false}
           disableVirtualization={true}

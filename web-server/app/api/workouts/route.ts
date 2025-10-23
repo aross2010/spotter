@@ -36,24 +36,18 @@ export const getExerciseId = async (
     ) => and(eq(exercise.name, name), eq(exercise.userId, userId)),
   })
   if (existingExercise) {
-    return existingExercise.id
+    return { id: existingExercise.id, isNew: false }
   }
 
-  // if not exists, detect muscle groups using AI
-  const { primaryMuscleGroup, secondaryMuscleGroups } =
-    await detectMuscleGroups(name)
-  // const primaryMuscleGroup = null
-  // const secondaryMuscleGroups = null
-
-  // if not exists, create exercise
+  // if not exists, create exercise with null muscle groups initially
   const [exercise] = await tx
     .insert(exercises)
     .values({
       name: name.trim(),
       userId,
       isUnilateral,
-      primaryMuscleGroup,
-      secondaryMuscleGroups,
+      primaryMuscleGroup: null,
+      secondaryMuscleGroups: [],
     })
     .returning()
 
@@ -61,7 +55,33 @@ export const getExerciseId = async (
     throw new Error('Failed to create exercise')
   }
 
-  return exercise.id
+  return { id: exercise.id, isNew: true }
+}
+
+// Background function to update muscle groups for new exercises
+async function updateMuscleGroupsInBackground(
+  exerciseId: string,
+  exerciseName: string
+) {
+  try {
+    const { primaryMuscleGroup, secondaryMuscleGroups } =
+      await detectMuscleGroups(exerciseName)
+
+    await db
+      .update(exercises)
+      .set({
+        primaryMuscleGroup,
+        secondaryMuscleGroups,
+      })
+      .where(eq(exercises.id, exerciseId))
+
+    console.log(`Updated muscle groups for exercise: ${exerciseName}`)
+  } catch (error) {
+    console.error(
+      `Failed to update muscle groups for exercise ${exerciseName}:`,
+      error
+    )
+  }
 }
 
 export const setSuperOrDropsets = async (
@@ -226,12 +246,16 @@ export const setExercise = async (
   workoutId: string,
   tx: any
 ) => {
-  const exerciseId = await getExerciseId(
+  const { id: exerciseId, isNew } = await getExerciseId(
     exercise.name,
     userId,
     exercise.isUnilateral,
     tx
   )
+
+  // Return the exercise ID and whether it's new for background processing
+  const exerciseData = { id: exerciseId, name: exercise.name, isNew }
+
   const [workoutExercise] = await tx
     .insert(workoutExercises)
     .values({
@@ -321,12 +345,15 @@ export const setExercise = async (
     )
     setNum++
   }
+
+  return exerciseData
 }
 // upload workout data, then exercises (exercise then workout exercises), then sets, then any dropsets/supersets, then tags
 export const POST = withAuth(async (req, user) => {
   const data = await req.json()
 
   const setIdMap = new Map<string, string>()
+  const newExercises: { id: string; name: string }[] = []
   let exNum = 1
 
   let { date, name, location, exercises, setGroupings, tags, notes, status } =
@@ -425,7 +452,7 @@ export const POST = withAuth(async (req, user) => {
         if (exercise.name.length > 50) {
           throw new Error('Exercise name must be under 50 characters')
         }
-        await setExercise(
+        const exerciseData = await setExercise(
           exercise,
           status,
           setIdMap,
@@ -434,6 +461,12 @@ export const POST = withAuth(async (req, user) => {
           workout.id,
           tx
         )
+
+        // Track new exercises for background processing
+        if (exerciseData.isNew) {
+          newExercises.push({ id: exerciseData.id, name: exerciseData.name })
+        }
+
         exNum++
       }
 
@@ -447,6 +480,17 @@ export const POST = withAuth(async (req, user) => {
 
       return workout.id
     })
+
+    // Trigger background muscle group updates for new exercises (don't await)
+    if (newExercises.length > 0) {
+      Promise.all(
+        newExercises.map((exercise) =>
+          updateMuscleGroupsInBackground(exercise.id, exercise.name)
+        )
+      ).catch((error) => {
+        console.error('Background muscle group update failed:', error)
+      })
+    }
 
     return NextResponse.json(
       {

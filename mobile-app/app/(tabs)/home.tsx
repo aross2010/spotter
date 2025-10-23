@@ -4,19 +4,28 @@ import useTheme from '../hooks/theme'
 import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
 import { formattedDate } from '../../functions/formatted-date'
-import { Alert, Pressable, View } from 'react-native'
-import { Link } from 'expo-router'
+import { formatNumber } from '../../functions/format-number'
+import { Alert, View, Pressable } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import { HomeData } from '../../utils/types'
 import ActivityCalendar from '../../components/activity-calendar'
+import {
+  Calendar,
+  ChevronRight,
+  CurlyBraces,
+  Dumbbell,
+  Repeat,
+} from 'lucide-react-native'
+import Colors from '../../constants/colors'
+import WorkoutView from '../../components/workout'
+import { WorkoutMinimal } from '../../context/workout-context'
+import Button from '../../components/button'
+import { Link, router, SplashScreen } from 'expo-router'
+import { LinearGradient } from 'expo-linear-gradient'
 
-// structure:
-// main stats at top (# workouts, sets, reps, and total weight lifted)
-// calendar/grid heat map view by month
-// todays workout (if any)
-// INSIGHTS Section: one graph (activity over time), link in header to view more insights
+SplashScreen.preventAutoHideAsync()
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -32,6 +41,14 @@ const Home = () => {
   const { theme } = useTheme()
   const { fetchWithAuth } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
+
+  console.log('user: ', user)
+
+  const featuredWorkoutStatus = data?.featuredWorkout?.status
+
+  useEffect(() => {
+    if (data) SplashScreen.hide()
+  }, [data])
 
   const getHomeData = async () => {
     try {
@@ -49,13 +66,136 @@ const Home = () => {
     }
   }
 
+  const stats = data && [
+    {
+      label: 'Workouts',
+      value: data.totalWorkouts,
+      icon: Calendar,
+    },
+    {
+      label: 'Exercises',
+      value: data.totalExercises,
+      icon: Dumbbell,
+    },
+    {
+      label: 'Sets',
+      value: data.totalSets,
+      icon: CurlyBraces,
+    },
+    {
+      label: 'Reps',
+      value: data.totalReps,
+      icon: Repeat,
+    },
+  ]
+
   useEffect(() => {
     getHomeData()
   }, [])
 
-  const stats = data && <View></View>
+  const renderedStats = (
+    <View style={tw`flex-row flex-wrap gap-2`}>
+      {stats &&
+        stats.map((stat) => {
+          const Icon = stat.icon
+          return (
+            <View
+              key={stat.label}
+              style={tw`flex-1 bg-white dark:bg-dark-grayPrimary rounded-xl p-3 min-w-[48%]`}
+            >
+              <View>
+                <View style={tw`flex-row items-center justify-between`}>
+                  <Txt twcn="text-light-grayText text-xs dark:text-dark-grayText">
+                    {stat.label}
+                  </Txt>
+                  <Icon
+                    size={22}
+                    strokeWidth={2}
+                    color={Colors.primary}
+                  />
+                </View>
+
+                <Txt twcn="text-xl font-poppinsSemiBold">
+                  {formatNumber(stat.value)}
+                </Txt>
+              </View>
+            </View>
+          )
+        })}
+    </View>
+  )
+
+  const activityMap = data && (
+    <View>
+      <Txt twcn="mb-4 text-base font-poppinsSemiBold">Activity</Txt>
+      <ActivityCalendar data={data?.activityCalendar} />
+    </View>
+  )
+
+  const featuredWorkout = data?.featuredWorkout && (
+    <View>
+      <Txt twcn="mb-4 text-base font-poppinsSemiBold">
+        {featuredWorkoutStatus === 'current'
+          ? 'Current Workout'
+          : featuredWorkoutStatus === 'upcoming'
+            ? 'Upcoming Workout'
+            : 'Latest Workout'}
+      </Txt>
+      <WorkoutView
+        workout={data.featuredWorkout.workout as WorkoutMinimal}
+        roundBottom
+        roundTop
+      />
+    </View>
+  )
+
+  const workoutPrompt = data?.totalWorkouts === 0 && (
+    <Button onPress={() => router.push('/workout-form')}>
+      <LinearGradient
+        colors={[Colors.primary, Colors.secondary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={tw`p-3 rounded-2xl -mb-4`}
+      >
+        <View style={tw`flex-row items-center gap-4`}>
+          <View
+            style={tw.style(
+              'bg-white/20  items-center justify-between rounded-full p-2'
+            )}
+          >
+            <Txt twcn="text-3xl">🎯</Txt>
+          </View>
+          <View style={tw`flex-1`}>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Txt twcn="text-lg font-poppinsSemiBold text-white mb-1">
+                Ready to Start?
+              </Txt>
+              <ChevronRight
+                size={22}
+                strokeWidth={2}
+                color={'#FFFFFF'}
+              />
+            </View>
+            <Txt twcn="text-sm mb-3 text-light-grayPrimary">
+              Log your first workout and let the progress begin!
+            </Txt>
+          </View>
+        </View>
+      </LinearGradient>
+    </Button>
+  )
+
+  const userPage = (
+    <View style={tw`mt-4 gap-8`}>
+      {workoutPrompt}
+      {renderedStats}
+      {activityMap}
+      {featuredWorkout}
+    </View>
+  )
 
   const greeting = getGreeting()
+
   return (
     <SafeView
       hasTabBar
@@ -67,15 +207,7 @@ const Home = () => {
       <Txt twcn="text-xl font-poppinsMedium">
         {greeting}, {user?.firstName} 👋
       </Txt>
-      <View style={tw`mt-4`}>
-        {stats}
-        {data && (
-          <>
-            <Txt twcn="my-4 text-base font-poppinsSemiBold">Activity</Txt>
-            <ActivityCalendar data={data?.activityCalendar} />
-          </>
-        )}
-      </View>
+      {userPage}
     </SafeView>
   )
 }

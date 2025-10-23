@@ -10,9 +10,16 @@ import Colors from '../constants/colors'
 import MyModal from './modal'
 import { Workout, WorkoutMinimal, useWorkout } from '../context/workout-context'
 import WorkoutOptions from './workout-options'
-import { capString } from '../functions/cap-string'
 
-const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
+const WorkoutView = ({
+  workout,
+  roundTop,
+  roundBottom,
+}: {
+  workout: WorkoutMinimal
+  roundTop: boolean
+  roundBottom: boolean
+}) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { theme } = useTheme()
   const { filters } = useWorkout()
@@ -61,7 +68,7 @@ const WorkoutView = ({ workout }: { workout: WorkoutMinimal }) => {
   return (
     <Fragment>
       <View
-        style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
+        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>

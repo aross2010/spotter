@@ -81,7 +81,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
       // Get all workout stats (total workouts, sets, reps, exercises)
       db
         .select({
-          totalWorkouts: count(workouts.id),
+          totalWorkouts: sql<number>`count(distinct ${workouts.id})`,
           totalSets: sql<number>`count(${sets.id})`,
           totalReps: sql<number>`sum(COALESCE(${sets.reps}, 0) + COALESCE(${sets.leftReps}, 0) + COALESCE(${sets.rightReps}, 0))`,
           totalExercises: sql<number>`count(distinct ${exercises.id})`,

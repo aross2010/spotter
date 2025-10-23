@@ -156,6 +156,7 @@ const ActivityCalendar = ({ data }: ActivityCalendarProps) => {
         calendarStyle={{
           paddingLeft: 4,
           paddingRight: 4,
+          paddingBottom: -12,
         }}
         style={{
           borderRadius: 24,

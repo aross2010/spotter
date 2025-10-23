@@ -22,10 +22,15 @@ const createTokenCache = (): TokenCache => {
     getToken: async (key: string) => {
       try {
         const item = await SecureStore.getItemAsync(key)
+        console.log('item: ', item)
         if (!item) {
           console.log('No cached session')
         } else {
           console.log('Cached session found')
+        }
+        if (item === null) {
+          await SecureStore.deleteItemAsync(key)
+          return null
         }
         return item
       } catch (error) {

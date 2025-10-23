@@ -243,42 +243,44 @@ const ExerciseDetails = () => {
     </View>
   )
 
-  const musclesWorked = exercise && (
-    <View>
-      <View style={tw`flex-row justify-between items-center mb-4`}>
-        <Txt twcn="font-poppinsMedium">
-          Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
-        </Txt>
-        <Button onPress={() => navigateToEdit()}>
-          <Txt twcn="font-poppinsSemiBold text-primary">Edit</Txt>
-        </Button>
-      </View>
-      <View style={tw`flex-row flex-wrap gap-2 items-center`}>
-        {renderedMuscleGroups}
-        <View
-          style={tw`px-3 py-1 rounded-lg border border-secondary bg-secondary/10 flex-row items-center gap-2`}
-        >
-          {exercise.isUnilateral ? (
-            <>
-              <Txt twcn={`text-xs text-secondary`}>Unilateral</Txt>
-              <ChevronsLeftRightEllipsis
-                size={16}
-                color={Colors.secondary}
-              />
-            </>
-          ) : (
-            <>
-              <Txt twcn={`text-xs text-secondary`}>Bilateral</Txt>
-              <ChevronsLeftRight
-                size={16}
-                color={Colors.secondary}
-              />
-            </>
-          )}
+  const musclesWorked = exercise &&
+    (exercise.primaryMuscleGroup ||
+      exercise?.secondaryMuscleGroups.length > 0) && (
+      <View>
+        <View style={tw`flex-row justify-between items-center mb-4`}>
+          <Txt twcn="font-poppinsMedium">
+            Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
+          </Txt>
+          <Button onPress={() => navigateToEdit()}>
+            <Txt twcn="font-poppinsSemiBold text-primary">Edit</Txt>
+          </Button>
+        </View>
+        <View style={tw`flex-row flex-wrap gap-2 items-center`}>
+          {renderedMuscleGroups}
+          <View
+            style={tw`px-3 py-1 rounded-lg border border-secondary bg-secondary/10 flex-row items-center gap-2`}
+          >
+            {exercise.isUnilateral ? (
+              <>
+                <Txt twcn={`text-xs text-secondary`}>Unilateral</Txt>
+                <ChevronsLeftRightEllipsis
+                  size={16}
+                  color={Colors.secondary}
+                />
+              </>
+            ) : (
+              <>
+                <Txt twcn={`text-xs text-secondary`}>Bilateral</Txt>
+                <ChevronsLeftRight
+                  size={16}
+                  color={Colors.secondary}
+                />
+              </>
+            )}
+          </View>
         </View>
       </View>
-    </View>
-  )
+    )
 
   const renderedToolTips = exercise?.stats.progressionChart.map((point) => {
     const { data, date } = point

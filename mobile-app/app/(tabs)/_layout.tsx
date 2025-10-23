@@ -20,7 +20,6 @@ import TextLogo from '../../assets/spotter-text-logo.svg'
 import Log from '../../components/log'
 import MyModal from '../../components/modal'
 import useTheme from '../hooks/theme'
-import Button from '../../components/button'
 import tw from '../../tw'
 
 // the main dashboard layout for the app for a logged in user

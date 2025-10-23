@@ -4,7 +4,14 @@ import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import { router, useNavigation } from 'expo-router'
 import Button from '../../components/button'
-import { ChevronRight, ListFilter, Search, X } from 'lucide-react-native'
+import {
+  ChevronRight,
+  Dumbbell,
+  ListFilter,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import tw from '../../tw'
 import MyModal from '../../components/modal'
@@ -66,6 +73,7 @@ const Exercises = () => {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => {
+        if (exercises.length === 0) return
         return (
           <View style={tw`mr-4`}>
             <Button
@@ -81,7 +89,7 @@ const Exercises = () => {
         )
       },
     })
-  }, [navigation])
+  }, [navigation, exercises])
 
   const applyAllFilters = (
     searchText: string = searchQuery,
@@ -164,24 +172,30 @@ const Exercises = () => {
         >
           <View style={tw`gap-0`}>
             <Txt twcn="text-sm">{exercises.name}</Txt>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-              {exercises.primaryMuscleGroup
-                ?.split(' ')
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ')}{' '}
-              {exercises.secondaryMuscleGroups.length > 0
-                ? `• ${exercises.secondaryMuscleGroups
-                    .map((mg) =>
-                      mg
-                        .split(' ')
-                        .map(
-                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+            {(exercises.primaryMuscleGroup ||
+              exercises.secondaryMuscleGroups.length > 0) && (
+              <>
+                <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                  {exercises.primaryMuscleGroup
+                    ?.split(' ')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ')}
+                  {exercises.secondaryMuscleGroups.length > 0
+                    ? `${exercises.primaryMuscleGroup ? ' • ' : ''}${exercises.secondaryMuscleGroups
+                        .map((mg) =>
+                          mg
+                            .split(' ')
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(' ')
                         )
-                        .join(' ')
-                    )
-                    .join(', ')}`
-                : ''}
-            </Txt>
+                        .join(', ')}`
+                    : ''}
+                </Txt>
+              </>
+            )}
           </View>
           <ChevronRight
             size={20}
@@ -191,9 +205,40 @@ const Exercises = () => {
       )
     })
 
-  return isLoading ? (
-    <Spinner />
-  ) : (
+  const exercisesPrompt = (
+    <SafeView
+      hasTabBar
+      scroll={false}
+    >
+      <View style={tw`flex-1 items-center justify-center px-16`}>
+        <Dumbbell
+          color={Colors.primary}
+          strokeWidth={1}
+          size={64}
+        />
+        <Txt twcn="text-xl font-poppinsMedium text-center mt-6 mb-3">
+          Your Exercises
+        </Txt>
+        <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
+          View and manage your exercise library when you log workouts
+        </Txt>
+        <Button
+          onPress={() => router.push('/workout-form')}
+          text="Log your first workout"
+          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
+          twcnText="font-poppinsMedium text-dark-text"
+        >
+          <Plus
+            color={Colors.dark.text}
+            size={16}
+            style={tw`ml-2`}
+          />
+        </Button>
+      </View>
+    </SafeView>
+  )
+
+  const exercisesView = (
     <SafeView twcnContentView="px-0">
       <View
         style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
@@ -228,6 +273,14 @@ const Exercises = () => {
         </View>
       </MyModal>
     </SafeView>
+  )
+
+  return isLoading ? (
+    <Spinner />
+  ) : exercises.length > 0 ? (
+    exercisesView
+  ) : (
+    exercisesPrompt
   )
 }
 
