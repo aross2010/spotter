@@ -20,13 +20,13 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   const router = useRouter()
   const exerciseOptions = [
     {
-      title: 'Superset',
+      title: 'Create Superset',
       description: 'Sets performed back-to-back, different exercises.',
       icon: SquareStack,
       href: '/workout-form/supersets',
     },
     {
-      title: 'Drop Set',
+      title: 'Create Drop Set',
       description:
         'Sets performed back-to-back, same exercise, decreasing weight.',
       icon: SquareStack,
@@ -59,7 +59,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
             style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
           >
             <View style={tw`flex-1`}>
-              <Txt twcn="text-base mb-0.5">{title}</Txt>
+              <Txt twcn="mb-0.5">{title}</Txt>
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                 {description}
               </Txt>
@@ -73,7 +73,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   return (
     <>
       <View style={tw`flex-row items-center justify-between`}>
-        <Txt twcn="text-base font-poppinsMedium">Exercises Options</Txt>
+        <Txt twcn=" font-poppinsMedium">Exercises Options</Txt>
         <View style={tw`flex-row items-center gap-2`}>
           <Selector
             selectedValue={workoutData.weightUnit}

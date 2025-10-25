@@ -28,6 +28,7 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
 import MyModal from './modal'
 import ExerciseMiniHistory from './exercise-mini-history'
+import { useUserStore } from '../stores/user-store'
 
 const MAX_SETS = 20
 
@@ -65,6 +66,10 @@ const ExerciseInput = ({
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
   } = useWorkoutForm()
+  const { preferences } = useUserStore()
+  const [isSynced, setIsSynced] = useState(
+    preferences?.unilateralLogging === 'sync'
+  )
   const { exercises } = workoutData
   const { theme } = useTheme()
   const exercise = exercises[exerciseNumber - 1]
@@ -124,6 +129,16 @@ const ExerciseInput = ({
     (grouping) =>
       grouping.groupingType === 'superset' &&
       grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber)
+  )
+
+  // Check if the next exercise is in the same superset group
+  const isNextExerciseInSameSuperset = workoutData.setGroupings.some(
+    (grouping) =>
+      grouping.groupingType === 'superset' &&
+      grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber) &&
+      grouping.groupSets.some(
+        (set) => set.exerciseNumber === exerciseNumber + 1
+      )
   )
 
   const isSetInDropset = (setNumber: number) => {
@@ -307,6 +322,9 @@ const ExerciseInput = ({
     const currentExercise = updatedExercises[exerciseNumber - 1]
     if (!currentExercise || !currentExercise.sets) return
 
+    const setToDelete = currentExercise.sets[setIndex]
+    const deletedSetNumber = setToDelete.setNumber
+
     const updatedSets = currentExercise.sets.filter(
       (_, index) => index !== setIndex
     )
@@ -321,9 +339,38 @@ const ExerciseInput = ({
       sets: renumberedSets,
     }
 
+    // Remove any set groupings that reference the deleted set
+    const updatedSetGroupings = workoutData.setGroupings
+      .map((grouping) => ({
+        ...grouping,
+        groupSets: grouping.groupSets.filter(
+          (gs) =>
+            !(
+              gs.exerciseNumber === exerciseNumber &&
+              gs.setNumber === deletedSetNumber
+            )
+        ),
+      }))
+      .filter((grouping) => grouping.groupSets.length > 1) // Remove groupings with less than 2 sets
+
+    // Update set numbers in remaining groupings for this exercise
+    const finalSetGroupings = updatedSetGroupings.map((grouping) => ({
+      ...grouping,
+      groupSets: grouping.groupSets.map((gs) => {
+        if (
+          gs.exerciseNumber === exerciseNumber &&
+          gs.setNumber > deletedSetNumber
+        ) {
+          return { ...gs, setNumber: gs.setNumber - 1 }
+        }
+        return gs
+      }),
+    }))
+
     setWorkoutData({
       ...workoutData,
       exercises: updatedExercises,
+      setGroupings: finalSetGroupings,
     })
   }
 
@@ -451,6 +498,18 @@ const ExerciseInput = ({
       [fieldToUpdate]: isNaN(finalValue as number) ? undefined : finalValue,
     } as any
 
+    // If in sync mode and editing left side, also update right side
+    if (isUnilateral && isSynced && isLeftSide === true) {
+      if (fieldValue === 'reps') {
+        updatedSets[setIndex].rightReps = updatedSets[setIndex].leftReps
+      } else if (fieldValue === 'partials') {
+        updatedSets[setIndex].rightPartialReps =
+          updatedSets[setIndex].leftPartialReps
+      } else if (fieldValue === 'rpe') {
+        updatedSets[setIndex].rightRpe = updatedSets[setIndex].leftRpe
+      }
+    }
+
     updatedExercises[exerciseNumber - 1] = {
       ...updatedExercises[exerciseNumber - 1],
       sets: updatedSets,
@@ -476,9 +535,32 @@ const ExerciseInput = ({
           onPress: () => {
             const updatedExercises = [...workoutData.exercises]
             updatedExercises.splice(exerciseNumber - 1, 1)
+
+            // Remove any set groupings that reference this exercise
+            const updatedSetGroupings = workoutData.setGroupings
+              .map((grouping) => ({
+                ...grouping,
+                groupSets: grouping.groupSets.filter(
+                  (gs) => gs.exerciseNumber !== exerciseNumber
+                ),
+              }))
+              .filter((grouping) => grouping.groupSets.length > 1) // Remove groupings with less than 2 sets
+
+            // Update exercise numbers in remaining groupings for exercises after this one
+            const finalSetGroupings = updatedSetGroupings.map((grouping) => ({
+              ...grouping,
+              groupSets: grouping.groupSets.map((gs) => {
+                if (gs.exerciseNumber > exerciseNumber) {
+                  return { ...gs, exerciseNumber: gs.exerciseNumber - 1 }
+                }
+                return gs
+              }),
+            }))
+
             setWorkoutData({
               ...workoutData,
               exercises: updatedExercises,
+              setGroupings: finalSetGroupings,
             })
           },
         },
@@ -486,11 +568,20 @@ const ExerciseInput = ({
     )
   }
 
+  const handleToggleSync = () => {
+    setIsSynced(!isSynced)
+  }
+
   const buttons = [
     {
       name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
       icon: ChevronsLeftRightEllipsis,
       onPress: handleMakeUnilateral,
+    },
+    {
+      name: 'toggleSync',
+      icon: SquareSplitHorizontal,
+      onPress: handleToggleSync,
     },
     {
       name: 'View Information', // history & exercise notes, IF EXISTS BEFORE, else HIDE
@@ -671,16 +762,18 @@ const ExerciseInput = ({
       const isActive =
         name === 'isUnilateral' && exerciseNumber
           ? workoutData.exercises[exerciseNumber - 1]?.isUnilateral
-          : false
+          : name === 'toggleSync'
+            ? !isSynced
+            : false
       if (name === 'Delete Exercise' && exercises.length <= 1) {
         return null
       }
 
-      if (
-        name === 'isUnilateral' &&
-        exercise.existing &&
-        !exercise.isUnilateral
-      ) {
+      if (name === 'isUnilateral' && exercise.existing) {
+        return null
+      }
+
+      if (name === 'toggleSync' && !isUnilateral) {
         return null
       }
 
@@ -953,7 +1046,7 @@ const ExerciseInput = ({
   const timelineComponent = (
     <View style={tw`gap-1 justify-center items-center`}>
       <View
-        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full ${isEditingExerciseNumber ? 'bg-primary/80 border border-primary' : 'bg-primary'} items-center justify-center`}
+        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full ${isEditingExerciseNumber ? `${isInSuperset ? 'bg-secondary/80 border border-secondary' : 'bg-primary/80 border border-primary'}` : `${isInSuperset ? 'bg-secondary' : 'bg-primary'}`} items-center justify-center`}
       >
         {isEditingExerciseNumber ? (
           <TextInput
@@ -978,7 +1071,7 @@ const ExerciseInput = ({
         )}
       </View>
       <View
-        style={tw`flex-1 w-1 ${isInSuperset ? 'bg-secondary' : 'bg-primary'} rounded-full`}
+        style={tw`flex-1 w-1 ${isNextExerciseInSameSuperset ? 'bg-secondary' : 'bg-primary'} rounded-full`}
       />
     </View>
   )
@@ -1029,9 +1122,9 @@ const ExerciseInput = ({
           </View>
         </View>
       </View>
-      <View style={tw`mt-4`}>
+      <View style={tw`mt-3`}>
         <View style={tw`flex-row flex-wrap`}>{renderedSetLabels}</View>
-        <View style={tw`mt-2`}>{renderedSetInputs}</View>
+        <View style={tw`mt-1`}>{renderedSetInputs}</View>
         <View style={tw`mt-2 flex-row items-center gap-2`}>
           {renderedSetButtons}
         </View>

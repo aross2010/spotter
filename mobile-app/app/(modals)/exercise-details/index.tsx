@@ -87,7 +87,7 @@ const ExerciseDetails = () => {
       headerTitleStyle: {
         fontSize:
           exercise.name.length > 30 ? 16 : exercise.name.length > 20 ? 18 : 20,
-        fontFamily: 'Poppins-SemiBold',
+        fontFamily: 'Poppins_600SemiBold',
         color: theme.text,
       },
       headerRight: () => (

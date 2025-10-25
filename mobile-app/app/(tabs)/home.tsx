@@ -24,6 +24,7 @@ import { WorkoutMinimal } from '../../context/workout-context'
 import Button from '../../components/button'
 import { Link, router, SplashScreen } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
+import ActivityMap from '../../components/activity-map'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -41,8 +42,6 @@ const Home = () => {
   const { theme } = useTheme()
   const { fetchWithAuth } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
-
-  console.log('user: ', user)
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
@@ -128,7 +127,7 @@ const Home = () => {
   const activityMap = data && (
     <View>
       <Txt twcn="mb-4 text-base font-poppinsSemiBold">Activity</Txt>
-      <ActivityCalendar data={data?.activityCalendar} />
+      <ActivityMap data={data?.activityCalendar} />
     </View>
   )
 
@@ -204,7 +203,10 @@ const Home = () => {
       <Txt twcn="text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText font-poppinsMedium">
         {formattedDate}
       </Txt>
-      <Txt twcn="text-xl font-poppinsMedium">
+      <Txt
+        numberOfLines={1}
+        twcn="text-xl font-poppinsSemiBold"
+      >
         {greeting}, {user?.firstName} 👋
       </Txt>
       {userPage}

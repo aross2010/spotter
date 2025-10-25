@@ -417,10 +417,8 @@ const WorkoutForm = () => {
         isOpen={showStatusMenu}
         setIsOpen={setShowStatusMenu}
       >
-        <Txt twcn="font-poppinsMedium text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText">
-          Workout Status
-        </Txt>
-        <View style={tw``}>
+        <Txt twcn="font-poppinsMedium ">Workout Status</Txt>
+        <View>
           {statusOptions.map((option) => {
             const isSelected = workoutData.status === option.value
             const StatusIcon = option.icon

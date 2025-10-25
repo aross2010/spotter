@@ -49,21 +49,12 @@ const settingsData = [
         },
       },
       {
-        label: 'Contact Us',
+        label: 'Contact',
         onPress: async () => {
-          console.log('Contact Us Pressed')
           const url = 'mailto:support@spotter.com'
-          console.log('Opening URL:', url)
           const ok = await Linking.canOpenURL(url)
-          console.log('Can open URL:', ok)
           if (ok) Linking.openURL(url)
           else Alert.alert('Error', 'Unable to open email client.')
-        },
-      },
-      {
-        label: 'Version History',
-        onPress: () => {
-          router.push('/settings/version-history')
         },
       },
       {
@@ -142,18 +133,21 @@ const Settings = () => {
 
   const renderedSettings = settingsData.map(
     ({ sectionTitle, options }, index) => {
+      const currentSectionTitle = sectionTitle
+      const nextSectionTitle =
+        index + 1 < settingsData.length
+          ? settingsData[index + 1].sectionTitle
+          : null
+
+      const needsBorderBottom = currentSectionTitle == nextSectionTitle
       return (
         <View
           style={tw`flex-col gap-4`}
           key={index}
         >
-          {sectionTitle && (
-            <Txt twcn="uppercase text-xs tracking-wider font-poppinsMedium text-light-grayText dark:text-dark-grayText">
-              {sectionTitle}
-            </Txt>
-          )}
+          {sectionTitle && <Txt twcn="font-poppinsMedium">{sectionTitle}</Txt>}
           <View
-            style={tw`bg-white border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white ${needsBorderBottom && index != settingsData.length - 1 ? 'border-b' : ''} border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (
@@ -184,7 +178,7 @@ const Settings = () => {
           onPress={promptDeleteAccount}
           style={tw`px-2 py-4`}
           text="Delete Account"
-          twcnText="font-poppinsMedium text-light-grayText dark:text-dark-grayText"
+          twcnText="font-poppinsSemiBold text-light-grayText dark:text-dark-grayText"
         />
       </View>
     </SafeView>

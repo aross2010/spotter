@@ -4,7 +4,16 @@ import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
-import { Ellipsis, Plus, SquareStack } from 'lucide-react-native'
+import {
+  ChevronsLeftRightEllipsis,
+  Ellipsis,
+  HelpCircle,
+  Info,
+  Plus,
+  SquareSplitHorizontal,
+  SquareStack,
+  Trash,
+} from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import ExerciseInput from './exercise-input'
 import Colors from '../constants/colors'
@@ -16,6 +25,7 @@ const MAX_EXERCISES = 25
 
 const Exercises = () => {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
     useWorkoutForm()
   const { theme } = useTheme()
@@ -60,6 +70,53 @@ const Exercises = () => {
     })
   }
 
+  const guideItems = [
+    {
+      icon: ChevronsLeftRightEllipsis,
+      title: 'Unilateral',
+      description:
+        'Toggle between unilateral (left/right) and bilateral modes for custom exercises',
+    },
+    {
+      icon: SquareSplitHorizontal,
+      title: 'Sync/Separate',
+      description:
+        'For unilateral exercises: sync left/right values together or log them separately',
+    },
+    {
+      icon: Info,
+      title: 'Exercise Info',
+      description: 'View exercise history and notes',
+    },
+    {
+      icon: Trash,
+      title: 'Delete Exercise',
+      description: 'Remove this exercise from the workout',
+    },
+  ]
+
+  const renderedGuide = guideItems.map(({ icon: Icon, title, description }) => (
+    <View
+      key={title}
+      style={tw`flex-row items-start gap-3`}
+    >
+      <View
+        style={tw`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+      >
+        <Icon
+          size={16}
+          color={theme.grayText}
+        />
+      </View>
+      <View style={tw`flex-1`}>
+        <Txt twcn="font-poppinsMedium text-sm">{title}</Txt>
+        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-0.5">
+          {description}
+        </Txt>
+      </View>
+    </View>
+  ))
+
   const renderedExercises = workoutData.exercises.map((exercise, index) => {
     return (
       <ExerciseInput
@@ -74,7 +131,16 @@ const Exercises = () => {
   return (
     <View>
       <View style={tw`flex-row justify-between items-center`}>
-        <Txt twcn="font-poppinsMedium">Exercises</Txt>
+        <View style={tw`flex-row items-center gap-2`}>
+          <Txt twcn="font-poppinsMedium">Exercises</Txt>
+          <Button onPress={() => setIsHelpModalOpen(true)}>
+            <HelpCircle
+              size={16}
+              color={theme.grayText}
+            />
+          </Button>
+        </View>
+
         <Button onPress={() => setIsOptionsModalOpen(true)}>
           <Ellipsis
             size={20}
@@ -104,6 +170,13 @@ const Exercises = () => {
         setIsOpen={setIsOptionsModalOpen}
       >
         <ExerciseOptions closeModal={() => setIsOptionsModalOpen(false)} />
+      </MyModal>
+      <MyModal
+        isOpen={isHelpModalOpen}
+        setIsOpen={setIsHelpModalOpen}
+      >
+        <Txt twcn="font-poppinsMedium mb-4">Exercises Guide</Txt>
+        <View style={tw`gap-4`}>{renderedGuide}</View>
       </MyModal>
     </View>
   )

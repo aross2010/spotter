@@ -5,6 +5,7 @@ import { Provider } from '../utils/types'
 
 type WeightMetric = 'lbs' | 'kgs'
 type IntensityMetric = 'rpe' | 'rir'
+type UnilateralLogging = 'sync' | 'separate'
 
 export type UserProfile = {
   id: string | null
@@ -18,6 +19,7 @@ type UserPreferences = {
   weightMetric: WeightMetric
   intensityMetric: IntensityMetric
   colorScheme: 'dark' | 'light' | 'system'
+  unilateralLogging: UnilateralLogging
 }
 
 type UserStore = {
@@ -39,6 +41,7 @@ const initialUserPreferences: UserPreferences = {
   weightMetric: 'lbs',
   intensityMetric: 'rir',
   colorScheme: 'system',
+  unilateralLogging: 'sync',
 }
 
 const kv = new MMKV({ id: 'spotter-user-store' })
@@ -98,6 +101,10 @@ export const useUserStore = create<UserStore>()(
               p?.colorScheme ??
               s.preferences?.colorScheme ??
               initialUserPreferences.colorScheme,
+            unilateralLogging:
+              p?.unilateralLogging ??
+              s.preferences?.unilateralLogging ??
+              initialUserPreferences.unilateralLogging,
           },
         })),
       clearUserStore: () =>

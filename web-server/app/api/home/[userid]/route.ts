@@ -61,6 +61,8 @@ export const GET = withAuth(async (req: Request, user: any) => {
   const url = new URL(req.url)
   const userId = url.pathname.split('/').pop()
 
+  console.log('user id', userId)
+
   if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
   }

@@ -67,12 +67,6 @@ const SettingsLayout = () => {
           headerTitle: 'FAQ',
         }}
       />
-      <Stack.Screen
-        name="version-history"
-        options={{
-          headerTitle: 'Version History',
-        }}
-      />
     </Stack>
   )
 }

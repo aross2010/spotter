@@ -30,7 +30,7 @@ const preferenceOptions = [
   },
   {
     title: 'Weight Unit',
-    subtitle: null,
+    subtitle: 'How sets are logged by default and viewed',
     options: [
       {
         value: 'lbs',
@@ -45,7 +45,7 @@ const preferenceOptions = [
   },
   {
     title: 'Intensity Unit',
-    subtitle: null,
+    subtitle: 'RIR: Reps in Reserves, RPE: Rate of Perceived Exertion',
     options: [
       {
         value: 'rir',
@@ -58,9 +58,28 @@ const preferenceOptions = [
     ],
     type: 'intensityMetric',
   },
+  {
+    title: 'Unilateral Sets',
+    subtitle: 'Unilateral sets are synced or logged separately',
+    options: [
+      {
+        value: 'sync',
+        label: 'Sync',
+      },
+      {
+        value: 'separate',
+        label: 'Separate',
+      },
+    ],
+    type: 'unilateralLogging',
+  },
 ]
 
-type PreferenceKey = 'colorScheme' | 'weightMetric' | 'intensityMetric'
+type PreferenceKey =
+  | 'colorScheme'
+  | 'weightMetric'
+  | 'intensityMetric'
+  | 'unilateralLogging'
 
 const UserPreferences = () => {
   const { theme, colorScheme, setColorSchemePreference } = useTheme()
@@ -69,6 +88,7 @@ const UserPreferences = () => {
     colorScheme: preferences?.colorScheme || 'system',
     weightMetric: preferences?.weightMetric || 'lbs',
     intensityMetric: preferences?.intensityMetric || 'rir',
+    unilateralLogging: preferences?.unilateralLogging || 'sync',
   })
 
   const handleSelect = (type: PreferenceKey, value: string) => {
@@ -91,6 +111,11 @@ const UserPreferences = () => {
         ...preferences,
         intensityMetric: value as 'rir' | 'rpe',
       })
+    } else if (type === 'unilateralLogging' && preferences) {
+      setPreferences({
+        ...preferences,
+        unilateralLogging: value as 'sync' | 'separate',
+      })
     }
   }
 
@@ -99,9 +124,16 @@ const UserPreferences = () => {
       return (
         <View
           key={type}
-          style={tw`flex-row items-center gap-4 justify-between`}
+          style={tw`flex-row items-center gap-6 justify-between`}
         >
-          <Txt>{title}</Txt>
+          <View style={tw`flex-1`}>
+            <Txt twcn="font-poppinsMedium">{title}</Txt>
+            {subtitle && (
+              <Txt twcn="text-xs mt-1 text-light-grayText dark:text-dark-grayText">
+                {subtitle}
+              </Txt>
+            )}
+          </View>
 
           <Selector
             options={options}
@@ -116,21 +148,7 @@ const UserPreferences = () => {
   )
 
   return (
-    <SafeView twcnContentView="gap-4">
-      {renderedPreferenceOptions}
-      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-2">
-        Weight units can be changed on a per-workout basis. When viewed,
-        workouts will be converted to your preferred unit.
-      </Txt>
-      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-        RIR: Reps in Reserves – how many more full reps you could have
-        performed.
-      </Txt>
-      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-        RPE: Rate of Perceived Exertion – a scale from 1-10 to rate the
-        difficulty of a set.
-      </Txt>
-    </SafeView>
+    <SafeView twcnContentView="gap-6">{renderedPreferenceOptions}</SafeView>
   )
 }
 
