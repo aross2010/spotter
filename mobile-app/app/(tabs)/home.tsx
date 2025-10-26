@@ -13,10 +13,12 @@ import { HomeData } from '../../utils/types'
 import ActivityCalendar from '../../components/activity-calendar'
 import {
   Calendar,
+  ChartColumnIncreasing,
   ChevronRight,
   CurlyBraces,
   Dumbbell,
   Repeat,
+  Trophy,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import WorkoutView from '../../components/workout'
@@ -35,6 +37,44 @@ function getGreeting(d: Date = new Date()) {
   if (h >= 17 && h < 22) return 'Good Evening'
   // late night / very early
   return 'Good Evening'
+}
+
+function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
+  const first = new Date(firstWorkoutDate)
+  const now = new Date()
+
+  const diffTime = Math.abs(now.getTime() - first.getTime())
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+  // Less than a month (30 days) - show days
+  if (diffDays < 30) {
+    return diffDays === 1 ? 'Day' : `${diffDays} Days`
+  }
+
+  // Less than 2 months (60 days) - show weeks
+  if (diffDays < 60) {
+    const weeks = Math.floor(diffDays / 7)
+    return weeks === 1 ? 'Week' : `${weeks} Weeks`
+  }
+
+  // Less than a year - show months
+  if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30)
+    return months === 1 ? 'Month' : `${months} Months`
+  }
+
+  // A year or more - show years and months
+  const years = Math.floor(diffDays / 365)
+  const remainingDays = diffDays % 365
+  const months = Math.floor(remainingDays / 30)
+
+  if (months === 0) {
+    return years === 1 ? 'Year' : `${years} Years`
+  }
+
+  const yearText = years === 1 ? 'Year' : `${years} Years`
+  const monthText = months === 1 ? 'a Month' : `${months} Months`
+  return `${yearText} and ${monthText}`
 }
 
 const Home = () => {
@@ -58,6 +98,7 @@ const Home = () => {
         },
       })
       const data = await res.json()
+      console.log('Home data:', data)
       setData(data)
     } catch (error: any) {
       Alert.alert('Error', error.message)
@@ -91,38 +132,6 @@ const Home = () => {
   useEffect(() => {
     getHomeData()
   }, [])
-
-  const renderedStats = (
-    <View style={tw`flex-row flex-wrap gap-2`}>
-      {stats &&
-        stats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <View
-              key={stat.label}
-              style={tw`flex-1 bg-white dark:bg-dark-grayPrimary rounded-xl p-3 min-w-[48%]`}
-            >
-              <View>
-                <View style={tw`flex-row items-center justify-between`}>
-                  <Txt twcn="text-light-grayText text-xs dark:text-dark-grayText">
-                    {stat.label}
-                  </Txt>
-                  <Icon
-                    size={22}
-                    strokeWidth={2}
-                    color={Colors.primary}
-                  />
-                </View>
-
-                <Txt twcn="text-xl font-poppinsSemiBold">
-                  {formatNumber(stat.value)}
-                </Txt>
-              </View>
-            </View>
-          )
-        })}
-    </View>
-  )
 
   const activityMap = data && (
     <View>
@@ -184,10 +193,57 @@ const Home = () => {
     </Button>
   )
 
+  const firstWorkoutDate =
+    data?.activityCalendar && Object.keys(data.activityCalendar).sort()[0]
+  const timeSinceFirst = firstWorkoutDate
+    ? getTimeSinceFirstWorkout(firstWorkoutDate)
+    : ''
+
+  const statsTogether = data && (
+    <LinearGradient
+      colors={[Colors.primary, Colors.secondary]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={tw`rounded-2xl -mb-4`}
+    >
+      <View style={tw`rounded-2xl p-3`}>
+        <View style={tw`items-center flex-row gap-4`}>
+          <View style={tw`rounded-full bg-white/25 p-2`}>
+            <Trophy
+              size={20}
+              color={'#FFFFFF'}
+            />
+          </View>
+          <Txt twcn="text-white text-base font-poppinsSemiBold">
+            Your Last {timeSinceFirst}
+          </Txt>
+        </View>
+        <View style={tw`mt-4 flex-row justify-between`}>
+          {stats &&
+            stats.map((stat) => {
+              return (
+                <View
+                  key={stat.label}
+                  style={tw`items-center flex-1`}
+                >
+                  <Txt twcn="text-white text-sm font-poppinsLight">
+                    {stat.label}
+                  </Txt>
+                  <Txt twcn="text-white text-xl font-poppinsSemiBold">
+                    {formatNumber(stat.value)}
+                  </Txt>
+                </View>
+              )
+            })}
+        </View>
+      </View>
+    </LinearGradient>
+  )
+
   const userPage = (
     <View style={tw`mt-4 gap-8`}>
       {workoutPrompt}
-      {renderedStats}
+      {statsTogether}
       {activityMap}
       {featuredWorkout}
     </View>

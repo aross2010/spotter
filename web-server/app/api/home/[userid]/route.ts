@@ -69,9 +69,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
 
   try {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    const oneYearAgo = new Date()
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
-    const oneYearAgoStr = oneYearAgo.toISOString().split('T')[0]
 
     const [
       statsResult,
@@ -80,7 +77,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
       upcomingWorkout,
       recentWorkout,
     ] = await Promise.all([
-      // Get all workout stats (total workouts, sets, reps, exercises)
+      // Get all workout stats (total workouts, sets, reps, exercises) - only completed workouts
       db
         .select({
           totalWorkouts: sql<number>`count(distinct ${workouts.id})`,
@@ -92,9 +89,11 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .leftJoin(workoutExercises, eq(workouts.id, workoutExercises.workoutId))
         .leftJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
         .leftJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-        .where(eq(workouts.userId, userId)),
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+        ),
 
-      // Get activity data for the last 365 days with status and workout IDs
+      // Get all activity data with status and workout IDs
       db
         .select({
           date: workouts.date,
@@ -102,9 +101,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
           workoutId: workouts.id,
         })
         .from(workouts)
-        .where(
-          and(eq(workouts.userId, userId), gte(workouts.date, oneYearAgoStr))
-        )
+        .where(eq(workouts.userId, userId))
         .orderBy(asc(workouts.date)),
 
       // Try to find current workout (active status and today's date)

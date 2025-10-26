@@ -68,7 +68,7 @@ const WorkoutView = ({
   return (
     <Fragment>
       <View
-        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden ${workout.status === 'active' ? 'border-2 border-primary' : ''}`}
+        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>
@@ -104,7 +104,10 @@ const WorkoutView = ({
               {name}
             </Txt>
             {(workout.status === 'planned' || workout.status === 'active') && (
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText font-poppinsItalic">
+              <Txt
+                numberOfLines={1}
+                twcn={`text-xs ${workout.status === 'planned' ? 'text-secondary' : workout.status === 'active' ? 'text-blue' : 'text-light-grayText dark:text-dark-grayText '}`}
+              >
                 – {workout.status}
               </Txt>
             )}

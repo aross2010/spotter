@@ -306,7 +306,9 @@ const Workouts = () => {
     )
   }
 
-  return workouts.length > 0 ? workoutsView : workoutPrompt
+  if (isLoading) return <Spinner />
+
+  return workouts.length == 0 && hasLoaded ? workoutPrompt : workoutsView
 }
 
 export default Workouts

@@ -459,6 +459,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!response.ok) {
       const { error } = await response.json()
+      console.error('Fetch error NOT OK:', error)
       throw new Error(error)
     }
 

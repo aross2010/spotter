@@ -405,7 +405,19 @@ const WorkoutForm = () => {
         date={workoutData.date}
         onConfirm={(date) => {
           setIsDatePickerOpen(false)
-          setWorkoutData({ ...workoutData, date })
+
+          // Check if the selected date is in the future
+          const today = new Date()
+          today.setHours(0, 0, 0, 0) // Reset time to start of day
+          const selectedDate = new Date(date)
+          selectedDate.setHours(0, 0, 0, 0)
+
+          // If date is in the future, set status to planned
+          if (selectedDate > today) {
+            setWorkoutData({ ...workoutData, date, status: 'planned' })
+          } else {
+            setWorkoutData({ ...workoutData, date })
+          }
         }}
         mode="date"
         onCancel={() => {

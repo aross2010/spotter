@@ -1,5 +1,5 @@
 import { ScrollView, View, useWindowDimensions } from 'react-native'
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef, useEffect } from 'react'
 import { ActivityCalendar } from '../utils/types'
 import tw from '../tw'
 import Colors from '../constants/colors'
@@ -9,8 +9,10 @@ type ActivityMapProps = {
   data: ActivityCalendar
 }
 
+// show the year too '25
 const ActivityMap = ({ data }: ActivityMapProps) => {
   const { width } = useWindowDimensions()
+  const scrollViewRef = useRef<ScrollView>(null)
 
   // Generate the activity map data
   const { weeks, monthLabels } = useMemo(() => {
@@ -20,14 +22,14 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     }
 
     const firstDate = new Date(dates[0])
-    const lastDate = new Date() // Extend to today instead of last workout date
+    const lastDate = new Date(dates[dates.length - 1])
 
     // Start from the Sunday before the first date
     const startDate = new Date(firstDate)
     const dayOfWeek = startDate.getDay()
     startDate.setDate(startDate.getDate() - dayOfWeek)
 
-    // End on the Saturday after today
+    // End on the Saturday after the last date
     const endDate = new Date(lastDate)
     const endDayOfWeek = endDate.getDay()
     endDate.setDate(endDate.getDate() + (6 - endDayOfWeek))
@@ -70,8 +72,11 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       const month = currentDate.getMonth()
       if (month !== currentMonth && currentDate.getDay() === 0) {
         currentMonth = month
+        const year = currentDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
+        const label =
+          month === 0 ? `${monthNames[month]} '${year}` : monthNames[month]
         monthLabels.push({
-          label: monthNames[month],
+          label,
           weekIndex: weeks.length,
         })
       }
@@ -129,8 +134,11 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         const month = futureDate.getMonth()
         if (month !== currentMonth && futureDate.getDay() === 0) {
           currentMonth = month
+          const year = futureDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
+          const label =
+            month === 0 ? `${monthNames[month]} '${year}` : monthNames[month]
           monthLabels.push({
-            label: monthNames[month],
+            label,
             weekIndex: weeks.length,
           })
         }
@@ -144,6 +152,15 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
     return { weeks, monthLabels }
   }, [data, width])
+
+  // Scroll to the end when component mounts or data changes
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: false })
+      }, 100)
+    }
+  }, [weeks])
 
   const getColorForStatus = (
     status: 'none' | 'planned' | 'completed' | 'active'
@@ -193,6 +210,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         </View>
 
         <ScrollView
+          ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={tw`pr-4`}
@@ -200,16 +218,21 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
           <View>
             {/* Month labels */}
             <View style={tw`flex-row mb-2 h-4`}>
-              {monthLabels.map(({ label, weekIndex }) => (
-                <View
-                  key={`${label}-${weekIndex}`}
-                  style={[tw`absolute`, { left: weekIndex * 16 }]}
-                >
-                  <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                    {label}
-                  </Txt>
-                </View>
-              ))}
+              {monthLabels.map(({ label, weekIndex }) => {
+                const isJanuaryWithYear = label.includes("'")
+                return (
+                  <View
+                    key={`${label}-${weekIndex}`}
+                    style={[tw`absolute`, { left: weekIndex * 16 }]}
+                  >
+                    <Txt
+                      twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isJanuaryWithYear ? 'font-poppinsSemiBold' : ''}`}
+                    >
+                      {label}
+                    </Txt>
+                  </View>
+                )
+              })}
             </View>
 
             {/* Activity grid */}
@@ -238,7 +261,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       </View>
 
       {/* Legend */}
-      <View style={tw`flex-row items-center gap-3 mt-4`}>
+      <View style={tw`flex-row items-center gap-3 mt-2`}>
         <View style={tw`flex-row gap-1 items-center`}>
           <View
             style={[

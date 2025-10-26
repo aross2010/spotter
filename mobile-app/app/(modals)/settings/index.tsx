@@ -43,7 +43,7 @@ const settingsData = [
     sectionTitle: 'Help & Support',
     options: [
       {
-        label: 'FAQ',
+        label: 'Frequently Asked Questions',
         onPress: () => {
           router.push('/settings/faq')
         },
