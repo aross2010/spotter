@@ -10,71 +10,9 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
-import { Tag } from '../utils/types'
+import { WorkoutFormData, WorkoutName, ExerciseName } from '../utils/types'
 import { useWorkout } from './workout-context'
 import { toLocalDateString } from '../functions/formatted-date'
-
-export type WorkoutName = {
-  name: string
-  used: number
-}
-
-export type ExerciseName = {
-  name: string
-  isUnilateral: boolean
-  used: number
-}
-
-export type SetGroupingType = 'superset' | 'dropset'
-
-export type Set = {
-  setNumber: number
-  weightLbs?: number // lbs or kg - depending on user preference
-  weightKg?: number
-  reps?: number
-  leftReps?: number
-  rightReps?: number
-  rpe?: number
-  leftRpe?: number
-  rightRpe?: number
-  rir?: number
-  leftRir?: number
-  rightRir?: number
-  partialReps?: number
-  leftPartialReps?: number
-  rightPartialReps?: number
-  cheatReps?: number
-  id: string
-}
-
-export type SetGrouping = {
-  groupingType: SetGroupingType
-  groupSets: {
-    exerciseNumber: number
-    setNumber: number
-  }[]
-}
-
-// leave the isUnilateral button for new exercises only, not existing ones
-export type Exercise = {
-  name: string
-  isUnilateral: boolean
-  existing?: boolean // whether this exercise already exists in the user's exercise names
-  id?: string // existing exercise ID
-  sets: Set[]
-}
-
-export type WorkoutFormData = {
-  name: string
-  date: Date
-  location: string
-  tags: Tag[]
-  notes: string
-  exercises: Exercise[]
-  weightUnit: 'lbs' | 'kgs'
-  setGroupings: SetGrouping[]
-  status: 'completed' | 'planned' | 'active'
-}
 
 type WorkoutFormContextType = {
   workoutData: WorkoutFormData

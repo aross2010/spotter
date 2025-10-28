@@ -1,19 +1,11 @@
 import { MMKV } from 'react-native-mmkv'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { Provider } from '../utils/types'
+import { UserProfile } from '../utils/types'
 
 type WeightMetric = 'lbs' | 'kgs'
 type IntensityMetric = 'rpe' | 'rir'
 type UnilateralLogging = 'sync' | 'separate'
-
-export type UserProfile = {
-  id: string | null
-  firstName: string
-  lastName?: string
-  email: string
-  providers: Provider[]
-}
 
 type UserPreferences = {
   weightMetric: WeightMetric
@@ -86,7 +78,10 @@ export const useUserStore = create<UserStore>()(
                 : (s.user?.providers ?? []),
           },
         })),
-      setPreferences: (p) =>
+      setPreferences: (p) => {
+        console.log('💾 setPreferences called with:', p)
+        console.trace('📍 Call stack:')
+
         set((s) => ({
           preferences: {
             weightMetric:
@@ -106,9 +101,14 @@ export const useUserStore = create<UserStore>()(
               s.preferences?.unilateralLogging ??
               initialUserPreferences.unilateralLogging,
           },
-        })),
+        }))
+      },
       clearUserStore: () =>
-        set({ user: initialUser, preferences: initialUserPreferences }),
+        set((s) => ({
+          user: initialUser,
+          // Preserve preferences when clearing user data
+          preferences: s.preferences || initialUserPreferences,
+        })),
     }),
     {
       name: 'spotter-user-store',

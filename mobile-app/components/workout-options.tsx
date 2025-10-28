@@ -1,15 +1,14 @@
 import { StyleSheet, View } from 'react-native'
 import Txt from './text'
-import { WorkoutMinimal } from '../context/workout-context'
-import { Copy, PinOff, Share } from 'lucide-react-native'
-import { Info, Pin, Pencil, Trash } from 'lucide-react-native'
+import { Copy } from 'lucide-react-native'
+import { Info, Pencil, Trash } from 'lucide-react-native'
 import Button from './button'
 import tw from '../tw'
 import { Fragment } from 'react'
 import useTheme from '../app/hooks/theme'
 import { router } from 'expo-router'
 import { useWorkout } from '../context/workout-context'
-import { handleShareWorkout } from '../functions/share'
+import { WorkoutMinimal } from '../utils/types'
 
 type WorkoutOptionsProps = {
   workout: WorkoutMinimal

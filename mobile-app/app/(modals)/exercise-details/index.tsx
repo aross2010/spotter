@@ -10,7 +10,6 @@ import {
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { useState } from 'react'
-import { MuscleGroup } from '../../../utils/types'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
@@ -295,7 +294,7 @@ const ExerciseDetails = () => {
       <BlurView
         key={date}
         intensity={50}
-        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl border border-light-grayTertiary dark:border-dark-grayTertiary shadow-md`}
+        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl border border-light-grayBorder dark:border-dark-grayBorder shadow-md`}
       >
         <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
           {formattedDate}
@@ -364,7 +363,7 @@ const ExerciseDetails = () => {
       <Link
         href={`/workout-details?id=${entry.workoutId}&from=exercise`}
         key={entry.workoutId}
-        style={tw`border-b border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder py-1`}
       >
         {entry.sets.map((set, index) => {
           if (entry.date === previousDate) needsDate = false
@@ -408,7 +407,7 @@ const ExerciseDetails = () => {
     <View>
       <Txt twcn="font-poppinsMedium mb-4">History</Txt>
       <View
-        style={tw`flex-row items-center border-b border-light-grayTertiary dark:border-dark-grayTertiary `}
+        style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
         <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1">
           Date

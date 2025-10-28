@@ -1,14 +1,5 @@
 export const TOKEN_KEY_NAME = 'accessToken'
 export const REFRESH_TOKEN_KEY_NAME = 'refreshToken'
-export const JWT_EXP_TIME = '30m'
-export const REFRESH_TOKEN_EXP_TIME = '90d'
-export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30 // 30 days in seconds
-
-export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID_WEB!
-export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET_WEB!
-export const GOOGLE_REDIRECT_URI = `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/callback/google`
-export const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 
 export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL!
 export const APP_SCHEME = process.env.EXPO_PUBLIC_APP_SCHEME!
-export const JWT_SECRET = process.env.JWT_SECRET!

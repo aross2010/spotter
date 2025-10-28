@@ -1,4 +1,4 @@
-import { Text, Pressable, PressableProps } from 'react-native'
+import { Pressable, PressableProps } from 'react-native'
 import React, { ReactNode } from 'react'
 import Txt from './text'
 import tw from '../tw'

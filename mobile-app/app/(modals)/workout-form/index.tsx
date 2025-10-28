@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react'
 import {
   Calendar,
   MapPin,
-  Check,
   Circle,
   CircleDot,
   CircleCheck,
@@ -17,10 +16,7 @@ import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
 import useTheme from '../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
-import {
-  useWorkoutForm,
-  WorkoutFormData,
-} from '../../../context/workout-form-context'
+import { useWorkoutForm } from '../../../context/workout-form-context'
 import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
@@ -34,6 +30,7 @@ import Txt from '../../../components/text'
 import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
 import { useWorkoutStore } from '../../../stores/workout-store'
+import { WorkoutFormData } from '../../../utils/types'
 
 const statusOptions = [
   {
@@ -358,7 +355,7 @@ const WorkoutForm = () => {
             setIsDatePickerOpen(true)
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorderrounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText="text-xs  text-light-text dark:text-dark-text"
         >
           <Calendar
@@ -376,7 +373,7 @@ const WorkoutForm = () => {
             router.push('/workout-form/location')
           }}
           hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayTertiary/50 dark:border-dark-grayTertiary rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorderrounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
           twcnText={`text-xs ${
             workoutData.location.length > 0
               ? 'text-light-text dark:text-dark-text'

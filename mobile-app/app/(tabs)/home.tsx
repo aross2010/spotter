@@ -1,19 +1,16 @@
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
-import useTheme from '../hooks/theme'
 import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
 import { formattedDate } from '../../functions/formatted-date'
 import { formatNumber } from '../../functions/format-number'
-import { Alert, View, Pressable } from 'react-native'
+import { Alert, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
-import { HomeData } from '../../utils/types'
-import ActivityCalendar from '../../components/activity-calendar'
+import { HomeData, WorkoutMinimal } from '../../utils/types'
 import {
   Calendar,
-  ChartColumnIncreasing,
   ChevronRight,
   CurlyBraces,
   Dumbbell,
@@ -22,11 +19,11 @@ import {
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import WorkoutView from '../../components/workout'
-import { WorkoutMinimal } from '../../context/workout-context'
 import Button from '../../components/button'
-import { Link, router, SplashScreen } from 'expo-router'
+import { router, SplashScreen } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import ActivityMap from '../../components/activity-map'
+import { BackgroundDots } from '../../components/dots'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -79,7 +76,6 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
 
 const Home = () => {
   const { user } = useUserStore()
-  const { theme } = useTheme()
   const { fetchWithAuth } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
 
@@ -98,7 +94,6 @@ const Home = () => {
         },
       })
       const data = await res.json()
-      console.log('Home data:', data)
       setData(data)
     } catch (error: any) {
       Alert.alert('Error', error.message)
@@ -157,39 +152,43 @@ const Home = () => {
     </View>
   )
 
-  const workoutPrompt = data?.totalWorkouts === 0 && (
-    <Button onPress={() => router.push('/workout-form')}>
-      <LinearGradient
-        colors={[Colors.primary, Colors.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={tw`p-3 rounded-2xl -mb-4`}
-      >
-        <View style={tw`flex-row items-center gap-4`}>
-          <View
-            style={tw.style(
-              'bg-white/20  items-center justify-between rounded-full p-2'
-            )}
-          >
-            <Txt twcn="text-3xl">🎯</Txt>
-          </View>
-          <View style={tw`flex-1`}>
-            <View style={tw`flex-row items-center justify-between`}>
-              <Txt twcn="text-lg font-poppinsSemiBold text-white mb-1">
-                Ready to Start?
-              </Txt>
-              <ChevronRight
-                size={22}
-                strokeWidth={2}
-                color={'#FFFFFF'}
-              />
-            </View>
-            <Txt twcn="text-sm mb-3 text-light-grayPrimary">
-              Log your first workout and let the progress begin!
-            </Txt>
-          </View>
+  const workoutPrompt = data?.totalWorkouts == 0 && (
+    <Button
+      onPress={() => router.push('/workout-form')}
+      twcn="p-3 rounded-2xl -mb-4 bg-primary relative overflow-hidden"
+    >
+      <View style={tw`flex-row items-center gap-4`}>
+        <View
+          style={tw.style(
+            'bg-white/20  items-center justify-between rounded-full p-2'
+          )}
+        >
+          <Txt twcn="text-3xl">🎯</Txt>
         </View>
-      </LinearGradient>
+        <View style={tw`flex-1`}>
+          <View style={tw`flex-row items-center justify-between`}>
+            <Txt twcn="text-lg font-poppinsSemiBold text-white mb-1">
+              Ready to Start?
+            </Txt>
+            <ChevronRight
+              size={22}
+              strokeWidth={2}
+              color={'#FFFFFF'}
+            />
+          </View>
+          <Txt twcn="text-sm mb-3 text-dark-text">
+            Log your first workout and let the progress begin!
+          </Txt>
+        </View>
+      </View>
+      <BackgroundDots
+        numDots={5}
+        minSize={20}
+        maxSize={30}
+        speedMin={15}
+        speedMax={30}
+        colorClass="bg-white/10"
+      />
     </Button>
   )
 
@@ -199,45 +198,46 @@ const Home = () => {
     ? getTimeSinceFirstWorkout(firstWorkoutDate)
     : ''
 
-  const statsTogether = data && (
-    <LinearGradient
-      colors={[Colors.primary, Colors.secondary]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={tw`rounded-2xl -mb-4`}
-    >
-      <View style={tw`rounded-2xl p-3`}>
-        <View style={tw`items-center flex-row gap-4`}>
-          <View style={tw`rounded-full bg-white/25 p-2`}>
-            <Trophy
-              size={20}
-              color={'#FFFFFF'}
-            />
-          </View>
-          <Txt twcn="text-white text-base font-poppinsSemiBold">
-            Your Last {timeSinceFirst}
-          </Txt>
+  const statsTogether = data && data.totalWorkouts > 0 && (
+    <View style={tw`rounded-2xl p-3 bg-primary relative overflow-hidden`}>
+      <View style={tw`items-center flex-row gap-4`}>
+        <View style={tw`rounded-full bg-white/25 p-2`}>
+          <Trophy
+            size={20}
+            color={'#FFFFFF'}
+          />
         </View>
-        <View style={tw`mt-4 flex-row justify-between`}>
-          {stats &&
-            stats.map((stat) => {
-              return (
-                <View
-                  key={stat.label}
-                  style={tw`items-center flex-1`}
-                >
-                  <Txt twcn="text-white text-sm font-poppinsLight">
-                    {stat.label}
-                  </Txt>
-                  <Txt twcn="text-white text-xl font-poppinsSemiBold">
-                    {formatNumber(stat.value)}
-                  </Txt>
-                </View>
-              )
-            })}
-        </View>
+        <Txt twcn="text-white text-base font-poppinsSemiBold">
+          Your {timeSinceFirst} on Spotter
+        </Txt>
       </View>
-    </LinearGradient>
+      <View style={tw`mt-4 flex-row justify-between`}>
+        {stats &&
+          stats.map((stat) => {
+            return (
+              <View
+                key={stat.label}
+                style={tw`items-center flex-1`}
+              >
+                <Txt twcn="text-white text-sm font-poppinsLight">
+                  {stat.label}
+                </Txt>
+                <Txt twcn="text-white text-xl font-poppinsSemiBold">
+                  {formatNumber(stat.value)}
+                </Txt>
+              </View>
+            )
+          })}
+      </View>
+      <BackgroundDots
+        numDots={6}
+        minSize={20}
+        maxSize={30}
+        speedMin={15}
+        speedMax={30}
+        colorClass="bg-white/10"
+      />
+    </View>
   )
 
   const userPage = (

@@ -13,20 +13,27 @@ export default function useTheme() {
   const [colorScheme, toggleColorScheme, setColorScheme] = useAppColorScheme(tw)
 
   useEffect(() => {
-    if (preferences?.colorScheme) {
-      if (preferences.colorScheme === 'system') {
-        // For system, let twrnc auto-detect from device
-        // Don't set any specific scheme, let it follow system
-        setColorScheme(null as any)
-      } else if (preferences.colorScheme !== colorScheme) {
-        // Set specific scheme
-        setColorScheme(preferences.colorScheme as Scheme)
-      }
+    const savedScheme = preferences?.colorScheme
+    console.log('🎨 Theme useEffect triggered - savedScheme:', savedScheme)
+    
+    if (!savedScheme) {
+      console.log('⚠️ No saved scheme found, skipping')
+      return
+    }
+
+    if (savedScheme === 'system') {
+      console.log('📱 Setting to system (null)')
+      setColorScheme(null as any)
+    } else {
+      console.log('✅ Setting to:', savedScheme)
+      setColorScheme(savedScheme as Scheme)
     }
   }, [preferences?.colorScheme])
 
   const theme: Theme =
     (Colors as Record<Scheme, Theme>)[colorScheme ?? 'light'] ?? Colors.light
+
+  console.log('Using color scheme:', colorScheme, 'Theme:', theme)
 
   return {
     theme,
@@ -39,6 +46,9 @@ export default function useTheme() {
       }
     },
     setColorSchemePreference: (scheme: PreferenceScheme) => {
+      console.log('🔧 setColorSchemePreference called with:', scheme)
+      console.trace('📍 Call stack:')
+      
       if (preferences) {
         setPreferences({ ...preferences, colorScheme: scheme })
 

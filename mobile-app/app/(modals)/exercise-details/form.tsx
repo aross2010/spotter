@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import SafeView from '../../../components/safe-view'
@@ -8,7 +8,6 @@ import { MUSCLE_GROUPS } from '../../../constants/data'
 import Button from '../../../components/button'
 import { MuscleGroup } from '../../../utils/types'
 import Txt from '../../../components/text'
-import { toTitleCase } from '../../../functions/utils'
 import {
   Check,
   ChevronsLeftRight,
@@ -23,11 +22,6 @@ import useTheme from '../../hooks/theme'
 import MyModal from '../../../components/modal'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
-
-// primary muscle groups: one button with swap indicator
-// seondary muscle groups: buttons with x to remove, with button to add more
-// modal holds the list of muscle groups to add
-// workout type: selector (unilateral/bilateral) text to explain
 
 type ExerciseInfo = {
   id: string
@@ -188,12 +182,12 @@ const ExerciseForm = () => {
               ? () => handleAddMuscleGroup(group.toLowerCase())
               : undefined
           }
-          twcn={`px-3 py-1 rounded-lg border ${!exists ? 'border-light-grayTertiary dark:border-dark-grayTertiary' : 'border-primary bg-primary/10'} flex-row items-center gap-2`}
+          twcn={`px-3 py-1 rounded-lg border ${!exists ? 'border-light-grayBorder dark:border-dark-grayBorder' : 'border-primary bg-primary/10'} flex-row items-center gap-2`}
         >
           <Txt
             twcn={`text-xs ${!exists ? 'text-light-grayText dark:text-dark-grayText' : 'text-primary'}`}
           >
-            {toTitleCase(group)}
+            {group}
           </Txt>
           {!exists ? (
             <Plus
@@ -219,7 +213,7 @@ const ExerciseForm = () => {
           onPress={() => handleRemoveMuscleGroup(m)}
           twcn="px-3 py-1 rounded-lg border border-primary bg-primary/10 flex-row items-center gap-2"
         >
-          <Txt twcn="text-xs text-primary">{toTitleCase(m)}</Txt>
+          <Txt twcn="text-xs text-primary">{m}</Txt>
           <X
             size={12}
             color={Colors.primary}
@@ -261,7 +255,7 @@ const ExerciseForm = () => {
             twcn="px-3 py-1 rounded-lg border border-primary bg-primary/10 flex-row items-center gap-2 self-start"
           >
             <Txt twcn="text-xs text-primary">
-              {toTitleCase(exercise.primaryMuscleGroup as string)}
+              {exercise.primaryMuscleGroup as string}
             </Txt>
             <RefreshCcw
               size={12}
@@ -277,7 +271,7 @@ const ExerciseForm = () => {
             {renderedSecondaryMuscleGroups}
             <Button
               onPress={() => setIsMuscleGroupModalOpen(true)}
-              twcn="px-3 py-1 rounded-lg border border-light-grayTertiary dark:border-dark-grayTertiary flex-row items-center gap-2"
+              twcn="px-3 py-1 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder flex-row items-center gap-2"
             >
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                 Add
@@ -302,7 +296,7 @@ const ExerciseForm = () => {
               twcn={`px-3 py-1 rounded-lg border flex-row items-center gap-2 ${
                 exercise.isUnilateral === false
                   ? 'border-secondary bg-secondary/10'
-                  : 'border-light-grayTertiary dark:border-dark-grayTertiary'
+                  : 'border-light-grayBorder dark:border-dark-grayBorder'
               }`}
             >
               <Txt
@@ -332,7 +326,7 @@ const ExerciseForm = () => {
               twcn={`px-3 py-1 rounded-lg border flex-row items-center gap-2 ${
                 exercise.isUnilateral === true
                   ? 'border-secondary bg-secondary/10'
-                  : 'border-light-grayTertiary dark:border-dark-grayTertiary'
+                  : 'border-light-grayBorder dark:border-dark-grayBorder'
               }`}
             >
               <Txt

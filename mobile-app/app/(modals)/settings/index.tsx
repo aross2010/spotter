@@ -147,14 +147,14 @@ const Settings = () => {
         >
           {sectionTitle && <Txt twcn="font-poppinsMedium">{sectionTitle}</Txt>}
           <View
-            style={tw`bg-white ${needsBorderBottom && index != settingsData.length - 1 ? 'border-b' : ''} border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white ${needsBorderBottom && index != settingsData.length - 1 ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (
                 <Button
                   key={index}
                   onPress={onPress ? onPress : promptSignOut}
-                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'}`}
+                  twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'}`}
                 >
                   <Txt twcn="font-poppinsRegular">{label}</Txt>
                   <ChevronRight

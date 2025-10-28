@@ -61,7 +61,7 @@ const LinkedAccounts = () => {
         </View>
         {isLinked ? (
           <View style={tw`flex-row items-center gap-2`}>
-            <CircleCheck color={Colors.success} />
+            <CircleCheck color={Colors.green} />
             <Txt twcn="text-light-grayText dark:text-dark-grayText">
               {providerEmail}
             </Txt>

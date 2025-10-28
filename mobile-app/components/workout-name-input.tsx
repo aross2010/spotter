@@ -1,6 +1,6 @@
 import { View, Keyboard } from 'react-native'
 import { useState, useEffect } from 'react'
-import { WorkoutName } from '../context/workout-context'
+import { WorkoutName } from '../utils/types'
 import tw from '../tw'
 import Txt from './text'
 import Input from './input'
@@ -35,7 +35,7 @@ const WorkoutNameInput = () => {
         style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
           index === workoutNamesResults.length - 1
             ? ''
-            : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'
+            : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
         }`}
       >
         <Txt>{name}</Txt>
@@ -56,7 +56,7 @@ const WorkoutNameInput = () => {
 
   return (
     <View
-      style={tw`relative border-b border-light-grayTertiary flex-1 dark:border-dark-grayTertiary`}
+      style={tw`relative border-b border-light-grayBorder flex-1 dark:border-dark-grayBorder`}
     >
       <Input
         editable
@@ -82,7 +82,7 @@ const WorkoutNameInput = () => {
           intensity={50}
           tint="default"
           style={[
-            tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
+            tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
           ]}
         >
           {renderedWorkoutNames}

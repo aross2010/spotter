@@ -17,7 +17,8 @@ import {
 import * as jose from 'jose'
 import { tokenCache } from '../utils/cache'
 import { useRouter } from 'expo-router'
-import { UserProfile, useUserStore } from '../stores/user-store'
+import { useUserStore } from '../stores/user-store'
+import { UserProfile } from '../utils/types'
 import { Alert } from 'react-native'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -144,10 +145,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           },
         ],
       })
-    } else {
+    } else if (!isLoading) {
+      // Only clear when explicitly logged out, not during initial session restore
       clearUserStore()
     }
-  }, [authUser])
+  }, [authUser, isLoading])
 
   useEffect(() => {
     // case where user is just linking their account and has accessToken, do not complete sign in

@@ -1,7 +1,7 @@
 import { Alert } from 'react-native'
 import React, { Fragment, useEffect, useState } from 'react'
 import Txt from '../../components/text'
-import { Tag } from '../../utils/types'
+import { TagWithCount } from '../../utils/types'
 import { useNotebook } from '../../context/notebook-context'
 import Input from '../../components/input'
 import { Pressable, View } from 'react-native'
@@ -20,8 +20,6 @@ import {
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import useTheme from '../hooks/theme'
-
-type TagWithCount = Tag & { used: number }
 
 // search and select tags feature
 
@@ -155,7 +153,7 @@ const NotebookFilters = () => {
   const renderedResultTags = resultTags.map(({ id, name, used, userId }) => {
     return (
       <Pressable
-        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-4 py-3 items-center`}
+        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder justify-between flex-row px-4 py-3 items-center`}
         key={id}
         onPress={() => handleSelectTag({ id, name, userId, used })}
       >
@@ -189,7 +187,7 @@ const NotebookFilters = () => {
             style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}
           >
             <View
-              style={tw`px-3 flex-1 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+              style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
             >
               <Search
                 size={16}
@@ -246,7 +244,7 @@ const NotebookFilters = () => {
           </View>
           {selectedTags.length > 0 && (
             <View
-              style={tw`flex-row flex-wrap border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 pb-2 items-center gap-1 pt-2 px-4`}
+              style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2 px-4`}
             >
               {renderedSelectedTags}
             </View>
@@ -254,12 +252,13 @@ const NotebookFilters = () => {
           <View>{renderedResultTags}</View>
         </Fragment>
       ) : (
-        <View
-          style={tw`flex-row items-center mt-4 justify-center h-48 p-4 border border-dashed border-light-grayTertiary dark:border-dark-grayTertiary rounded-lg`}
-        >
+        <View style={tw`items-center mx-4 mt-4 justify-center h-48 p-4`}>
+          <Txt twcn="text-center text-xl font-poppinsSemiBold mb-4">
+            No tags found
+          </Txt>
           <Txt twcn="text-light-grayText dark:text-dark-grayText text-center">
-            No tags found. Start tagging your entries to organize and filter
-            them more effectively.
+            Start tagging your entries to organize and filter them more
+            effectively.
           </Txt>
         </View>
       )}

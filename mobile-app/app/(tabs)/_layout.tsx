@@ -1,5 +1,4 @@
-import { View, Animated } from 'react-native'
-import { useState, Fragment, useRef } from 'react'
+import { View } from 'react-native'
 import { Link, Tabs } from 'expo-router'
 import {
   Dumbbell,
@@ -7,26 +6,17 @@ import {
   BookOpen,
   Calendar,
   CalendarFold,
-  CirclePlus,
   Home,
   Settings,
-  Plus,
-  Sliders,
-  ListFilter,
 } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import TopIndicatorTabBar from '../../components/tabbar'
 import TextLogo from '../../assets/spotter-text-logo.svg'
-import Log from '../../components/log'
-import MyModal from '../../components/modal'
 import useTheme from '../hooks/theme'
 import tw from '../../tw'
 
-// the main dashboard layout for the app for a logged in user
-
 const TabsLayout = () => {
   const { theme } = useTheme()
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false)
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -163,12 +153,6 @@ const TabsLayout = () => {
           }}
         />
       </Tabs>
-      <MyModal
-        isOpen={isLogModalOpen}
-        setIsOpen={setIsLogModalOpen}
-      >
-        <Log setIsOpen={setIsLogModalOpen} />
-      </MyModal>
     </View>
   )
 }

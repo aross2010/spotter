@@ -7,7 +7,7 @@ import {
   TextInput,
 } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
-import { ExerciseName, useWorkoutForm } from '../context/workout-form-context'
+import { useWorkoutForm } from '../context/workout-form-context'
 import { BlurView } from 'expo-blur'
 import tw from '../tw'
 import Txt from './text'
@@ -22,13 +22,14 @@ import {
 } from 'lucide-react-native'
 import Button from './button'
 import Colors from '../constants/colors'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, use } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
 import MyModal from './modal'
 import ExerciseMiniHistory from './exercise-mini-history'
 import { useUserStore } from '../stores/user-store'
+import { ExerciseName } from '../utils/types'
 
 const MAX_SETS = 20
 
@@ -603,16 +604,22 @@ const ExerciseInput = ({
     },
   ]
 
-  const handleSelectExistingExercise = (name: string) => {
+  const handleSelectExistingExercise = (
+    id: string,
+    name: string,
+    used: number
+  ) => {
     setWorkoutData((prev) => {
       const updatedExercises = [...prev.exercises]
       if (exerciseNumber) {
         updatedExercises[exerciseNumber - 1] = {
           ...updatedExercises[exerciseNumber - 1],
+          id,
           name,
           isUnilateral:
             exerciseNames.find((ex) => ex.name === name)?.isUnilateral || false,
           existing: true,
+          used,
         }
       }
       return {
@@ -625,19 +632,19 @@ const ExerciseInput = ({
   }
 
   const renderedExerciseNames = exerciseNameResults.map(
-    ({ name, used }, index) => {
+    ({ id, name, used }, index) => {
       return (
         <Button
           key={name}
-          onPress={() => handleSelectExistingExercise(name)}
+          onPress={() => handleSelectExistingExercise(id, name, used)}
           style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
             index === exerciseNameResults.length - 1
               ? ''
-              : 'border-b border-light-grayTertiary dark:border-dark-grayTertiary'
+              : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
           }`}
         >
           <Txt>{name}</Txt>
-          <Txt>{used}</Txt>
+          {used > 0 && <Txt>{used}</Txt>}
         </Button>
       )
     }
@@ -677,6 +684,7 @@ const ExerciseInput = ({
       // Update with matching exercise data
       updatedExercises[exerciseIndex] = {
         ...updatedExercises[exerciseIndex],
+        id: matchingExercise.id,
         name: text, // Keep the user's typed text (may have trailing spaces)
         isUnilateral: matchingExercise.isUnilateral || false,
         existing: true,
@@ -785,7 +793,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={onPress}
-          twcn={`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+          twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
         >
           <Icon
             size={16}
@@ -827,7 +835,7 @@ const ExerciseInput = ({
       const setContent = (
         <View>
           <View
-            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary dark:border-dark-grayTertiary py-0.5`}
+            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayBorder dark:border-dark-grayBorder py-0.5`}
           >
             {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
               let displayValue = ''
@@ -889,7 +897,7 @@ const ExerciseInput = ({
             })}
           </View>
           <View
-            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary  dark:border-dark-grayTertiary py-1`}
+            style={tw`flex-row flex-wrap border-b ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayBorder dark:border-dark-grayBorder py-1`}
           >
             {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
               let displayValue = ''
@@ -978,7 +986,7 @@ const ExerciseInput = ({
       // For regular exercises, wrap single row
       const setContent = (
         <View
-          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-0.5`}
+          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayBorder dark:border-dark-grayBorder py-0.5`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             // Map 'partials' to 'partialReps' for display
@@ -1081,7 +1089,7 @@ const ExerciseInput = ({
       <View style={tw`flex-row flex-1`}>
         <View style={tw`flex-row gap-2 items-center flex-1 -mt-1.5`}>
           <View
-            style={tw`flex-1 shrink border-b border-light-grayTertiary dark:border-dark-grayTertiary`}
+            style={tw`flex-1 shrink border-b border-light-grayBorder dark:border-dark-grayBorder`}
           >
             <Input
               ref={exerciseNameInputRef}
@@ -1104,7 +1112,7 @@ const ExerciseInput = ({
                 intensity={50}
                 tint="default"
                 style={[
-                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayTertiary dark:border-dark-grayTertiary`,
+                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
                 ]}
               >
                 <ScrollView

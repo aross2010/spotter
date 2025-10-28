@@ -1,5 +1,4 @@
 import { MUSCLE_GROUPS } from '../constants/data'
-import { WorkoutMinimal } from '../context/workout-context'
 
 export type Providers = 'apple' | 'google'
 
@@ -9,21 +8,15 @@ export type Provider = {
   email: string
 }
 
-export type User = {
-  id: string
-  firstName: string
-  lastName?: string
-  email: string
-}
-
-export type CompleteUser = {
-  id: string
+export type UserProfile = {
+  id: string | null
   firstName: string
   lastName?: string
   email: string
   providers: Provider[]
 }
 
+// for display only
 export type Tag = {
   id: string
   name: string
@@ -31,11 +24,7 @@ export type Tag = {
 }
 
 // for tag selector results
-export type UsedTags = {
-  id: string
-  name: string
-  used: number
-}
+export type TagWithCount = Tag & { used: number }
 
 export type NotebookEntry = {
   id: string
@@ -49,16 +38,106 @@ export type NotebookEntry = {
   tags: Tag[]
 }
 
+export type SetGroupingType = 'superset' | 'dropset'
+
+export type Set = {
+  setNumber: number
+  weightLbs?: number // lbs or kg - depending on user preference
+  weightKg?: number
+  reps?: number
+  leftReps?: number
+  rightReps?: number
+  rpe?: number
+  leftRpe?: number
+  rightRpe?: number
+  rir?: number
+  leftRir?: number
+  rightRir?: number
+  partialReps?: number
+  leftPartialReps?: number
+  rightPartialReps?: number
+  cheatReps?: number
+  id: string
+}
+
+export type SetGrouping = {
+  groupingType: SetGroupingType
+  groupSets: {
+    exerciseNumber: number
+    setNumber: number
+  }[]
+}
+
+export type Exercise = {
+  name: string
+  isUnilateral: boolean
+  sets: Set[]
+}
+
+// for workout details page
 export type Workout = {
   id: string
   userId: string
-  name: string
-  notes?: string
   date: string
-  location?: string
-  status: 'completed' | 'planned'
   createdAt: string
   updatedAt?: string
+  pinned: boolean
+  tags: Tag[]
+  name: string
+  exercises: Exercise[]
+  setGroupings: SetGrouping[]
+  notes?: string
+  location?: string
+}
+
+type ExerciseInForm = {
+  name: string
+  isUnilateral: boolean
+  existing?: boolean // whether this exercise already exists in the user's exercise names
+  id?: string // existing exercise ID
+  sets: Set[]
+  used?: number
+}
+
+export type WorkoutFormData = {
+  name: string
+  date: Date
+  location: string
+  tags: Tag[]
+  notes: string
+  exercises: ExerciseInForm[]
+  weightUnit: 'lbs' | 'kgs'
+  setGroupings: SetGrouping[]
+  status: 'completed' | 'planned' | 'active'
+}
+
+// for the workout tab workouts
+export type WorkoutMinimal = {
+  id: string
+  date: string
+  location: string
+  tags: string[]
+  pinned: boolean
+  name: string
+  exercises: {
+    name: string
+    sets: number // 2 sets, 3 sets, etc.
+    lowRepRange: number
+    highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
+  }[]
+  status: 'completed' | 'planned' | 'active'
+}
+
+export type WorkoutName = {
+  name: string
+  used: number
+}
+
+export type ExerciseName = {
+  id: string
+  name: string
+  isUnilateral: boolean
+  used: number
 }
 
 export type MuscleGroup = (typeof MUSCLE_GROUPS)[number]
@@ -100,23 +179,6 @@ export type ExerciseDetails = {
         rir?: number
       }
     }[]
-  }
-}
-
-export type ExerciseDetailsMini = {
-  id: string
-  description: string
-  history: {
-    // last 10 workouts with this exercise
-    workoutId: string
-    date: string
-    sets: {
-      setNumber: number
-      weight: number
-      reps: number
-      partials?: number
-      intensity?: number
-    }
   }
 }
 

@@ -2,7 +2,7 @@ import { withAuth } from '@/app/api/middleware'
 import { NextResponse } from 'next/server'
 import db from '@/src'
 import { workouts, exercises, workoutExercises } from '@/src/db/schema'
-import { eq, sql, desc } from 'drizzle-orm'
+import { eq, sql, desc, and } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
@@ -20,14 +20,19 @@ export const GET = withAuth(async (req, user) => {
           used: sql<number>`count(*)::int`.as('used'),
         })
         .from(workouts)
-        .where(eq(workouts.userId, userId))
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+        )
         .groupBy(workouts.name)
         .orderBy(desc(sql`count(*)`)),
 
       db
         .select({
+          id: exercises.id,
           name: exercises.name,
-          used: sql<number>`count(${workoutExercises.id})::int`.as('used'),
+          used: sql<number>`count(CASE WHEN ${workouts.status} = 'completed' THEN ${workoutExercises.id} END)::int`.as(
+            'used'
+          ),
           isUnilateral: exercises.isUnilateral,
         })
         .from(exercises)
@@ -35,9 +40,14 @@ export const GET = withAuth(async (req, user) => {
           workoutExercises,
           eq(exercises.id, workoutExercises.exerciseId)
         )
+        .leftJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
         .where(eq(exercises.userId, userId))
-        .groupBy(exercises.name, exercises.isUnilateral)
-        .orderBy(desc(sql`count(${workoutExercises.id})`)),
+        .groupBy(exercises.id, exercises.name, exercises.isUnilateral)
+        .orderBy(
+          desc(
+            sql`count(CASE WHEN ${workouts.status} = 'completed' THEN ${workoutExercises.id} END)`
+          )
+        ),
 
       db
         .select({
@@ -45,7 +55,9 @@ export const GET = withAuth(async (req, user) => {
           used: sql<number>`count(*)::int`.as('used'),
         })
         .from(workouts)
-        .where(eq(workouts.userId, userId))
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+        )
         .groupBy(workouts.location)
         .orderBy(desc(sql`count(*)`)),
     ])
@@ -53,8 +65,6 @@ export const GET = withAuth(async (req, user) => {
     const locations = locationResults.filter(
       (loc) => loc.location !== null && loc.location !== '' && loc.used > 0
     )
-
-    console.log('locations: ', locations)
 
     return NextResponse.json(
       { workoutNames, exerciseNames, locations },

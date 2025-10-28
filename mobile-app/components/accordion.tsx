@@ -64,13 +64,13 @@ const Accordion = ({
     <View className={twcn}>
       <Button
         onPress={() => !disabled && onToggle()}
-        twcn={`justify-between flex-row px-4 py-4 items-center ${
+        twcn={`justify-between flex-row flex-wrap gap-4 px-4 py-4 items-center ${
           disabled ? 'opacity-40' : ''
         }`}
         disabled={disabled}
       >
         <Txt
-          twcn={`flex-1 pr-2 ${disabled ? 'text-light-grayText dark:text-dark-grayText' : ''}`}
+          twcn={`flex-1 ${disabled ? 'text-light-grayText dark:text-dark-grayText' : ''}`}
         >
           {title}
         </Txt>

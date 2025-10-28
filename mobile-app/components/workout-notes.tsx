@@ -20,7 +20,7 @@ const WorkoutNotes = () => {
         numberOfLines={6}
         textAlignVertical="top"
         fullBorder
-        twcnInput="mt-2 text-sm border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 p-3"
+        twcnInput="mt-2 text-sm border border-light-grayBorder dark:border-dark-grayBorder p-3"
       />
     </View>
   )

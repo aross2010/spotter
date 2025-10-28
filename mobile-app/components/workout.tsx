@@ -1,15 +1,16 @@
-import { StyleSheet, Pressable, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { Fragment, useState } from 'react'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
 import tw from '../tw'
 import Button from './button'
-import { Ellipsis, ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
+import { Ellipsis, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
 import MyModal from './modal'
-import { Workout, WorkoutMinimal, useWorkout } from '../context/workout-context'
+import { useWorkout } from '../context/workout-context'
 import WorkoutOptions from './workout-options'
+import { WorkoutMinimal } from '../utils/types'
 
 const WorkoutView = ({
   workout,
@@ -68,7 +69,7 @@ const WorkoutView = ({
   return (
     <Fragment>
       <View
-        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayTertiary/50 dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
+        style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl' : ''} ${roundBottom ? '' : 'border-b border-light-grayBorder dark:border-dark-graytertiary/50'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>

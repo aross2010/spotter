@@ -1,8 +1,8 @@
-import { View, Animated, Easing, FlatList, ScrollView } from 'react-native'
-import React, { useEffect, useRef } from 'react'
+import { View, FlatList } from 'react-native'
+import React, { useEffect } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
-import { PenLine, Pin, ListFilter, Plus, BookOpen } from 'lucide-react-native'
+import { PenLine, ListFilter, Plus, BookOpen } from 'lucide-react-native'
 import { Link } from 'expo-router'
 import tw from '../../tw'
 import Colors from '../../constants/colors'
@@ -11,7 +11,6 @@ import { router, useNavigation } from 'expo-router'
 import Spinner from '../../components/activity-indicator'
 import NotebookEntryView from '../../components/notebook-entry'
 import { useNotebook } from '../../context/notebook-context'
-import useTheme from '../hooks/theme'
 import { NotebookEntry } from '../../utils/types'
 import { MONTHS } from '../../constants/data'
 
@@ -26,7 +25,6 @@ const Notebook = () => {
     tagFilters,
     sortOrder,
   } = useNotebook()
-  const { theme } = useTheme()
   const navigation = useNavigation()
   const hasEntries = currentNotebookEntries.length > 0
   const noResults = currentNotebookEntries.length === 0 && tagFilters.length > 0

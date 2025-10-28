@@ -8,12 +8,13 @@ import { ListFilter, Plus, Calendar, Pin } from 'lucide-react-native'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import Button from '../../components/button'
-import { useWorkout, WorkoutMinimal } from '../../context/workout-context'
+import { useWorkout } from '../../context/workout-context'
 import Spinner from '../../components/activity-indicator'
 import useTheme from '../hooks/theme'
 import WorkoutView from '../../components/workout'
 import Selector from '../../components/selector'
 import { MONTHS } from '../../constants/data'
+import { WorkoutMinimal } from '../../utils/types'
 
 const Workouts = () => {
   const navigation = useNavigation()

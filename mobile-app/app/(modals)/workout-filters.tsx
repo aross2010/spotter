@@ -1,5 +1,5 @@
 import { Alert, Pressable, View } from 'react-native'
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import tw from '../../tw'
@@ -82,8 +82,6 @@ const WorkoutFilters = () => {
     })
     setSortOrder(initialState.sortOrder)
   }
-
-  console.log('isLoading', isLoading)
 
   useEffect(() => {
     const changesExist = hasChanges()
@@ -206,10 +204,7 @@ const WorkoutFilters = () => {
         (opt) => !(opt.label === option.label && opt.type === option.type)
       )
     )
-    // Find the correct position in filterOptions to maintain order
-    const originalIndex = filterOptions.findIndex(
-      (opt) => opt.label === option.label && opt.type === option.type
-    )
+
     setResultOptions((prev) => {
       const newResults = [...prev, option]
       // Sort by original filterOptions order
@@ -258,13 +253,13 @@ const WorkoutFilters = () => {
       case 'tags':
         return 'bg-blue/20'
       case 'workoutNames':
-        return 'bg-warn/20'
+        return 'bg-orange/20'
       case 'exerciseNames':
-        return 'bg-success/20'
+        return 'bg-green/20'
       case 'locations':
-        return 'bg-alert/20'
+        return 'bg-red/20'
       default:
-        return 'bg-light-graySecondary dark:bg-dark-graySecondary'
+        return 'bg-light-grayPrimary dark:bg-dark-grayPrimary'
     }
   }
 
@@ -273,11 +268,11 @@ const WorkoutFilters = () => {
       case 'tags':
         return 'text-blue'
       case 'workoutNames':
-        return 'text-warn'
+        return 'text-orange'
       case 'exerciseNames':
-        return 'text-success'
+        return 'text-green'
       case 'locations':
-        return 'text-alert'
+        return 'text-red'
       default:
         return 'text-light-grayText dark:text-dark-grayText'
     }
@@ -293,7 +288,7 @@ const WorkoutFilters = () => {
     return (
       <View
         key={`${option.type}-${option.label}`}
-        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
+        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
         <Pressable
           style={tw`justify-between flex-row px-4 py-3 items-center ${isDisabled ? 'opacity-40' : ''}`}
@@ -342,7 +337,7 @@ const WorkoutFilters = () => {
     <SafeView twcnContentView="px-0">
       <View style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}>
         <View
-          style={tw`px-3 flex-1 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+          style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
         >
           <Search
             size={16}
@@ -398,7 +393,7 @@ const WorkoutFilters = () => {
 
       {selectedOptions.length > 0 && (
         <View
-          style={tw`flex-row flex-wrap border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 pb-2 items-center gap-1 pt-2 px-4`}
+          style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2 px-4`}
         >
           {renderedSelectedOptions}
         </View>

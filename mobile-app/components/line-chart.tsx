@@ -222,7 +222,7 @@ const LineChart = ({
           tickValues: xTickValues(),
           formatXLabel: (v: number) => xFormatter(v),
           labelColor: theme.grayText,
-          lineColor: theme.grayTertiary,
+          lineColor: theme.grayBorder,
         }}
         yAxis={[
           {
@@ -230,7 +230,7 @@ const LineChart = ({
             tickCount: 5,
             formatYLabel: (v: number) => yFormatter(v),
             labelColor: theme.grayText,
-            lineColor: theme.grayTertiary,
+            lineColor: theme.grayBorder,
           },
         ]}
         chartPressState={press}

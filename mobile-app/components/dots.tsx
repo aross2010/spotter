@@ -7,8 +7,6 @@ import Animated, {
 } from 'react-native-reanimated'
 import tw from '../tw'
 
-// animate them in
-
 type BackgroundDotsProps = {
   numDots?: number
   minSize?: number

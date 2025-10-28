@@ -1,11 +1,10 @@
 import SafeView from '../../../components/safe-view'
-import Button from '../../../components/button'
 import Txt from '../../../components/text'
 import useTheme from '../../hooks/theme'
 import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
-import { View, Animated, Pressable } from 'react-native'
-import { useState, useRef, useEffect } from 'react'
+import { View } from 'react-native'
+import { useEffect, useState } from 'react'
 import Selector from '../../../components/selector'
 
 const preferenceOptions = [
@@ -82,7 +81,7 @@ type PreferenceKey =
   | 'unilateralLogging'
 
 const UserPreferences = () => {
-  const { theme, colorScheme, setColorSchemePreference } = useTheme()
+  const { setColorSchemePreference } = useTheme()
   const { preferences, setPreferences } = useUserStore()
   const [localPreferences, setLocalPreferences] = useState({
     colorScheme: preferences?.colorScheme || 'system',
@@ -91,7 +90,26 @@ const UserPreferences = () => {
     unilateralLogging: preferences?.unilateralLogging || 'sync',
   })
 
+  // Sync local state when preferences rehydrate
+  useEffect(() => {
+    if (preferences) {
+      const newLocal = {
+        colorScheme: preferences.colorScheme || 'system',
+        weightMetric: preferences.weightMetric || 'lbs',
+        intensityMetric: preferences.intensityMetric || 'rir',
+        unilateralLogging: preferences.unilateralLogging || 'sync',
+      }
+
+      setLocalPreferences(newLocal)
+    }
+  }, [preferences])
+
   const handleSelect = (type: PreferenceKey, value: string) => {
+    // Guard: Skip if value hasn't changed
+    if (localPreferences[type] === value) {
+      return
+    }
+
     // Update local state immediately for instant feedback
     setLocalPreferences((prev) => ({
       ...prev,

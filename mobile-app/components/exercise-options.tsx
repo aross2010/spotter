@@ -1,8 +1,6 @@
-import { View, Switch } from 'react-native'
+import { View } from 'react-native'
 import tw from '../tw'
 import Txt from './text'
-import useTheme from '../app/hooks/theme'
-import Colors from '../constants/colors'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
 import { SquareStack } from 'lucide-react-native'
@@ -14,19 +12,17 @@ type ExerciseOptionsProps = {
 }
 
 const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
-  const { theme } = useTheme()
   const { workoutData, setWorkoutData } = useWorkoutForm()
-  const { weightUnit } = workoutData
   const router = useRouter()
   const exerciseOptions = [
     {
-      title: 'Create Superset',
+      title: 'Supersets',
       description: 'Sets performed back-to-back, different exercises.',
       icon: SquareStack,
       href: '/workout-form/supersets',
     },
     {
-      title: 'Create Drop Set',
+      title: 'Drop Sets',
       description:
         'Sets performed back-to-back, same exercise, decreasing weight.',
       icon: SquareStack,

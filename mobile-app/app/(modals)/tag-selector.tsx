@@ -135,7 +135,7 @@ const TagSelector = () => {
   const renderedResults = tagResults.map(({ id, name, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-4 py-3 items-center`}
+        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder justify-between flex-row px-4 py-3 items-center`}
         key={id}
         onPress={() => handleSelectTag(name)}
       >
@@ -160,7 +160,7 @@ const TagSelector = () => {
   return (
     <SafeView twcnContentView="px-0">
       <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
       >
         <Search
           size={16}
@@ -188,7 +188,7 @@ const TagSelector = () => {
 
       {selectedTags.length > 0 && (
         <View
-          style={tw`flex-row flex-wrap border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 pb-2 items-center gap-1 pt-2 px-4`}
+          style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2 px-4`}
         >
           {renderedSelectedTags}
         </View>

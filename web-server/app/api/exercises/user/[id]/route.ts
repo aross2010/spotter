@@ -1,8 +1,8 @@
 import { withAuth } from '@/app/api/middleware'
 import db from '@/src'
-import { exercises } from '@/src/db/schema'
+import { exercises, workoutExercises, workouts } from '@/src/db/schema'
 import { NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
@@ -13,16 +13,23 @@ export const GET = withAuth(async (req, user) => {
   }
 
   try {
-    // Simple query to get all user exercises with muscle groups
+    // Query to get only exercises that are in at least one completed workout
     const userExercises = await db
-      .select({
+      .selectDistinct({
         id: exercises.id,
         name: exercises.name,
         primaryMuscleGroup: exercises.primaryMuscleGroup,
         secondaryMuscleGroups: exercises.secondaryMuscleGroups,
       })
       .from(exercises)
-      .where(eq(exercises.userId, userId))
+      .innerJoin(
+        workoutExercises,
+        eq(workoutExercises.exerciseId, exercises.id)
+      )
+      .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
+      .where(
+        and(eq(exercises.userId, userId), eq(workouts.status, 'completed'))
+      )
       .orderBy(exercises.name)
 
     const result = userExercises.map((exercise) => ({

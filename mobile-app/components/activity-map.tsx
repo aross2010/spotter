@@ -4,6 +4,7 @@ import { ActivityCalendar } from '../utils/types'
 import tw from '../tw'
 import Colors from '../constants/colors'
 import Txt from './text'
+import useTheme from '../app/hooks/theme'
 
 type ActivityMapProps = {
   data: ActivityCalendar
@@ -12,6 +13,7 @@ type ActivityMapProps = {
 // show the year too '25
 const ActivityMap = ({ data }: ActivityMapProps) => {
   const { width } = useWindowDimensions()
+  const { theme } = useTheme()
   const scrollViewRef = useRef<ScrollView>(null)
 
   // Generate the activity map data
@@ -173,7 +175,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       case 'planned':
         return Colors.secondary
       default:
-        return Colors.light.grayPrimary
+        return theme.grayPrimary
     }
   }
 

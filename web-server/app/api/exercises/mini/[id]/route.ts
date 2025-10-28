@@ -10,18 +10,20 @@ type ExerciseDetailsMini = {
   name: string
   description?: string
   isUnilateral: boolean
-  history: {
-    workoutId: string
-    date: string
-    exerciseNumber: number
-    sets: {
-      setNumber: number
-      weight: number
-      reps: number
-      partials?: number
-      intensity?: number
-    }[]
-  }[]
+  history:
+    | {
+        workoutId: string
+        date: string
+        exerciseNumber: number
+        sets: {
+          setNumber: number
+          weight: number
+          reps: number
+          partials?: number
+          intensity?: number
+        }[]
+      }[]
+    | null
 }
 
 export const GET = withAuth(async (req, user) => {
@@ -96,7 +98,7 @@ export const GET = withAuth(async (req, user) => {
           name: exercise.name,
           description: exercise.description || undefined,
           isUnilateral: exercise.isUnilateral,
-          history: [],
+          history: null,
         } as ExerciseDetailsMini,
         { status: 200 }
       )

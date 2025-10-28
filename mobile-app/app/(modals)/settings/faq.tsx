@@ -269,6 +269,20 @@ const FAQ = () => {
     )
   })
 
+  // Group FAQs by category
+  const groupedFAQs = filteredFAQs.reduce(
+    (acc, faq) => {
+      if (!acc[faq.category]) {
+        acc[faq.category] = []
+      }
+      acc[faq.category].push(faq)
+      return acc
+    },
+    {} as Record<string, FAQItem[]>
+  )
+
+  const categories = Object.keys(groupedFAQs)
+
   return (
     <SafeView
       twcnContentView="px-0"
@@ -281,7 +295,7 @@ const FAQ = () => {
 
         {/* Search Bar */}
         <View
-          style={tw`px-3 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
+          style={tw`px-3 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
         >
           <Search
             size={16}
@@ -311,26 +325,36 @@ const FAQ = () => {
               </Txt>
             </View>
           ) : (
-            filteredFAQs.map((faq, index) => (
-              <View key={faq.id}>
-                {(index === 0 ||
-                  faq.category !== filteredFAQs[index - 1].category) && (
-                  <Txt twcn="my-4 font-poppinsMedium">{faq.category}</Txt>
-                )}
+            categories.map((category) => (
+              <View
+                key={category}
+                style={tw`mb-4`}
+              >
+                <Txt twcn="mb-2 font-poppinsMedium">{category}</Txt>
                 <View
-                  style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl mb-2`}
+                  style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl overflow-hidden`}
                 >
-                  <Accordion
-                    title={faq.question}
-                    isExpanded={expandedIds.includes(faq.id)}
-                    onToggle={() => toggleExpanded(faq.id)}
-                  >
-                    <View style={tw`px-4 pb-4`}>
-                      <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                        {faq.answer}
-                      </Txt>
-                    </View>
-                  </Accordion>
+                  {groupedFAQs[category].map((faq, index) => {
+                    const isLast = index === groupedFAQs[category].length - 1
+                    return (
+                      <View
+                        key={faq.id}
+                        style={tw`${!isLast ? 'border-b border-light-grayBorder dark:border-dark-grayBorder' : ''}`}
+                      >
+                        <Accordion
+                          title={faq.question}
+                          isExpanded={expandedIds.includes(faq.id)}
+                          onToggle={() => toggleExpanded(faq.id)}
+                        >
+                          <View style={tw`px-4 pb-4`}>
+                            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                              {faq.answer}
+                            </Txt>
+                          </View>
+                        </Accordion>
+                      </View>
+                    )
+                  })}
                 </View>
               </View>
             ))

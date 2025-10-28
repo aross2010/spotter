@@ -1,10 +1,10 @@
 import { ExerciseDetails } from '../utils/types'
-import { WorkoutDetails } from '../context/workout-context'
+import { Workout } from '../utils/types'
 import { formatDate } from './formatted-date'
 import { Share as RNShare, Alert } from 'react-native'
 import { estimate1RM } from './one-rm'
 
-export const getWorkoutMessage = (workout: WorkoutDetails) => {
+export const getWorkoutMessage = (workout: Workout) => {
   if (!workout) return ''
 
   // Build the workout summary text
@@ -83,7 +83,7 @@ export const getWorkoutMessage = (workout: WorkoutDetails) => {
   return message
 }
 
-export const handleShareWorkout = async (workout: WorkoutDetails) => {
+export const handleShareWorkout = async (workout: Workout) => {
   try {
     const message = getWorkoutMessage(workout)
 

@@ -31,26 +31,22 @@ module.exports = {
       colors: {
         primary: '#807BCF',
         secondary: '#cf807b',
-        warn: '#ca8a04',
-        alert: '#dc2626',
-        success: '#16a34a',
         blue: '#3b82f6',
-
+        green: '#16a34a',
+        orange: '#ca8a04',
+        red: '#dc2626',
         dark: {
           text: '#f0f0f0',
           background: '#1a1a1a',
           grayPrimary: '#292929',
-          graySecondary: '#3D3D3D',
-          grayTertiary: '#4D4D4D',
+          grayBorder: '#dc2626',
           grayText: '#bababa',
         },
-
         light: {
           text: '#1a1a1a',
           background: '#f0f0f0',
           grayPrimary: '#e0e0e0',
-          graySecondary: '#d9d9d9',
-          grayTertiary: '#C9C9C9',
+          grayBorder: '#e7e7e7',
           grayText: '#747474',
         },
       },

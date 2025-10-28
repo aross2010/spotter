@@ -4,57 +4,7 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { toLocalDateString } from '../functions/formatted-date'
-import { Tag } from '../utils/types'
-import { Set, SetGrouping, WorkoutFormData } from './workout-form-context'
-
-type Exercise = {
-  name: string
-  isUnilateral: boolean
-  sets: Set[]
-}
-
-export type Workout = {
-  id: string
-  userId: string
-  date: string
-  createdAt: string
-  updatedAt?: string
-  pinned: boolean
-  tags: Tag[]
-  name: string
-  exercises: Exercise[]
-  setGroupings: SetGrouping[]
-  notes?: string
-  location?: string
-}
-
-export type WorkoutDetails = Workout & {
-  muscleGroupAnalysis: {
-    muscleGroup: string
-    percentage: number
-  }[]
-}
-
-export type WorkoutMinimal = {
-  id: string
-  date: string
-  location: string
-  tags: string[]
-  pinned: boolean
-  name: string
-  exercises: {
-    name: string
-    sets: number // 2 sets, 3 sets, etc.
-    lowRepRange: number
-    highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
-  }[]
-  status: 'completed' | 'planned' | 'active'
-}
-
-export type WorkoutName = {
-  name: string
-  used: number
-}
+import { WorkoutFormData, WorkoutMinimal } from '../utils/types'
 
 type WorkoutFilters = {
   tags: string[]

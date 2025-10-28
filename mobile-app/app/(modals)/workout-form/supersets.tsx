@@ -4,16 +4,13 @@ import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { useNavigation } from 'expo-router'
 import Button from '../../../components/button'
-import {
-  SetGroupingType,
-  useWorkoutForm,
-} from '../../../context/workout-form-context'
+import { useWorkoutForm } from '../../../context/workout-form-context'
+import { SetGroupingType } from '../../../utils/types'
 import { capString } from '../../../functions/cap-string'
 import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
 import { Ellipsis, Trash } from 'lucide-react-native'
 import MyModal from '../../../components/modal'
-import Colors from '../../../constants/colors'
 
 const Supersets = () => {
   const navigation = useNavigation()
@@ -307,7 +304,7 @@ const Supersets = () => {
     return (
       <View
         key={exerciseIndex}
-        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50`}
+        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
         <Txt twcn="w-full text-sm">
           {exerciseIndex + 1}. {capString(ex.name, 30)}
@@ -370,13 +367,13 @@ const Supersets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative px-3 py-1 rounded-lg border dark:bg-dark-grayPrimary rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 ${isSelected ? 'bg-primary/10 border-primary' : ''}`}
+                twcn={`relative px-3 py-1 rounded-lg border dark:bg-dark-grayPrimary rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isSelected ? 'bg-primary/10 border-primary' : ''}`}
                 disabled={isSetDisabled}
               >
                 <Txt
                   twcn={`text-xs text-light-grayText dark:text-dark-grayText ${
                     isSetDisabled
-                      ? 'text-light-graySecondary dark:text-dark-graySecondary'
+                      ? 'text-light-grayText/50 dark:text-dark-grayText/50'
                       : ''
                   } ${isSelected ? 'text-primary' : ''}`}
                 >
@@ -427,7 +424,7 @@ const Supersets = () => {
       return (
         <View
           key={exerciseCombo}
-          style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl p-4`}
+          style={tw`bg-white dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl p-4`}
         >
           <View style={tw`flex-row items-start justify-between gap-4 mb-4`}>
             <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">

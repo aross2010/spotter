@@ -66,7 +66,7 @@ const LocationSelector = () => {
   const renderedResults = locationResults.map(({ location, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 justify-between flex-row px-4 py-3 items-center`}
+        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder justify-between flex-row px-4 py-3 items-center`}
         key={location}
         onPress={() => {
           handleSaveLocation(location)
@@ -81,7 +81,7 @@ const LocationSelector = () => {
   return (
     <SafeView twcnContentView="px-0">
       <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
       >
         <Search
           size={16}

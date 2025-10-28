@@ -101,7 +101,7 @@ const Exercises = () => {
       style={tw`flex-row items-start gap-3`}
     >
       <View
-        style={tw`p-1.5 rounded-lg border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+        style={tw`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
         <Icon
           size={16}

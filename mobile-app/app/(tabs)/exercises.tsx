@@ -143,7 +143,7 @@ const Exercises = () => {
       <Button
         key={m}
         onPress={() => handleFilterMuscleGroup(m)}
-        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 border-primary' : 'border-light-grayTertiary/50 dark:border-dark-grayTertiary/50'} rounded-lg border`}
+        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder'} rounded-lg border`}
       >
         <Txt
           twcn={`text-xs ${isSelected ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
@@ -168,7 +168,7 @@ const Exercises = () => {
               },
             })
           }}
-          twcn="flex-row items-center justify-between p-4 border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50"
+          twcn="flex-row items-center justify-between p-4 border-b border-light-grayBorder dark:border-dark-grayBorder"
         >
           <View style={tw`gap-0`}>
             <Txt twcn="text-sm">{exercises.name}</Txt>
@@ -241,7 +241,7 @@ const Exercises = () => {
   const exercisesView = (
     <SafeView twcnContentView="px-0">
       <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
       >
         <Search
           size={16}

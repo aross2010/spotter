@@ -1,8 +1,7 @@
 import React from 'react'
-import { Modal, View, ActivityIndicator, StyleSheet, Text } from 'react-native'
+import { Modal, View, ActivityIndicator, StyleSheet } from 'react-native'
 import Colors from '../constants/colors'
 import Txt from './text'
-import SafeView from './safe-view'
 
 type LoadingProps = {
   visible: boolean

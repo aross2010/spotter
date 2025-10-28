@@ -1,14 +1,11 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import SafeView from '../../../components/safe-view'
-import Txt from '../../../components/text'
 import { useAuth } from '../../../context/auth-context'
 import Input from '../../../components/input'
 import { Alert, View } from 'react-native'
 import Button from '../../../components/button'
 import { BASE_URL } from '../../../constants/auth'
-import { toast } from '../../../utils/toast'
 import { useUserStore } from '../../../stores/user-store'
-import { tokenCache } from '../../../utils/cache'
 import { useNavigation } from 'expo-router'
 import tw from '../../../tw'
 
@@ -107,7 +104,7 @@ const Profile = () => {
       setCanSubmit(false)
     } catch (error: any) {
       console.error('Error updating profile:', error)
-      toast('myError', 'Error Updating Profile', error.response.data.error)
+      Alert.alert('Error', error.message || 'Failed to update profile')
     } finally {
       setLoading(false)
     }
@@ -122,7 +119,8 @@ const Profile = () => {
           setUserData({ ...userData, [field.name]: text })
         }
         editable={field.name !== 'email'}
-        twcnInput="border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50"
+        fullBorder
+        twcnInput="border-b border-light-grayBorder dark:border-dark-grayBorder"
         {...field}
       />
     )

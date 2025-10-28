@@ -1,7 +1,6 @@
 import { Platform, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal'
-import useTheme from '../app/hooks/theme'
 import tw from '../tw'
 import DragHandle from './drag-handle'
 

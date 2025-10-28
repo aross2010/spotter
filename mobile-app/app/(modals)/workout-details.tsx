@@ -1,15 +1,14 @@
-import { Alert, Share as RNShare, StyleSheet, Text, View } from 'react-native'
+import { Alert, Share as RNShare, StyleSheet, View } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
   Link,
-  router,
   useFocusEffect,
   useLocalSearchParams,
   useNavigation,
 } from 'expo-router'
 import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
-import { WorkoutDetails as WorkoutDetailsType } from '../../context/workout-context'
+import { Workout } from '../../utils/types'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import tw from '../../tw'
@@ -24,7 +23,7 @@ import { useUserStore } from '../../stores/user-store'
 import { useWorkoutStore } from '../../stores/workout-store'
 
 const WorkoutDetails = () => {
-  const [workout, setWorkout] = useState<WorkoutDetailsType | null>(null)
+  const [workout, setWorkout] = useState<Workout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation()
   const { id, from } = useLocalSearchParams()
@@ -41,7 +40,7 @@ const WorkoutDetails = () => {
           method: 'GET',
         }
       )
-      const workoutDetails = (await response.json()) as WorkoutDetailsType
+      const workoutDetails = (await response.json()) as Workout
       setWorkout(workoutDetails)
     } catch (error: any) {
       Alert.alert('Error', error.message)
@@ -212,7 +211,7 @@ const WorkoutDetails = () => {
                   return (
                     <View
                       key={set.id}
-                      style={tw`flex-row flex-wrap border-b ${isSetInDropset ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayTertiary dark:border-dark-grayTertiary py-1`}
+                      style={tw`flex-row flex-wrap border-b ${isSetInDropset ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-light-grayBorder dark:border-dark-grayBorder py-1`}
                     >
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
                         <Txt twcn="text-center text-light-text dark:text-dark-text">
@@ -267,7 +266,7 @@ const WorkoutDetails = () => {
                   return (
                     <View
                       key={set.id}
-                      style={tw`flex-row flex-wrap ${isSetInDropset ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayTertiary/50 dark:border-dark-grayTertiary/50 py-1`}
+                      style={tw`flex-row flex-wrap ${isSetInDropset ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayBorder dark:border-dark-grayBorder py-1`}
                     >
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
                         <Txt twcn="text-center text-light-text dark:text-dark-text">
