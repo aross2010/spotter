@@ -15,15 +15,11 @@ import {
   CurlyBraces,
   Dumbbell,
   Repeat,
-  Trophy,
 } from 'lucide-react-native'
-import Colors from '../../constants/colors'
 import WorkoutView from '../../components/workout'
 import Button from '../../components/button'
 import { router, SplashScreen } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
 import ActivityMap from '../../components/activity-map'
-import { BackgroundDots } from '../../components/dots'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -83,11 +79,13 @@ const Home = () => {
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
   useEffect(() => {
+    console.log('Home data updated:', data)
     if (data) SplashScreen.hide()
   }, [data])
 
   const getHomeData = async () => {
     try {
+      console.log('Fetching home data for user:', user?.id)
       const res = await fetchWithAuth(`${BASE_URL}/api/home/${user?.id}`, {
         method: 'GET',
         headers: {
@@ -95,6 +93,7 @@ const Home = () => {
         },
       })
       const data = await res.json()
+      console.log('Home data fetched:', data)
       setData(data)
     } catch (error: any) {
       Alert.alert('Error', error.message)

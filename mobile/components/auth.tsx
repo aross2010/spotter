@@ -1,7 +1,6 @@
 import { View } from 'react-native'
 import React from 'react'
 import SafeView from './safe-view'
-import Txt from './text'
 import { useAuth } from '../context/auth-context'
 import SignInWithGoogle from './sign-in-google'
 import { SignInWithAppleIos } from './sign-in-apple.ios'
@@ -9,6 +8,9 @@ import TextLogo from '../assets/spotter-text-logo.svg'
 import Colors from '../constants/colors'
 import { BackgroundDots } from './dots'
 import tw from '../tw'
+import { SplashScreen } from 'expo-router'
+
+SplashScreen.hide()
 
 const Auth = () => {
   const { signIn } = useAuth()

@@ -121,6 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           await refreshAccessToken(storedRefreshToken)
         }
       } catch (error) {
+        console.error('Error restoring session:', error)
       } finally {
         setIsLoading(false)
       }
@@ -241,6 +242,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const tokens = await tokenResponse.json()
         await handleNativeTokens(tokens)
       } catch (error) {
+        console.error('Error handling auth response:', error)
       } finally {
         setIsLoading(false)
       }
@@ -467,6 +469,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // for user store when a user logs in
   const getAndSetUser = async (userId: string, newAccessToken: string) => {
     try {
+      console.log('accessToken in getAndSetUser:', newAccessToken)
       const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
         method: 'GET',
         headers: {

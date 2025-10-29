@@ -11,15 +11,11 @@ export function withAuth<T extends Response>(
       let token: string | null = null
 
       const authHeader = req.headers.get('authorization')
-      console.log('Auth Header:', authHeader)
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.split(' ')[1]
       }
 
-      console.log('Token extracted:', token)
-
       if (!token) {
-        console.log('No token found')
         return NextResponse.json(
           {
             error: 'Unauthorized',
@@ -33,7 +29,6 @@ export function withAuth<T extends Response>(
       const jwtSecret = JWT_SECRET
 
       if (!jwtSecret) {
-        console.log('JWT secret not found')
         return NextResponse.json(
           {
             error: 'Internal server error',
