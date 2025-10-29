@@ -2,7 +2,6 @@ import * as jose from 'jose'
 import crypto from 'crypto'
 import { JWT_EXP_TIME, REFRESH_TOKEN_EXP_TIME, JWT_SECRET } from '../libs/auth'
 import db from '@/src'
-import { NextResponse } from 'next/server'
 
 interface AppleAuthResult {
   accessToken: string
