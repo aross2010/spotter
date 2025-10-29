@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import SafeView from './safe-view'
 import { useAuth } from '../context/auth-context'
 import SignInWithGoogle from './sign-in-google'
@@ -8,12 +8,20 @@ import TextLogo from '../assets/spotter-text-logo.svg'
 import Colors from '../constants/colors'
 import { BackgroundDots } from './dots'
 import tw from '../tw'
-import { SplashScreen } from 'expo-router'
-
-SplashScreen.hide()
+import { SplashScreen, useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
 
 const Auth = () => {
-  const { signIn } = useAuth()
+  const { signIn, authUser, isLoading } = useAuth()
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!authUser && !isLoading) {
+        SplashScreen.hideAsync()
+      }
+    }, [authUser, isLoading])
+  )
+
   return (
     <SafeView
       scroll={false}

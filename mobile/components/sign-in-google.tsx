@@ -26,7 +26,7 @@ export default function SignInWithGoogle({
             height: 16,
           }}
         />
-        <Txt twcn="text-lg ">Continue with Google</Txt>
+        <Txt twcn="text-lg ">Continue with Google </Txt>
       </View>
     </Button>
   )

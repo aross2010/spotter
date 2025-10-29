@@ -987,7 +987,7 @@ const ExerciseInput = ({
       // For regular exercises, wrap single row
       const setContent = (
         <View
-          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayBorder dark:border-dark-grayBorder py-0.5`}
+          style={tw`flex-row flex-wrap ${isSetInDropset(set.setNumber) ? 'bg-secondary/10' : 'bg-light-background dark:bg-dark-background'} border-b border-light-grayBorder dark:border-dark-grayBorder py-1`}
         >
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             // Map 'partials' to 'partialReps' for display

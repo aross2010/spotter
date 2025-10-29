@@ -67,7 +67,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
           style={tw`py-1.5 px-3 rounded-xl`}
         >
           <Txt
-            twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary' : ''}`}
+            twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary dark:text-dark-text' : ''}`}
           >
             {option.label}
           </Txt>
@@ -83,7 +83,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
       {buttonLayouts.length === options.length && (
         <Animated.View
           style={[
-            tw`absolute bg-primary/25 rounded-lg`,
+            tw`absolute bg-primary/25 rounded-lg dark:bg-primary/75`,
             {
               width: animatedWidth,
               height: '100%',

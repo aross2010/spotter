@@ -29,7 +29,10 @@ import Spinner from '../../../components/activity-indicator'
 import Txt from '../../../components/text'
 import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
-import { useWorkoutStore } from '../../../stores/workout-store'
+import {
+  useHomeDataStore,
+  useWorkoutStore,
+} from '../../../stores/workout-store'
 import { WorkoutFormData } from '../../../utils/types'
 
 const statusOptions = [
@@ -71,6 +74,7 @@ const WorkoutForm = () => {
     null
   )
   const { triggerRefresh } = useWorkoutStore()
+  const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
 
   const getWorkoutData = async () => {
     setIsLoading(true)
@@ -329,6 +333,7 @@ const WorkoutForm = () => {
           } else router.replace('/workouts')
         }
       }
+      triggerHomeDataRefresh()
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {

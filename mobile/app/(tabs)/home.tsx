@@ -18,8 +18,11 @@ import {
 } from 'lucide-react-native'
 import WorkoutView from '../../components/workout'
 import Button from '../../components/button'
-import { router, SplashScreen } from 'expo-router'
+import { router, SplashScreen, useFocusEffect } from 'expo-router'
 import ActivityMap from '../../components/activity-map'
+import { useCallback } from 'react'
+import { useHomeDataStore } from '../../stores/workout-store'
+import Spinner from '../../components/activity-indicator'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -75,12 +78,15 @@ const Home = () => {
   const { fetchWithAuth } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { shouldRefresh, clearRefresh } = useHomeDataStore()
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
   useEffect(() => {
-    console.log('Home data updated:', data)
-    if (data) SplashScreen.hide()
+    if (data) {
+      console.log('Hiding splash screen')
+      SplashScreen.hideAsync()
+    }
   }, [data])
 
   const getHomeData = async () => {
@@ -102,6 +108,20 @@ const Home = () => {
       setLoading(false)
     }
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      if (shouldRefresh) {
+        getHomeData()
+        clearRefresh()
+      }
+      return () => {}
+    }, [shouldRefresh])
+  )
+
+  useEffect(() => {
+    getHomeData()
+  }, [])
 
   const stats = data && [
     {
@@ -125,10 +145,6 @@ const Home = () => {
       icon: Repeat,
     },
   ]
-
-  useEffect(() => {
-    getHomeData()
-  }, [])
 
   const activityMap = data && (
     <View>
@@ -242,7 +258,9 @@ const Home = () => {
 
   const greeting = getGreeting()
 
-  return (
+  return loading ? (
+    <Spinner />
+  ) : (
     <SafeView
       hasTabBar
       hasHeader
