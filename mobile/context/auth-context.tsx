@@ -282,7 +282,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     providerId: string
   ) => {
     try {
-      const res = await fetchWithAuth(`${BASE_URL}/api/users`, {
+      const res = await fetch(`${BASE_URL}/api/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -296,11 +296,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }),
       })
 
+      console.log('signUp response status:', res.status)
+
       if (res.status === 409) {
-        Alert.alert(
-          'Unsuccessful Sign Up',
-          'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.'
-        )
+        const resData = await res.json()
+        console.log('signUp 409 response data:', resData)
+        if (resData.error.includes('User already exists')) {
+          // user is trying to sign up with credentials that already exist
+          console.log('User already exists')
+        } else if (resData.error.includes('Google account already exists')) {
+          // user is trying to sign up with apple but they already have a google account
+          Alert.alert(
+            'Unsuccessful Sign Up',
+            'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.'
+          )
+        } else if (resData.error.includes('Apple account already exists')) {
+          // user is trying to sign up with google but they already have an apple account
+          Alert.alert(
+            'Unsuccessful Sign Up',
+            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.'
+          )
+        }
 
         return {
           status: 409,
@@ -310,6 +326,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await res.json()
       return data
     } catch (error) {
+      console.error('Error during sign up:', error)
       Alert.alert(
         'Unsuccessful Sign Up',
         'An error occurred during sign up. Please try again.'
@@ -332,24 +349,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (credential.fullName?.givenName && credential.email) {
         // first time signing in w/ Apple, store key credentials to db
         // save to cache in case sign up fails
-        tokenCache?.saveAppleDetails({
-          email: credential.email,
-          givenName: credential.fullName?.givenName,
-          familyName: credential.fullName?.familyName ?? null,
-        })
 
         try {
-          await signUp(
+          let exists = false
+          const response = await signUp(
             credential.email,
             credential.fullName.givenName,
             credential.fullName.familyName ?? null,
             'apple',
             credential.user
           )
+
+          if (response?.status === 409) {
+            console.log('Apple account already exists')
+            exists = true
+            // user has signed up before with apple but either deleted account or is signing in on a new device
+          }
+
+          if (!exists) {
+            tokenCache?.saveAppleDetails({
+              email: credential.email,
+              givenName: credential.fullName?.givenName,
+              familyName: credential.fullName?.familyName ?? null,
+            })
+          }
         } catch (error) {
           console.error('Error during Apple sign up:', error)
         }
       }
+      console.log('proceeding to sign in ...')
       let appleResponse
       appleResponse = await fetch(`${BASE_URL}/api/auth/apple/apple-native`, {
         method: 'POST',
@@ -362,6 +390,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           providerId: credential.user,
         }),
       })
+
+      console.log('appleResponse:', appleResponse)
 
       if (appleResponse.status === 404) {
         // user could not be found, sign up with cache details and try again
@@ -453,7 +483,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             Authorization: `Bearer ${newToken}`,
           },
         })
-      } else {
       }
     }
 

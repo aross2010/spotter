@@ -1,7 +1,7 @@
 {
   "expo": {
-    "scheme": "spotter-lifting-app",
-    "name": "Spotter",
+    "scheme": "spotter-weightlifting",
+    "name": "Spotter – Weightlifting Log",
     "slug": "Spotter",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -25,7 +25,9 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIDesignRequiresCompatibility": true
+        "UIDesignRequiresCompatibility": true,
+        "UIDeviceFamily": [1],
+        "UIRequiresFullScreen": true
       }
     },
     "android": {

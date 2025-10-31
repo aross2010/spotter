@@ -23,18 +23,36 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       return { weeks: [], monthLabels: [] }
     }
 
-    const firstDate = new Date(dates[0])
-    const lastDate = new Date(dates[dates.length - 1])
+    // Parse date string in local timezone to avoid timezone shifts
+    const parseDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    }
 
-    // Start from the Sunday before the first date
+    const firstDate = parseDate(dates[0])
+    const lastDate = parseDate(dates[dates.length - 1])
+
+    console.log('first date no parese:', dates[0], firstDate)
+    console.log('last date no parse:', dates[dates.length - 1], lastDate)
+    console.log('first date parsed:', parseDate(dates[0]))
+    console.log('last date parsed:', parseDate(dates[dates.length - 1]))
+    console.log('All data keys:', dates)
+    console.log('Sample data entry:', dates[0], data[dates[0]])
+
+    // Start from the Monday before the first date
     const startDate = new Date(firstDate)
     const dayOfWeek = startDate.getDay()
-    startDate.setDate(startDate.getDate() - dayOfWeek)
+    // getDay() returns 0 for Sunday, 1 for Monday, etc.
+    // We want to go back to Monday, so: if Sunday (0), go back 6 days; otherwise go back (dayOfWeek - 1) days
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    startDate.setDate(startDate.getDate() - daysToMonday)
 
-    // End on the Saturday after the last date
+    // End on the Sunday after the last date
     const endDate = new Date(lastDate)
     const endDayOfWeek = endDate.getDay()
-    endDate.setDate(endDate.getDate() + (6 - endDayOfWeek))
+    // If it's Sunday (0), we're already at the end; otherwise add days to get to Sunday
+    const daysToSunday = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek
+    endDate.setDate(endDate.getDate() + daysToSunday)
 
     const weeks: {
       days: {
@@ -70,9 +88,9 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     while (currentDate <= endDate) {
       const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
 
-      // Check if we're at the start of a new month (on a Sunday, which starts a new week)
+      // Check if we're at the start of a new month (on a Monday, which starts a new week)
       const month = currentDate.getMonth()
-      if (month !== currentMonth && currentDate.getDay() === 0) {
+      if (month !== currentMonth && currentDate.getDay() === 1) {
         currentMonth = month
         const year = currentDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
         const label =
@@ -86,6 +104,16 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       // Determine status
       let status: 'none' | 'planned' | 'completed' | 'active' = 'none'
       const dayData = data[dateString]
+
+      // Debug: log when we find data
+      if (dayData && dayData.workouts.length > 0) {
+        console.log(
+          'Found workout data for dateString:',
+          dateString,
+          'Data:',
+          dayData
+        )
+      }
       if (dayData) {
         const hasActive = dayData.workouts.some((w) => w.status === 'active')
         const hasCompleted = dayData.workouts.some(
@@ -100,8 +128,8 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
       currentWeek.push({ date: dateString, status })
 
-      // If it's Saturday (6) or we've reached the end, push the week
-      if (currentDate.getDay() === 6 || currentDate >= endDate) {
+      // If it's Sunday (0) or we've reached the end, push the week
+      if (currentDate.getDay() === 0 || currentDate >= endDate) {
         // Fill remaining days if needed (for incomplete weeks)
         while (currentWeek.length < 7) {
           currentWeek.push({ date: '', status: 'none' })
@@ -132,9 +160,9 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       for (let i = 0; i < 7; i++) {
         const dateString = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}-${String(futureDate.getDate()).padStart(2, '0')}`
 
-        // Check for month label on Sunday
+        // Check for month label on Monday
         const month = futureDate.getMonth()
-        if (month !== currentMonth && futureDate.getDay() === 0) {
+        if (month !== currentMonth && futureDate.getDay() === 1) {
           currentMonth = month
           const year = futureDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
           const label =
@@ -189,6 +217,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     )
   }
 
+  // Day labels starting from Monday to match the calendar grid
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
   return (

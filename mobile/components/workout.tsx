@@ -47,12 +47,12 @@ const WorkoutView = ({
   })
 
   const renderedExercises = exercises.map(
-    ({ name, sets, lowRepRange, highRepRange }) => {
+    ({ name, sets, lowRepRange, highRepRange }, index) => {
       const isFiltered = isExerciseFiltered(name)
       return (
         <View
           style={tw`flex-row items-center justify-between gap-2`}
-          key={name}
+          key={index}
         >
           <Txt twcn={`text-sm ${isFiltered ? 'text-primary' : ''}`}>{name}</Txt>
           <Txt twcn={`text-sm ${isFiltered ? 'text-primary' : ''}`}>

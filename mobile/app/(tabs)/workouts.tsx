@@ -153,6 +153,20 @@ const Workouts = () => {
       year: 'numeric',
     })
 
+    if (index === 0) {
+      const nextEntry = currentWorkouts[index + 1]
+      const nextMonth = nextEntry
+        ? new Date(nextEntry.date).toLocaleString('default', {
+            month: 'numeric',
+            year: 'numeric',
+          })
+        : null
+
+      if (nextMonth && month !== nextMonth && !pinned) {
+        lastInMonth = true
+      }
+    }
+
     if (index > 0) {
       const prevEntry = currentWorkouts[index - 1]
       const prevMonth = new Date(prevEntry.date).toLocaleString('default', {

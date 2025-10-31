@@ -1,5 +1,4 @@
-import { View, Image } from 'react-native'
-import Txt from './text'
+import { View, Image, Text } from 'react-native'
 import tw from '../tw'
 import Button from './button'
 
@@ -26,7 +25,7 @@ export default function SignInWithGoogle({
             height: 16,
           }}
         />
-        <Txt twcn="text-lg ">Continue with Google </Txt>
+        <Text style={tw`text-xl`}>Continue with Google </Text>
       </View>
     </Button>
   )

@@ -103,6 +103,20 @@ const Notebook = () => {
       year: 'numeric',
     })
 
+    if (index === 0) {
+      const nextEntry = currentNotebookEntries[index + 1]
+      const nextMonth = nextEntry
+        ? new Date(nextEntry.date).toLocaleString('default', {
+            month: 'numeric',
+            year: 'numeric',
+          })
+        : null
+
+      if (nextMonth && month !== nextMonth && !pinned) {
+        lastInMonth = true
+      }
+    }
+
     // Check if we need to show month header
     if (index > 0) {
       const prevEntry = currentNotebookEntries[index - 1]

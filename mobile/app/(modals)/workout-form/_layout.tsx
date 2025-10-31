@@ -47,7 +47,7 @@ const WorkoutFormLayout = () => {
         <Stack.Screen
           name="location"
           options={{
-            headerTitle: 'Select Location',
+            headerTitle: 'Location',
           }}
         />
         <Stack.Screen

@@ -37,15 +37,36 @@ export async function POST(req: Request) {
   }
 
   try {
-    const existingUser = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.email, email),
-      with: {
-        userProviders: true,
-      },
-    })
+    let existingUser
+
+    if (provider === 'apple' || provider === 'google') {
+      const result = await db.query.userProviders.findFirst({
+        where: (userProvider, { eq, and }) =>
+          and(
+            eq(userProvider.provider, provider),
+            eq(userProvider.providerId, providerId)
+          ),
+        with: {
+          user: {
+            with: {
+              userProviders: true,
+            },
+          },
+        },
+      })
+      existingUser = result?.user
+    }
 
     if (existingUser) {
       const providers = existingUser.userProviders.map((p) => p.provider)
+
+      if (providers.includes(provider)) {
+        return NextResponse.json(
+          { error: 'User already exists' },
+          { status: 409 }
+        )
+      }
+
       if (providers.includes('google')) {
         return NextResponse.json(
           { error: 'Google account already exists' },
@@ -54,11 +75,6 @@ export async function POST(req: Request) {
       } else if (provider === 'apple') {
         return NextResponse.json(
           { error: 'Apple account already exists' },
-          { status: 409 }
-        )
-      } else {
-        return NextResponse.json(
-          { error: 'User with this email already exists' },
           { status: 409 }
         )
       }
