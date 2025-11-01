@@ -294,6 +294,7 @@ const FAQ = () => {
     <SafeView
       twcnContentView="px-0"
       scroll
+      keyboardAvoiding
     >
       <View style={tw`px-4 mb-4`}>
         <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mb-4">
@@ -337,7 +338,7 @@ const FAQ = () => {
                 key={category}
                 style={tw`mb-4`}
               >
-                <Txt twcn="mb-2 font-poppinsMedium">{category}</Txt>
+                <Txt twcn="mb-4 font-poppinsMedium">{category}</Txt>
                 <View
                   style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl overflow-hidden`}
                 >

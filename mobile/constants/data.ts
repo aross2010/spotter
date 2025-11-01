@@ -36,3 +36,5 @@ export const MONTHS: Map<string, string> = new Map([
   ['11', '🦃 November'],
   ['12', '🎄 December'],
 ])
+
+export const APP_ID = '6754656428'

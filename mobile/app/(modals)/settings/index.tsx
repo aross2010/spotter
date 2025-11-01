@@ -7,8 +7,9 @@ import { ChevronRight } from 'lucide-react-native'
 import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
-import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
+import * as StoreReview from 'expo-store-review'
+import { BASE_URL } from '../../../constants/auth'
 
 const settingsData = [
   {
@@ -43,6 +44,18 @@ const settingsData = [
     sectionTitle: 'Help & Support',
     options: [
       {
+        label: 'Privacy Policy',
+        onPress: () => {
+          router.push(`${BASE_URL}/privacy`)
+        },
+      },
+      {
+        label: 'Terms of Service',
+        onPress: () => {
+          router.push(`${BASE_URL}/terms`)
+        },
+      },
+      {
         label: 'Frequently Asked Questions',
         onPress: () => {
           router.push('/settings/faq')
@@ -55,6 +68,19 @@ const settingsData = [
           const ok = await Linking.canOpenURL(url)
           if (ok) Linking.openURL(url)
           else Alert.alert('Error', 'Unable to open email client.')
+        },
+      },
+    ],
+  },
+  {
+    sectionTitle: null,
+    options: [
+      {
+        label: '⭐ Rate the App!',
+        onPress: async () => {
+          if (await StoreReview.isAvailableAsync()) {
+            StoreReview.requestReview()
+          }
         },
       },
     ],
@@ -141,7 +167,7 @@ const Settings = () => {
         >
           {sectionTitle && <Txt twcn="font-poppinsMedium">{sectionTitle}</Txt>}
           <View
-            style={tw`bg-white ${needsBorderBottom && index != settingsData.length - 1 ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
+            style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
             {options.map(({ label, onPress }, index) => {
               return (

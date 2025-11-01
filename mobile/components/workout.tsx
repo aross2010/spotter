@@ -24,7 +24,7 @@ const WorkoutView = ({
   isHome?: boolean
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
   const { filters } = useWorkout()
   const { date, tags, name, location, exercises } = workout
 

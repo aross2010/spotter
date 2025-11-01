@@ -24,8 +24,6 @@ import { useCallback } from 'react'
 import { useHomeDataStore } from '../../stores/workout-store'
 import Spinner from '../../components/activity-indicator'
 
-SplashScreen.preventAutoHideAsync()
-
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
   if (h >= 5 && h < 12) return 'Good Morning'
@@ -75,7 +73,7 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
 
 const Home = () => {
   const { user } = useUserStore()
-  const { fetchWithAuth } = useAuth()
+  const { fetchWithAuth, isLoading } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
@@ -83,10 +81,10 @@ const Home = () => {
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
   useEffect(() => {
-    if (data) {
+    if (data && !loading) {
       SplashScreen.hideAsync()
     }
-  }, [data])
+  }, [data, isLoading])
 
   const getHomeData = async () => {
     try {
@@ -214,7 +212,7 @@ const Home = () => {
         <View style={tw`rounded-full bg-white/25 p-2 h-10 w-10 items-center`}>
           <Txt twcn="text-2xl">🏆</Txt>
         </View>
-        <Txt twcn="text-white text-base font-poppinsSemiBold">
+        <Txt twcn="text-white text-lg font-poppinsSemiBold">
           Your {timeSinceFirst} on Spotter
         </Txt>
       </View>
@@ -273,7 +271,6 @@ const Home = () => {
         {greeting}, {user?.firstName} 👋
       </Txt>
       {userPage}
-      <Link href="/test">Test Link</Link>
     </SafeView>
   )
 }

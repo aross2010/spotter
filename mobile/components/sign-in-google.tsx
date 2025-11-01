@@ -25,7 +25,7 @@ export default function SignInWithGoogle({
             height: 16,
           }}
         />
-        <Text style={tw`text-xl`}>Continue with Google </Text>
+        <Text style={tw`text-xl dark:text-white`}>Continue with Google </Text>
       </View>
     </Button>
   )

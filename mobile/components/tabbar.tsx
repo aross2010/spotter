@@ -13,6 +13,7 @@ import Colors from '../constants/colors'
 import Txt from './text'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
+import Button from './button'
 
 type Props = BottomTabBarProps & {
   barColor?: string
@@ -59,10 +60,8 @@ export default function TopIndicatorTabBar({
   const onLayout = (e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)
 
   return (
-    <BlurView
-      intensity={50}
+    <View
       onLayout={onLayout}
-      experimentalBlurMethod="dimezisBlurView"
       style={[
         styles.container,
         {
@@ -71,7 +70,7 @@ export default function TopIndicatorTabBar({
           paddingBottom: Math.max(insets.bottom, 12),
           zIndex: 10,
           elevation: 10,
-          backgroundColor: hexToRgba(theme.background, 0.25),
+          backgroundColor: theme.background,
         },
       ]}
     >
@@ -127,7 +126,7 @@ export default function TopIndicatorTabBar({
           route.name
 
         return (
-          <Pressable
+          <Button
             key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
@@ -146,10 +145,10 @@ export default function TopIndicatorTabBar({
             >
               {label}
             </Txt>
-          </Pressable>
+          </Button>
         )
       })}
-    </BlurView>
+    </View>
   )
 }
 

@@ -3,6 +3,9 @@ import { Workout } from '../utils/types'
 import { formatDate } from './formatted-date'
 import { Share as RNShare, Alert } from 'react-native'
 import { estimate1RM } from './one-rm'
+import { APP_ID } from '../constants/data'
+
+const APP_LINK = `https://apps.apple.com/app/id${APP_ID}`
 
 export const getWorkoutMessage = (workout: Workout) => {
   if (!workout) return ''
@@ -79,6 +82,8 @@ export const getWorkoutMessage = (workout: Workout) => {
   if (workout.tags && workout.tags.length > 0) {
     message += `🏷️ ${workout.tags.map((tag) => tag.name).join(', ')}`
   }
+
+  message += `\n\nShared via Spotter: ${APP_LINK}`
 
   return message
 }
@@ -165,6 +170,8 @@ const getExerciseMessage = (
 
   message += `🔥 Last Session:\n`
   message += lastSessionSets
+
+  message += `\nShared via Spotter: ${APP_LINK}`
 
   return message
 }

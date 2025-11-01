@@ -522,9 +522,7 @@ const WorkoutForm = () => {
                       color={Colors.red}
                     />
                   </Button>
-                  <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
-                    1
-                  </Txt>
+                  <Txt twcn="font-poppinsMedium">1</Txt>
                   <Button
                     onPress={() => adjustFocusedInputValue(true, 1)}
                     twcn="p-2"
@@ -547,9 +545,7 @@ const WorkoutForm = () => {
                       color={Colors.red}
                     />
                   </Button>
-                  <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
-                    2.5
-                  </Txt>
+                  <Txt twcn="font-poppinsMedium">2.5</Txt>
                   <Button
                     onPress={() => adjustFocusedInputValue(true, 2.5)}
                     twcn="p-2"
@@ -572,7 +568,7 @@ const WorkoutForm = () => {
                     color={Colors.red}
                   />
                 </Button>
-                <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="font-poppinsMedium">
                   {focusedInput &&
                   (focusedInput.field === 'rpe' || focusedInput.field === 'rir')
                     ? '0.5'

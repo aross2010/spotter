@@ -24,25 +24,9 @@ import {
   Poppins_900Black_Italic,
 } from '@expo-google-fonts/poppins'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
-
-import {
-  Geologica_100Thin,
-  Geologica_200ExtraLight,
-  Geologica_300Light,
-  Geologica_400Regular,
-  Geologica_500Medium,
-  Geologica_600SemiBold,
-  Geologica_700Bold,
-  Geologica_800ExtraBold,
-  Geologica_900Black,
-} from '@expo-google-fonts/geologica'
-
-import Loading from '../components/loading'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider } from '../context/auth-context'
 import { NotebookProvider } from '../context/notebook-context'
-import { useDeviceContext } from 'twrnc'
-import tw from '../tw'
 import ThemedStatusBar from '../components/status-bar'
 import { WorkoutProvider } from '../context/workout-context'
 
@@ -52,10 +36,6 @@ SplashScreen.setOptions({
 })
 
 const RootLayout = () => {
-  useDeviceContext(tw, {
-    observeDeviceColorSchemeChanges: false,
-    initialColorScheme: 'device',
-  })
   const [fontsLoaded] = useFonts({
     Poppins_100Thin,
     Poppins_100Thin_Italic,
@@ -75,15 +55,6 @@ const RootLayout = () => {
     Poppins_800ExtraBold_Italic,
     Poppins_900Black,
     Poppins_900Black_Italic,
-    Geologica_100Thin,
-    Geologica_200ExtraLight,
-    Geologica_300Light,
-    Geologica_400Regular,
-    Geologica_500Medium,
-    Geologica_600SemiBold,
-    Geologica_700Bold,
-    Geologica_800ExtraBold,
-    Geologica_900Black,
   })
 
   return (

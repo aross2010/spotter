@@ -65,6 +65,7 @@ const Workouts = () => {
                 <Link
                   href="/workout-filters"
                   style={tw` bg-primary/10 rounded-2xl p-2`}
+                  prefetch
                 >
                   <ListFilter
                     size={20}

@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { useAppColorScheme } from 'twrnc'
+import { useAppColorScheme, useDeviceContext } from 'twrnc'
 import Colors from '../../constants/colors'
 import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
+import { useColorScheme } from 'react-native'
 
 type Scheme = 'light' | 'dark'
 type PreferenceScheme = 'light' | 'dark' | 'system'
@@ -11,27 +12,27 @@ type Theme = typeof Colors.light
 export default function useTheme() {
   const { preferences, setPreferences } = useUserStore()
   const [colorScheme, toggleColorScheme, setColorScheme] = useAppColorScheme(tw)
+  const deviceColorScheme = useColorScheme()
 
   useEffect(() => {
     const savedScheme = preferences?.colorScheme
 
-    if (!savedScheme) {
-      return
-    }
-
-    if (savedScheme === 'system') {
-      setColorScheme(null as any)
+    // If no saved preference (pre-login), default to system theme
+    if (!savedScheme || savedScheme === 'system') {
+      setColorScheme(deviceColorScheme as Scheme)
     } else {
       setColorScheme(savedScheme as Scheme)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences?.colorScheme])
 
-  const theme: Theme =
-    (Colors as Record<Scheme, Theme>)[colorScheme ?? 'light'] ?? Colors.light
+  // When colorScheme is null (system), get actual device color scheme
+  const actualColorScheme = colorScheme || (deviceColorScheme as Scheme)
+  const theme: Theme = Colors[actualColorScheme]
 
   return {
     theme,
-    colorScheme,
+    colorScheme: actualColorScheme, // Return actual scheme, not null
     toggleColorScheme,
     setColorScheme: (scheme: Scheme) => {
       setColorScheme(scheme)
@@ -45,7 +46,7 @@ export default function useTheme() {
 
         if (scheme === 'system') {
           // Reset to follow system setting
-          setColorScheme(null as any)
+          setColorScheme(deviceColorScheme as Scheme)
         } else {
           // Set specific scheme
           setColorScheme(scheme)
