@@ -6,12 +6,15 @@ import { UserProfile } from '../utils/types'
 type WeightMetric = 'lbs' | 'kgs'
 type IntensityMetric = 'rpe' | 'rir'
 type UnilateralLogging = 'sync' | 'separate'
+type HapticFeedback = 'enabled' | 'disabled'
 
 type UserPreferences = {
   weightMetric: WeightMetric
   intensityMetric: IntensityMetric
   colorScheme: 'dark' | 'light' | 'system'
   unilateralLogging: UnilateralLogging
+  hapticFeedback: HapticFeedback
+  location: string
 }
 
 type UserStore = {
@@ -34,6 +37,8 @@ const initialUserPreferences: UserPreferences = {
   intensityMetric: 'rir',
   colorScheme: 'system',
   unilateralLogging: 'sync',
+  hapticFeedback: 'enabled',
+  location: '',
 }
 
 const kv = new MMKV({ id: 'spotter-user-store' })
@@ -97,6 +102,14 @@ export const useUserStore = create<UserStore>()(
               p?.unilateralLogging ??
               s.preferences?.unilateralLogging ??
               initialUserPreferences.unilateralLogging,
+            hapticFeedback:
+              p?.hapticFeedback ??
+              s.preferences?.hapticFeedback ??
+              initialUserPreferences.hapticFeedback,
+            location:
+              p?.location !== undefined
+                ? p.location.trim()
+                : (s.preferences?.location ?? initialUserPreferences.location),
           },
         }))
       },

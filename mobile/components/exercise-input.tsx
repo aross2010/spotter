@@ -53,8 +53,19 @@ const ExerciseInput = ({
   >([])
   const exerciseNameInputRef = useRef<TextInput>(null)
   const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
+  const [shouldFocusFirstSetWeight, setShouldFocusFirstSetWeight] =
+    useState(false)
   const weightInputRefs = useRef<Map<string, TextInput>>(new Map())
   const leftWeightInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const repsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const leftRepsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const rightRepsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const partialsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const leftPartialsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const rightPartialsInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const rpeInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const leftRpeInputRefs = useRef<Map<string, TextInput>>(new Map())
+  const rightRpeInputRefs = useRef<Map<string, TextInput>>(new Map())
   const [isEditingExerciseNumber, setIsEditingExerciseNumber] = useState(false)
   const [exerciseNumberInput, setExerciseNumberInput] = useState(
     exerciseNumber.toString()
@@ -66,6 +77,7 @@ const ExerciseInput = ({
     exerciseNames,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
+    setFocusedInput,
   } = useWorkoutForm()
   const { preferences } = useUserStore()
   const [isSynced, setIsSynced] = useState(
@@ -76,6 +88,7 @@ const ExerciseInput = ({
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
+  const intensityMetric = preferences?.intensityMetric || 'rir'
   const isUnilateral = exercise?.isUnilateral || false
 
   useEffect(() => {
@@ -126,6 +139,35 @@ const ExerciseInput = ({
     }
   }, [newlyAddedSetId, isUnilateral])
 
+  // Autofocus the first set's weight input after selecting an exercise name
+  useEffect(() => {
+    if (shouldFocusFirstSetWeight && sets.length > 0) {
+      const firstSetId = sets[0].id
+
+      const focusInput = () => {
+        // For unilateral exercises, focus the left weight input first
+        if (isUnilateral) {
+          const leftWeightInput = leftWeightInputRefs.current.get(firstSetId)
+          if (leftWeightInput) {
+            leftWeightInput.focus()
+            setShouldFocusFirstSetWeight(false)
+            return
+          }
+        }
+
+        // For bilateral exercises, focus the regular weight input
+        const weightInput = weightInputRefs.current.get(firstSetId)
+        if (weightInput) {
+          weightInput.focus()
+          setShouldFocusFirstSetWeight(false)
+        }
+      }
+
+      // Use setTimeout to ensure keyboard is dismissed first and refs are ready
+      setTimeout(focusInput, 150)
+    }
+  }, [shouldFocusFirstSetWeight, sets, isUnilateral])
+
   const isInSuperset = workoutData.setGroupings.some(
     (grouping) =>
       grouping.groupingType === 'superset' &&
@@ -175,8 +217,8 @@ const ExerciseInput = ({
       inputMode: 'numeric',
     },
     {
-      label: 'RPE',
-      value: 'rpe',
+      label: intensityMetric === 'rir' ? 'RIR' : 'RPE',
+      value: intensityMetric === 'rir' ? 'rir' : 'rpe',
       inputMode: 'decimal',
     },
   ] as const
@@ -473,14 +515,16 @@ const ExerciseInput = ({
 
     // convert to number immediately (or keep as undefined if empty)
     // but avoid converting incomplete decimals that end with '.'
-    const finalValue =
-      s === ''
-        ? undefined
-        : inputMode === 'decimal' && s.endsWith('.')
-          ? s // keep as string if it ends with decimal
-          : inputMode === 'decimal'
-            ? parseFloat(s)
-            : parseInt(s, 10)
+    let finalValue: number | string | undefined
+    if (s === '') {
+      finalValue = undefined
+    } else if (inputMode === 'decimal' && s.endsWith('.')) {
+      finalValue = s // keep as string if it ends with decimal
+    } else {
+      const numValue = inputMode === 'decimal' ? parseFloat(s) : parseInt(s, 10)
+      // Treat 0 as undefined (empty state)
+      finalValue = numValue === 0 ? undefined : numValue
+    }
 
     const updatedExercises = [...workoutData.exercises]
     const updatedSets = [...(updatedExercises[exerciseNumber - 1]?.sets || [])]
@@ -633,6 +677,9 @@ const ExerciseInput = ({
     })
     setIsExerciseNameSelectorOpen(false)
     Keyboard.dismiss()
+
+    // Trigger autofocus on the first set's weight input
+    setShouldFocusFirstSetWeight(true)
   }
 
   const renderedExerciseNames = exerciseNameResults.map(
@@ -850,33 +897,46 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.leftReps === 'string'
                     ? set.leftReps
-                    : set.leftReps?.toString() || ''
+                    : set.leftReps && set.leftReps !== 0
+                      ? set.leftReps.toString()
+                      : ''
               } else if (value === 'partials') {
                 displayValue =
                   typeof set.leftPartialReps === 'string'
                     ? set.leftPartialReps
-                    : set.leftPartialReps?.toString() || ''
+                    : set.leftPartialReps && set.leftPartialReps !== 0
+                      ? set.leftPartialReps.toString()
+                      : ''
               } else if (value === 'rpe') {
                 displayValue =
                   typeof set.leftRpe === 'string'
                     ? set.leftRpe
-                    : set.leftRpe?.toString() || ''
+                    : set.leftRpe && set.leftRpe !== 0
+                      ? set.leftRpe.toString()
+                      : ''
               } else {
                 const fieldValue = set[value as keyof typeof set]
                 displayValue =
                   typeof fieldValue === 'string'
                     ? fieldValue
-                    : fieldValue?.toString() || ''
+                    : fieldValue && fieldValue !== 0
+                      ? fieldValue.toString()
+                      : ''
               }
 
               return (
                 <Input
                   ref={(ref) => {
-                    if (
-                      ref &&
-                      (value === 'weightLbs' || value === 'weightKg')
-                    ) {
-                      leftWeightInputRefs.current.set(set.id, ref)
+                    if (ref) {
+                      if (value === 'weightLbs' || value === 'weightKg') {
+                        leftWeightInputRefs.current.set(set.id, ref)
+                      } else if (value === 'reps') {
+                        leftRepsInputRefs.current.set(set.id, ref)
+                      } else if (value === 'partials') {
+                        leftPartialsInputRefs.current.set(set.id, ref)
+                      } else if (value === 'rpe') {
+                        leftRpeInputRefs.current.set(set.id, ref)
+                      }
                     }
                   }}
                   editable={value !== 'setNumber'}
@@ -896,6 +956,17 @@ const ExerciseInput = ({
                   onChangeText={(text) => {
                     handleInputChange(setIndex, value, text, inputMode, true)
                   }}
+                  onFocus={() => {
+                    if (value !== 'setNumber') {
+                      setFocusedInput({
+                        exerciseIndex: exerciseNumber - 1,
+                        setIndex,
+                        field: value,
+                        isLeftSide: true,
+                      })
+                    }
+                  }}
+                  onBlur={() => setFocusedInput(null)}
                 />
               )
             })}
@@ -912,33 +983,46 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.rightReps === 'string'
                     ? set.rightReps
-                    : set.rightReps?.toString() || ''
+                    : set.rightReps && set.rightReps !== 0
+                      ? set.rightReps.toString()
+                      : ''
               } else if (value === 'partials') {
                 displayValue =
                   typeof set.rightPartialReps === 'string'
                     ? set.rightPartialReps
-                    : set.rightPartialReps?.toString() || ''
+                    : set.rightPartialReps && set.rightPartialReps !== 0
+                      ? set.rightPartialReps.toString()
+                      : ''
               } else if (value === 'rpe') {
                 displayValue =
                   typeof set.rightRpe === 'string'
                     ? set.rightRpe
-                    : set.rightRpe?.toString() || ''
+                    : set.rightRpe && set.rightRpe !== 0
+                      ? set.rightRpe.toString()
+                      : ''
               } else {
                 const fieldValue = set[value as keyof typeof set]
                 displayValue =
                   typeof fieldValue === 'string'
                     ? fieldValue
-                    : fieldValue?.toString() || ''
+                    : fieldValue && fieldValue !== 0
+                      ? fieldValue.toString()
+                      : ''
               }
 
               return (
                 <Input
                   ref={(ref) => {
-                    if (
-                      ref &&
-                      (value === 'weightLbs' || value === 'weightKg')
-                    ) {
-                      weightInputRefs.current.set(set.id, ref)
+                    if (ref) {
+                      if (value === 'weightLbs' || value === 'weightKg') {
+                        weightInputRefs.current.set(set.id, ref)
+                      } else if (value === 'reps') {
+                        rightRepsInputRefs.current.set(set.id, ref)
+                      } else if (value === 'partials') {
+                        rightPartialsInputRefs.current.set(set.id, ref)
+                      } else if (value === 'rpe') {
+                        rightRpeInputRefs.current.set(set.id, ref)
+                      }
                     }
                   }}
                   editable={value !== 'setNumber'}
@@ -958,6 +1042,17 @@ const ExerciseInput = ({
                   onChangeText={(text) => {
                     handleInputChange(setIndex, value, text, inputMode, false)
                   }}
+                  onFocus={() => {
+                    if (value !== 'setNumber') {
+                      setFocusedInput({
+                        exerciseIndex: exerciseNumber - 1,
+                        setIndex,
+                        field: value,
+                        isLeftSide: false,
+                      })
+                    }
+                  }}
+                  onBlur={() => setFocusedInput(null)}
                 />
               )
             })}
@@ -992,13 +1087,27 @@ const ExerciseInput = ({
           {SetInputs.map(({ label, value, inputMode }, inputIndex) => {
             // Map 'partials' to 'partialReps' for display
             const displayField = value === 'partials' ? 'partialReps' : value
-            const displayValue = set[displayField as keyof typeof set]
+            const rawValue = set[displayField as keyof typeof set]
+            const displayValue =
+              typeof rawValue === 'string'
+                ? rawValue
+                : rawValue && rawValue !== 0
+                  ? rawValue.toString()
+                  : ''
 
             return (
               <Input
                 ref={(ref) => {
-                  if (ref && (value === 'weightLbs' || value === 'weightKg')) {
-                    weightInputRefs.current.set(set.id, ref)
+                  if (ref) {
+                    if (value === 'weightLbs' || value === 'weightKg') {
+                      weightInputRefs.current.set(set.id, ref)
+                    } else if (value === 'reps') {
+                      repsInputRefs.current.set(set.id, ref)
+                    } else if (value === 'partials') {
+                      partialsInputRefs.current.set(set.id, ref)
+                    } else if (value === 'rpe') {
+                      rpeInputRefs.current.set(set.id, ref)
+                    }
                   }
                 }}
                 editable={value !== 'setNumber'}
@@ -1014,14 +1123,20 @@ const ExerciseInput = ({
                 key={`${set.id}-${value}-base`}
                 placeholder="-"
                 twcnInput="w-1/5 text-center py-1 text-light-text dark:text-dark-text"
-                value={
-                  typeof displayValue === 'string'
-                    ? displayValue
-                    : displayValue?.toString() || ''
-                }
+                value={displayValue}
                 onChangeText={(text) => {
                   handleInputChange(setIndex, value, text, inputMode)
                 }}
+                onFocus={() => {
+                  if (value !== 'setNumber') {
+                    setFocusedInput({
+                      exerciseIndex: exerciseNumber - 1,
+                      setIndex,
+                      field: value,
+                    })
+                  }
+                }}
+                onBlur={() => setFocusedInput(null)}
               />
             )
           })}
@@ -1101,27 +1216,39 @@ const ExerciseInput = ({
                 setIsExerciseNameSelectorOpen(!isExerciseNameSelectorOpen)
               }}
               onChange={(e) => handleChange(e.nativeEvent.text)}
-              onFocus={() => setIsExerciseNameSelectorOpen(true)}
-              onBlur={() => setIsExerciseNameSelectorOpen(false)}
+              onFocus={() => {
+                setIsExerciseNameSelectorOpen(true)
+                setFocusedInput({
+                  exerciseIndex: exerciseNumber - 1,
+                  setIndex: -1,
+                  field: 'exerciseName',
+                })
+              }}
+              onBlur={() => {
+                setIsExerciseNameSelectorOpen(false)
+                setFocusedInput(null)
+              }}
               {...rest}
             />
-            {isExerciseNameSelectorOpen && exerciseNameResults.length > 0 && (
-              <BlurView
-                intensity={50}
-                tint="default"
-                style={[
-                  tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
-                ]}
-              >
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  showsVerticalScrollIndicator={false}
-                  style={tw`max-h-44`}
+            {isExerciseNameSelectorOpen &&
+              exerciseNameResults.length > 0 &&
+              exercise.name.trim().length > 0 && (
+                <BlurView
+                  intensity={50}
+                  tint="default"
+                  style={[
+                    tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
+                  ]}
                 >
-                  {renderedExerciseNames}
-                </ScrollView>
-              </BlurView>
-            )}
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={tw`max-h-44`}
+                  >
+                    {renderedExerciseNames}
+                  </ScrollView>
+                </BlurView>
+              )}
           </View>
           <View style={tw`flex-row gap-1 items-center`}>
             {renderedExerciseButtons}

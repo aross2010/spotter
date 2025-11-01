@@ -9,16 +9,23 @@ import useTheme from '../app/hooks/theme'
 import { router } from 'expo-router'
 import { useWorkout } from '../context/workout-context'
 import { WorkoutMinimal } from '../utils/types'
+import { useHomeDataStore } from '../stores/workout-store'
 
 type WorkoutOptionsProps = {
   workout: WorkoutMinimal
+  isHome?: boolean
   setIsOptionsOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
+const WorkoutOptions = ({
+  workout,
+  setIsOptionsOpen,
+  isHome,
+}: WorkoutOptionsProps) => {
   const { pinned, id, name, date, location } = workout
   const { deleteWorkout } = useWorkout()
   const { theme } = useTheme()
+  const { triggerRefresh } = useHomeDataStore()
 
   const handleViewDetails = () => {
     setIsOptionsOpen(false)
@@ -43,6 +50,7 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
   const handleDeleteWorkout = async () => {
     await deleteWorkout(id)
     setIsOptionsOpen(false)
+    triggerRefresh()
   }
 
   const handleCloneWorkout = () => {
@@ -74,11 +82,15 @@ const WorkoutOptions = ({ workout, setIsOptionsOpen }: WorkoutOptionsProps) => {
       onPress: handleEdit,
       icon: Pencil,
     },
-    {
-      title: 'Delete',
-      onPress: handleDeleteWorkout,
-      icon: Trash,
-    },
+    ...(!isHome
+      ? [
+          {
+            title: 'Delete',
+            onPress: handleDeleteWorkout,
+            icon: Trash,
+          },
+        ]
+      : []),
   ]
 
   const renderedOptions = options.map(

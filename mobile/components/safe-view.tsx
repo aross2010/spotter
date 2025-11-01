@@ -17,6 +17,7 @@ type SafeViewProps = {
   hasHeader?: boolean
   scroll?: boolean
   keyboardVerticalOffset?: number
+  keyboardShouldPersistTaps?: 'never' | 'always' | 'handled'
 } & ViewProps
 
 const SafeView = ({
@@ -29,6 +30,7 @@ const SafeView = ({
   hasHeader = true,
   scroll = true,
   keyboardVerticalOffset = 115,
+  keyboardShouldPersistTaps = 'handled',
   ...rest
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()

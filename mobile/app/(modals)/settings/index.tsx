@@ -51,16 +51,10 @@ const settingsData = [
       {
         label: 'Contact',
         onPress: async () => {
-          const url = 'mailto:support@spotter.com'
+          const url = 'mailto:spotterapphelp@gmail.com'
           const ok = await Linking.canOpenURL(url)
           if (ok) Linking.openURL(url)
           else Alert.alert('Error', 'Unable to open email client.')
-        },
-      },
-      {
-        label: 'Rate the App',
-        onPress: () => {
-          console.log('Rating App!')
         },
       },
     ],

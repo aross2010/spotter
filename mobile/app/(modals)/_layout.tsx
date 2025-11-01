@@ -131,6 +131,7 @@ export default function ModalLayout() {
             title: 'Exercise',
           }}
         />
+        <Stack.Screen name="test" />
       </Stack>
     </>
   )

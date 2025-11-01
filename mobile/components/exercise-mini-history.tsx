@@ -115,10 +115,10 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">{set.reps}</Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.partials ? set.partials : ' '}
+                  {set.partials ? set.partials : '-'}
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.intensity ? set.intensity : ' '}
+                  {set.intensity || set.intensity === 0 ? set.intensity : '-'}
                 </Txt>
               </View>
             )

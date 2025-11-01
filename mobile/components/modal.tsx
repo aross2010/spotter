@@ -1,4 +1,4 @@
-import { Platform, StyleSheet, Text, View } from 'react-native'
+import { Platform, View } from 'react-native'
 import React from 'react'
 import Modal from 'react-native-modal'
 import tw from '../tw'

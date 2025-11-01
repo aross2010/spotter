@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
 import Input from '../../components/input'
@@ -8,7 +8,12 @@ import Button from '../../components/button'
 import { View } from 'react-native'
 import tw from '../../tw'
 import useTheme from '../hooks/theme'
-import { router, useLocalSearchParams, useNavigation } from 'expo-router'
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from 'expo-router'
 import TagView from '../../components/tag'
 import { Search, X } from 'lucide-react-native'
 
@@ -32,31 +37,41 @@ const TagSelector = () => {
 
   const handleSaveTags = () => {
     if (router.canGoBack()) {
-      router.back()
+      router.dismiss(1)
+      // Use setTimeout to ensure the navigation completes before setting params
       setTimeout(() => {
         router.setParams({ tags: JSON.stringify(selectedTags) })
-      }, 100)
+      }, 0)
     }
   }
 
-  useEffect(() => {
-    // Don't set options if navigation isn't ready (e.g., when prefetching)
-    const unsubscribe = navigation.addListener('focus', () => {
+  useFocusEffect(
+    useCallback(() => {
       navigation.setOptions({
-        headerRight: () => (
-          <Button
-            onPress={handleSaveTags}
-            hitSlop={12}
-            accessibilityLabel="save selected tags"
-            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-            text="Done"
-          />
-        ),
+        headerRight: () => {
+          return (
+            <Button
+              onPress={handleSaveTags}
+              hitSlop={12}
+              accessibilityLabel="save selected tags"
+              twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+              text="Save"
+              disabled={
+                typeof formTags === 'string' &&
+                selectedTags.length === JSON.parse(formTags).length
+              }
+            />
+          )
+        },
       })
-    })
+    }, [selectedTags, formTags])
+  )
 
-    return unsubscribe
-  }, [navigation, selectedTags])
+  useEffect(() => {
+    if (userTags) {
+      setTags(JSON.parse(userTags as string))
+    }
+  }, [])
 
   useEffect(() => {
     if (!tags) return
@@ -169,7 +184,9 @@ const TagSelector = () => {
           autoCorrect={false}
           twcnInput="flex-1"
           autoCapitalize="none"
-          placeholder={tags.length === 0 ? 'Add tags...' : 'Search tags...'}
+          placeholder={
+            tags.length === 0 ? 'Add tags...' : 'Search or add tags...'
+          }
           value={query}
           onChange={(e) => setQuery(e.nativeEvent.text)}
           returnKeyType="done"

@@ -79,7 +79,10 @@ const LocationSelector = () => {
   })
 
   return (
-    <SafeView twcnContentView="px-0">
+    <SafeView
+      twcnContentView="px-0"
+      keyboardAvoiding
+    >
       <View
         style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
       >

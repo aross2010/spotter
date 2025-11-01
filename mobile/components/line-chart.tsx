@@ -164,14 +164,24 @@ const LineChart = ({
     if (n === 0) return []
     if (n === 1) return [0]
     if (n <= 5) return Array.from({ length: n }, (_, i) => i)
-
+    let ticks
     const last = n - 1
     const mid = Math.round(last / 2) // centered middle
-    const q1 = Math.ceil(last / 4) // bias inward (e.g., 1.5 -> 2)
-    const q3 = Math.floor((3 * last) / 4) // bias inward (e.g., 4.5 -> 4)
 
-    // Desired 5 ticks: first, quarter, middle, three-quarters, last
-    let ticks = [0, q1, mid, q3, last]
+    if (n % 2 == 0) {
+      // even number of 4 data points,
+      const q1 = Math.floor(last / 4)
+      const q3 = Math.floor((3 * last) / 4)
+      // 1 2 3 4 5 6 7 8
+      // Desired 5 ticks: first, quarter, middle, three-quarters, last
+      ticks = [0, q1, q3, last]
+    } else {
+      const q1 = Math.ceil(last / 4) // bias inward (e.g., 1.5 -> 2)
+      const q3 = Math.floor((3 * last) / 4) // bias inward (e.g., 4.5 -> 4)
+      // 1 2 3 4 5 6 7 8 9 10
+      // Desired 5 ticks: first, quarter, middle, three-quarters, last
+      ticks = [0, q1, mid, q3, last]
+    }
 
     // Dedupe + keep 5 by filling from neighbors toward center if needed
     const set = new Set<number>()

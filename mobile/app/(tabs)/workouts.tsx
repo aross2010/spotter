@@ -46,8 +46,10 @@ const Workouts = () => {
     initializeWorkouts()
   }, [])
 
-  // Apply status filter through API when tab changes
+  // Apply status filter through API when tab changes (skip on mount)
   useEffect(() => {
+    if (!hasLoaded) return // Don't apply filters until initial load is done
+
     const status =
       statusFilter === 'all' || statusFilter === null ? undefined : statusFilter
     applyFiltersAndSort(status)

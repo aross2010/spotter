@@ -318,7 +318,9 @@ export const GET = withAuth(async (req: Request, user: any) => {
     }
 
     const tags = workout.workoutTagLinks.map((l) => ({
+      id: l.workoutTag.id,
       name: l.workoutTag.name,
+      userId: l.workoutTag.userId,
     }))
 
     // Build set groupings map

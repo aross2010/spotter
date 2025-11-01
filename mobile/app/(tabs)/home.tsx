@@ -18,7 +18,7 @@ import {
 } from 'lucide-react-native'
 import WorkoutView from '../../components/workout'
 import Button from '../../components/button'
-import { router, SplashScreen, useFocusEffect } from 'expo-router'
+import { Link, router, SplashScreen, useFocusEffect } from 'expo-router'
 import ActivityMap from '../../components/activity-map'
 import { useCallback } from 'react'
 import { useHomeDataStore } from '../../stores/workout-store'
@@ -84,14 +84,12 @@ const Home = () => {
 
   useEffect(() => {
     if (data) {
-      console.log('Hiding splash screen')
       SplashScreen.hideAsync()
     }
   }, [data])
 
   const getHomeData = async () => {
     try {
-      console.log('Fetching home data for user:', user?.id)
       const res = await fetchWithAuth(`${BASE_URL}/api/home/${user?.id}`, {
         method: 'GET',
         headers: {
@@ -99,7 +97,6 @@ const Home = () => {
         },
       })
       const data = await res.json()
-      console.log('Home data fetched:', data)
       setData(data)
     } catch (error: any) {
       Alert.alert('Error', error.message)
@@ -166,6 +163,7 @@ const Home = () => {
         workout={data.featuredWorkout.workout as WorkoutMinimal}
         roundBottom
         roundTop
+        isHome
       />
     </View>
   )
@@ -275,6 +273,7 @@ const Home = () => {
         {greeting}, {user?.firstName} 👋
       </Txt>
       {userPage}
+      <Link href="/test">Test Link</Link>
     </SafeView>
   )
 }

@@ -6,6 +6,7 @@ import tw from '../../../tw'
 import { View } from 'react-native'
 import { useEffect, useState } from 'react'
 import Selector from '../../../components/selector'
+import Input from '../../../components/input'
 
 const preferenceOptions = [
   {
@@ -26,6 +27,23 @@ const preferenceOptions = [
       },
     ],
     type: 'colorScheme',
+    category: 'Appearance',
+  },
+  {
+    title: 'Haptic Feedback',
+    subtitle: 'Vibrate on various actions in the app',
+    options: [
+      {
+        value: 'enabled',
+        label: 'Enabled',
+      },
+      {
+        value: 'disabled',
+        label: 'Disabled',
+      },
+    ],
+    type: 'hapticFeedback',
+    category: 'Appearance',
   },
   {
     title: 'Weight Unit',
@@ -41,6 +59,7 @@ const preferenceOptions = [
       },
     ],
     type: 'weightMetric',
+    category: 'Workouts',
   },
   {
     title: 'Intensity Unit',
@@ -56,6 +75,7 @@ const preferenceOptions = [
       },
     ],
     type: 'intensityMetric',
+    category: 'Workouts',
   },
   {
     title: 'Unilateral Sets',
@@ -71,6 +91,14 @@ const preferenceOptions = [
       },
     ],
     type: 'unilateralLogging',
+    category: 'Workouts',
+  },
+  {
+    title: 'Default Location',
+    subtitle: 'Set a default location for new workouts',
+    type: 'location',
+    category: 'Workouts',
+    isInput: true,
   },
 ]
 
@@ -79,6 +107,8 @@ type PreferenceKey =
   | 'weightMetric'
   | 'intensityMetric'
   | 'unilateralLogging'
+  | 'hapticFeedback'
+  | 'location'
 
 const UserPreferences = () => {
   const { setColorSchemePreference } = useTheme()
@@ -88,6 +118,8 @@ const UserPreferences = () => {
     weightMetric: preferences?.weightMetric || 'lbs',
     intensityMetric: preferences?.intensityMetric || 'rir',
     unilateralLogging: preferences?.unilateralLogging || 'sync',
+    hapticFeedback: preferences?.hapticFeedback || 'enabled',
+    location: preferences?.location || '',
   })
 
   // Sync local state when preferences rehydrate
@@ -98,6 +130,8 @@ const UserPreferences = () => {
         weightMetric: preferences.weightMetric || 'lbs',
         intensityMetric: preferences.intensityMetric || 'rir',
         unilateralLogging: preferences.unilateralLogging || 'sync',
+        hapticFeedback: preferences.hapticFeedback || 'enabled',
+        location: preferences.location || '',
       }
 
       setLocalPreferences(newLocal)
@@ -134,39 +168,113 @@ const UserPreferences = () => {
         ...preferences,
         unilateralLogging: value as 'sync' | 'separate',
       })
+    } else if (type === 'hapticFeedback' && preferences) {
+      setPreferences({
+        ...preferences,
+        hapticFeedback: value as 'enabled' | 'disabled',
+      })
+    } else if (type === 'location' && preferences) {
+      setPreferences({
+        ...preferences,
+        location: value,
+      })
     }
   }
 
-  const renderedPreferenceOptions = preferenceOptions.map(
-    ({ title, subtitle, options, type }) => {
+  const handleLocationChange = (text: string) => {
+    // Update local state immediately
+    setLocalPreferences((prev) => ({
+      ...prev,
+      location: text,
+    }))
+  }
+
+  const handleLocationBlur = () => {
+    // Save to preferences on blur with trimmed value
+    if (preferences) {
+      setPreferences({
+        ...preferences,
+        location: localPreferences.location.trim(),
+      })
+    }
+  }
+
+  // Group preferences by category
+  const groupedPreferences = preferenceOptions.reduce(
+    (acc, preference) => {
+      const category = preference.category
+      if (!acc[category]) {
+        acc[category] = []
+      }
+      acc[category].push(preference)
+      return acc
+    },
+    {} as Record<string, typeof preferenceOptions>
+  )
+
+  const renderedPreferenceCategories = Object.entries(groupedPreferences).map(
+    ([category, preferences]) => {
       return (
         <View
-          key={type}
-          style={tw`flex-row items-center gap-6 justify-between`}
+          key={category}
+          style={tw`gap-4`}
         >
-          <View style={tw`flex-1`}>
-            <Txt twcn="font-poppinsMedium">{title}</Txt>
-            {subtitle && (
-              <Txt twcn="text-xs mt-1 text-light-grayText dark:text-dark-grayText">
-                {subtitle}
-              </Txt>
-            )}
-          </View>
+          <Txt twcn="text-base font-poppinsSemiBold text-light-text dark:text-dark-text">
+            {category}
+          </Txt>
+          <View style={tw`gap-6`}>
+            {preferences.map(({ title, subtitle, options, type, isInput }) => (
+              <View key={type}>
+                {isInput ? (
+                  <View style={tw`gap-2`}>
+                    <View>
+                      <Txt twcn="">{title}</Txt>
+                      {subtitle && (
+                        <Txt twcn="text-xs mt-1 text-light-grayText dark:text-dark-grayText">
+                          {subtitle}
+                        </Txt>
+                      )}
+                    </View>
+                    <Input
+                      value={localPreferences[type as PreferenceKey] as string}
+                      onChangeText={handleLocationChange}
+                      onBlur={handleLocationBlur}
+                      placeholder="24 Hour Fitness, LA Fitness, Home, etc."
+                      maxLength={100}
+                      fullBorder
+                      twcnInput="text-light-text dark:text-dark-text"
+                    />
+                  </View>
+                ) : (
+                  <View style={tw`flex-row items-center gap-6 justify-between`}>
+                    <View style={tw`flex-1`}>
+                      <Txt twcn="">{title}</Txt>
+                      {subtitle && (
+                        <Txt twcn="text-xs mt-1 text-light-grayText dark:text-dark-grayText">
+                          {subtitle}
+                        </Txt>
+                      )}
+                    </View>
 
-          <Selector
-            options={options}
-            selectedValue={localPreferences[type as PreferenceKey]}
-            onSelect={(value) => {
-              handleSelect(type as PreferenceKey, value)
-            }}
-          />
+                    <Selector
+                      options={options || []}
+                      selectedValue={localPreferences[type as PreferenceKey]}
+                      onSelect={(value) => {
+                        handleSelect(type as PreferenceKey, value)
+                      }}
+                    />
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
         </View>
       )
     }
   )
 
   return (
-    <SafeView twcnContentView="gap-6">{renderedPreferenceOptions}</SafeView>
+    <SafeView twcnContentView="gap-8">{renderedPreferenceCategories}</SafeView>
   )
 }
 

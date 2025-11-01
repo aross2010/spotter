@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react'
 import Txt from './text'
 import tw from '../tw'
 import * as Haptics from 'expo-haptics'
+import { useUserStore } from '../stores/user-store'
 
 type ButtonProps = {
   children?: ReactNode
@@ -25,10 +26,14 @@ const Button = ({
   ...props
 }: ButtonProps) => {
   const isDisabled = disabled || loading
+  const { preferences } = useUserStore()
+  const hapticFeedback = preferences?.hapticFeedback ?? 'enabled'
 
   const handlePress = (e: any) => {
     if (!isDisabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      if (hapticFeedback === 'enabled') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      }
       onPress?.(e)
     }
   }

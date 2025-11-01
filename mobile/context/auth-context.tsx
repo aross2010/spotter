@@ -296,14 +296,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }),
       })
 
-      console.log('signUp response status:', res.status)
-
       if (res.status === 409) {
         const resData = await res.json()
-        console.log('signUp 409 response data:', resData)
         if (resData.error.includes('User already exists')) {
           // user is trying to sign up with credentials that already exist
-          console.log('User already exists')
         } else if (resData.error.includes('Google account already exists')) {
           // user is trying to sign up with apple but they already have a google account
           Alert.alert(
@@ -361,7 +357,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           )
 
           if (response?.status === 409) {
-            console.log('Apple account already exists')
             exists = true
             // user has signed up before with apple but either deleted account or is signing in on a new device
           }
@@ -377,7 +372,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.error('Error during Apple sign up:', error)
         }
       }
-      console.log('proceeding to sign in ...')
       let appleResponse
       appleResponse = await fetch(`${BASE_URL}/api/auth/apple/apple-native`, {
         method: 'POST',
@@ -390,8 +384,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           providerId: credential.user,
         }),
       })
-
-      console.log('appleResponse:', appleResponse)
 
       if (appleResponse.status === 404) {
         // user could not be found, sign up with cache details and try again
@@ -473,6 +465,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })
 
     if (response.status === 401) {
+      console.error('Fetch received 401, attempting token refresh')
       const newToken = await refreshAccessToken()
 
       if (newToken) {
@@ -498,7 +491,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // for user store when a user logs in
   const getAndSetUser = async (userId: string, newAccessToken: string) => {
     try {
-      console.log('accessToken in getAndSetUser:', newAccessToken)
       const response = await fetch(`${BASE_URL}/api/users/${userId}`, {
         method: 'GET',
         headers: {

@@ -32,13 +32,6 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     const firstDate = parseDate(dates[0])
     const lastDate = parseDate(dates[dates.length - 1])
 
-    console.log('first date no parese:', dates[0], firstDate)
-    console.log('last date no parse:', dates[dates.length - 1], lastDate)
-    console.log('first date parsed:', parseDate(dates[0]))
-    console.log('last date parsed:', parseDate(dates[dates.length - 1]))
-    console.log('All data keys:', dates)
-    console.log('Sample data entry:', dates[0], data[dates[0]])
-
     // Start from the Monday before the first date
     const startDate = new Date(firstDate)
     const dayOfWeek = startDate.getDay()
@@ -105,15 +98,6 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       let status: 'none' | 'planned' | 'completed' | 'active' = 'none'
       const dayData = data[dateString]
 
-      // Debug: log when we find data
-      if (dayData && dayData.workouts.length > 0) {
-        console.log(
-          'Found workout data for dateString:',
-          dateString,
-          'Data:',
-          dayData
-        )
-      }
       if (dayData) {
         const hasActive = dayData.workouts.some((w) => w.status === 'active')
         const hasCompleted = dayData.workouts.some(

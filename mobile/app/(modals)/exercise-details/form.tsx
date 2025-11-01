@@ -53,6 +53,7 @@ const ExerciseForm = () => {
     null
   )
   const [isMuscleGroupModalOpen, setIsMuscleGroupModalOpen] = useState(false)
+  const [isSwapMode, setIsSwapMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const navigation = useNavigation()
@@ -181,6 +182,35 @@ const ExerciseForm = () => {
     })
   }
 
+  const handleSwapPrimaryMuscleGroup = (muscleGroup: MuscleGroup) => {
+    setExercise((prev) => {
+      if (!prev || !prev.primaryMuscleGroup) return prev
+
+      const currentPrimary = prev.primaryMuscleGroup
+      const isClickedSecondary =
+        prev.secondaryMuscleGroups.includes(muscleGroup)
+
+      if (isClickedSecondary) {
+        // Swap: clicked muscle becomes primary, old primary becomes secondary
+        return {
+          ...prev,
+          primaryMuscleGroup: muscleGroup,
+          secondaryMuscleGroups: prev.secondaryMuscleGroups
+            .filter((m) => m !== muscleGroup)
+            .concat(currentPrimary),
+        }
+      } else {
+        // Replace: clicked muscle becomes primary, old primary becomes neither
+        return {
+          ...prev,
+          primaryMuscleGroup: muscleGroup,
+        }
+      }
+    })
+    setIsMuscleGroupModalOpen(false)
+    setIsSwapMode(false)
+  }
+
   const renderedMuscleGroups =
     exercise &&
     MUSCLE_GROUPS.map((group) => {
@@ -190,6 +220,28 @@ const ExerciseForm = () => {
       )
       const exists = isAPrimary || isASecondary
 
+      if (isSwapMode) {
+        // In swap mode, show swap icon for all muscles and highlight selected ones
+        return (
+          <Button
+            key={group}
+            onPress={() => handleSwapPrimaryMuscleGroup(group.toLowerCase())}
+            twcn={`px-3 py-1 rounded-lg border ${exists ? 'border-primary bg-primary/10' : 'border-light-grayBorder dark:border-dark-grayBorder'} flex-row items-center gap-2`}
+          >
+            <Txt
+              twcn={`text-xs ${exists ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+            >
+              {toTitleCase(group)}
+            </Txt>
+            <ArrowLeftRight
+              size={12}
+              color={exists ? Colors.primary : theme.grayText}
+            />
+          </Button>
+        )
+      }
+
+      // Normal add mode
       return (
         <Button
           key={group}
@@ -270,7 +322,10 @@ const ExerciseForm = () => {
           <Txt twcn="mb-2 font-poppinsMedium text-sm">Primary Muscle Group</Txt>
           {exercise.primaryMuscleGroup ? (
             <Button
-              onPress={() => setIsMuscleGroupModalOpen(true)}
+              onPress={() => {
+                setIsSwapMode(true)
+                setIsMuscleGroupModalOpen(true)
+              }}
               twcn="px-3 py-1 rounded-lg border border-primary bg-primary/10 flex-row items-center gap-2 self-start"
             >
               <Txt twcn="text-xs text-primary dark:text-primary">
@@ -284,7 +339,10 @@ const ExerciseForm = () => {
           ) : (
             <View style={tw`flex-row flex-wrap gap-2`}>
               <Button
-                onPress={() => setIsMuscleGroupModalOpen(true)}
+                onPress={() => {
+                  setIsSwapMode(false)
+                  setIsMuscleGroupModalOpen(true)
+                }}
                 twcn="px-3 py-1 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder flex-row items-center gap-2"
               >
                 <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
@@ -305,7 +363,10 @@ const ExerciseForm = () => {
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedSecondaryMuscleGroups}
             <Button
-              onPress={() => setIsMuscleGroupModalOpen(true)}
+              onPress={() => {
+                setIsSwapMode(false)
+                setIsMuscleGroupModalOpen(true)
+              }}
               twcn="px-3 py-1 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder flex-row items-center gap-2"
             >
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
@@ -394,9 +455,14 @@ const ExerciseForm = () => {
 
         <MyModal
           isOpen={isMuscleGroupModalOpen}
-          setIsOpen={setIsMuscleGroupModalOpen}
+          setIsOpen={(open) => {
+            setIsMuscleGroupModalOpen(open)
+            if (!open) setIsSwapMode(false)
+          }}
         >
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">Muscle Groups</Txt>
+          <Txt twcn="mb-2 font-poppinsMedium text-sm">
+            {isSwapMode ? 'Swap Primary Muscle Group' : 'Muscle Groups'}
+          </Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedMuscleGroups}
           </View>

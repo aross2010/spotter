@@ -6,11 +6,19 @@ import { formatDate } from '../../../functions/formatted-date'
 import { HeaderBackButton } from '@react-navigation/elements'
 import { useEffect, useState } from 'react'
 import {
+  KeyboardToolbar,
+  KeyboardToolbarProps,
+} from 'react-native-keyboard-controller'
+import {
   Calendar,
   MapPin,
   Circle,
   CircleDot,
   CircleCheck,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Minus,
 } from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
@@ -33,7 +41,7 @@ import {
   useHomeDataStore,
   useWorkoutStore,
 } from '../../../stores/workout-store'
-import { WorkoutFormData } from '../../../utils/types'
+import { TagWithCount, WorkoutFormData } from '../../../utils/types'
 
 const statusOptions = [
   {
@@ -60,7 +68,14 @@ const WorkoutForm = () => {
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const navigation = useNavigation()
   const { theme } = useTheme()
-  const { workoutData, setWorkoutData, addWorkout } = useWorkoutForm()
+  const {
+    workoutData,
+    setWorkoutData,
+    addWorkout,
+    adjustFocusedInputValue,
+    focusedInput,
+    getNames,
+  } = useWorkoutForm()
   const { updateWorkout } = useWorkout()
   const { fetchWithAuth } = useAuth()
   const { id, cloneId, from } = useLocalSearchParams()
@@ -76,11 +91,13 @@ const WorkoutForm = () => {
   const { triggerRefresh } = useWorkoutStore()
   const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
 
-  const getWorkoutData = async () => {
+  const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
     try {
+      await getNames()
+      if (!workoutId) return
       const response = await fetchWithAuth(
-        `${BASE_URL}/api/workouts/${mode === 'edit' ? id : cloneId}`,
+        `${BASE_URL}/api/workouts/${workoutId}`,
         {
           method: 'GET',
           headers: {
@@ -111,6 +128,7 @@ const WorkoutForm = () => {
       setWorkoutId(id as string)
       setMode('edit')
     }
+    getWorkoutData(cloneId ? (cloneId as string) : id ? (id as string) : null)
   }, [])
 
   const hasChanges = () => {
@@ -234,10 +252,6 @@ const WorkoutForm = () => {
   }
 
   useEffect(() => {
-    if (mode === 'edit' || mode === 'clone') getWorkoutData()
-  }, [])
-
-  useEffect(() => {
     const isValid = isValidWorkout()
     const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
 
@@ -346,116 +360,239 @@ const WorkoutForm = () => {
     setShowStatusMenu(false)
   }
 
+  const CustomLeftButton: KeyboardToolbarProps['button'] = ({
+    children,
+    onPress,
+  }) => (
+    <Button onPress={onPress}>
+      <ChevronLeft
+        size={32}
+        color={Colors.primary}
+      />
+    </Button>
+  )
+
+  const CustomRightButton: KeyboardToolbarProps['button'] = ({
+    children,
+    onPress,
+  }) => (
+    <Button onPress={onPress}>
+      <ChevronRight
+        size={32}
+        color={Colors.primary}
+      />
+    </Button>
+  )
+  const shouldShowToolbar =
+    !!focusedInput &&
+    focusedInput.field !== 'exerciseName' &&
+    focusedInput.field !== 'workoutName'
   return isLoading ? (
     <Spinner />
   ) : (
-    <SafeView
-      keyboardAvoiding
-      bottomOffset={200}
-    >
-      <View style={tw`flex-row gap-2`}>
-        <Button
-          text={formatDate(workoutData.date)}
-          onPress={() => {
-            setIsDatePickerOpen(true)
-          }}
-          hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText="text-xs  text-light-text dark:text-dark-text"
-        >
-          <Calendar
-            size={16}
-            color={theme.text}
-          />
-        </Button>
-        <Button
-          text={
-            workoutData.location.length > 0
-              ? workoutData.location
-              : 'Location (optional)'
-          }
-          onPress={() => {
-            router.push('/workout-form/location')
-          }}
-          hitSlop={12}
-          twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-          twcnText={`text-xs ${
-            workoutData.location.length > 0
-              ? 'text-light-text dark:text-dark-text'
-              : 'text-light-grayText dark:text-dark-grayText'
-          }`}
-        >
-          <MapPin
-            size={16}
-            color={
-              workoutData.location.length > 0 ? theme.text : theme.grayText
-            }
-          />
-        </Button>
-      </View>
-
-      <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
-        <WorkoutNameInput />
-        <Exercises />
-        <WorkoutNotes />
-        <WorkoutTags />
-      </View>
-
-      <DatePicker
-        modal
-        open={isDatePickerOpen}
-        date={workoutData.date}
-        onConfirm={(date) => {
-          setIsDatePickerOpen(false)
-
-          // Check if the selected date is in the future
-          const today = new Date()
-          today.setHours(0, 0, 0, 0) // Reset time to start of day
-          const selectedDate = new Date(date)
-          selectedDate.setHours(0, 0, 0, 0)
-
-          // If date is in the future, set status to planned
-          if (selectedDate > today) {
-            setWorkoutData({ ...workoutData, date, status: 'planned' })
-          } else {
-            setWorkoutData({ ...workoutData, date })
-          }
-        }}
-        mode="date"
-        onCancel={() => {
-          setIsDatePickerOpen(false)
-        }}
-      />
-
-      <MyModal
-        isOpen={showStatusMenu}
-        setIsOpen={setShowStatusMenu}
+    <>
+      <SafeView
+        keyboardAvoiding
+        bottomOffset={200}
       >
-        <Txt twcn="font-poppinsMedium ">Workout Status</Txt>
-        <View>
-          {statusOptions.map((option) => {
-            const isSelected = workoutData.status === option.value
-            const StatusIcon = option.icon
-
-            return (
-              <Button
-                key={option.value}
-                onPress={() => handleStatusChange(option.value)}
-                twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
-                  isSelected ? 'bg-primary/10' : ''
-                }`}
-              >
-                <StatusIcon
-                  size={20}
-                  color={isSelected ? Colors.primary : theme.text}
-                />
-                <Txt twcn="text-sm">{option.label}</Txt>
-              </Button>
-            )
-          })}
+        <View style={tw`flex-row gap-2`}>
+          <Button
+            text={formatDate(workoutData.date)}
+            onPress={() => {
+              setIsDatePickerOpen(true)
+            }}
+            hitSlop={12}
+            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+            twcnText="text-xs  text-light-text dark:text-dark-text"
+          >
+            <Calendar
+              size={16}
+              color={theme.text}
+            />
+          </Button>
+          <Button
+            text={
+              workoutData.location.length > 0
+                ? workoutData.location
+                : 'Location (optional)'
+            }
+            onPress={() => {
+              router.push('/workout-form/location')
+            }}
+            hitSlop={12}
+            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+            twcnText={`text-xs ${
+              workoutData.location.length > 0
+                ? 'text-light-text dark:text-dark-text'
+                : 'text-light-grayText dark:text-dark-grayText'
+            }`}
+          >
+            <MapPin
+              size={16}
+              color={
+                workoutData.location.length > 0 ? theme.text : theme.grayText
+              }
+            />
+          </Button>
         </View>
-      </MyModal>
-    </SafeView>
+
+        <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
+          <WorkoutNameInput />
+          <Exercises />
+          <WorkoutNotes />
+          <WorkoutTags />
+        </View>
+
+        <DatePicker
+          modal
+          open={isDatePickerOpen}
+          date={workoutData.date}
+          onConfirm={(date) => {
+            setIsDatePickerOpen(false)
+
+            // Check if the selected date is in the future
+            const today = new Date()
+            today.setHours(0, 0, 0, 0) // Reset time to start of day
+            const selectedDate = new Date(date)
+            selectedDate.setHours(0, 0, 0, 0)
+
+            // If date is in the future, set status to planned
+            if (selectedDate > today) {
+              setWorkoutData({ ...workoutData, date, status: 'planned' })
+            } else {
+              setWorkoutData({ ...workoutData, date })
+            }
+          }}
+          mode="date"
+          onCancel={() => {
+            setIsDatePickerOpen(false)
+          }}
+        />
+
+        <MyModal
+          isOpen={showStatusMenu}
+          setIsOpen={setShowStatusMenu}
+        >
+          <Txt twcn="font-poppinsMedium ">Workout Status</Txt>
+          <View>
+            {statusOptions.map((option) => {
+              const isSelected = workoutData.status === option.value
+              const StatusIcon = option.icon
+
+              return (
+                <Button
+                  key={option.value}
+                  onPress={() => handleStatusChange(option.value)}
+                  twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
+                    isSelected ? 'bg-primary/10' : ''
+                  }`}
+                >
+                  <StatusIcon
+                    size={20}
+                    color={isSelected ? Colors.primary : theme.text}
+                  />
+                  <Txt twcn="text-sm">{option.label}</Txt>
+                </Button>
+              )
+            })}
+          </View>
+        </MyModal>
+      </SafeView>
+      <View
+        collapsable={false}
+        pointerEvents={shouldShowToolbar ? 'auto' : 'none'}
+        style={!shouldShowToolbar ? { height: 0, opacity: 0 } : undefined}
+      >
+        <KeyboardToolbar>
+          <KeyboardToolbar.Prev button={CustomLeftButton} />
+          <KeyboardToolbar.Next button={CustomRightButton} />
+          <KeyboardToolbar.Content>
+            {focusedInput &&
+            (focusedInput.field === 'weightLbs' ||
+              focusedInput.field === 'weightKg') ? (
+              <View style={tw`flex-row items-center justify-end gap-3 px-4`}>
+                {/* +/- 1 */}
+                <View style={tw`flex-row items-center gap-1`}>
+                  <Button
+                    onPress={() => adjustFocusedInputValue(false, 1)}
+                    twcn="p-2"
+                  >
+                    <Minus
+                      size={24}
+                      color={Colors.red}
+                    />
+                  </Button>
+                  <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                    1
+                  </Txt>
+                  <Button
+                    onPress={() => adjustFocusedInputValue(true, 1)}
+                    twcn="p-2"
+                  >
+                    <Plus
+                      size={24}
+                      color={Colors.green}
+                    />
+                  </Button>
+                </View>
+
+                {/* +/- 2.5 */}
+                <View style={tw`flex-row items-center gap-1`}>
+                  <Button
+                    onPress={() => adjustFocusedInputValue(false, 2.5)}
+                    twcn="p-2"
+                  >
+                    <Minus
+                      size={24}
+                      color={Colors.red}
+                    />
+                  </Button>
+                  <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                    2.5
+                  </Txt>
+                  <Button
+                    onPress={() => adjustFocusedInputValue(true, 2.5)}
+                    twcn="p-2"
+                  >
+                    <Plus
+                      size={24}
+                      color={Colors.green}
+                    />
+                  </Button>
+                </View>
+              </View>
+            ) : (
+              <View style={tw`flex-row items-center justify-end gap-1 px-4`}>
+                <Button
+                  onPress={() => adjustFocusedInputValue(false)}
+                  twcn="p-2"
+                >
+                  <Minus
+                    size={24}
+                    color={Colors.red}
+                  />
+                </Button>
+                <Txt twcn="font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                  {focusedInput &&
+                  (focusedInput.field === 'rpe' || focusedInput.field === 'rir')
+                    ? '0.5'
+                    : '1'}
+                </Txt>
+                <Button
+                  onPress={() => adjustFocusedInputValue(true)}
+                  twcn="p-2"
+                >
+                  <Plus
+                    size={24}
+                    color={Colors.green}
+                  />
+                </Button>
+              </View>
+            )}
+          </KeyboardToolbar.Content>
+        </KeyboardToolbar>
+      </View>
+    </>
   )
 }
 

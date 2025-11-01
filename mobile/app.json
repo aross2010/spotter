@@ -27,7 +27,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIDesignRequiresCompatibility": true,
         "UIDeviceFamily": [1],
-        "UIRequiresFullScreen": true
+        "UIRequiresFullScreen": true,
+        "CFBundleDisplayName": "Spotter"
       }
     },
     "android": {

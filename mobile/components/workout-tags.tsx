@@ -6,24 +6,27 @@ import Colors from '../constants/colors'
 import Button from './button'
 import TagView from './tag'
 import tw from '../tw'
-import useTheme from '../app/hooks/theme'
 import { useWorkoutForm } from '../context/workout-form-context'
 
 const WorkoutTags = () => {
-  const { theme } = useTheme()
-  const { workoutData, setWorkoutData } = useWorkoutForm()
+  const { workoutData, setWorkoutData, userTags } = useWorkoutForm()
   const { tags } = useLocalSearchParams()
 
   useEffect(() => {
-    setWorkoutData((prev) => {
-      return { ...prev, tags: tags ? JSON.parse(tags as string) : [] }
-    })
+    if (tags)
+      setWorkoutData((prev) => {
+        return { ...prev, tags: tags ? JSON.parse(tags as string) : [] }
+      })
   }, [tags])
 
   const handleAddTags = () => {
     router.push({
       pathname: '/tag-selector',
-      params: { formTags: JSON.stringify(workoutData.tags) },
+      params: {
+        formTags: JSON.stringify(workoutData.tags),
+        userTags: JSON.stringify(userTags),
+        type: 'workout',
+      },
     })
   }
 

@@ -226,6 +226,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
       return data.workouts
     } catch (error: any) {
+      console.error('Error fetching workouts. Displaying alert:', error)
       Alert.alert('Error', error.message)
     } finally {
       setIsLoading(false)

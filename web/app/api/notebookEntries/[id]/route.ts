@@ -281,3 +281,47 @@ export const GET = withAuth(async (req, user) => {
     )
   }
 })
+
+export const PATCH = withAuth(async (req, user) => {
+  const id = req.url.split('/').pop()
+  const data = await req.json()
+
+  let { pinned } = data
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Notebook entry ID is required' },
+      { status: 400 }
+    )
+  }
+
+  if (pinned === undefined) {
+    return NextResponse.json(
+      { error: 'Pinned field is required' },
+      { status: 400 }
+    )
+  }
+
+  if (typeof pinned !== 'boolean') {
+    return NextResponse.json(
+      { error: 'Pinned must be a boolean value' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const [updatedEntry] = await db
+      .update(notebookEntries)
+      .set({ pinned, updatedAt: new Date() })
+      .where(eq(notebookEntries.id, id))
+      .returning()
+
+    return NextResponse.json(updatedEntry, { status: 200 })
+  } catch (error: any) {
+    console.error(error)
+    return NextResponse.json(
+      { error: 'An unexpected error occurred' },
+      { status: 500 }
+    )
+  }
+})

@@ -14,7 +14,8 @@ const WorkoutNameInput = () => {
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
     []
   )
-  const { workoutNames, setWorkoutData, workoutData } = useWorkoutForm()
+  const { workoutNames, setWorkoutData, workoutData, setFocusedInput } =
+    useWorkoutForm()
 
   useEffect(() => {
     setWorkoutNamesResults(workoutNames)
@@ -67,6 +68,7 @@ const WorkoutNameInput = () => {
         onChange={(e) => handleChange(e.nativeEvent.text)}
         onBlur={(e) => {
           setIsWorkoutNameSelectorOpen(false)
+          setFocusedInput(null)
         }}
         label="Name"
         placeholder="Legs, Push, Pull, Upper Body, etc..."
@@ -74,7 +76,14 @@ const WorkoutNameInput = () => {
         returnKeyType="done"
         twcnInput="text-light-text dark:text-dark-text"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
-        onFocus={() => setIsWorkoutNameSelectorOpen(true)}
+        onFocus={() => {
+          setIsWorkoutNameSelectorOpen(true)
+          setFocusedInput({
+            exerciseIndex: -1,
+            setIndex: -1,
+            field: 'workoutName',
+          })
+        }}
       />
 
       {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (

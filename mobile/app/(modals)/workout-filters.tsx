@@ -334,7 +334,10 @@ const WorkoutFilters = () => {
   return loading ? (
     <Spinner />
   ) : (
-    <SafeView twcnContentView="px-0">
+    <SafeView
+      twcnContentView="px-0"
+      keyboardAvoiding
+    >
       <View style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}>
         <View
           style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}

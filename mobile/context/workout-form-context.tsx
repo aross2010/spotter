@@ -10,9 +10,21 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
-import { WorkoutFormData, WorkoutName, ExerciseName } from '../utils/types'
+import {
+  WorkoutFormData,
+  WorkoutName,
+  ExerciseName,
+  TagWithCount,
+} from '../utils/types'
 import { useWorkout } from './workout-context'
 import { toLocalDateString } from '../functions/formatted-date'
+
+type FocusedInputType = {
+  exerciseIndex: number
+  setIndex: number
+  field: string
+  isLeftSide?: boolean
+} | null
 
 type WorkoutFormContextType = {
   workoutData: WorkoutFormData
@@ -24,6 +36,11 @@ type WorkoutFormContextType = {
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
   addWorkout: () => Promise<{ id: string; message: string } | undefined>
   locations: UsedLocations[]
+  focusedInput: FocusedInputType
+  setFocusedInput: (input: FocusedInputType) => void
+  adjustFocusedInputValue: (increment: boolean, customStep?: number) => void
+  getNames: () => Promise<void>
+  userTags: TagWithCount[]
 }
 
 type UsedLocations = {
@@ -61,10 +78,11 @@ type WorkoutFormProviderProps = {
 export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const { user, preferences } = useUserStore()
   const defaultWeightMetric = preferences?.weightMetric || 'lbs'
+  const defaultLocation = preferences?.location || ''
   const [workoutData, setWorkoutData] = useState<WorkoutFormData>({
     name: '',
     date: new Date(),
-    location: '',
+    location: defaultLocation,
     tags: [],
     notes: '',
     weightUnit: defaultWeightMetric,
@@ -74,16 +92,110 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   })
   const [exerciseNames, setExerciseNames] = useState<ExerciseName[]>([])
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
+  const [userTags, setUserTags] = useState<TagWithCount[]>([])
   const [locations, setLocations] = useState<UsedLocations[]>([])
   const [newlyAddedExerciseNumber, setNewlyAddedExerciseNumber] = useState<
     number | null
   >(null)
+  const [focusedInput, setFocusedInput] = useState<FocusedInputType>(null)
   const { fetchWithAuth } = useAuth()
   const { refreshWorkouts } = useWorkout()
 
-  useEffect(() => {
-    getNames()
-  }, []) // add workouts dependency
+  // add workouts dependency
+
+  const adjustFocusedInputValue = (increment: boolean, customStep?: number) => {
+    if (!focusedInput) return
+
+    const { exerciseIndex, setIndex, field, isLeftSide } = focusedInput
+    const currentExercise = workoutData.exercises[exerciseIndex]
+    if (!currentExercise) return
+
+    const currentSet = currentExercise.sets[setIndex]
+    if (!currentSet) return
+
+    const isUnilateral = currentExercise.isUnilateral
+
+    let currentValue: number | undefined
+    let fieldToUpdate: string = field
+
+    // Determine the current value and field to update
+    if (isUnilateral && isLeftSide !== undefined) {
+      if (field === 'reps')
+        fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
+      else if (field === 'partials')
+        fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
+      else if (field === 'rpe')
+        fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+      else if (field === 'rir')
+        fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+    } else {
+      // For bilateral exercises, map 'partials' to 'partialReps'
+      if (field === 'partials') fieldToUpdate = 'partialReps'
+    }
+
+    currentValue = currentSet[fieldToUpdate as keyof typeof currentSet] as
+      | number
+      | undefined
+
+    // Calculate step based on field type or use custom step for weight
+    let step: number
+    if (
+      customStep !== undefined &&
+      (field === 'weightLbs' || field === 'weightKg')
+    ) {
+      // Use custom step for weight fields
+      step = increment ? customStep : -customStep
+    } else if (field === 'rpe' || field === 'rir') {
+      // RPE and RIR: increment by 0.5
+      step = increment ? 0.5 : -0.5
+    } else {
+      // Reps and partials: increment by 1
+      step = increment ? 1 : -1
+    }
+
+    // Calculate new value
+    let newValue: number
+    if (currentValue === undefined || isNaN(currentValue)) {
+      // If no current value, start from appropriate base
+      if (increment) {
+        if (field === 'rpe' || field === 'rir') {
+          newValue = 0.5
+        } else if (customStep !== undefined) {
+          newValue = customStep
+        } else {
+          newValue = 1
+        }
+      } else {
+        newValue = 0
+      }
+    } else {
+      newValue = Math.max(0, currentValue + step)
+
+      // Cap RPE and RIR at 10
+      if (field === 'rpe' || field === 'rir') {
+        newValue = Math.min(10, newValue)
+      }
+    }
+
+    // Update the value
+    const updatedExercises = [...workoutData.exercises]
+    const updatedSets = [...updatedExercises[exerciseIndex].sets]
+
+    updatedSets[setIndex] = {
+      ...updatedSets[setIndex],
+      [fieldToUpdate]: newValue,
+    } as any
+
+    updatedExercises[exerciseIndex] = {
+      ...updatedExercises[exerciseIndex],
+      sets: updatedSets,
+    }
+
+    setWorkoutData({
+      ...workoutData,
+      exercises: updatedExercises,
+    })
+  }
 
   const addWorkout = async () => {
     try {
@@ -124,10 +236,12 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
         }
       )
 
-      const { exerciseNames, workoutNames, locations } = await response.json()
+      const { exerciseNames, workoutNames, locations, tags } =
+        await response.json()
       setExerciseNames(exerciseNames)
       setWorkoutNames(workoutNames)
       setLocations(locations)
+      setUserTags(tags)
     } catch (error: any) {
       console.error('Error fetching exercise names:', error)
       Alert.alert('Error fetching exercise names:', error.message)
@@ -144,6 +258,11 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     setNewlyAddedExerciseNumber,
     addWorkout,
     locations,
+    focusedInput,
+    setFocusedInput,
+    adjustFocusedInputValue,
+    getNames,
+    userTags,
   }
 
   return (

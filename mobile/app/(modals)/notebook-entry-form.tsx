@@ -6,9 +6,15 @@ import Input from '../../components/input'
 import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
-import { Link, router, useLocalSearchParams, useNavigation } from 'expo-router'
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from 'expo-router'
 import Colors from '../../constants/colors'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Tag } from '../../utils/types'
 import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
@@ -116,15 +122,17 @@ const NotebookEntryForm = () => {
     })
   }, [navigation, isSaving, data, initialState])
 
-  useEffect(() => {
-    if (tags) {
-      setData((prevData) => ({ ...prevData, tags: selectedTags }))
-      // If this is the first time setting tags (initial load), update initial state too
-      if (!isEditing && initialState) {
-        setInitialState({ ...initialState, tags: selectedTags })
+  useFocusEffect(
+    useCallback(() => {
+      if (tags) {
+        setData((prevData) => ({ ...prevData, tags: selectedTags }))
+        // If this is the first time setting tags (initial load), update initial state too
+        if (!isEditing && initialState) {
+          setInitialState({ ...initialState, tags: selectedTags })
+        }
       }
-    }
-  }, [tags, isEditing])
+    }, [tags, isEditing])
+  )
 
   const handleSubmitEntry = async () => {
     setIsSaving(true)
@@ -201,7 +209,7 @@ const NotebookEntryForm = () => {
       </View>
 
       {data.tags.length > 0 ? (
-        <View>
+        <View style={tw`flex-row justify-between items-center`}>
           <Link
             href={{
               pathname: '/tag-selector',
@@ -211,15 +219,15 @@ const NotebookEntryForm = () => {
                 type: 'notebook',
               },
             }}
-            prefetch
-            style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}
           >
-            <TagIcon
-              color={Colors.primary}
-              size={12}
-              strokeWidth={1.5}
-            />
-            {renderedTags}
+            <View style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}>
+              <TagIcon
+                color={Colors.primary}
+                size={12}
+                strokeWidth={1.5}
+              />
+              {renderedTags}
+            </View>
           </Link>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
             {data.body.length} / {500}

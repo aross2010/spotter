@@ -16,10 +16,12 @@ const WorkoutView = ({
   workout,
   roundTop,
   roundBottom,
+  isHome = false,
 }: {
   workout: WorkoutMinimal
   roundTop: boolean
   roundBottom: boolean
+  isHome?: boolean
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { theme } = useTheme()
@@ -90,7 +92,7 @@ const WorkoutView = ({
             onPress={() => setIsOptionsOpen(true)}
           >
             <Ellipsis
-              size={20}
+              size={24}
               color={theme.grayText}
             />
           </Button>
@@ -134,6 +136,7 @@ const WorkoutView = ({
         <WorkoutOptions
           setIsOptionsOpen={setIsOptionsOpen}
           workout={workout}
+          isHome={isHome}
         />
       </MyModal>
     </Fragment>

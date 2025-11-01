@@ -246,6 +246,13 @@ const faqData: FAQItem[] = [
       'Yes! When editing a workout, press on the exercise number to trigger the input. You can then change the number to reorder the exercises as desired.',
     category: 'Tips & Tricks',
   },
+  {
+    id: 29,
+    question: 'Can I save a workout without exiting it?',
+    answer:
+      'Yes! Set the workout to "Active" status. This saves your progress without closing the workout, allowing you to log sets as you go.',
+    category: 'Tips & Tricks',
+  },
 ]
 
 const FAQ = () => {
