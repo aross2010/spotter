@@ -43,6 +43,7 @@ const WorkoutOptions = ({
       pathname: '/workout-form',
       params: {
         id: id,
+        ...(isHome ? { from: 'home' } : {}),
       },
     })
   }

@@ -16,6 +16,24 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
   const { theme } = useTheme()
   const scrollViewRef = useRef<ScrollView>(null)
 
+  // Calculate square size dynamically based on view width to fit exactly 20 columns
+  const visibleWeeks = useMemo(() => {
+    const dayLabelsWidth = 12 // Width of the day labels (w-3)
+    const dayLabelsMargin = 8 // mr-2 = 8px
+    const paddingWidth = 32 // 16px padding on each side of SafeView (px-4)
+    const availableWidth =
+      width - dayLabelsWidth - dayLabelsMargin - paddingWidth
+
+    const targetWeeks = 20
+    const gapSize = 3 // Minimal gap between squares
+
+    // Calculate square width to fill available width: (width - all gaps) / columns
+    const squareWidth =
+      (availableWidth - gapSize * (targetWeeks - 1)) / targetWeeks
+
+    return { count: targetWeeks, gap: gapSize, squareWidth }
+  }, [width])
+
   // Generate the activity map data
   const { weeks, monthLabels } = useMemo(() => {
     const dates = Object.keys(data).sort()
@@ -40,12 +58,21 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
     startDate.setDate(startDate.getDate() - daysToMonday)
 
-    // End on the Sunday after the last date
+    // End on the Sunday after the last date, but ensure at least 20 weeks are shown
     const endDate = new Date(lastDate)
     const endDayOfWeek = endDate.getDay()
     // If it's Sunday (0), we're already at the end; otherwise add days to get to Sunday
     const daysToSunday = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek
     endDate.setDate(endDate.getDate() + daysToSunday)
+
+    // Calculate minimum end date to show at least 20 weeks
+    const minEndDate = new Date(startDate)
+    minEndDate.setDate(minEndDate.getDate() + 20 * 7 - 1) // 20 weeks from start
+
+    // Use the later of the two dates
+    if (endDate < minEndDate) {
+      endDate.setTime(minEndDate.getTime())
+    }
 
     const weeks: {
       days: {
@@ -56,6 +83,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
     const monthLabels: { label: string; weekIndex: number }[] = []
     let currentMonth = -1
+    let currentYear = -1
 
     let currentWeek: {
       date: string
@@ -83,11 +111,20 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
       // Check if we're at the start of a new month (on a Monday, which starts a new week)
       const month = currentDate.getMonth()
+      const year = currentDate.getFullYear()
+
       if (month !== currentMonth && currentDate.getDay() === 1) {
         currentMonth = month
-        const year = currentDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
-        const label =
-          month === 0 ? `${monthNames[month]} '${year}` : monthNames[month]
+
+        // Show year if it's January OR if year changed from previous label
+        const yearChanged = currentYear !== -1 && year !== currentYear
+        const isJanuary = month === 0
+        const showYear = isJanuary || yearChanged
+
+        currentYear = year
+        const yearSuffix = showYear ? ` '${year.toString().slice(-2)}` : ''
+        const label = `${monthNames[month]}${yearSuffix}`
+
         monthLabels.push({
           label,
           weekIndex: weeks.length,
@@ -125,47 +162,64 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       currentDate.setDate(currentDate.getDate() + 1)
     }
 
-    // Calculate how many weeks we can fit on screen
-    // Width minus padding (48px), minus day labels (12px), minus gaps, divided by (12px square + 4px gap)
-    const availableWidth = width - 48 - 12
-    const weeksNeeded = Math.floor(availableWidth / 16)
+    // Filter out first/last month labels if they only have 1 week
+    const filteredMonthLabels = monthLabels
+      .filter((label, index) => {
+        const isFirst = index === 0
+        const isLast = index === monthLabels.length - 1
 
-    // Add future weeks to fill the screen if needed
-    let futureDate = new Date(endDate)
-    futureDate.setDate(futureDate.getDate() + 1) // Start from day after endDate
-
-    while (weeks.length < weeksNeeded) {
-      let futureWeek: {
-        date: string
-        status: 'none' | 'planned' | 'completed' | 'active'
-      }[] = []
-
-      // Create a full week of future dates
-      for (let i = 0; i < 7; i++) {
-        const dateString = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}-${String(futureDate.getDate()).padStart(2, '0')}`
-
-        // Check for month label on Monday
-        const month = futureDate.getMonth()
-        if (month !== currentMonth && futureDate.getDay() === 1) {
-          currentMonth = month
-          const year = futureDate.getFullYear().toString().slice(-2) // Get last 2 digits of year
-          const label =
-            month === 0 ? `${monthNames[month]} '${year}` : monthNames[month]
-          monthLabels.push({
-            label,
-            weekIndex: weeks.length,
-          })
+        if (isFirst) {
+          // Check if first month only has 1 week
+          const nextLabel = monthLabels[index + 1]
+          const weeksInFirstMonth = nextLabel
+            ? nextLabel.weekIndex - label.weekIndex
+            : weeks.length - label.weekIndex
+          if (weeksInFirstMonth === 1) return false
         }
 
-        futureWeek.push({ date: dateString, status: 'none' })
-        futureDate.setDate(futureDate.getDate() + 1)
-      }
+        if (isLast) {
+          // Check if last month only has 1 week
+          const weeksInLastMonth = weeks.length - label.weekIndex
+          if (weeksInLastMonth === 1) return false
+        }
 
-      weeks.push({ days: futureWeek })
-    }
+        return true
+      })
+      .map((label, index, array) => {
+        // Remove year ONLY from first/last month labels if they have less than 3 weeks
+        const isFirstMonth = index === 0
+        const isLastMonth = index === array.length - 1
 
-    return { weeks, monthLabels }
-  }, [data, width])
+        if (isFirstMonth && label.label.includes("'")) {
+          // Calculate weeks in first month
+          const nextLabel = array[index + 1]
+          const weeksInFirstMonth = nextLabel
+            ? nextLabel.weekIndex - label.weekIndex
+            : weeks.length - label.weekIndex
+          if (weeksInFirstMonth < 3) {
+            return {
+              ...label,
+              label: label.label.split("'")[0].trim(),
+            }
+          }
+        }
+
+        if (isLastMonth && label.label.includes("'")) {
+          // Calculate weeks in last month
+          const weeksInLastMonth = weeks.length - label.weekIndex
+          if (weeksInLastMonth < 3) {
+            return {
+              ...label,
+              label: label.label.split("'")[0].trim(),
+            }
+          }
+        }
+
+        return label
+      })
+
+    return { weeks, monthLabels: filteredMonthLabels }
+  }, [data])
 
   // Scroll to the end when component mounts or data changes
   useEffect(() => {
@@ -228,21 +282,21 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
           ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={tw`pr-4`}
+          contentContainerStyle={{ paddingRight: 0 }}
         >
           <View>
             {/* Month labels */}
             <View style={tw`flex-row mb-2 h-4`}>
               {monthLabels.map(({ label, weekIndex }) => {
-                const isJanuaryWithYear = label.includes("'")
+                // Calculate position based on square width + gap
+                const columnWidth = visibleWeeks.squareWidth + visibleWeeks.gap
+                const left = weekIndex * columnWidth
                 return (
                   <View
                     key={`${label}-${weekIndex}`}
-                    style={[tw`absolute`, { left: weekIndex * 16 }]}
+                    style={[tw`absolute`, { left }]}
                   >
-                    <Txt
-                      twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isJanuaryWithYear ? 'font-poppinsSemiBold' : ''}`}
-                    >
+                    <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                       {label}
                     </Txt>
                   </View>
@@ -251,21 +305,21 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
             </View>
 
             {/* Activity grid */}
-            <View style={tw`flex-row gap-1`}>
+            <View style={{ flexDirection: 'row', gap: visibleWeeks.gap }}>
               {weeks.map((week, weekIndex) => (
                 <View
                   key={weekIndex}
-                  style={tw`gap-1`}
+                  style={{ gap: visibleWeeks.gap }}
                 >
                   {week.days.map((day, dayIndex) => (
                     <View
                       key={`${weekIndex}-${dayIndex}`}
-                      style={[
-                        tw`w-3 h-3 rounded-sm`,
-                        {
-                          backgroundColor: getColorForStatus(day.status),
-                        },
-                      ]}
+                      style={{
+                        width: visibleWeeks.squareWidth,
+                        height: visibleWeeks.squareWidth,
+                        borderRadius: 2,
+                        backgroundColor: getColorForStatus(day.status),
+                      }}
                     />
                   ))}
                 </View>

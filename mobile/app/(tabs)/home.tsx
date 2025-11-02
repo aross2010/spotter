@@ -152,10 +152,10 @@ const Home = () => {
     <View>
       <Txt twcn="mb-4 text-base font-poppinsSemiBold">
         {featuredWorkoutStatus === 'current'
-          ? 'Current Workout'
+          ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
-            ? 'Upcoming Workout'
-            : 'Latest Workout'}
+            ? '⏰ Upcoming Workout'
+            : '✅ Latest Workout'}
       </Txt>
       <WorkoutView
         workout={data.featuredWorkout.workout as WorkoutMinimal}

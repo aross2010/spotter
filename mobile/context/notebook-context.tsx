@@ -213,6 +213,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
         entry.id === entryId ? { ...entry, ...updatedEntry } : entry
       )
     )
+    refreshEntries()
   }
 
   const deleteEntry = async (entryId: string) => {

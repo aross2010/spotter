@@ -98,19 +98,28 @@ const Notebook = () => {
     let roundTop = false
     let roundBottom = false
     const { date, pinned, id } = item
-    const month = new Date(date).toLocaleString('default', {
+
+    // Parse date in local timezone to avoid UTC shifts
+    const [year, monthNum, day] = date.split('-').map(Number)
+    const localDate = new Date(year, monthNum - 1, day)
+    const month = localDate.toLocaleString('default', {
       month: 'numeric',
       year: 'numeric',
     })
 
     if (index === 0) {
       const nextEntry = currentNotebookEntries[index + 1]
-      const nextMonth = nextEntry
-        ? new Date(nextEntry.date).toLocaleString('default', {
-            month: 'numeric',
-            year: 'numeric',
-          })
-        : null
+      let nextMonth = null
+      if (nextEntry) {
+        const [nextYear, nextMonthNum, nextDay] = nextEntry.date
+          .split('-')
+          .map(Number)
+        const nextLocalDate = new Date(nextYear, nextMonthNum - 1, nextDay)
+        nextMonth = nextLocalDate.toLocaleString('default', {
+          month: 'numeric',
+          year: 'numeric',
+        })
+      }
 
       if (nextMonth && month !== nextMonth && !pinned) {
         lastInMonth = true
@@ -120,18 +129,27 @@ const Notebook = () => {
     // Check if we need to show month header
     if (index > 0) {
       const prevEntry = currentNotebookEntries[index - 1]
-      const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
+      const [prevYear, prevMonthNum, prevDay] = prevEntry.date
+        .split('-')
+        .map(Number)
+      const prevLocalDate = new Date(prevYear, prevMonthNum - 1, prevDay)
+      const prevMonth = prevLocalDate.toLocaleString('default', {
         month: 'numeric',
         year: 'numeric',
       })
 
       const nextEntry = currentNotebookEntries[index + 1]
-      const nextMonth = nextEntry
-        ? new Date(nextEntry.date).toLocaleString('default', {
-            month: 'numeric',
-            year: 'numeric',
-          })
-        : null
+      let nextMonth = null
+      if (nextEntry) {
+        const [nextYear, nextMonthNum, nextDay] = nextEntry.date
+          .split('-')
+          .map(Number)
+        const nextLocalDate = new Date(nextYear, nextMonthNum - 1, nextDay)
+        nextMonth = nextLocalDate.toLocaleString('default', {
+          month: 'numeric',
+          year: 'numeric',
+        })
+      }
 
       if (nextMonth && month !== nextMonth && !pinned) {
         lastInMonth = true
@@ -166,14 +184,14 @@ const Notebook = () => {
       }
     }
 
-    const [monthNum, day] = month.split('/')
+    const [displayMonthNum, displayYear] = month.split('/')
 
     const monthTitle = addMonth && (
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
       >
         <Txt twcn="font-poppinsSemiBold text-base">
-          {MONTHS.get(monthNum)} {day}
+          {MONTHS.get(displayMonthNum)} {displayYear}
         </Txt>
       </View>
     )

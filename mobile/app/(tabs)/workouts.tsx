@@ -1,5 +1,5 @@
 import { View, FlatList } from 'react-native'
-import React, { useEffect } from 'react'
+import React, { useEffect, useCallback } from 'react'
 import { useNavigation, router } from 'expo-router'
 import { Link } from 'expo-router'
 import tw from '../../tw'
@@ -14,6 +14,8 @@ import WorkoutView from '../../components/workout'
 import Selector from '../../components/selector'
 import { MONTHS } from '../../constants/data'
 import { WorkoutMinimal } from '../../utils/types'
+import { useWorkoutTabStore } from '../../stores/workout-store'
+import { useFocusEffect } from 'expo-router'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -31,7 +33,9 @@ const Workouts = () => {
     setStatusFilter,
     workouts,
     hasLoaded,
+    refreshWorkouts,
   } = useWorkout()
+  const { shouldRefresh, clearRefresh } = useWorkoutTabStore()
 
   const numActiveFilters =
     Object.keys(filters).reduce((acc: number, key) => {
@@ -41,6 +45,19 @@ const Workouts = () => {
   const noResults =
     currentWorkouts.length === 0 &&
     (numActiveFilters > 0 || statusFilter != 'all')
+
+  useFocusEffect(
+    useCallback(() => {
+      if (shouldRefresh) {
+        if (hasLoaded) {
+          // the initial load has completed, so we can refresh else do not
+          refreshWorkouts()
+        }
+        clearRefresh()
+      }
+      return () => {}
+    }, [shouldRefresh])
+  )
 
   useEffect(() => {
     initializeWorkouts()
@@ -65,7 +82,6 @@ const Workouts = () => {
                 <Link
                   href="/workout-filters"
                   style={tw` bg-primary/10 rounded-2xl p-2`}
-                  prefetch
                 >
                   <ListFilter
                     size={20}
@@ -151,19 +167,28 @@ const Workouts = () => {
     let addMonth = false
     let lastInMonth = false
     const { date, pinned, id } = item
-    const month = new Date(date).toLocaleString('default', {
+
+    // Parse date in local timezone to avoid UTC shifts
+    const [year, monthNum, day] = date.split('-').map(Number)
+    const localDate = new Date(year, monthNum - 1, day)
+    const month = localDate.toLocaleString('default', {
       month: 'numeric',
       year: 'numeric',
     })
 
     if (index === 0) {
       const nextEntry = currentWorkouts[index + 1]
-      const nextMonth = nextEntry
-        ? new Date(nextEntry.date).toLocaleString('default', {
-            month: 'numeric',
-            year: 'numeric',
-          })
-        : null
+      let nextMonth = null
+      if (nextEntry) {
+        const [nextYear, nextMonthNum, nextDay] = nextEntry.date
+          .split('-')
+          .map(Number)
+        const nextLocalDate = new Date(nextYear, nextMonthNum - 1, nextDay)
+        nextMonth = nextLocalDate.toLocaleString('default', {
+          month: 'numeric',
+          year: 'numeric',
+        })
+      }
 
       if (nextMonth && month !== nextMonth && !pinned) {
         lastInMonth = true
@@ -172,18 +197,27 @@ const Workouts = () => {
 
     if (index > 0) {
       const prevEntry = currentWorkouts[index - 1]
-      const prevMonth = new Date(prevEntry.date).toLocaleString('default', {
+      const [prevYear, prevMonthNum, prevDay] = prevEntry.date
+        .split('-')
+        .map(Number)
+      const prevLocalDate = new Date(prevYear, prevMonthNum - 1, prevDay)
+      const prevMonth = prevLocalDate.toLocaleString('default', {
         month: 'numeric',
         year: 'numeric',
       })
 
       const nextEntry = currentWorkouts[index + 1]
-      const nextMonth = nextEntry
-        ? new Date(nextEntry.date).toLocaleString('default', {
-            month: 'numeric',
-            year: 'numeric',
-          })
-        : null
+      let nextMonth = null
+      if (nextEntry) {
+        const [nextYear, nextMonthNum, nextDay] = nextEntry.date
+          .split('-')
+          .map(Number)
+        const nextLocalDate = new Date(nextYear, nextMonthNum - 1, nextDay)
+        nextMonth = nextLocalDate.toLocaleString('default', {
+          month: 'numeric',
+          year: 'numeric',
+        })
+      }
 
       if (nextMonth && month !== nextMonth && !pinned) {
         lastInMonth = true
@@ -198,14 +232,14 @@ const Workouts = () => {
     } else if (!pinned) {
       addMonth = true
     }
-    const [monthNum, day] = month.split('/')
+    const [displayMonthNum, displayYear] = month.split('/')
 
     const monthTitle = addMonth && (
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
       >
         <Txt twcn="font-poppinsSemiBold text-base">
-          {MONTHS.get(monthNum)} {day}
+          {MONTHS.get(displayMonthNum)} {displayYear}
         </Txt>
       </View>
     )

@@ -65,6 +65,7 @@ const TabsLayout = () => {
                 color={focused ? theme.text : theme.grayText}
               />
             ),
+
             headerTitle: () => (
               <View style={{ height: '100%', aspectRatio: 135 / 57 }}>
                 <TextLogo

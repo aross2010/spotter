@@ -214,6 +214,11 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
       const data = await response.json()
 
+      if (!data || !data.workouts) {
+        console.error('Invalid response from API:', data)
+        throw new Error('Invalid response from server')
+      }
+
       if (append) {
         setCurrentWorkouts((prev) => [...prev, ...data.workouts])
       } else {
@@ -226,8 +231,9 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
       return data.workouts
     } catch (error: any) {
-      console.error('Error fetching workouts. Displaying alert:', error)
-      Alert.alert('Error', error.message)
+      console.error('Error fetching workouts:', error)
+      Alert.alert('Error', error.message || 'Failed to fetch workouts')
+      return [] // Return empty array instead of undefined
     } finally {
       setIsLoading(false)
       setIsLoadingMore(false)
@@ -237,7 +243,10 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const initializeWorkouts = async () => {
     if (!hasLoaded && !isLoading) {
       const workouts = await fetchWorkouts(1, false)
-      setWorkouts(workouts)
+      // Only set workouts if we actually got data back
+      if (workouts && Array.isArray(workouts)) {
+        setWorkouts(workouts)
+      }
     }
   }
 
@@ -327,10 +336,12 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
         }
       )
       const workout = await response.json()
-      await refreshWorkouts()
+      // Don't refresh here - let the caller decide when to refresh
+      // This prevents double-refresh issues
       return workout
     } catch (error: any) {
       Alert.alert('Error', error.message)
+      throw error
     }
   }
 

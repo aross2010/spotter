@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from 'react-native'
+import { Alert, Keyboard, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
@@ -255,7 +255,11 @@ const Exercises = () => {
   )
 
   const exercisesView = (
-    <SafeView twcnContentView="px-0">
+    <SafeView
+      twcnContentView="px-0"
+      hasTabBar
+      keyboardAvoiding
+    >
       <View
         style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
       >
@@ -269,7 +273,12 @@ const Exercises = () => {
           value={searchQuery}
           onChangeText={handleSearchChange}
         />
-        <Button onPress={() => handleSearchChange('')}>
+        <Button
+          onPress={() => {
+            if (searchQuery === '') Keyboard.dismiss()
+            handleSearchChange('')
+          }}
+        >
           <X
             size={16}
             color={theme.grayText}

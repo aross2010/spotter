@@ -9,18 +9,7 @@ import {
   workoutTagLinks,
   workoutTags,
 } from '@/src/db/schema'
-import {
-  desc,
-  asc,
-  eq,
-  and,
-  inArray,
-  sql,
-  min,
-  max,
-  count,
-  gte,
-} from 'drizzle-orm'
+import { desc, asc, eq, and, sql, min, max, count, gte } from 'drizzle-orm'
 
 export type WorkoutMinimal = {
   id: string
@@ -73,7 +62,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    // Get today's date in local timezone (YYYY-MM-DD format)
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(now.getDate()).padStart(2, '0')}`
 
     const [
       statsResult,
@@ -94,9 +88,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .leftJoin(workoutExercises, eq(workouts.id, workoutExercises.workoutId))
         .leftJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
         .leftJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-        .where(
-          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
-        ),
+        .where(and(eq(workouts.userId, userId))),
 
       // Get all activity data with status and workout IDs
       db

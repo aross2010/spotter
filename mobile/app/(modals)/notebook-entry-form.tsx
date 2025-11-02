@@ -244,7 +244,6 @@ const NotebookEntryForm = () => {
                 type: 'notebook',
               },
             }}
-            prefetch
           >
             <Txt twcn="font-poppinsSemiBold text-primary dark:text-primary">
               Add tags

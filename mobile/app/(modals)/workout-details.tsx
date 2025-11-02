@@ -2,6 +2,7 @@ import { Alert, Share as RNShare, StyleSheet, View } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
   Link,
+  router,
   useFocusEffect,
   useLocalSearchParams,
   useNavigation,
@@ -20,7 +21,8 @@ import Colors from '../../constants/colors'
 import { capString } from '../../functions/cap-string'
 import { handleShareWorkout } from '../../functions/share'
 import { useUserStore } from '../../stores/user-store'
-import { useWorkoutStore } from '../../stores/workout-store'
+import { useWorkoutStore, useWorkoutTabStore } from '../../stores/workout-store'
+import { useExerciseStore } from '../../stores/exercise-store'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -30,6 +32,8 @@ const WorkoutDetails = () => {
   const { fetchWithAuth } = useAuth()
   const { preferences } = useUserStore()
   const { shouldRefresh, clearRefresh } = useWorkoutStore()
+  const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
+  const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
 
   const getWorkoutDetails = async () => {
     setIsLoading(true)
@@ -56,11 +60,15 @@ const WorkoutDetails = () => {
   useFocusEffect(
     useCallback(() => {
       if (shouldRefresh) {
+        triggerWorkoutTabsRefresh()
+        if (from === 'exercise') {
+          triggerExerciseDetailsRefresh()
+        }
         getWorkoutDetails()
         clearRefresh()
       }
       return () => {}
-    }, [])
+    }, [shouldRefresh])
   )
 
   useEffect(() => {
@@ -72,7 +80,6 @@ const WorkoutDetails = () => {
         ? () => (
             <View style={tw`flex-row items-center gap-2`}>
               <Link
-                prefetch
                 href={`/workout-form?id=${workout?.id}&from=workout-details`}
               >
                 <View style={tw`bg-primary/10 rounded-2xl p-2`}>
@@ -94,6 +101,15 @@ const WorkoutDetails = () => {
             </View>
           )
         : undefined,
+      headerLeft: () => (
+        <Button
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityLabel="close workout details"
+          twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+          text="Close"
+        />
+      ),
       presentation,
       animation: 'slide_from_bottom',
       animationDuration: 350,

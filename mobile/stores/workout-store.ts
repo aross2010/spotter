@@ -27,3 +27,15 @@ export const useHomeDataStore = create<HomeDataState>((set) => ({
   triggerRefresh: () => set({ shouldRefresh: true }),
   clearRefresh: () => set({ shouldRefresh: false }),
 }))
+
+type WorkoutTabState = {
+  shouldRefresh: boolean
+  triggerRefresh: () => void
+  clearRefresh: () => void
+}
+
+export const useWorkoutTabStore = create<WorkoutTabState>((set) => ({
+  shouldRefresh: false,
+  triggerRefresh: () => set({ shouldRefresh: true }),
+  clearRefresh: () => set({ shouldRefresh: false }),
+}))

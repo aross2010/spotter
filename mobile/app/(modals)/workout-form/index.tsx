@@ -40,8 +40,10 @@ import Colors from '../../../constants/colors'
 import {
   useHomeDataStore,
   useWorkoutStore,
+  useWorkoutTabStore,
 } from '../../../stores/workout-store'
 import { TagWithCount, WorkoutFormData } from '../../../utils/types'
+import { useExerciseStore } from '../../../stores/exercise-store'
 
 const statusOptions = [
   {
@@ -90,6 +92,8 @@ const WorkoutForm = () => {
   )
   const { triggerRefresh } = useWorkoutStore()
   const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
+  const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
+  const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
 
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
@@ -329,6 +333,7 @@ const WorkoutForm = () => {
     try {
       if (mode === 'create') {
         const res = await addWorkout()
+        triggerHomeDataRefresh()
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
           if (res?.id) {
@@ -344,10 +349,18 @@ const WorkoutForm = () => {
           if (from === 'workout-details') {
             triggerRefresh()
             router.back()
-          } else router.replace('/workouts')
+          } else if (from === 'home') {
+            triggerHomeDataRefresh()
+            router.back()
+          } else if (from == 'exercise') {
+            triggerExerciseDetailsRefresh()
+            triggerWorkoutTabRefresh()
+          } else {
+            triggerRefresh()
+            router.replace('/workouts')
+          }
         }
       }
-      triggerHomeDataRefresh()
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {
