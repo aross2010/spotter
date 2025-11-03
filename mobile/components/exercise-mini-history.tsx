@@ -190,7 +190,14 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
     </>
   )
 
-  return <ScrollView style={tw`gap-4 h-72`}>{content}</ScrollView>
+  return (
+    <ScrollView
+      showsHorizontalScrollIndicator={false}
+      style={tw`gap-4 h-80`}
+    >
+      {content}
+    </ScrollView>
+  )
 }
 
 export default ExerciseMiniHistory

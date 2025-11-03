@@ -9,6 +9,7 @@ import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
+import { registerContextResetter } from '../utils/context-manager'
 import { nanoid } from 'nanoid/non-secure'
 import {
   WorkoutFormData,
@@ -41,6 +42,7 @@ type WorkoutFormContextType = {
   adjustFocusedInputValue: (increment: boolean, customStep?: number) => void
   getNames: () => Promise<void>
   userTags: TagWithCount[]
+  resetWorkoutFormContext: () => void
 }
 
 type UsedLocations = {
@@ -248,6 +250,31 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     }
   }
 
+  const resetWorkoutFormContext = () => {
+    setWorkoutData({
+      name: '',
+      date: new Date(),
+      location: defaultLocation,
+      tags: [],
+      notes: '',
+      exercises: [starterExercise],
+      weightUnit: defaultWeightMetric,
+      setGroupings: [],
+      status: 'completed',
+    })
+    setExerciseNames([])
+    setWorkoutNames([])
+    setUserTags([])
+    setLocations([])
+    setNewlyAddedExerciseNumber(null)
+    setFocusedInput(null)
+  }
+
+  // Register reset function on mount
+  useEffect(() => {
+    registerContextResetter('resetWorkoutFormContext', resetWorkoutFormContext)
+  }, [])
+
   const value = {
     workoutData,
     setWorkoutData,
@@ -263,6 +290,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     adjustFocusedInputValue,
     getNames,
     userTags,
+    resetWorkoutFormContext,
   }
 
   return (

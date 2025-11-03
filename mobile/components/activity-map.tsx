@@ -264,11 +264,16 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         {/* Day labels on the left */}
         <View style={tw`mr-2`}>
           <View style={tw`h-4 mb-2`} />
-          <View style={tw`gap-1`}>
+          <View style={{ gap: visibleWeeks.gap }}>
             {dayLabels.map((day, index) => (
               <View
                 key={index}
-                style={tw`w-3 h-3 items-center justify-center`}
+                style={{
+                  width: 12,
+                  height: visibleWeeks.squareWidth,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Txt twcn="text-[10px] text-light-grayText dark:text-dark-grayText">
                   {day}

@@ -522,8 +522,23 @@ const ExerciseInput = ({
       finalValue = s // keep as string if it ends with decimal
     } else {
       const numValue = inputMode === 'decimal' ? parseFloat(s) : parseInt(s, 10)
-      // Treat 0 as undefined (empty state)
-      finalValue = numValue === 0 ? undefined : numValue
+
+      // Cap numeric fields at 99 (reps, partials, rpe, rir have database precision of 2,0)
+      if (inputMode === 'numeric' && numValue > 99) {
+        Alert.alert(
+          'Value Too Large',
+          `${fieldValue === 'reps' ? 'Reps' : 'Partial reps'} must be 99 or less`
+        )
+        return
+      }
+
+      // Cap RPE/RIR at 10
+      if ((fieldValue === 'rpe' || fieldValue === 'rir') && numValue > 10) {
+        finalValue = 10
+      } else {
+        // Treat 0 as undefined (empty state)
+        finalValue = numValue === 0 ? undefined : numValue
+      }
     }
 
     const updatedExercises = [...workoutData.exercises]

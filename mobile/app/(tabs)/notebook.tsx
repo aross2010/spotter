@@ -260,7 +260,10 @@ const Notebook = () => {
   )
 
   const notebookView = noResults ? (
-    <SafeView>
+    <SafeView
+      hasTabBar
+      scroll={false}
+    >
       <View style={tw`flex-1 items-center justify-center`}>
         <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
           No results found

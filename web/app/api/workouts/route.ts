@@ -390,6 +390,20 @@ export const POST = withAuth(async (req, user) => {
     )
   }
 
+  // Validate that each exercise has a name
+  for (const exercise of exercises) {
+    if (
+      !exercise.name ||
+      typeof exercise.name !== 'string' ||
+      exercise.name.trim() === ''
+    ) {
+      return NextResponse.json(
+        { error: 'Each exercise must have a name' },
+        { status: 400 }
+      )
+    }
+  }
+
   if (setGroupings && !Array.isArray(setGroupings)) {
     return NextResponse.json(
       { error: 'Set groupings must be an array' },

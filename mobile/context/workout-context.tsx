@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react'
 import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { toLocalDateString } from '../functions/formatted-date'
 import { WorkoutFormData, WorkoutMinimal } from '../utils/types'
+import { registerContextResetter } from '../utils/context-manager'
 
 type WorkoutFilters = {
   tags: string[]
@@ -50,6 +57,7 @@ type WorkoutContextType = {
   getFilterOptions: () => Promise<void>
   filterOptions: FilterOptions
   workouts: WorkoutMinimal[] // --- IGNORE ---
+  resetWorkoutContext: () => void
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -67,7 +75,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string | null>('completed')
   const [filters, setFilters] = useState<WorkoutFilters>({
     tags: [],
     workoutNames: [],
@@ -134,6 +142,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       exerciseNames: [],
       locations: [],
     })
+    setStatusFilter('completed')
   }
 
   const buildQueryParams = (
@@ -242,10 +251,10 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
   const initializeWorkouts = async () => {
     if (!hasLoaded && !isLoading) {
-      const workouts = await fetchWorkouts(1, false)
+      const fetchedWorkouts = await fetchWorkouts(1, false)
       // Only set workouts if we actually got data back
-      if (workouts && Array.isArray(workouts)) {
-        setWorkouts(workouts)
+      if (fetchedWorkouts && Array.isArray(fetchedWorkouts)) {
+        setWorkouts(fetchedWorkouts)
       }
     }
   }
@@ -253,7 +262,11 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const refreshWorkouts = async () => {
     setCurrentPage(1)
     setHasMore(true)
-    await fetchWorkouts(1, false)
+    const fetchedWorkouts = await fetchWorkouts(1, false)
+    // Update workouts state when refreshing
+    if (fetchedWorkouts && Array.isArray(fetchedWorkouts)) {
+      setWorkouts(fetchedWorkouts)
+    }
   }
 
   const loadMoreWorkouts = async () => {
@@ -303,6 +316,9 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
                 setCurrentWorkouts((prev) =>
                   prev.filter((workout) => workout.id !== workoutId)
                 )
+                setWorkouts((prev) =>
+                  prev.filter((workout) => workout.id !== workoutId)
+                )
               }
             } catch (error: any) {
               Alert.alert('Error', error.message)
@@ -345,6 +361,30 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     }
   }
 
+  const resetWorkoutContext = () => {
+    setCurrentWorkouts([])
+    setWorkouts([])
+    setIsLoading(false)
+    setIsLoadingMore(false)
+    setHasLoaded(false)
+    setHasMore(true)
+    setCurrentPage(1)
+    setSortOrder('desc')
+    setStatusFilter('completed')
+    setFilters({
+      tags: [],
+      workoutNames: [],
+      exerciseNames: [],
+      locations: [],
+    })
+    setFilterOptions([])
+  }
+
+  // Register reset function on mount
+  useEffect(() => {
+    registerContextResetter('resetWorkoutContext', resetWorkoutContext)
+  }, [])
+
   const value: WorkoutContextType = {
     currentWorkouts,
     isLoading,
@@ -367,6 +407,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     getFilterOptions,
     filterOptions,
     workouts,
+    resetWorkoutContext,
   }
 
   return (

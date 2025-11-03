@@ -10,6 +10,7 @@ import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import { HomeData, WorkoutMinimal } from '../../utils/types'
 import {
+  Book,
   Calendar,
   ChevronRight,
   CurlyBraces,
@@ -18,11 +19,13 @@ import {
 } from 'lucide-react-native'
 import WorkoutView from '../../components/workout'
 import Button from '../../components/button'
-import { Link, router, SplashScreen, useFocusEffect } from 'expo-router'
+import { router, SplashScreen, useFocusEffect } from 'expo-router'
 import ActivityMap from '../../components/activity-map'
 import { useCallback } from 'react'
 import { useHomeDataStore } from '../../stores/workout-store'
 import Spinner from '../../components/activity-indicator'
+import Colors from '../../constants/colors'
+import { Link } from 'expo-router'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -38,37 +41,22 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
   const now = new Date()
 
   const diffTime = Math.abs(now.getTime() - first.getTime())
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1 // Add 1 so first day counts as day 1
 
   // Less than a month (30 days) - show days
   if (diffDays < 30) {
-    return diffDays === 1 ? 'Day' : `${diffDays} Days`
+    return diffDays === 1 ? '1 Day' : `${diffDays} Days`
   }
 
-  // Less than 2 months (60 days) - show weeks
-  if (diffDays < 60) {
-    const weeks = Math.floor(diffDays / 7)
-    return weeks === 1 ? 'Week' : `${weeks} Weeks`
-  }
-
-  // Less than a year - show months
+  // Less than a year - show months with decimal
   if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30)
-    return months === 1 ? 'Month' : `${months} Months`
+    const months = (diffDays / 30).toFixed(2)
+    return `${months} Months`
   }
 
-  // A year or more - show years and months
-  const years = Math.floor(diffDays / 365)
-  const remainingDays = diffDays % 365
-  const months = Math.floor(remainingDays / 30)
-
-  if (months === 0) {
-    return years === 1 ? 'Year' : `${years} Years`
-  }
-
-  const yearText = years === 1 ? 'Year' : `${years} Years`
-  const monthText = months === 1 ? 'a Month' : `${months} Months`
-  return `${yearText} and ${monthText}`
+  // A year or more - show years with decimal
+  const years = (diffDays / 365).toFixed(2)
+  return `${years} Years`
 }
 
 const Home = () => {
@@ -141,14 +129,14 @@ const Home = () => {
     },
   ]
 
-  const activityMap = data && (
+  const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-4 text-base font-poppinsSemiBold">Activity</Txt>
-      <ActivityMap data={data?.activityCalendar} />
+      <Txt twcn="mb-4 text-base font-poppinsSemiBold">🔥 Activity</Txt>
+      <ActivityMap data={data?.activityCalendar || {}} />
     </View>
   )
 
-  const featuredWorkout = data?.featuredWorkout && (
+  const featuredWorkout = data?.featuredWorkout.status != 'none' && (
     <View>
       <Txt twcn="mb-4 text-base font-poppinsSemiBold">
         {featuredWorkoutStatus === 'current'
@@ -158,7 +146,7 @@ const Home = () => {
             : '✅ Latest Workout'}
       </Txt>
       <WorkoutView
-        workout={data.featuredWorkout.workout as WorkoutMinimal}
+        workout={data?.featuredWorkout.workout as WorkoutMinimal}
         roundBottom
         roundTop
         isHome
@@ -168,7 +156,7 @@ const Home = () => {
 
   const workoutPrompt = data?.totalWorkouts == 0 && (
     <Button
-      onPress={() => router.push('/workout-form')}
+      onPress={() => router.push('/workout-form?from=home')}
       twcn="p-3 rounded-2xl -mb-4 bg-primary relative overflow-hidden"
     >
       <View style={tw`flex-row items-center gap-4`}>
@@ -200,6 +188,67 @@ const Home = () => {
     </Button>
   )
 
+  const features = [
+    {
+      icon: Calendar,
+      title: 'Track Workouts',
+      href: '/workouts',
+      description:
+        'Log your training sessions with ease. Add exercises, sets, reps, and weight. Schedule future workouts and track your consistency over time.',
+    },
+    {
+      icon: Dumbbell,
+      title: 'Exercise Library',
+      href: '/exercises',
+      description:
+        'Build your personal exercise database. View detailed progression charts, track personal records, and analyze performance trends.',
+    },
+    {
+      icon: Book,
+      title: 'Training Notebook',
+      href: '/notebook',
+      description:
+        'Document your fitness journey. Use it to track injuries, progress, warm-up routines, stretching, diet notes, weight, and anything else.',
+    },
+  ]
+
+  const appFeatures = data?.totalWorkouts == 0 && (
+    <View>
+      <Txt twcn="text-base font-poppinsSemiBold mb-4">
+        ✨ Featured in Spotter
+      </Txt>
+      <View style={tw`gap-3`}>
+        {features.map((feature) => (
+          <Link
+            href={feature.href}
+            key={feature.title}
+          >
+            <View
+              key={feature.title}
+              style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}
+            >
+              <View style={tw`flex-row items-center gap-3 mb-4`}>
+                <View
+                  style={tw`rounded-full bg-primary/10 p-2 items-center justify-center`}
+                >
+                  <feature.icon
+                    size={20}
+                    color={Colors.primary}
+                    strokeWidth={1.5}
+                  />
+                </View>
+                <Txt twcn="text-base font-poppinsMedium">{feature.title}</Txt>
+              </View>
+              <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                {feature.description}
+              </Txt>
+            </View>
+          </Link>
+        ))}
+      </View>
+    </View>
+  )
+
   const firstWorkoutDate =
     data?.activityCalendar && Object.keys(data.activityCalendar).sort()[0]
   const timeSinceFirst = firstWorkoutDate
@@ -212,8 +261,8 @@ const Home = () => {
         <View style={tw`rounded-full bg-white/25 p-2 h-10 w-10 items-center`}>
           <Txt twcn="text-2xl">🏆</Txt>
         </View>
-        <Txt twcn="text-white text-lg font-poppinsSemiBold">
-          Your {timeSinceFirst} on Spotter
+        <Txt twcn="text-white text-xl font-poppinsSemiBold">
+          {timeSinceFirst} on Spotter
         </Txt>
       </View>
       <View style={tw`mt-4 flex-row justify-between`}>
@@ -246,6 +295,7 @@ const Home = () => {
   const userPage = (
     <View style={tw`mt-4 gap-8`}>
       {workoutPrompt}
+      {appFeatures}
       {statsTogether}
       {activityMap}
       {featuredWorkout}

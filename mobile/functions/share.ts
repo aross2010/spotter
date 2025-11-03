@@ -34,9 +34,9 @@ export const getWorkoutMessage = (workout: Workout) => {
           leftReps !== rightReps ? `${leftReps}/${rightReps}` : leftReps
 
         if (weight && weight > 0) {
-          message += `    Set ${set.setNumber}: ${weight} lbs × ${reps} reps`
+          message += `    ${set.setNumber}. ${weight} lbs × ${reps} reps`
         } else {
-          message += `    Set ${set.setNumber}: ${reps} reps`
+          message += `    ${set.setNumber}. ${reps} reps`
         }
 
         if (set.leftPartialReps || set.rightPartialReps) {
@@ -60,9 +60,9 @@ export const getWorkoutMessage = (workout: Workout) => {
         const reps = set.reps || '-'
 
         if (weight && weight > 0) {
-          message += `    Set ${set.setNumber}: ${weight} lbs × ${reps} reps`
+          message += `    ${set.setNumber}. ${weight} lbs × ${reps} reps`
         } else {
-          message += `    Set ${set.setNumber}: ${reps} reps`
+          message += `    ${set.setNumber}. ${reps} reps`
         }
 
         if (set.partialReps) {
@@ -143,7 +143,7 @@ const getExerciseMessage = (
     lastSession.sets.forEach((set) => {
       const weight = weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight
 
-      lastSessionSets += `  Set ${set.setNumber}: ${weight} ${weightMetric} × ${set.reps} reps`
+      lastSessionSets += `  ${set.setNumber}. ${weight} ${weightMetric} × ${set.reps} reps`
 
       if (set.partials) {
         lastSessionSets += ` + ${set.partials} partials`

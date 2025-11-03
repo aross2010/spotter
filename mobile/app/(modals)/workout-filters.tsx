@@ -7,6 +7,9 @@ import Button from '../../components/button'
 import {
   CalendarArrowDown,
   CalendarArrowUp,
+  Circle,
+  CircleCheck,
+  CircleDot,
   RotateCcw,
   Search,
   X,
@@ -17,6 +20,25 @@ import { useWorkout, FilterOptions } from '../../context/workout-context'
 import Input from '../../components/input'
 import Spinner from '../../components/activity-indicator'
 import { router, useNavigation } from 'expo-router'
+import MyModal from '../../components/modal'
+
+const statusOptions = [
+  {
+    value: 'completed' as const,
+    label: 'Completed',
+    icon: CircleCheck,
+  },
+  {
+    value: 'planned' as const,
+    label: 'Planned',
+    icon: Circle,
+  },
+  {
+    value: 'active' as const,
+    label: 'Active',
+    icon: CircleDot,
+  },
+]
 
 const WorkoutFilters = () => {
   const { theme } = useTheme()
@@ -30,18 +52,23 @@ const WorkoutFilters = () => {
     getFilterOptions,
     filterOptions,
     isLoading,
+    statusFilter,
+    setStatusFilter,
   } = useWorkout()
 
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [resultOptions, setResultOptions] = useState<FilterOptions>([])
   const [selectedOptions, setSelectedOptions] = useState<FilterOptions>([])
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [initialState, setInitialState] = useState<{
     selectedOptions: FilterOptions
     sortOrder: 'asc' | 'desc'
+    statusFilter: string | null
   }>({
     selectedOptions: [],
     sortOrder: 'desc',
+    statusFilter: 'completed',
   })
 
   const navigation = useNavigation()
@@ -58,7 +85,8 @@ const WorkoutFilters = () => {
           )
       )
     const sortOrderChanged = sortOrder !== initialState.sortOrder
-    return filtersChanged || sortOrderChanged
+    const statusFilterChanged = statusFilter !== initialState.statusFilter
+    return filtersChanged || sortOrderChanged || statusFilterChanged
   }
 
   const resetState = () => {
@@ -81,6 +109,7 @@ const WorkoutFilters = () => {
       }
     })
     setSortOrder(initialState.sortOrder)
+    setStatusFilter(initialState.statusFilter)
   }
 
   useEffect(() => {
@@ -110,8 +139,16 @@ const WorkoutFilters = () => {
           text="Cancel"
         />
       ),
+      presentation: 'modal',
     })
-  }, [navigation, selectedOptions, sortOrder, initialState, isLoading])
+  }, [
+    navigation,
+    selectedOptions,
+    sortOrder,
+    statusFilter,
+    initialState,
+    isLoading,
+  ])
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -163,38 +200,24 @@ const WorkoutFilters = () => {
       setInitialState({
         selectedOptions: selected,
         sortOrder: sortOrder,
+        statusFilter: statusFilter,
       })
 
-      // Filter out selected options from results and maintain original order
-      const available = filterOptions.filter(
-        (opt) =>
-          !selected.some(
-            (sel) => sel.label === opt.label && sel.type === opt.type
-          )
-      )
-      setResultOptions(available)
+      // Show all filter options
+      setResultOptions(filterOptions)
     }
   }, [filterOptions])
 
   const handleChange = (text: string) => {
     setQuery(text)
-    const filteredResults = filterOptions.filter(
-      (option) =>
-        option.label.toLowerCase().includes(text.toLowerCase()) &&
-        !selectedOptions.some(
-          (sel) => sel.label === option.label && sel.type === option.type
-        )
+    const filteredResults = filterOptions.filter((option) =>
+      option.label.toLowerCase().includes(text.toLowerCase())
     )
     setResultOptions(filteredResults)
   }
 
   const handleSelectOption = (option: FilterOptions[number]) => {
     setSelectedOptions((prev) => [...prev, option])
-    setResultOptions((prev) =>
-      prev.filter(
-        (opt) => !(opt.label === option.label && opt.type === option.type)
-      )
-    )
     updateFilters(option, 'add')
   }
 
@@ -204,20 +227,6 @@ const WorkoutFilters = () => {
         (opt) => !(opt.label === option.label && opt.type === option.type)
       )
     )
-
-    setResultOptions((prev) => {
-      const newResults = [...prev, option]
-      // Sort by original filterOptions order
-      return newResults.sort(
-        (a, b) =>
-          filterOptions.findIndex(
-            (opt) => opt.label === a.label && opt.type === a.type
-          ) -
-          filterOptions.findIndex(
-            (opt) => opt.label === b.label && opt.type === b.type
-          )
-      )
-    })
     updateFilters(option, 'remove')
   }
 
@@ -229,8 +238,14 @@ const WorkoutFilters = () => {
   const handleResetAll = () => {
     setSelectedOptions([])
     setSortOrder('desc')
+    setStatusFilter('completed')
     setResultOptions(filterOptions)
     clearFilters()
+  }
+
+  const handleStatusChange = (status: 'completed' | 'planned' | 'active') => {
+    setStatusFilter(status)
+    setShowStatusMenu(false)
   }
 
   const getTypeLabel = (type: string) => {
@@ -251,13 +266,13 @@ const WorkoutFilters = () => {
   const getTypeBgColor = (type: string) => {
     switch (type) {
       case 'tags':
-        return 'bg-blue/20'
+        return 'bg-blue/10 '
       case 'workoutNames':
-        return 'bg-orange/20'
+        return 'bg-orange/10'
       case 'exerciseNames':
-        return 'bg-green/20'
+        return 'bg-green/10'
       case 'locations':
-        return 'bg-red/20'
+        return 'bg-red/10'
       default:
         return 'bg-light-grayPrimary dark:bg-dark-grayPrimary'
     }
@@ -266,15 +281,15 @@ const WorkoutFilters = () => {
   const getTypeTextColor = (type: string) => {
     switch (type) {
       case 'tags':
-        return 'text-blue'
+        return Colors.blue
       case 'workoutNames':
-        return 'text-orange'
+        return Colors.orange
       case 'exerciseNames':
-        return 'text-green'
+        return Colors.green
       case 'locations':
-        return 'text-red'
+        return Colors.red
       default:
-        return 'text-light-grayText dark:text-dark-grayText'
+        return theme.grayText
     }
   }
 
@@ -283,7 +298,11 @@ const WorkoutFilters = () => {
   )
 
   const renderedResultOptions = resultOptions.map((option) => {
-    const isDisabled = option.type === 'workoutNames' && hasWorkoutNameSelected
+    const isSelected = selectedOptions.some(
+      (sel) => sel.label === option.label && sel.type === option.type
+    )
+    const isDisabled =
+      isSelected || (option.type === 'workoutNames' && hasWorkoutNameSelected)
 
     return (
       <View
@@ -303,9 +322,11 @@ const WorkoutFilters = () => {
               {option.label}
             </Txt>
             <View
-              style={tw`px-2 py-0.5 rounded-xl ${getTypeBgColor(option.type)}`}
+              style={tw`px-2 py-0.5 rounded-lg ${getTypeBgColor(option.type)}`}
             >
-              <Txt twcn={`text-xs ${getTypeTextColor(option.type)}`}>
+              <Txt
+                twcn={`text-xs text-[${getTypeTextColor(option.type)}] dark:text-[${getTypeTextColor(option.type)}]`}
+              >
                 {getTypeLabel(option.type)}
               </Txt>
             </View>
@@ -323,11 +344,17 @@ const WorkoutFilters = () => {
       key={`${option.type}-${option.label}`}
       onPress={() => handleDeselectOption(option)}
       hitSlop={12}
-      style={tw`flex-row items-center gap-2 px-2 py-1 ${getTypeBgColor(option.type)} rounded-xl`}
+      style={tw`flex-row items-center gap-2 px-3 py-1 ${getTypeBgColor(option.type)} rounded-lg`}
     >
-      <Txt twcn={`text-xs ${getTypeTextColor(option.type)}`}>
+      <Txt
+        twcn={`text-xs text-[${getTypeTextColor(option.type)}] dark:text-[${getTypeTextColor(option.type)}]`}
+      >
         {option.label}
       </Txt>
+      <X
+        size={12}
+        color={getTypeTextColor(option.type)}
+      />
     </Pressable>
   ))
 
@@ -341,7 +368,7 @@ const WorkoutFilters = () => {
     >
       {/* Sticky Header */}
       <View style={tw`pb-2 bg-light-background dark:bg-dark-background`}>
-        <View style={tw`flex-row justify-between items-center gap-4 mb-2`}>
+        <View style={tw`flex-row justify-between items-center gap-2 mb-2`}>
           <View
             style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
           >
@@ -371,17 +398,30 @@ const WorkoutFilters = () => {
               />
             </Button>
           </View>
-          <View style={tw`flex-row items-center gap-2`}>
+          <View style={tw`flex-row items-center gap-1.5`}>
             <Button
+              onPress={() => setShowStatusMenu(true)}
               hitSlop={12}
-              onPress={handleResetAll}
-              twcn="bg-primary/10 rounded-xl p-2"
+              twcn={`p-2 rounded-xl ${statusFilter && statusFilter !== 'completed' ? 'bg-primary' : 'bg-primary/10'}`}
             >
-              <RotateCcw
-                size={16}
-                color={Colors.primary}
-              />
+              {(() => {
+                const currentStatus = statusFilter || 'completed'
+                const StatusIcon = statusOptions.find(
+                  (opt) => opt.value === currentStatus
+                )?.icon
+                return StatusIcon ? (
+                  <StatusIcon
+                    size={16}
+                    color={
+                      statusFilter && statusFilter !== 'completed'
+                        ? '#FFFFFF'
+                        : Colors.primary
+                    }
+                  />
+                ) : null
+              })()}
             </Button>
+
             <Button
               hitSlop={12}
               twcn={`${sortOrder != 'asc' ? 'bg-primary/10' : 'bg-primary'} rounded-xl p-2`}
@@ -399,6 +439,17 @@ const WorkoutFilters = () => {
                 />
               )}
             </Button>
+
+            <Button
+              hitSlop={12}
+              onPress={handleResetAll}
+              twcn="bg-primary/10 rounded-xl p-2"
+            >
+              <RotateCcw
+                size={16}
+                color={Colors.primary}
+              />
+            </Button>
           </View>
         </View>
 
@@ -411,13 +462,42 @@ const WorkoutFilters = () => {
         )}
       </View>
 
-      {/* Scrollable Content */}
       <ScrollView
+        showsVerticalScrollIndicator={false}
         style={tw`flex-1 -mx-4`}
         contentContainerStyle={tw`flex-grow`}
       >
         {renderedResultOptions}
       </ScrollView>
+
+      <MyModal
+        isOpen={showStatusMenu}
+        setIsOpen={setShowStatusMenu}
+      >
+        <Txt twcn="font-poppinsMedium mb-2">Workout Status</Txt>
+        <View>
+          {statusOptions.map((option) => {
+            const isSelected = (statusFilter || 'completed') === option.value
+            const StatusIcon = option.icon
+
+            return (
+              <Button
+                key={option.value}
+                onPress={() => handleStatusChange(option.value)}
+                twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
+                  isSelected ? 'bg-primary/10' : ''
+                }`}
+              >
+                <StatusIcon
+                  size={20}
+                  color={isSelected ? Colors.primary : theme.text}
+                />
+                <Txt twcn="text-sm">{option.label}</Txt>
+              </Button>
+            )
+          })}
+        </View>
+      </MyModal>
     </SafeView>
   )
 }

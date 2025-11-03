@@ -30,7 +30,6 @@ const initialUser = {
   firstName: '',
   lastName: '',
   email: '',
-  providers: [],
 }
 const initialUserPreferences: UserPreferences = {
   weightMetric: 'lbs',
@@ -77,10 +76,6 @@ export const useUserStore = create<UserStore>()(
                   ? s.user.lastName
                   : undefined,
             email: u && u.email ? u.email.trim() : s.user ? s.user.email : '',
-            providers:
-              u && Object.prototype.hasOwnProperty.call(u, 'providers')
-                ? (u.providers ?? [])
-                : (s.user?.providers ?? []),
           },
         })),
       setPreferences: (p) => {

@@ -116,13 +116,13 @@ export const GET = withAuth(async (req: Request, user: any) => {
         used: location.used,
       }))
 
-    // Combine all filter options
+    // Combine all filter options and sort by usage (descending)
     const allFilters: FilterOptions = [
       ...tags,
       ...workoutNames,
       ...exerciseNames,
       ...locations,
-    ]
+    ].sort((a, b) => b.used - a.used)
 
     return NextResponse.json(allFilters)
   } catch (error: any) {

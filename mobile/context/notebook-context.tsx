@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react'
 import { Alert } from 'react-native'
 import { NotebookEntry } from '../utils/types'
 import { useAuth } from './auth-context'
 import { useUserStore } from '../stores/user-store'
 import { BASE_URL } from '../constants/auth'
 import { Tag } from '../utils/types'
+import { registerContextResetter } from '../utils/context-manager'
 
 type NotebookEntryData = Omit<
   NotebookEntry,
@@ -33,6 +40,7 @@ type NotebookContextType = {
   tagFilters: Tag[]
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
+  resetNotebookContext: () => void
 }
 
 // filters: by tags
@@ -298,6 +306,22 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     }
   }
 
+  const resetNotebookContext = () => {
+    setCurrentNotebookEntries([])
+    setIsLoading(false)
+    setIsLoadingMore(false)
+    setHasLoaded(false)
+    setHasMore(true)
+    setCurrentPage(1)
+    setSortOrder('desc')
+    setTagFilters([])
+  }
+
+  // Register reset function on mount
+  useEffect(() => {
+    registerContextResetter('resetNotebookContext', resetNotebookContext)
+  }, [])
+
   const value: NotebookContextType = {
     currentNotebookEntries,
     isLoading,
@@ -317,6 +341,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     tagFilters,
     sortOrder,
     setSortOrder,
+    resetNotebookContext,
   }
 
   return (

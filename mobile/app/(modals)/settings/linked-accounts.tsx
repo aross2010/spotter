@@ -1,17 +1,18 @@
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { Image, View } from 'react-native'
+import { Alert, Image, View } from 'react-native'
 import { useUserStore } from '../../../stores/user-store'
 import Button from '../../../components/button'
 import { CircleCheck } from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import { useAuth } from '../../../context/auth-context'
-import { Providers } from '../../../utils/types'
-import { useState } from 'react'
-import Loading from '../../../components/loading'
+import { Provider, Providers } from '../../../utils/types'
+import { useEffect, useState } from 'react'
 import tw from '../../../tw'
 import googleLogo from '../../../assets/google.png'
 import appleLogo from '../../../assets/apple.png'
+import Spinner from '../../../components/activity-indicator'
+import { BASE_URL } from '../../../constants/auth'
 
 const providerOptions = [
   {
@@ -27,9 +28,32 @@ const providerOptions = [
 ] as const
 
 const LinkedAccounts = () => {
-  const { user } = useUserStore()
-  const { linkAppleAccount, linkGoogleAccount } = useAuth()
+  const { linkAppleAccount, linkGoogleAccount, fetchWithAuth, authUser } =
+    useAuth()
   const [loading, setIsLoading] = useState(false)
+  const [providersLinked, setProvidersLinked] = useState<Provider[]>([])
+
+  const getProvidersLinked = async () => {
+    try {
+      setIsLoading(true)
+      const res = await fetchWithAuth(`${BASE_URL}/api/users/${authUser?.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const { providers } = await res.json()
+      setProvidersLinked(providers)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getProvidersLinked()
+  }, [])
 
   const handleLinking = async (provider: Providers) => {
     try {
@@ -44,8 +68,8 @@ const LinkedAccounts = () => {
   }
 
   const renderedProviders = providerOptions.map(({ title, provider, logo }) => {
-    const isLinked = user?.providers.some((p) => p.name === provider)
-    const providerEmail = user?.providers.find(
+    const isLinked = providersLinked.some((p) => p.name === provider)
+    const providerEmail = providersLinked.find(
       (p) => p.name === provider
     )?.email
 
@@ -77,17 +101,15 @@ const LinkedAccounts = () => {
     )
   })
 
-  return (
-    <SafeView>
+  return loading ? (
+    <Spinner />
+  ) : (
+    <SafeView scroll={false}>
       <Txt twcn="text-light-grayText dark:text-dark-grayText mb-4">
         Securely link multiple sign-in providers (e.g., Apple and Google) to a
         single account, so you can log in with any of them across devices.
       </Txt>
       <View style={tw`gap-8 mb-8`}>{renderedProviders}</View>
-      <Loading
-        visible={loading}
-        label="Linking account..."
-      />
     </SafeView>
   )
 }

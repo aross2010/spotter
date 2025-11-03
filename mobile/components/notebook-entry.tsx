@@ -10,6 +10,7 @@ import useTheme from '../app/hooks/theme'
 import MyModal from './modal'
 import NotebookEntryOptions from './notebook-entry-options'
 import Colors from '../constants/colors'
+import TagView from './tag'
 
 type NotebookEntryProps = {
   entry: NotebookEntry
@@ -37,12 +38,10 @@ const NotebookEntryView = ({
   const renderedTags = tags.map((tag) => {
     const { id, name } = tag
     return (
-      <Txt
+      <TagView
         key={id}
-        twcn="text-xs text-primary"
-      >
-        #{name}
-      </Txt>
+        tag={tag}
+      />
     )
   })
 

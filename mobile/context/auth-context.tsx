@@ -18,8 +18,9 @@ import * as jose from 'jose'
 import { tokenCache } from '../utils/cache'
 import { useRouter } from 'expo-router'
 import { useUserStore } from '../stores/user-store'
-import { UserProfile } from '../utils/types'
+import { Provider, UserProfile } from '../utils/types'
 import { Alert } from 'react-native'
+import { resetAllContexts } from '../utils/context-manager'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -138,13 +139,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: authUser.email,
         firstName: authUser.firstName,
         lastName: authUser.lastName || '',
-        providers: [
-          {
-            id: authUser.providerId,
-            name: authUser.provider,
-            email: authUser.email,
-          },
-        ],
       })
     } else if (!isLoading) {
       // Only clear when explicitly logged out, not during initial session restore
@@ -270,6 +264,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAccessToken(null)
     setRefreshToken(null)
     clearUserStore()
+    // Reset all context states to clear user data
+    resetAllContexts()
     router.replace('/')
   }
 
@@ -541,17 +537,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (response.status === 200) {
         const { updatedLinkedAccount } = await response.json()
-        setUser({
-          ...user,
-          providers: [
-            ...user.providers,
-            {
-              name: 'apple',
-              email: updatedLinkedAccount.providerEmail,
-              id: updatedLinkedAccount.providerId,
-            },
-          ],
-        })
         tokenCache.saveAppleDetails({
           email: user.email,
           givenName: user.firstName,
@@ -594,17 +579,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (response.status === 200) {
           const { updatedLinkedAccount } = await response.json()
-          setUser({
-            ...user,
-            providers: [
-              ...user.providers,
-              {
-                name: 'google',
-                email: updatedLinkedAccount.providerEmail,
-                id: updatedLinkedAccount.providerId,
-              },
-            ],
-          })
           Alert.alert(
             'Success',
             'Google account successfully linked. You can now sign in with Google.'
@@ -645,13 +619,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
+      setIsLoading(true)
+      // get user providers
+      const res = await fetchWithAuth(`${BASE_URL}/api/users/${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const { providers } = await res.json()
+
       // if auth User provider == apple, send refresh token, else prompt login to get refresh token
       let appleRefreshToken =
         authUser?.provider == 'apple' ? refreshToken : null
 
       if (
         !appleRefreshToken &&
-        user.providers.some((p) => p.name === 'apple')
+        providers.some((p: Provider) => p.name === 'apple')
       ) {
         const confirm = await promptAppleReAuth()
         if (!confirm) return
@@ -666,8 +650,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         appleRefreshToken = tokens.refreshToken
       }
-
-      setIsLoading(true)
 
       const response = await fetchWithAuth(`${BASE_URL}/api/users/${user.id}`, {
         method: 'DELETE',

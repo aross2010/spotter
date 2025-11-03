@@ -13,7 +13,6 @@ export type UserProfile = {
   firstName: string
   lastName?: string
   email: string
-  providers: Provider[]
 }
 
 // for display only

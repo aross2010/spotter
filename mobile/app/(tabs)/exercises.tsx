@@ -1,4 +1,4 @@
-import { Alert, Keyboard, StyleSheet, View } from 'react-native'
+import { Alert, Keyboard, ScrollView, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
@@ -256,12 +256,12 @@ const Exercises = () => {
 
   const exercisesView = (
     <SafeView
-      twcnContentView="px-0"
       hasTabBar
       keyboardAvoiding
+      scroll={false}
     >
       <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
+        style={tw`px-3 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
       >
         <Search
           size={16}
@@ -285,7 +285,12 @@ const Exercises = () => {
           />
         </Button>
       </View>
-      <View>{renderedExercises}</View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={tw`-mx-4`}
+      >
+        {renderedExercises}
+      </ScrollView>
       <MyModal
         isOpen={isFiltersModalOpen}
         setIsOpen={setIsFiltersModalOpen}

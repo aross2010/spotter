@@ -4,14 +4,13 @@ import { useNavigation, router } from 'expo-router'
 import { Link } from 'expo-router'
 import tw from '../../tw'
 import Colors from '../../constants/colors'
-import { ListFilter, Plus, Calendar, Pin } from 'lucide-react-native'
+import { ListFilter, Plus, Calendar } from 'lucide-react-native'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import Button from '../../components/button'
 import { useWorkout } from '../../context/workout-context'
 import Spinner from '../../components/activity-indicator'
 import WorkoutView from '../../components/workout'
-import Selector from '../../components/selector'
 import { MONTHS } from '../../constants/data'
 import { WorkoutMinimal } from '../../utils/types'
 import { useWorkoutTabStore } from '../../stores/workout-store'
@@ -27,10 +26,8 @@ const Workouts = () => {
     hasMore,
     initializeWorkouts,
     loadMoreWorkouts,
-    applyFiltersAndSort,
     sortOrder,
     statusFilter,
-    setStatusFilter,
     workouts,
     hasLoaded,
     refreshWorkouts,
@@ -41,10 +38,10 @@ const Workouts = () => {
     Object.keys(filters).reduce((acc: number, key) => {
       const filterLength = filters[key as keyof typeof filters]?.length || 0
       return Number(acc) + Number(filterLength)
-    }, 0 as number) + (sortOrder == 'asc' ? 1 : 0)
-  const noResults =
-    currentWorkouts.length === 0 &&
-    (numActiveFilters > 0 || statusFilter != 'all')
+    }, 0 as number) +
+    (sortOrder == 'asc' ? 1 : 0) +
+    (statusFilter && statusFilter !== 'completed' ? 1 : 0)
+  const noResults = currentWorkouts.length === 0 && numActiveFilters > 0
 
   useFocusEffect(
     useCallback(() => {
@@ -62,15 +59,6 @@ const Workouts = () => {
   useEffect(() => {
     initializeWorkouts()
   }, [])
-
-  // Apply status filter through API when tab changes (skip on mount)
-  useEffect(() => {
-    if (!hasLoaded) return // Don't apply filters until initial load is done
-
-    const status =
-      statusFilter === 'all' || statusFilter === null ? undefined : statusFilter
-    applyFiltersAndSort(status)
-  }, [statusFilter])
 
   useEffect(() => {
     navigation.setOptions({
@@ -261,66 +249,39 @@ const Workouts = () => {
     return <Spinner />
   }
 
-  const workoutsView = (
-    <View style={tw`flex-1`}>
-      <View style={tw`px-4 py-2`}>
-        <Selector
-          selectedValue={statusFilter || 'all'}
-          onSelect={(value) => {
-            const status = value === 'all' ? null : value
-            setStatusFilter(status)
-          }}
-          options={[
-            {
-              label: 'All',
-              value: 'all',
-            },
-            {
-              label: 'Completed',
-              value: 'completed',
-            },
-            {
-              label: 'Planned',
-              value: 'planned',
-            },
-            {
-              label: 'Active',
-              value: 'active',
-            },
-          ]}
-        />
+  const workoutsView = isLoading ? (
+    <Spinner />
+  ) : noResults ? (
+    <SafeView
+      hasTabBar
+      scroll={false}
+    >
+      <View style={tw`flex-1 items-center justify-center`}>
+        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+          No results found
+        </Txt>
+        <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
+          Try adjusting your filters or sort method to find what you're looking
+          for.
+        </Txt>
       </View>
-
-      {isLoading ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <Spinner />
-        </View>
-      ) : noResults ? (
-        <View style={tw`flex-1 items-center justify-center`}>
-          <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
-            No results found
-          </Txt>
-          <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">
-            Try adjusting your filters or sort method to find what you're
-            looking for.
-          </Txt>
-        </View>
-      ) : (
-        <FlatList
-          data={currentWorkouts}
-          renderItem={renderEntry}
-          keyExtractor={(item) => item.id}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          contentContainerStyle={tw`p-4`}
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews={false}
-          disableVirtualization={true}
-          initialNumToRender={currentWorkouts.length}
-          maxToRenderPerBatch={currentWorkouts.length}
-        />
-      )}
+    </SafeView>
+  ) : (
+    <View style={tw`flex-1`}>
+      <FlatList
+        data={currentWorkouts}
+        renderItem={renderEntry}
+        keyExtractor={(item) => item.id}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={tw`p-4`}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+        disableVirtualization={true}
+        initialNumToRender={currentWorkouts.length}
+        maxToRenderPerBatch={currentWorkouts.length}
+      />
     </View>
   )
 

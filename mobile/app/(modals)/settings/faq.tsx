@@ -292,15 +292,10 @@ const FAQ = () => {
 
   return (
     <SafeView
-      twcnContentView="px-0"
       scroll
       keyboardAvoiding
     >
-      <View style={tw`px-4 mb-4`}>
-        <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText mb-4">
-          Search for topics or browse through common questions
-        </Txt>
-
+      <View style={tw`mb-4`}>
         {/* Search Bar */}
         <View
           style={tw`px-3 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
@@ -324,8 +319,11 @@ const FAQ = () => {
         </View>
       </View>
 
-      <ScrollView style={tw`flex-1`}>
-        <View style={tw`px-4 pb-8`}>
+      <ScrollView
+        style={tw`flex-1`}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={tw``}>
           {filteredFAQs.length === 0 ? (
             <View style={tw`py-8 items-center`}>
               <Txt twcn="text-light-grayText dark:text-dark-grayText">

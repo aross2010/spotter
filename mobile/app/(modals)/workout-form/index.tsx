@@ -78,7 +78,7 @@ const WorkoutForm = () => {
     focusedInput,
     getNames,
   } = useWorkoutForm()
-  const { updateWorkout } = useWorkout()
+  const { updateWorkout, refreshWorkouts } = useWorkout()
   const { fetchWithAuth } = useAuth()
   const { id, cloneId, from } = useLocalSearchParams()
   const [mode, setMode] = useState<'create' | 'edit' | 'clone'>(
@@ -240,6 +240,9 @@ const WorkoutForm = () => {
 
     // Each exercise must have at least one set
     for (const exercise of workoutData.exercises) {
+      // Must have an exercise name
+      if (!exercise.name || exercise.name.trim() === '') return false
+
       if (exercise.sets.length === 0) return false
 
       // Each set must have reps (for unilateral: leftReps or rightReps)
