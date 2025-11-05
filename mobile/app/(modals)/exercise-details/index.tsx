@@ -400,7 +400,7 @@ const ExerciseDetails = () => {
                 {set.partials ? set.partials : ' '}
               </Txt>
               <Txt twcn="text-xs flex-1 text-center">
-                {set.intensity || set.intensity === 0 ? set.intensity : '-'}
+                {set.intensity || set.intensity === 0 ? set.intensity : ' '}
               </Txt>
             </View>
           )

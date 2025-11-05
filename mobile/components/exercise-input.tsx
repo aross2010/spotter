@@ -1202,7 +1202,7 @@ const ExerciseInput = ({
   const timelineComponent = (
     <View style={tw`gap-1 justify-center items-center`}>
       <View
-        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-8 h-8 rounded-full ${isEditingExerciseNumber ? `${isInSuperset ? 'bg-secondary/80 border border-secondary' : 'bg-primary/80 border border-primary'}` : `${isInSuperset ? 'bg-secondary' : 'bg-primary'}`} items-center justify-center`}
+        style={tw`${exerciseNumber != 1 ? 'mt-0.5' : '-mt-0.5'} w-8 h-8 rounded-full ${isEditingExerciseNumber ? `${isInSuperset ? 'bg-secondary/80 border border-secondary' : 'bg-primary/80 border border-primary'}` : `${isInSuperset ? 'bg-secondary' : 'bg-primary'}`} items-center justify-center`}
       >
         {isEditingExerciseNumber ? (
           <TextInput
@@ -1303,7 +1303,7 @@ const ExerciseInput = ({
   )
 
   return (
-    <View style={tw`flex-row gap-4 items-start`}>
+    <View style={tw`flex-row gap-2 items-start`}>
       {timelineComponent}
       {formComponent}
       <MyModal

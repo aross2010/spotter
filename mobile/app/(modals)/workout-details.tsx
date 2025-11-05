@@ -150,9 +150,9 @@ const WorkoutDetails = () => {
           {/* Timeline Component */}
           <View style={tw`gap-1 justify-center items-center`}>
             <View
-              style={tw`${exerciseIndex !== 0 ? 'mt-1' : ''} w-7 h-7 rounded-full ${isInSuperset ? 'bg-secondary' : 'bg-primary'} items-center justify-center`}
+              style={tw`${exerciseIndex !== 0 ? 'mt-1' : ''} w-8 h-8 rounded-full ${isInSuperset ? 'bg-secondary' : 'bg-primary'} items-center justify-center`}
             >
-              <Txt twcn="text-sm text-dark-text font-poppinsSemiBold">
+              <Txt twcn="text-base text-dark-text font-poppinsSemiBold">
                 {exerciseIndex + 1}
               </Txt>
             </View>
@@ -173,7 +173,9 @@ const WorkoutDetails = () => {
           </View>
 
           {/* Exercise Content */}
-          <View style={tw`flex-1 mb-4 ${exerciseIndex !== 0 ? 'mt-1' : ''}`}>
+          <View
+            style={tw`flex-1 mb-4 ${exerciseIndex != 0 ? 'mt-[7]' : 'mt-[3]'}`}
+          >
             {/* Exercise Name */}
             <View style={tw`pb-2`}>
               <Txt twcn="text-base">{exercise.name}</Txt>
