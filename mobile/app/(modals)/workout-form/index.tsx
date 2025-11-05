@@ -44,7 +44,7 @@ import {
   useWorkoutStore,
   useWorkoutTabStore,
 } from '../../../stores/workout-store'
-import { TagWithCount, WorkoutFormData } from '../../../utils/types'
+import { WorkoutFormData } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
 
 const statusOptions = [

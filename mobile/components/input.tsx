@@ -4,6 +4,7 @@ import { forwardRef } from 'react'
 import Colors from '../constants/colors'
 import Txt from './text'
 import tw from '../tw'
+import useTheme from '../app/hooks/theme'
 
 type InputProps = {
   fullBorder?: boolean
@@ -27,8 +28,7 @@ const Input = forwardRef<TextInput, InputProps>(
     },
     ref
   ) => {
-    const colorScheme = useColorScheme() ?? 'light'
-    const theme = Colors[colorScheme] ?? Colors.light
+    const { colorScheme, theme } = useTheme()
 
     const getMultilineHeight = () => {
       if (props.numberOfLines) {
@@ -38,6 +38,8 @@ const Input = forwardRef<TextInput, InputProps>(
       }
       return undefined
     }
+
+    console.log('colorScheme in Input:', colorScheme)
 
     const standardInput = (
       <TextInput
@@ -53,6 +55,7 @@ const Input = forwardRef<TextInput, InputProps>(
             : undefined,
         ]}
         placeholderTextColor={theme.grayText}
+        keyboardAppearance={colorScheme}
         multiline={props.numberOfLines ? true : props.multiline}
         {...props}
       />

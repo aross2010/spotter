@@ -13,7 +13,7 @@ type ActivityMapProps = {
 // show the year too '25
 const ActivityMap = ({ data }: ActivityMapProps) => {
   const { width } = useWindowDimensions()
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
   const scrollViewRef = useRef<ScrollView>(null)
 
   // Calculate square size dynamically based on view width to fit exactly 20 columns
@@ -246,7 +246,9 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       case 'planned':
         return Colors.secondary
       default:
-        return theme.grayPrimary
+        return colorScheme === 'dark'
+          ? Colors.dark.grayBorder
+          : Colors.light.grayPrimary
     }
   }
 

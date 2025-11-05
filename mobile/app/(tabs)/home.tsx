@@ -68,11 +68,11 @@ const Home = () => {
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
-  useEffect(() => {
-    if (data && !loading) {
-      SplashScreen.hideAsync()
-    }
-  }, [data, isLoading])
+  // useEffect(() => {
+  //   if (data && !loading) {
+  //     SplashScreen.hideAsync()
+  //   }
+  // }, [data, isLoading])
 
   const getHomeData = async () => {
     try {
@@ -103,6 +103,7 @@ const Home = () => {
   )
 
   useEffect(() => {
+    SplashScreen.hideAsync()
     getHomeData()
   }, [])
 
@@ -266,7 +267,7 @@ const Home = () => {
           <Txt twcn="text-2xl">🚀</Txt>
         </View>
         <Txt twcn="text-white text-lg font-poppinsSemiBold">
-          {timeSinceFirst} w/ Spotter
+          {timeSinceFirst} on Spotter
         </Txt>
       </View>
       <View style={tw`mt-4 flex-row justify-between`}>

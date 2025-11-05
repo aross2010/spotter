@@ -706,8 +706,8 @@ const ExerciseInput = ({
               : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
           }`}
         >
-          <Txt>{name}</Txt>
-          {used > 0 && <Txt>{used}</Txt>}
+          <Txt style={tw`text-xs`}>{name}</Txt>
+          {used > 0 && <Txt style={tw`text-xs`}>{used}</Txt>}
         </Button>
       )
     }
