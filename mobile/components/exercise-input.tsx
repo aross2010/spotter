@@ -78,6 +78,9 @@ const ExerciseInput = ({
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
     setFocusedInput,
+    exerciseNumberInputValue,
+    setExerciseNumberInputValue,
+    handleExerciseNumberSubmitRef,
   } = useWorkoutForm()
   const { preferences } = useUserStore()
   const [isSynced, setIsSynced] = useState(
@@ -105,8 +108,7 @@ const ExerciseInput = ({
       const timeoutId = setTimeout(() => {
         exerciseNameInputRef.current?.focus()
         setNewlyAddedExerciseNumber(null) // Clear the flag after focusing
-      }, 100)
-
+      }, 10)
       return () => clearTimeout(timeoutId)
     }
   }, [newlyAddedExerciseNumber, exerciseNumber, setNewlyAddedExerciseNumber])
@@ -163,8 +165,8 @@ const ExerciseInput = ({
         }
       }
 
-      // Use setTimeout to ensure keyboard is dismissed first and refs are ready
-      setTimeout(focusInput, 150)
+      // Use setTimeout to ensure refs are ready
+      setTimeout(focusInput, 50)
     }
   }, [shouldFocusFirstSetWeight, sets, isUnilateral])
 
@@ -525,10 +527,6 @@ const ExerciseInput = ({
 
       // Cap numeric fields at 99 (reps, partials, rpe, rir have database precision of 2,0)
       if (inputMode === 'numeric' && numValue > 99) {
-        Alert.alert(
-          'Value Too Large',
-          `${fieldValue === 'reps' ? 'Reps' : 'Partial reps'} must be 99 or less`
-        )
         return
       }
 
@@ -691,7 +689,6 @@ const ExerciseInput = ({
       }
     })
     setIsExerciseNameSelectorOpen(false)
-    Keyboard.dismiss()
 
     // Trigger autofocus on the first set's weight input
     setShouldFocusFirstSetWeight(true)
@@ -771,12 +768,14 @@ const ExerciseInput = ({
       exercises: updatedExercises,
     })
 
-    const filtered = exerciseNames.filter((workout) =>
-      workout.name.toLowerCase().includes(text.toLowerCase())
+    const filtered = exerciseNames.filter(
+      (ex) =>
+        ex.name.toLowerCase().includes(text.toLowerCase()) &&
+        ex.name.toLowerCase().trim() !== text.toLowerCase().trim()
     )
     setExerciseNameResults(filtered)
 
-    if (text.trim() === '') {
+    if (text.trim() === '' || filtered.length === 0) {
       setIsExerciseNameSelectorOpen(false)
     } else if (!isExerciseNameSelectorOpen) {
       setIsExerciseNameSelectorOpen(true)
@@ -786,6 +785,12 @@ const ExerciseInput = ({
   const handleExerciseNumberEdit = () => {
     setIsEditingExerciseNumber(true)
     setExerciseNumberInput(exerciseNumber.toString())
+    setExerciseNumberInputValue(exerciseNumber.toString())
+    setFocusedInput({
+      exerciseIndex: exerciseNumber - 1,
+      setIndex: -1,
+      field: 'exerciseNumber',
+    })
     // Focus the input after a small delay to ensure it's rendered
     setTimeout(() => {
       exerciseNumberInputRef.current?.focus()
@@ -800,6 +805,7 @@ const ExerciseInput = ({
       // Reset to current number if invalid
       setExerciseNumberInput(exerciseNumber.toString())
       setIsEditingExerciseNumber(false)
+      setFocusedInput(null)
       return
     }
 
@@ -817,19 +823,33 @@ const ExerciseInput = ({
     }
 
     setIsEditingExerciseNumber(false)
+    setFocusedInput(null)
+    Keyboard.dismiss()
   }
-
-  const handleExerciseNumberCancel = () => {
-    setExerciseNumberInput(exerciseNumber.toString())
-    setIsEditingExerciseNumber(false)
-  }
-
   // Update input value when exerciseNumber prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isEditingExerciseNumber) {
       setExerciseNumberInput(exerciseNumber.toString())
     }
   }, [exerciseNumber, isEditingExerciseNumber])
+
+  // Sync context value changes back to local input
+  useEffect(() => {
+    if (isEditingExerciseNumber) {
+      setExerciseNumberInput(exerciseNumberInputValue)
+    }
+  }, [exerciseNumberInputValue, isEditingExerciseNumber])
+
+  // Override context's handleExerciseNumberSubmit with local implementation
+  useEffect(() => {
+    if (isEditingExerciseNumber) {
+      handleExerciseNumberSubmitRef.current = handleExerciseNumberSubmit
+    }
+  }, [
+    isEditingExerciseNumber,
+    handleExerciseNumberSubmit,
+    handleExerciseNumberSubmitRef,
+  ])
 
   const renderedExerciseButtons = buttons.map(
     ({ name, icon: Icon, onPress }) => {
@@ -1182,25 +1202,25 @@ const ExerciseInput = ({
   const timelineComponent = (
     <View style={tw`gap-1 justify-center items-center`}>
       <View
-        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-7 h-7 rounded-full ${isEditingExerciseNumber ? `${isInSuperset ? 'bg-secondary/80 border border-secondary' : 'bg-primary/80 border border-primary'}` : `${isInSuperset ? 'bg-secondary' : 'bg-primary'}`} items-center justify-center`}
+        style={tw`${exerciseNumber != 1 ? 'mt-1' : ''} w-8 h-8 rounded-full ${isEditingExerciseNumber ? `${isInSuperset ? 'bg-secondary/80 border border-secondary' : 'bg-primary/80 border border-primary'}` : `${isInSuperset ? 'bg-secondary' : 'bg-primary'}`} items-center justify-center`}
       >
         {isEditingExerciseNumber ? (
           <TextInput
             ref={exerciseNumberInputRef}
-            style={tw`text-sm text-dark-text font-poppinsSemiBold w-full h-full`}
+            style={tw`text-base text-dark-text font-poppinsSemiBold w-full h-full`}
             textAlign="center"
             textAlignVertical="center"
             value={exerciseNumberInput}
             onChangeText={setExerciseNumberInput}
             onSubmitEditing={handleExerciseNumberSubmit}
-            onBlur={handleExerciseNumberCancel}
+            onBlur={handleExerciseNumberSubmit}
             keyboardType="numeric"
             maxLength={2}
-            selectTextOnFocus={false}
+            selectTextOnFocus
           />
         ) : (
           <Button onPress={handleExerciseNumberEdit}>
-            <Txt twcn="text-sm text-dark-text font-poppinsSemiBold">
+            <Txt twcn="text-base text-dark-text font-poppinsSemiBold">
               {exerciseNumber ?? '+'}
             </Txt>
           </Button>
@@ -1232,7 +1252,9 @@ const ExerciseInput = ({
               }}
               onChange={(e) => handleChange(e.nativeEvent.text)}
               onFocus={() => {
-                setIsExerciseNameSelectorOpen(true)
+                // Clear results on focus - they'll populate when user types
+                setExerciseNameResults([])
+                setIsExerciseNameSelectorOpen(false)
                 setFocusedInput({
                   exerciseIndex: exerciseNumber - 1,
                   setIndex: -1,
@@ -1249,10 +1271,10 @@ const ExerciseInput = ({
               exerciseNameResults.length > 0 &&
               exercise.name.trim().length > 0 && (
                 <BlurView
-                  intensity={50}
+                  intensity={25}
                   tint="default"
                   style={[
-                    tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
+                    tw`absolute top-full bg-white dark:bg-dark-grayPrimary left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
                   ]}
                 >
                   <ScrollView
@@ -1281,7 +1303,7 @@ const ExerciseInput = ({
   )
 
   return (
-    <View style={tw`flex-row gap-2 items-start`}>
+    <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
       <MyModal

@@ -50,12 +50,12 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
 
   // Less than a year - show months with decimal
   if (diffDays < 365) {
-    const months = (diffDays / 30).toFixed(2)
+    const months = parseFloat((diffDays / 30).toFixed(2))
     return `${months} Months`
   }
 
   // A year or more - show years with decimal
-  const years = (diffDays / 365).toFixed(2)
+  const years = parseFloat((diffDays / 365).toFixed(2))
   return `${years} Years`
 }
 
@@ -131,8 +131,10 @@ const Home = () => {
 
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-4 text-base font-poppinsSemiBold">🔥 Activity</Txt>
-      <ActivityMap data={data?.activityCalendar || {}} />
+      <Txt twcn="mb-4 text-base font-poppinsSemiBold">Activity</Txt>
+      <View style={tw`p-4 rounded-xl bg-white dark:bg-dark-grayPrimary`}>
+        <ActivityMap data={data?.activityCalendar || {}} />
+      </View>
     </View>
   )
 
@@ -143,7 +145,7 @@ const Home = () => {
           ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
             ? '⏰ Upcoming Workout'
-            : '✅ Latest Workout'}
+            : 'Last Workout'}
       </Txt>
       <WorkoutView
         workout={data?.featuredWorkout.workout as WorkoutMinimal}
@@ -258,11 +260,13 @@ const Home = () => {
   const statsTogether = data && data.totalWorkouts > 0 && (
     <View style={tw`rounded-2xl p-3 bg-primary relative overflow-hidden`}>
       <View style={tw`items-center flex-row gap-4`}>
-        <View style={tw`rounded-full bg-white/25 p-2 h-10 w-10 items-center`}>
-          <Txt twcn="text-2xl">🏆</Txt>
+        <View
+          style={tw`rounded-full bg-white/25 h-10 w-10 items-center justify-center`}
+        >
+          <Txt twcn="text-2xl">🚀</Txt>
         </View>
-        <Txt twcn="text-white text-xl font-poppinsSemiBold">
-          {timeSinceFirst} on Spotter
+        <Txt twcn="text-white text-lg font-poppinsSemiBold">
+          {timeSinceFirst} w/ Spotter
         </Txt>
       </View>
       <View style={tw`mt-4 flex-row justify-between`}>

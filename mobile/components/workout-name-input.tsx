@@ -46,11 +46,15 @@ const WorkoutNameInput = () => {
 
   const handleChange = (text: string) => {
     setWorkoutData((prev) => ({ ...prev, name: text }))
-    const filtered = workoutNames.filter((workout) =>
-      workout.name.toLowerCase().includes(text.toLowerCase())
+    const filtered = workoutNames.filter(
+      (workout) =>
+        workout.name.toLowerCase().includes(text.toLowerCase()) &&
+        workout.name.toLowerCase().trim() !== text.toLowerCase().trim()
     )
     setWorkoutNamesResults(filtered)
-    if (!isWorkoutNameSelectorOpen) {
+    if (filtered.length === 0) {
+      setIsWorkoutNameSelectorOpen(false)
+    } else if (!isWorkoutNameSelectorOpen) {
       setIsWorkoutNameSelectorOpen(true)
     }
   }
@@ -77,7 +81,9 @@ const WorkoutNameInput = () => {
         twcnInput="text-light-text dark:text-dark-text"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
-          setIsWorkoutNameSelectorOpen(true)
+          // Clear results on focus - they'll populate when user types
+          setWorkoutNamesResults([])
+          setIsWorkoutNameSelectorOpen(false)
           setFocusedInput({
             exerciseIndex: -1,
             setIndex: -1,
@@ -88,10 +94,10 @@ const WorkoutNameInput = () => {
 
       {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (
         <BlurView
-          intensity={50}
+          intensity={25}
           tint="default"
           style={[
-            tw`absolute top-full bg-light-grayPrimary/25 dark:bg-dark-grayPrimary/25 left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
+            tw`absolute top-full bg-white dark:bg-dark-grayPrimary left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
           ]}
         >
           {renderedWorkoutNames}

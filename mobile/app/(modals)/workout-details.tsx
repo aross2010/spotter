@@ -23,6 +23,7 @@ import { handleShareWorkout } from '../../functions/share'
 import { useUserStore } from '../../stores/user-store'
 import { useWorkoutStore, useWorkoutTabStore } from '../../stores/workout-store'
 import { useExerciseStore } from '../../stores/exercise-store'
+import WorkoutRecap from '../../components/workout-recap'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -34,6 +35,7 @@ const WorkoutDetails = () => {
   const { shouldRefresh, clearRefresh } = useWorkoutStore()
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   const getWorkoutDetails = async () => {
     setIsLoading(true)
@@ -46,6 +48,7 @@ const WorkoutDetails = () => {
       )
       const workoutDetails = (await response.json()) as Workout
       setWorkout(workoutDetails)
+      setHasLoaded(true)
     } catch (error: any) {
       Alert.alert('Error', error.message)
     } finally {
@@ -64,7 +67,7 @@ const WorkoutDetails = () => {
         if (from === 'exercise') {
           triggerExerciseDetailsRefresh()
         }
-        getWorkoutDetails()
+        if (hasLoaded) getWorkoutDetails()
         clearRefresh()
       }
       return () => {}
@@ -179,27 +182,27 @@ const WorkoutDetails = () => {
             {/* Set Labels */}
             <View style={tw`mt-2 flex-row flex-wrap`}>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
                   Set
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
                   {preferences?.weightMetric === 'kgs' ? 'Kg' : 'Lbs'}
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
                   Reps
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
                   Part.
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium uppercase tracking-wider text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
                   RPE
                 </Txt>
               </View>
@@ -355,12 +358,16 @@ const WorkoutDetails = () => {
     workout && (
       <SafeView>
         <View style={tw`gap-3`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide text-center">
             {capString(
               `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
               40
             )}
           </Txt>
+          {workout && <WorkoutRecap {...workout} />}
+        </View>
+        <View style={tw`mt-6`}>{renderedExercises}</View>
+        <View style={tw`mt-4 gap-3`}>
           {workout.notes && (
             <Txt twcn="text-sm font-poppinsItalic">{workout.notes}</Txt>
           )}
@@ -375,7 +382,6 @@ const WorkoutDetails = () => {
             </View>
           )}
         </View>
-        <View style={tw`mt-6`}>{renderedExercises}</View>
       </SafeView>
     )
   )

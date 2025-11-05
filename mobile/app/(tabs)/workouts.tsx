@@ -40,7 +40,7 @@ const Workouts = () => {
       return Number(acc) + Number(filterLength)
     }, 0 as number) +
     (sortOrder == 'asc' ? 1 : 0) +
-    (statusFilter && statusFilter !== 'completed' ? 1 : 0)
+    (statusFilter && statusFilter !== 'all' ? 1 : 0)
   const noResults = currentWorkouts.length === 0 && numActiveFilters > 0
 
   useFocusEffect(

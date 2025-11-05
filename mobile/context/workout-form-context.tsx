@@ -4,6 +4,7 @@ import React, {
   useState,
   ReactNode,
   useEffect,
+  useRef,
 } from 'react'
 import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
@@ -40,6 +41,9 @@ type WorkoutFormContextType = {
   focusedInput: FocusedInputType
   setFocusedInput: (input: FocusedInputType) => void
   adjustFocusedInputValue: (increment: boolean, customStep?: number) => void
+  exerciseNumberInputValue: string
+  setExerciseNumberInputValue: (value: string) => void
+  handleExerciseNumberSubmitRef: React.MutableRefObject<(() => void) | null>
   getNames: () => Promise<void>
   userTags: TagWithCount[]
   resetWorkoutFormContext: () => void
@@ -100,6 +104,8 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     number | null
   >(null)
   const [focusedInput, setFocusedInput] = useState<FocusedInputType>(null)
+  const [exerciseNumberInputValue, setExerciseNumberInputValue] = useState('')
+  const handleExerciseNumberSubmitRef = useRef<(() => void) | null>(null)
   const { fetchWithAuth } = useAuth()
   const { refreshWorkouts } = useWorkout()
 
@@ -288,6 +294,9 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     focusedInput,
     setFocusedInput,
     adjustFocusedInputValue,
+    exerciseNumberInputValue,
+    setExerciseNumberInputValue,
+    handleExerciseNumberSubmitRef,
     getNames,
     userTags,
     resetWorkoutFormContext,

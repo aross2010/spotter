@@ -1,11 +1,12 @@
 import SafeView from '../../../components/safe-view'
-import { View } from 'react-native'
+import { View, Keyboard } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { HeaderBackButton } from '@react-navigation/elements'
 import { useEffect, useState } from 'react'
 import {
+  DefaultKeyboardToolbarTheme,
   KeyboardToolbar,
   KeyboardToolbarProps,
 } from 'react-native-keyboard-controller'
@@ -19,6 +20,7 @@ import {
   ChevronRight,
   Plus,
   Minus,
+  Check,
 } from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
 import DatePicker from 'react-native-date-picker'
@@ -69,7 +71,7 @@ const WorkoutForm = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [showStatusMenu, setShowStatusMenu] = useState(false)
   const navigation = useNavigation()
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
   const {
     workoutData,
     setWorkoutData,
@@ -77,6 +79,9 @@ const WorkoutForm = () => {
     adjustFocusedInputValue,
     focusedInput,
     getNames,
+    exerciseNumberInputValue,
+    setExerciseNumberInputValue,
+    handleExerciseNumberSubmitRef,
   } = useWorkoutForm()
   const { updateWorkout, refreshWorkouts } = useWorkout()
   const { fetchWithAuth } = useAuth()
@@ -359,7 +364,7 @@ const WorkoutForm = () => {
             triggerExerciseDetailsRefresh()
             triggerWorkoutTabRefresh()
           } else {
-            triggerRefresh()
+            triggerWorkoutTabRefresh()
             router.replace('/workouts')
           }
         }
@@ -399,6 +404,19 @@ const WorkoutForm = () => {
       />
     </Button>
   )
+
+  const CustomDoneButton: KeyboardToolbarProps['button'] = ({
+    children,
+    onPress,
+  }) => (
+    <Button onPress={onPress}>
+      <Check
+        size={32}
+        color={Colors.primary}
+      />
+    </Button>
+  )
+
   const shouldShowToolbar =
     !!focusedInput &&
     focusedInput.field !== 'exerciseName' &&
@@ -418,7 +436,7 @@ const WorkoutForm = () => {
               setIsDatePickerOpen(true)
             }}
             hitSlop={12}
-            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-lg py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
             twcnText="text-xs  text-light-text dark:text-dark-text"
           >
             <Calendar
@@ -436,7 +454,7 @@ const WorkoutForm = () => {
               router.push('/workout-form/location')
             }}
             hitSlop={12}
-            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
+            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-lg py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
             twcnText={`text-xs ${
               workoutData.location.length > 0
                 ? 'text-light-text dark:text-dark-text'
@@ -519,18 +537,34 @@ const WorkoutForm = () => {
         pointerEvents={shouldShowToolbar ? 'auto' : 'none'}
         style={!shouldShowToolbar ? { height: 0, opacity: 0 } : undefined}
       >
-        <KeyboardToolbar>
-          <KeyboardToolbar.Prev button={CustomLeftButton} />
-          <KeyboardToolbar.Next button={CustomRightButton} />
+        <KeyboardToolbar
+          theme={{
+            ...DefaultKeyboardToolbarTheme,
+            dark: {
+              ...DefaultKeyboardToolbarTheme.dark,
+              primary: Colors.dark.text,
+              background: Colors.dark.background,
+            },
+            light: {
+              ...DefaultKeyboardToolbarTheme.light,
+              primary: Colors.light.text,
+              background: Colors.light.background,
+            },
+          }}
+        >
           <KeyboardToolbar.Content>
-            {focusedInput &&
-            (focusedInput.field === 'weightLbs' ||
-              focusedInput.field === 'weightKg') ? (
-              <View style={tw`flex-row items-center justify-end gap-3 px-4`}>
-                {/* +/- 1 */}
+            {focusedInput && focusedInput.field === 'exerciseNumber' ? (
+              <View
+                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
+              >
                 <View style={tw`flex-row items-center gap-1`}>
                   <Button
-                    onPress={() => adjustFocusedInputValue(false, 1)}
+                    onPress={() => {
+                      const currentValue =
+                        parseInt(exerciseNumberInputValue) || 1
+                      const newValue = Math.max(currentValue - 1, 1)
+                      setExerciseNumberInputValue(newValue.toString())
+                    }}
                     twcn="p-2"
                   >
                     <Minus
@@ -540,7 +574,13 @@ const WorkoutForm = () => {
                   </Button>
                   <Txt twcn="font-poppinsMedium">1</Txt>
                   <Button
-                    onPress={() => adjustFocusedInputValue(true, 1)}
+                    onPress={() => {
+                      const currentValue =
+                        parseInt(exerciseNumberInputValue) || 1
+                      const maxNumber = workoutData.exercises.length
+                      const newValue = Math.min(currentValue + 1, maxNumber)
+                      setExerciseNumberInputValue(newValue.toString())
+                    }}
                     twcn="p-2"
                   >
                     <Plus
@@ -549,56 +589,112 @@ const WorkoutForm = () => {
                     />
                   </Button>
                 </View>
-
-                {/* +/- 2.5 */}
-                <View style={tw`flex-row items-center gap-1`}>
-                  <Button
-                    onPress={() => adjustFocusedInputValue(false, 2.5)}
-                    twcn="p-2"
-                  >
-                    <Minus
-                      size={24}
-                      color={Colors.red}
-                    />
-                  </Button>
-                  <Txt twcn="font-poppinsMedium">2.5</Txt>
-                  <Button
-                    onPress={() => adjustFocusedInputValue(true, 2.5)}
-                    twcn="p-2"
-                  >
-                    <Plus
-                      size={24}
-                      color={Colors.green}
-                    />
-                  </Button>
+                <Button
+                  onPress={() => {
+                    Keyboard.dismiss()
+                    handleExerciseNumberSubmitRef.current?.()
+                  }}
+                >
+                  <Check
+                    size={32}
+                    color={Colors.primary}
+                  />
+                </Button>
+              </View>
+            ) : focusedInput &&
+              (focusedInput.field === 'weightLbs' ||
+                focusedInput.field === 'weightKg') ? (
+              <View
+                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
+              >
+                <View style={tw`flex-row items-center gap-2`}>
+                  <KeyboardToolbar.Prev button={CustomLeftButton} />
+                  <KeyboardToolbar.Next button={CustomRightButton} />
                 </View>
+                <View style={tw`flex-row gap-2 items-center`}>
+                  <View style={tw`flex-row items-center gap-1`}>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(false, 2.5)}
+                      twcn="p-2"
+                    >
+                      <Minus
+                        size={24}
+                        color={Colors.red}
+                      />
+                    </Button>
+                    <Txt twcn="font-poppinsMedium">2.5</Txt>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(true, 2.5)}
+                      twcn="p-2"
+                    >
+                      <Plus
+                        size={24}
+                        color={Colors.green}
+                      />
+                    </Button>
+                  </View>
+                  <View style={tw`flex-row items-center gap-1`}>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(false, 5)}
+                      twcn="p-2"
+                    >
+                      <Minus
+                        size={24}
+                        color={Colors.red}
+                      />
+                    </Button>
+                    <Txt twcn="font-poppinsMedium">5</Txt>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(true, 5)}
+                      twcn="p-2"
+                    >
+                      <Plus
+                        size={24}
+                        color={Colors.green}
+                      />
+                    </Button>
+                  </View>
+                </View>
+                <KeyboardToolbar.Done button={CustomDoneButton} />
               </View>
             ) : (
-              <View style={tw`flex-row items-center justify-end gap-1 px-4`}>
-                <Button
-                  onPress={() => adjustFocusedInputValue(false)}
-                  twcn="p-2"
-                >
-                  <Minus
-                    size={24}
-                    color={Colors.red}
-                  />
-                </Button>
-                <Txt twcn="font-poppinsMedium">
-                  {focusedInput &&
-                  (focusedInput.field === 'rpe' || focusedInput.field === 'rir')
-                    ? '0.5'
-                    : '1'}
-                </Txt>
-                <Button
-                  onPress={() => adjustFocusedInputValue(true)}
-                  twcn="p-2"
-                >
-                  <Plus
-                    size={24}
-                    color={Colors.green}
-                  />
-                </Button>
+              <View
+                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
+              >
+                <View style={tw`flex-row items-center gap-4`}>
+                  <View style={tw`flex-row items-center gap-2`}>
+                    <KeyboardToolbar.Prev button={CustomLeftButton} />
+                    <KeyboardToolbar.Next button={CustomRightButton} />
+                  </View>
+                  <View style={tw`flex-row items-center gap-1`}>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(false)}
+                      twcn="p-2"
+                    >
+                      <Minus
+                        size={24}
+                        color={Colors.red}
+                      />
+                    </Button>
+                    <Txt twcn="font-poppinsMedium">
+                      {focusedInput &&
+                      (focusedInput.field === 'rpe' ||
+                        focusedInput.field === 'rir')
+                        ? '0.5'
+                        : '1'}
+                    </Txt>
+                    <Button
+                      onPress={() => adjustFocusedInputValue(true)}
+                      twcn="p-2"
+                    >
+                      <Plus
+                        size={24}
+                        color={Colors.green}
+                      />
+                    </Button>
+                  </View>
+                </View>
+                <KeyboardToolbar.Done button={CustomDoneButton} />
               </View>
             )}
           </KeyboardToolbar.Content>

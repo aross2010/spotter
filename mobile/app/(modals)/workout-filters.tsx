@@ -10,6 +10,7 @@ import {
   Circle,
   CircleCheck,
   CircleDot,
+  Layers,
   RotateCcw,
   Search,
   X,
@@ -23,6 +24,11 @@ import { router, useNavigation } from 'expo-router'
 import MyModal from '../../components/modal'
 
 const statusOptions = [
+  {
+    value: 'all' as const,
+    label: 'All',
+    icon: Layers,
+  },
   {
     value: 'completed' as const,
     label: 'Completed',
@@ -68,7 +74,7 @@ const WorkoutFilters = () => {
   }>({
     selectedOptions: [],
     sortOrder: 'desc',
-    statusFilter: 'completed',
+    statusFilter: 'all',
   })
 
   const navigation = useNavigation()
@@ -117,14 +123,35 @@ const WorkoutFilters = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <Button
-            onPress={changesExist ? handleApplyFilters : undefined}
-            hitSlop={12}
-            accessibilityLabel="apply filters and sort method"
-            twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-            text={isLoading ? 'Applying...' : 'Apply'}
-            disabled={!changesExist || isLoading}
-          />
+          <View style={tw`flex-row items-center gap-2`}>
+            {!isLoading && (
+              <Button
+                onPress={() => setShowStatusMenu(true)}
+                hitSlop={12}
+                twcn="p-1.5 rounded-xl bg-primary/10"
+              >
+                {(() => {
+                  const StatusIcon = statusOptions.find(
+                    (opt) => opt.value === (statusFilter || 'all')
+                  )?.icon
+                  return StatusIcon ? (
+                    <StatusIcon
+                      size={16}
+                      color={Colors.primary}
+                    />
+                  ) : null
+                })()}
+              </Button>
+            )}
+            <Button
+              onPress={changesExist ? handleApplyFilters : undefined}
+              hitSlop={12}
+              accessibilityLabel="apply filters and sort method"
+              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+              text={isLoading ? 'Applying...' : 'Apply'}
+              disabled={!changesExist || isLoading}
+            />
+          </View>
         )
       },
       headerLeft: () => (
@@ -238,12 +265,14 @@ const WorkoutFilters = () => {
   const handleResetAll = () => {
     setSelectedOptions([])
     setSortOrder('desc')
-    setStatusFilter('completed')
+    setStatusFilter('all')
     setResultOptions(filterOptions)
     clearFilters()
   }
 
-  const handleStatusChange = (status: 'completed' | 'planned' | 'active') => {
+  const handleStatusChange = (
+    status: 'all' | 'completed' | 'planned' | 'active'
+  ) => {
     setStatusFilter(status)
     setShowStatusMenu(false)
   }
@@ -400,29 +429,6 @@ const WorkoutFilters = () => {
           </View>
           <View style={tw`flex-row items-center gap-1.5`}>
             <Button
-              onPress={() => setShowStatusMenu(true)}
-              hitSlop={12}
-              twcn={`p-2 rounded-xl ${statusFilter && statusFilter !== 'completed' ? 'bg-primary' : 'bg-primary/10'}`}
-            >
-              {(() => {
-                const currentStatus = statusFilter || 'completed'
-                const StatusIcon = statusOptions.find(
-                  (opt) => opt.value === currentStatus
-                )?.icon
-                return StatusIcon ? (
-                  <StatusIcon
-                    size={16}
-                    color={
-                      statusFilter && statusFilter !== 'completed'
-                        ? '#FFFFFF'
-                        : Colors.primary
-                    }
-                  />
-                ) : null
-              })()}
-            </Button>
-
-            <Button
               hitSlop={12}
               twcn={`${sortOrder != 'asc' ? 'bg-primary/10' : 'bg-primary'} rounded-xl p-2`}
               onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -477,7 +483,7 @@ const WorkoutFilters = () => {
         <Txt twcn="font-poppinsMedium mb-2">Workout Status</Txt>
         <View>
           {statusOptions.map((option) => {
-            const isSelected = (statusFilter || 'completed') === option.value
+            const isSelected = (statusFilter || 'all') === option.value
             const StatusIcon = option.icon
 
             return (

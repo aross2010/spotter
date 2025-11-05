@@ -1,6 +1,6 @@
 export function formatNumber(num: number): string {
   // For numbers less than 100,000, add commas
-  if (num < 100000) {
+  if (num < 10000) {
     return num.toLocaleString('en-US')
   }
 

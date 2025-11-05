@@ -24,7 +24,7 @@ const TabsLayout = () => {
         tabBar={(props) => (
           <TopIndicatorTabBar
             {...props}
-            height={90}
+            height={80}
             paddingTop={10}
             indicatorColor={theme.text}
           />
@@ -61,7 +61,7 @@ const TabsLayout = () => {
             tabBarIcon: ({ focused }) => (
               <Home
                 strokeWidth={1.5}
-                size={28}
+                size={22}
                 color={focused ? theme.text : theme.grayText}
               />
             ),
@@ -98,13 +98,13 @@ const TabsLayout = () => {
               focused ? (
                 <CalendarFold
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.text}
                 />
               ) : (
                 <Calendar
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.grayText}
                 />
               ),
@@ -121,13 +121,13 @@ const TabsLayout = () => {
                     transform: [{ rotate: '45deg' }],
                   }}
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.text}
                 />
               ) : (
                 <Dumbbell
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.grayText}
                 />
               ),
@@ -141,13 +141,13 @@ const TabsLayout = () => {
               focused ? (
                 <BookOpen
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.text}
                 />
               ) : (
                 <Book
                   strokeWidth={1.5}
-                  size={28}
+                  size={22}
                   color={theme.grayText}
                 />
               ),

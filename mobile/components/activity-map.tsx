@@ -20,9 +20,14 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
   const visibleWeeks = useMemo(() => {
     const dayLabelsWidth = 12 // Width of the day labels (w-3)
     const dayLabelsMargin = 8 // mr-2 = 8px
-    const paddingWidth = 32 // 16px padding on each side of SafeView (px-4)
+    const safeViewPadding = 32 // 16px padding on each side of SafeView (px-4)
+    const wrapperPadding = 32 // 16px padding on each side of wrapper View (p-4)
     const availableWidth =
-      width - dayLabelsWidth - dayLabelsMargin - paddingWidth
+      width -
+      dayLabelsWidth -
+      dayLabelsMargin -
+      safeViewPadding -
+      wrapperPadding
 
     const targetWeeks = 20
     const gapSize = 3 // Minimal gap between squares

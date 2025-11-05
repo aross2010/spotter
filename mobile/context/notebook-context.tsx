@@ -68,7 +68,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc') // date desc or asc
   const [tagFilters, setTagFilters] = useState<Tag[]>([]) // active tag filters
 
-  const PAGE_SIZE = 25
+  const PAGE_SIZE = 10
 
   const buildQueryParams = (
     page: number,

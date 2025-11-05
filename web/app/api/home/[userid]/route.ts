@@ -88,7 +88,9 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .leftJoin(workoutExercises, eq(workouts.id, workoutExercises.workoutId))
         .leftJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
         .leftJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-        .where(and(eq(workouts.userId, userId))),
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+        ),
 
       // Get all activity data with status and workout IDs
       db
@@ -136,7 +138,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .where(
           and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
         )
-        .orderBy(desc(workouts.date))
+        .orderBy(desc(workouts.date), desc(workouts.updatedAt))
         .limit(1),
     ])
 

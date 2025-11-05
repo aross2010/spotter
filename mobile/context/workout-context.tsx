@@ -75,7 +75,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [statusFilter, setStatusFilter] = useState<string | null>('completed')
+  const [statusFilter, setStatusFilter] = useState<string | null>('all')
   const [filters, setFilters] = useState<WorkoutFilters>({
     tags: [],
     workoutNames: [],
@@ -86,7 +86,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   const { user } = useUserStore()
   const { fetchWithAuth } = useAuth()
 
-  const PAGE_SIZE = 25
+  const PAGE_SIZE = 10
 
   const getFilterOptions = async () => {
     try {
@@ -142,7 +142,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       exerciseNames: [],
       locations: [],
     })
-    setStatusFilter('completed')
+    setStatusFilter('all')
   }
 
   const buildQueryParams = (
@@ -175,7 +175,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       if (locations.length > 0) {
         params.append('locations', JSON.stringify(locations))
       }
-      if (status) {
+      if (status && status !== 'all') {
         params.append('status', status)
       }
     }
@@ -370,7 +370,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     setHasMore(true)
     setCurrentPage(1)
     setSortOrder('desc')
-    setStatusFilter('completed')
+    setStatusFilter('all')
     setFilters({
       tags: [],
       workoutNames: [],

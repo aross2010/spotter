@@ -38,8 +38,8 @@ export default function TopIndicatorTabBar({
   navigation,
   barColor = Colors.light.grayPrimary,
   indicatorColor = Colors.light.text,
-  height = 90,
-  paddingTop = 10,
+  height = 70,
+  paddingTop = 8,
 }: Props) {
   const insets = useSafeAreaInsets()
   const [w, setW] = React.useState(0)
@@ -85,8 +85,15 @@ export default function TopIndicatorTabBar({
           styles.indicator,
           {
             backgroundColor: indicatorColor,
-            width: tabW,
-            transform: [{ translateX }],
+            width: tabW * 0.75,
+            transform: [
+              {
+                translateX: translateX.interpolate({
+                  inputRange: [0, w],
+                  outputRange: [tabW * 0.125, w + tabW * 0.125],
+                }),
+              },
+            ],
           },
         ]}
       />
@@ -132,12 +139,12 @@ export default function TopIndicatorTabBar({
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={tw`flex-1 items-center justify-end h-16`}
+            style={tw`flex-1 items-center justify-end h-12`}
           >
             {icon}
             <Txt
               numberOfLines={1}
-              twcn={`text-xs ${
+              twcn={`text-[10px] ${
                 !isFocused
                   ? 'text-light-grayText dark:text-dark-grayText'
                   : 'text-light-text dark:text-dark-text'

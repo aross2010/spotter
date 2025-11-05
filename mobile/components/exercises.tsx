@@ -152,7 +152,7 @@ const Exercises = () => {
       </View>
       <View style={tw`mt-4`}>{renderedExercises}</View>
       <View
-        style={tw`w-7 h-7 mt-1 rounded-full bg-primary items-center justify-center`}
+        style={tw`w-8 h-8 mt-1 rounded-full bg-primary items-center justify-center`}
       >
         <Button
           onPress={handleAddEmptyExercise}
@@ -160,7 +160,7 @@ const Exercises = () => {
         >
           <Plus
             strokeWidth={2.5}
-            size={18}
+            size={22}
             color={Colors.dark.text}
           />
         </Button>

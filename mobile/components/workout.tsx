@@ -109,7 +109,7 @@ const WorkoutView = ({
             {(workout.status === 'planned' || workout.status === 'active') && (
               <Txt
                 numberOfLines={1}
-                twcn={`text-xs ${workout.status === 'planned' ? 'text-secondary' : workout.status === 'active' ? 'text-blue' : 'text-light-grayText dark:text-dark-grayText '}`}
+                twcn={`text-xs ${workout.status === 'planned' || workout.status === 'active' ? 'text-secondary dark:text-secondary' : 'text-light-grayText dark:text-dark-grayText '}`}
               >
                 – {workout.status}
               </Txt>
