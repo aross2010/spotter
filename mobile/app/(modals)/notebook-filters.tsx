@@ -189,7 +189,7 @@ const NotebookFilters = () => {
             style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}
           >
             <View
-              style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white`}
+              style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
             >
               <Search
                 size={16}
