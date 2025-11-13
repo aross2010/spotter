@@ -29,6 +29,8 @@ import { AuthProvider } from '../context/auth-context'
 import { NotebookProvider } from '../context/notebook-context'
 import ThemedStatusBar from '../components/status-bar'
 import { WorkoutProvider } from '../context/workout-context'
+import ErrorBoundary from 'react-native-error-boundary'
+import Error from '../components/error'
 
 SplashScreen.setOptions({
   duration: 1000,
@@ -65,35 +67,37 @@ const RootLayout = () => {
             <ThemedStatusBar />
             <NotebookProvider>
               <WorkoutProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    headerBackButtonDisplayMode: 'minimal',
-                  }}
-                >
-                  <Stack.Screen
-                    name="index"
-                    options={{ animation: 'none' }}
-                  />
-                  <Stack.Screen
-                    name="(tabs)"
-                    options={{
-                      animation: 'none',
+                <ErrorBoundary FallbackComponent={Error}>
+                  <Stack
+                    screenOptions={{
                       headerShown: false,
                       headerBackButtonDisplayMode: 'minimal',
                     }}
-                  />
-                  <Stack.Screen
-                    name="(modals)"
-                    options={{
-                      presentation: 'card',
-                      headerShown: false,
-                      animation: 'slide_from_bottom',
-                      animationDuration: 350,
-                      headerBackButtonDisplayMode: 'minimal',
-                    }}
-                  />
-                </Stack>
+                  >
+                    <Stack.Screen
+                      name="index"
+                      options={{ animation: 'none' }}
+                    />
+                    <Stack.Screen
+                      name="(tabs)"
+                      options={{
+                        animation: 'none',
+                        headerShown: false,
+                        headerBackButtonDisplayMode: 'minimal',
+                      }}
+                    />
+                    <Stack.Screen
+                      name="(modals)"
+                      options={{
+                        presentation: 'card',
+                        headerShown: false,
+                        animation: 'slide_from_bottom',
+                        animationDuration: 350,
+                        headerBackButtonDisplayMode: 'minimal',
+                      }}
+                    />
+                  </Stack>
+                </ErrorBoundary>
               </WorkoutProvider>
             </NotebookProvider>
           </SafeAreaProvider>

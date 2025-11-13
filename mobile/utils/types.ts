@@ -73,6 +73,8 @@ export type Exercise = {
   sets: Set[]
 }
 
+export type WorkoutStatus = 'completed' | 'planned' | 'active'
+
 // for workout details page
 export type Workout = {
   id: string
@@ -87,6 +89,7 @@ export type Workout = {
   setGroupings: SetGrouping[]
   notes?: string
   location?: string
+  status: WorkoutStatus
 }
 
 type ExerciseInForm = {
@@ -107,7 +110,7 @@ export type WorkoutFormData = {
   exercises: ExerciseInForm[]
   weightUnit: 'lbs' | 'kgs'
   setGroupings: SetGrouping[]
-  status: 'completed' | 'planned' | 'active'
+  status: WorkoutStatus
 }
 
 // for the workout tab workouts
@@ -124,7 +127,7 @@ export type WorkoutMinimal = {
     lowRepRange: number
     highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
   }[]
-  status: 'completed' | 'planned' | 'active'
+  status: WorkoutStatus
 }
 
 export type WorkoutName = {
@@ -184,7 +187,7 @@ export type ExerciseDetails = {
 export type ActivityCalendar = {
   [date: string]: {
     workouts: {
-      status: 'completed' | 'planned' | 'active'
+      status: WorkoutStatus
       workoutId: string
     }[]
   }

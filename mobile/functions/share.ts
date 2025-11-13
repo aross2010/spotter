@@ -34,9 +34,9 @@ export const getWorkoutMessage = (workout: Workout) => {
           leftReps !== rightReps ? `${leftReps}/${rightReps}` : leftReps
 
         if (weight && weight > 0) {
-          message += `    ${set.setNumber}. ${weight} lbs × ${reps} reps`
+          message += `    ${set.setNumber}. ${weight} lbs × ${reps} rep${reps === 1 ? '' : 's'}`
         } else {
-          message += `    ${set.setNumber}. ${reps} reps`
+          message += `    ${set.setNumber}. ${reps} rep${reps === 1 ? '' : 's'}`
         }
 
         if (set.leftPartialReps || set.rightPartialReps) {
@@ -46,7 +46,7 @@ export const getWorkoutMessage = (workout: Workout) => {
             leftPartials !== rightPartials
               ? `${leftPartials}/${rightPartials}`
               : leftPartials
-          message += ` + ${partials} partials`
+          message += ` + ${partials} partial${partials === '1' ? '' : 's'}`
         }
 
         if (set.leftRpe || set.rightRpe) {
@@ -54,23 +54,30 @@ export const getWorkoutMessage = (workout: Workout) => {
           const rightRpe = set.rightRpe || 0
           const rpe = leftRpe !== rightRpe ? `${leftRpe}/${rightRpe}` : leftRpe
           message += ` @ RPE ${rpe}`
+        } else if (set.leftRir || set.rightRir) {
+          const leftRir = set.leftRir || 0
+          const rightRir = set.rightRir || 0
+          const rir = leftRir !== rightRir ? `${leftRir}/${rightRir}` : leftRir
+          message += ` w/ ${rir} RIR`
         }
       } else {
         const weight = set.weightLbs || set.weightKg
         const reps = set.reps || '-'
 
         if (weight && weight > 0) {
-          message += `    ${set.setNumber}. ${weight} lbs × ${reps} reps`
+          message += `    ${set.setNumber}. ${weight} lbs × ${reps} rep${reps === 1 ? '' : 's'}`
         } else {
-          message += `    ${set.setNumber}. ${reps} reps`
+          message += `    ${set.setNumber}. ${reps} rep${reps === 1 ? '' : 's'}`
         }
 
         if (set.partialReps) {
-          message += ` + ${set.partialReps} partials`
+          message += ` + ${set.partialReps} partial${set.partialReps === 1 ? '' : 's'}`
         }
 
         if (set.rpe) {
           message += ` @ RPE ${set.rpe}`
+        } else if (set.rir) {
+          message += ` w/ ${set.rir} RIR`
         }
       }
       message += '\n'
@@ -83,7 +90,7 @@ export const getWorkoutMessage = (workout: Workout) => {
     message += `🏷️ ${workout.tags.map((tag) => tag.name).join(', ')}`
   }
 
-  message += `\n\nShared via Spotter: ${APP_LINK}`
+  message += `\nShared via Spotter: ${APP_LINK}`
 
   return message
 }
@@ -146,7 +153,7 @@ const getExerciseMessage = (
       lastSessionSets += `  ${set.setNumber}. ${weight} ${weightMetric} × ${set.reps} reps`
 
       if (set.partials) {
-        lastSessionSets += ` + ${set.partials} partials`
+        lastSessionSets += ` + ${set.partials} partial${set.partials > 1 ? 's' : ''}`
       }
 
       if (set.intensity) {

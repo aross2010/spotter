@@ -393,7 +393,7 @@ const WorkoutFilters = () => {
     <SafeView
       scroll={false}
       keyboardAvoiding
-      twcnContentView="pb-0"
+      twcnContentView="mb-0"
     >
       {/* Sticky Header */}
       <View style={tw`pb-2 bg-light-background dark:bg-dark-background`}>

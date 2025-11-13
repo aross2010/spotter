@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native'
 import Button from './button'
 import Colors from '../constants/colors'
-import { useState, useEffect, useRef, use } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
@@ -543,33 +543,59 @@ const ExerciseInput = ({
     const updatedSets = [...(updatedExercises[exerciseNumber - 1]?.sets || [])]
 
     let fieldToUpdate: string = fieldValue
+    let rightFieldToUpdate: string | undefined
+
     if (isUnilateral && isLeftSide !== undefined) {
-      if (fieldValue === 'reps')
+      if (fieldValue === 'reps') {
         fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
-      else if (fieldValue === 'partials')
+        rightFieldToUpdate = 'rightReps'
+      } else if (fieldValue === 'partials') {
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
-      else if (fieldValue === 'rpe')
+        rightFieldToUpdate = 'rightPartialReps'
+      } else if (fieldValue === 'rpe') {
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+        rightFieldToUpdate = 'rightRpe'
+      } else if (fieldValue === 'rir') {
+        fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+        rightFieldToUpdate = 'rightRir'
+      }
     } else {
       // For non-unilateral exercises, map 'partials' to 'partialReps'
       if (fieldValue === 'partials') fieldToUpdate = 'partialReps'
     }
 
-    updatedSets[setIndex] = {
-      ...updatedSets[setIndex],
-      [fieldToUpdate]: isNaN(finalValue as number) ? undefined : finalValue,
-    } as any
+    const finalValueToSet = isNaN(finalValue as number) ? undefined : finalValue
 
-    // If in sync mode and editing left side, also update right side
-    if (isUnilateral && isSynced && isLeftSide === true) {
+    // Update both left and right at the same time for sync mode
+    if (isUnilateral && isSynced && isLeftSide === true && rightFieldToUpdate) {
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
+        [fieldToUpdate]: finalValueToSet,
+        [rightFieldToUpdate]: finalValueToSet,
+      } as any
+
+      // Immediately update the right side input's displayed text using ref
+      const currentSet = updatedSets[setIndex]
+      const setId = currentSet.id
+      const displayText =
+        finalValueToSet === undefined ? '' : finalValueToSet.toString()
+
+      // Update the appropriate right-side input ref
       if (fieldValue === 'reps') {
-        updatedSets[setIndex].rightReps = updatedSets[setIndex].leftReps
+        const rightRef = rightRepsInputRefs.current.get(setId)
+        if (rightRef) rightRef.setNativeProps({ text: displayText })
       } else if (fieldValue === 'partials') {
-        updatedSets[setIndex].rightPartialReps =
-          updatedSets[setIndex].leftPartialReps
-      } else if (fieldValue === 'rpe') {
-        updatedSets[setIndex].rightRpe = updatedSets[setIndex].leftRpe
+        const rightRef = rightPartialsInputRefs.current.get(setId)
+        if (rightRef) rightRef.setNativeProps({ text: displayText })
+      } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+        const rightRef = rightRpeInputRefs.current.get(setId)
+        if (rightRef) rightRef.setNativeProps({ text: displayText })
       }
+    } else {
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
+        [fieldToUpdate]: finalValueToSet,
+      } as any
     }
 
     updatedExercises[exerciseNumber - 1] = {
@@ -673,14 +699,107 @@ const ExerciseInput = ({
     setWorkoutData((prev) => {
       const updatedExercises = [...prev.exercises]
       if (exerciseNumber) {
+        const currentExercise = updatedExercises[exerciseNumber - 1]
+        const selectedExercise = exerciseNames.find((ex) => ex.name === name)
+        const wasUnilateral = currentExercise.isUnilateral || false
+        const willBeUnilateral = selectedExercise?.isUnilateral || false
+
+        let convertedSets = currentExercise.sets
+
+        if (wasUnilateral !== willBeUnilateral) {
+          // Convert sets when switching between unilateral and bilateral
+          convertedSets = currentExercise.sets.map((set) => {
+            const newSet = { ...set }
+
+            if (willBeUnilateral && !wasUnilateral) {
+              // Converting bilateral → unilateral: copy values to both sides
+              if (set.reps !== undefined) {
+                newSet.leftReps = set.reps
+                newSet.rightReps = set.reps
+                delete newSet.reps
+              }
+              if (set.rpe !== undefined) {
+                newSet.leftRpe = set.rpe
+                newSet.rightRpe = set.rpe
+                delete newSet.rpe
+              }
+              if (set.rir !== undefined) {
+                newSet.leftRir = set.rir
+                newSet.rightRir = set.rir
+                delete newSet.rir
+              }
+              if (set.partialReps !== undefined) {
+                newSet.leftPartialReps = set.partialReps
+                newSet.rightPartialReps = set.partialReps
+                delete newSet.partialReps
+              }
+            } else if (!willBeUnilateral && wasUnilateral) {
+              // Converting unilateral → bilateral: use the lesser value (or left if equal)
+              if (set.leftReps !== undefined || set.rightReps !== undefined) {
+                const leftReps = set.leftReps || 0
+                const rightReps = set.rightReps || 0
+                newSet.reps =
+                  leftReps === 0
+                    ? rightReps
+                    : rightReps === 0
+                      ? leftReps
+                      : Math.min(leftReps, rightReps)
+                delete newSet.leftReps
+                delete newSet.rightReps
+              }
+              if (set.leftRpe !== undefined || set.rightRpe !== undefined) {
+                const leftRpe = set.leftRpe || 0
+                const rightRpe = set.rightRpe || 0
+                newSet.rpe =
+                  leftRpe === 0
+                    ? rightRpe
+                    : rightRpe === 0
+                      ? leftRpe
+                      : Math.min(leftRpe, rightRpe)
+                delete newSet.leftRpe
+                delete newSet.rightRpe
+              }
+              if (set.leftRir !== undefined || set.rightRir !== undefined) {
+                const leftRir = set.leftRir || 0
+                const rightRir = set.rightRir || 0
+                newSet.rir =
+                  leftRir === 0
+                    ? rightRir
+                    : rightRir === 0
+                      ? leftRir
+                      : Math.min(leftRir, rightRir)
+                delete newSet.leftRir
+                delete newSet.rightRir
+              }
+              if (
+                set.leftPartialReps !== undefined ||
+                set.rightPartialReps !== undefined
+              ) {
+                const leftPartials = set.leftPartialReps || 0
+                const rightPartials = set.rightPartialReps || 0
+                newSet.partialReps =
+                  leftPartials === 0
+                    ? rightPartials
+                    : rightPartials === 0
+                      ? leftPartials
+                      : Math.min(leftPartials, rightPartials)
+                delete newSet.leftPartialReps
+                delete newSet.rightPartialReps
+              }
+            }
+
+            return newSet
+          })
+        }
+
         updatedExercises[exerciseNumber - 1] = {
-          ...updatedExercises[exerciseNumber - 1],
+          ...currentExercise,
           id,
           name,
-          isUnilateral:
-            exerciseNames.find((ex) => ex.name === name)?.isUnilateral || false,
+          isUnilateral: willBeUnilateral,
           existing: true,
           used,
+          sets: convertedSets,
         }
       }
       return {
@@ -723,9 +842,6 @@ const ExerciseInput = ({
       (ex) => ex.name.toLowerCase() === text.toLowerCase().trim()
     )
 
-    const isEditing =
-      currentExercise.name !== text && currentExercise.name !== ''
-
     // Only mark as non-existing if trimmed text doesn't match an existing exercise
     updatedExercises[exerciseIndex] = {
       ...currentExercise,
@@ -733,24 +849,107 @@ const ExerciseInput = ({
       existing: matchingExercise ? true : false,
     }
 
-    if (isEditing && currentExercise.existing && !matchingExercise) {
-      // Only reset sets if we're breaking away from an existing exercise
-      updatedExercises[exerciseIndex].sets = [
-        {
-          setNumber: 1,
-          id: nanoid(),
-        },
-      ]
-    }
-
     if (matchingExercise && text.trim() !== '') {
-      // Update with matching exercise data
+      // Check if we need to convert sets due to unilateral change
+      const wasUnilateral = currentExercise.isUnilateral || false
+      const willBeUnilateral = matchingExercise.isUnilateral || false
+
+      let convertedSets = currentExercise.sets
+
+      if (wasUnilateral !== willBeUnilateral) {
+        // Convert sets when switching between unilateral and bilateral
+        convertedSets = currentExercise.sets.map((set) => {
+          const newSet = { ...set }
+
+          if (willBeUnilateral && !wasUnilateral) {
+            // Converting bilateral → unilateral: copy values to both sides
+            if (set.reps !== undefined) {
+              newSet.leftReps = set.reps
+              newSet.rightReps = set.reps
+              delete newSet.reps
+            }
+            if (set.rpe !== undefined) {
+              newSet.leftRpe = set.rpe
+              newSet.rightRpe = set.rpe
+              delete newSet.rpe
+            }
+            if (set.rir !== undefined) {
+              newSet.leftRir = set.rir
+              newSet.rightRir = set.rir
+              delete newSet.rir
+            }
+            if (set.partialReps !== undefined) {
+              newSet.leftPartialReps = set.partialReps
+              newSet.rightPartialReps = set.partialReps
+              delete newSet.partialReps
+            }
+          } else if (!willBeUnilateral && wasUnilateral) {
+            // Converting unilateral → bilateral: use the lesser value (or left if equal)
+            if (set.leftReps !== undefined || set.rightReps !== undefined) {
+              const leftReps = set.leftReps || 0
+              const rightReps = set.rightReps || 0
+              newSet.reps =
+                leftReps === 0
+                  ? rightReps
+                  : rightReps === 0
+                    ? leftReps
+                    : Math.min(leftReps, rightReps)
+              delete newSet.leftReps
+              delete newSet.rightReps
+            }
+            if (set.leftRpe !== undefined || set.rightRpe !== undefined) {
+              const leftRpe = set.leftRpe || 0
+              const rightRpe = set.rightRpe || 0
+              newSet.rpe =
+                leftRpe === 0
+                  ? rightRpe
+                  : rightRpe === 0
+                    ? leftRpe
+                    : Math.min(leftRpe, rightRpe)
+              delete newSet.leftRpe
+              delete newSet.rightRpe
+            }
+            if (set.leftRir !== undefined || set.rightRir !== undefined) {
+              const leftRir = set.leftRir || 0
+              const rightRir = set.rightRir || 0
+              newSet.rir =
+                leftRir === 0
+                  ? rightRir
+                  : rightRir === 0
+                    ? leftRir
+                    : Math.min(leftRir, rightRir)
+              delete newSet.leftRir
+              delete newSet.rightRir
+            }
+            if (
+              set.leftPartialReps !== undefined ||
+              set.rightPartialReps !== undefined
+            ) {
+              const leftPartials = set.leftPartialReps || 0
+              const rightPartials = set.rightPartialReps || 0
+              newSet.partialReps =
+                leftPartials === 0
+                  ? rightPartials
+                  : rightPartials === 0
+                    ? leftPartials
+                    : Math.min(leftPartials, rightPartials)
+              delete newSet.leftPartialReps
+              delete newSet.rightPartialReps
+            }
+          }
+
+          return newSet
+        })
+      }
+
+      // Update with matching exercise data and converted sets
       updatedExercises[exerciseIndex] = {
         ...updatedExercises[exerciseIndex],
         id: matchingExercise.id,
         name: text, // Keep the user's typed text (may have trailing spaces)
         isUnilateral: matchingExercise.isUnilateral || false,
         existing: true,
+        sets: convertedSets,
       }
 
       setWorkoutData({
@@ -949,6 +1148,13 @@ const ExerciseInput = ({
                     : set.leftRpe && set.leftRpe !== 0
                       ? set.leftRpe.toString()
                       : ''
+              } else if (value === 'rir') {
+                displayValue =
+                  typeof set.leftRir === 'string'
+                    ? set.leftRir
+                    : set.leftRir && set.leftRir !== 0
+                      ? set.leftRir.toString()
+                      : ''
               } else {
                 const fieldValue = set[value as keyof typeof set]
                 displayValue =
@@ -971,19 +1177,22 @@ const ExerciseInput = ({
                         leftPartialsInputRefs.current.set(set.id, ref)
                       } else if (value === 'rpe') {
                         leftRpeInputRefs.current.set(set.id, ref)
+                      } else if (value === 'rir') {
+                        leftRpeInputRefs.current.set(set.id, ref)
                       }
                     }
                   }}
                   editable={value !== 'setNumber'}
                   keyboardType={
                     value === 'rpe' ||
+                    value === 'rir' ||
                     value === 'weightLbs' ||
                     value === 'weightKg'
                       ? 'decimal-pad'
                       : 'numeric'
                   }
                   inputMode={inputMode}
-                  maxLength={value === 'rpe' ? 4 : 5}
+                  maxLength={value === 'rpe' || value === 'rir' ? 4 : 5}
                   key={`${set.id}-${value}-left`}
                   placeholder="-"
                   twcnInput="w-1/5 text-center py-1 text-light-text dark:text-dark-text"
@@ -1035,6 +1244,13 @@ const ExerciseInput = ({
                     : set.rightRpe && set.rightRpe !== 0
                       ? set.rightRpe.toString()
                       : ''
+              } else if (value === 'rir') {
+                displayValue =
+                  typeof set.rightRir === 'string'
+                    ? set.rightRir
+                    : set.rightRir && set.rightRir !== 0
+                      ? set.rightRir.toString()
+                      : ''
               } else {
                 const fieldValue = set[value as keyof typeof set]
                 displayValue =
@@ -1057,19 +1273,22 @@ const ExerciseInput = ({
                         rightPartialsInputRefs.current.set(set.id, ref)
                       } else if (value === 'rpe') {
                         rightRpeInputRefs.current.set(set.id, ref)
+                      } else if (value === 'rir') {
+                        rightRpeInputRefs.current.set(set.id, ref)
                       }
                     }
                   }}
                   editable={value !== 'setNumber'}
                   keyboardType={
                     value === 'rpe' ||
+                    value === 'rir' ||
                     value === 'weightLbs' ||
                     value === 'weightKg'
                       ? 'decimal-pad'
                       : 'numeric'
                   }
                   inputMode={inputMode}
-                  maxLength={value === 'rpe' ? 4 : 5}
+                  maxLength={value === 'rpe' || value === 'rir' ? 4 : 5}
                   key={`${set.id}-${value}-right`}
                   placeholder="-"
                   twcnInput="w-1/5 text-center py-1 text-light-text dark:text-dark-text"
@@ -1265,6 +1484,9 @@ const ExerciseInput = ({
                 setIsExerciseNameSelectorOpen(false)
                 setFocusedInput(null)
               }}
+              autoComplete="off"
+              autoCorrect={false}
+              autoCapitalize="words"
               {...rest}
             />
             {isExerciseNameSelectorOpen &&

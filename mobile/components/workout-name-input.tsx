@@ -90,6 +90,9 @@ const WorkoutNameInput = () => {
             field: 'workoutName',
           })
         }}
+        autoComplete="off"
+        autoCorrect={false}
+        autoCapitalize="words"
       />
 
       {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (

@@ -9,6 +9,7 @@ import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
 import tw from '../../../tw'
 import * as StoreReview from 'expo-store-review'
+import * as WebBrowser from 'expo-web-browser'
 import { BASE_URL } from '../../../constants/auth'
 
 const settingsData = [
@@ -45,14 +46,14 @@ const settingsData = [
     options: [
       {
         label: 'Privacy Policy',
-        onPress: () => {
-          router.push(`${BASE_URL}/privacy`)
+        onPress: async () => {
+          await WebBrowser.openBrowserAsync(`${BASE_URL}/privacy`)
         },
       },
       {
         label: 'Terms of Service',
-        onPress: () => {
-          router.push(`${BASE_URL}/terms`)
+        onPress: async () => {
+          await WebBrowser.openBrowserAsync(`${BASE_URL}/terms`)
         },
       },
       {
@@ -176,7 +177,7 @@ const Settings = () => {
                   onPress={onPress ? onPress : promptSignOut}
                   twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'}`}
                 >
-                  <Txt twcn="font-poppinsRegular">{label}</Txt>
+                  <Txt twcn="">{label}</Txt>
                   <ChevronRight
                     strokeWidth={1.5}
                     color={theme.grayText}

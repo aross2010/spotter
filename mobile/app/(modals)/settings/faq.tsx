@@ -292,11 +292,12 @@ const FAQ = () => {
 
   return (
     <SafeView
-      scroll
+      scroll={false}
       keyboardAvoiding
+      twcnContentView="mb-0"
     >
-      <View style={tw`mb-4`}>
-        {/* Search Bar */}
+      {/* Sticky Search Header */}
+      <View style={tw`pb-4 bg-light-background dark:bg-dark-background`}>
         <View
           style={tw`px-3 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
         >
@@ -320,8 +321,9 @@ const FAQ = () => {
       </View>
 
       <ScrollView
-        style={tw`flex-1`}
+        style={tw`flex-1 -mx-4`}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={tw`px-4`}
       >
         <View style={tw``}>
           {filteredFAQs.length === 0 ? (

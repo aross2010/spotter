@@ -39,8 +39,6 @@ const Input = forwardRef<TextInput, InputProps>(
       return undefined
     }
 
-    console.log('colorScheme in Input:', colorScheme)
-
     const standardInput = (
       <TextInput
         ref={ref}

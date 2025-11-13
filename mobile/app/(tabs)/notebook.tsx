@@ -82,7 +82,7 @@ const Notebook = () => {
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
-      <Txt twcn="font-poppinsSemiBold text-base">📌 Pinned</Txt>
+      <Txt twcn="font-poppinsSemiBold text-lg">📌 Pinned</Txt>
     </View>
   )
 
@@ -190,7 +190,7 @@ const Notebook = () => {
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
       >
-        <Txt twcn="font-poppinsSemiBold text-base">
+        <Txt twcn="font-poppinsSemiBold text-lg">
           {MONTHS.get(displayMonthNum)} {displayYear}
         </Txt>
       </View>

@@ -122,20 +122,27 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     if (!currentSet) return
 
     const isUnilateral = currentExercise.isUnilateral
+    const isSynced = preferences?.unilateralLogging === 'sync'
 
     let currentValue: number | undefined
     let fieldToUpdate: string = field
+    let rightFieldToUpdate: string | undefined
 
     // Determine the current value and field to update
     if (isUnilateral && isLeftSide !== undefined) {
-      if (field === 'reps')
+      if (field === 'reps') {
         fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
-      else if (field === 'partials')
+        rightFieldToUpdate = 'rightReps'
+      } else if (field === 'partials') {
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
-      else if (field === 'rpe')
+        rightFieldToUpdate = 'rightPartialReps'
+      } else if (field === 'rpe') {
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
-      else if (field === 'rir')
+        rightFieldToUpdate = 'rightRpe'
+      } else if (field === 'rir') {
         fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+        rightFieldToUpdate = 'rightRir'
+      }
     } else {
       // For bilateral exercises, map 'partials' to 'partialReps'
       if (field === 'partials') fieldToUpdate = 'partialReps'
@@ -189,10 +196,19 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     const updatedExercises = [...workoutData.exercises]
     const updatedSets = [...updatedExercises[exerciseIndex].sets]
 
-    updatedSets[setIndex] = {
-      ...updatedSets[setIndex],
-      [fieldToUpdate]: newValue,
-    } as any
+    // Update both left and right at the same time for sync mode
+    if (isUnilateral && isSynced && isLeftSide === true && rightFieldToUpdate) {
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
+        [fieldToUpdate]: newValue,
+        [rightFieldToUpdate]: newValue,
+      } as any
+    } else {
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
+        [fieldToUpdate]: newValue,
+      } as any
+    }
 
     updatedExercises[exerciseIndex] = {
       ...updatedExercises[exerciseIndex],

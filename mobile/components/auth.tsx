@@ -23,18 +23,18 @@ import Spinner from './activity-indicator'
 const features = [
   {
     title: 'Intuitive Workout Logging',
-    description: 'Log workouts, sets, reps, weights, and much more with ease',
+    description: 'Comes with all the features you need to log effectively',
     image: require('../assets/screenshots/Workout Form - for in app.png'),
   },
   {
     title: 'Visualize Your Journey',
     description:
-      'Visualize your consistency and progress through data & charts',
+      'Visualize your consistency and progress through interactive data & charts',
     image: require('../assets/screenshots/Home Screen – for in app.png'),
   },
   {
-    title: 'Every Single Workout',
-    description: 'Every detail of your workout history at your fingertips',
+    title: 'Simple, Clean Workout Details',
+    description: 'Every detail from every workout at your fingertips',
     image: require('../assets/screenshots/Workout Details - for in app.png'),
   },
   {
@@ -45,7 +45,7 @@ const features = [
   {
     title: 'Training Notebook',
     description:
-      'Document your fitness journey by recording everything outside your sets',
+      'Document your fitness journey by recording anything outside of your sets',
     image: require('../assets/screenshots/Notebook Entries - for in app.png'),
   },
 ]
@@ -123,7 +123,7 @@ const Auth = () => {
         <View style={tw`items-center pt-6`}>
           <View
             style={{
-              height: 50,
+              height: 60,
               aspectRatio: 135 / 57,
             }}
           >
@@ -135,7 +135,6 @@ const Auth = () => {
           </View>
         </View>
 
-        {/* Feature Carousel */}
         <View style={tw`flex-1`}>
           <ScrollView
             ref={scrollViewRef}
@@ -161,7 +160,7 @@ const Auth = () => {
                     source={feature.image}
                     style={{
                       width: width * 0.55,
-                      height: '85%',
+                      height: '100%',
                     }}
                     resizeMode="contain"
                   />

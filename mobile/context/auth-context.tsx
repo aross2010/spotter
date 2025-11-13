@@ -21,6 +21,10 @@ import { useUserStore } from '../stores/user-store'
 import { Provider, UserProfile } from '../utils/types'
 import { Alert } from 'react-native'
 import { resetAllContexts } from '../utils/context-manager'
+import NetInfo, {
+  useNetInfo,
+  useNetInfoInstance,
+} from '@react-native-community/netinfo'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -82,6 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshInProgressRef = useRef(false)
   const router = useRouter()
   const { setUser, user, clearUserStore } = useUserStore()
+  const { type, isConnected } = useNetInfo()
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -452,6 +457,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const fetchWithAuth = async (url: string, options: RequestInit) => {
+    if (!isConnected) {
+      console.error('No internet connection', isConnected, type)
+    }
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -477,7 +486,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!response.ok) {
       const { error } = await response.json()
-      console.error('Fetch error NOT OK:', error)
       throw new Error(error)
     }
 

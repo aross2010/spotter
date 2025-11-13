@@ -1,4 +1,4 @@
-import { Alert } from 'react-native'
+import { Alert, Keyboard, ScrollView } from 'react-native'
 import React, { Fragment, useEffect, useState } from 'react'
 import Txt from '../../components/text'
 import { TagWithCount } from '../../utils/types'
@@ -182,76 +182,95 @@ const NotebookFilters = () => {
   return loading ? (
     <Spinner />
   ) : (
-    <SafeView twcnContentView="px-0">
+    <SafeView
+      scroll={false}
+      keyboardAvoiding
+      twcnContentView="mb-0"
+    >
       {tags.length > 0 ? (
         <Fragment>
-          <View
-            style={tw`flex-row justify-between items-center px-4 gap-4 mb-2`}
-          >
-            <View
-              style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-            >
-              <Search
-                size={16}
-                color={theme.grayText}
-              />
-              <Input
-                autoCorrect={false}
-                twcnInput="flex-1"
-                autoCapitalize="none"
-                placeholder={'Search tags...'}
-                value={query}
-                onChange={(e) => setQuery(e.nativeEvent.text)}
-                maxLength={50}
-                autoFocus
-              />
-              <Button onPress={() => setQuery('')}>
-                <X
+          {/* Sticky Header */}
+          <View style={tw`pb-2 bg-light-background dark:bg-dark-background`}>
+            <View style={tw`flex-row justify-between items-center gap-2 mb-2`}>
+              <View
+                style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
+              >
+                <Search
                   size={16}
                   color={theme.grayText}
                 />
-              </Button>
-            </View>
-            <View style={tw`flex-row items-center gap-2`}>
-              <Button
-                hitSlop={12}
-                onPress={handleResetAll}
-                twcn="bg-primary/10 rounded-xl p-2"
-              >
-                <RotateCcw
-                  size={16}
-                  color={Colors.primary}
+                <Input
+                  autoCorrect={false}
+                  twcnInput="flex-1"
+                  autoCapitalize="none"
+                  placeholder={'Search tags...'}
+                  value={query}
+                  onChange={(e) => setQuery(e.nativeEvent.text)}
+                  maxLength={50}
+                  autoFocus
                 />
-              </Button>
-              <Button
-                hitSlop={12}
-                twcn="bg-primary/10 rounded-xl p-2"
-                onPress={() =>
-                  setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-                }
-              >
-                {sortOrder === 'desc' ? (
-                  <CalendarArrowDown
+                <Button
+                  onPress={() => {
+                    if (query === '') Keyboard.dismiss()
+                    setQuery('')
+                  }}
+                >
+                  <X
+                    size={16}
+                    color={theme.grayText}
+                  />
+                </Button>
+              </View>
+              <View style={tw`flex-row items-center gap-1.5`}>
+                <Button
+                  hitSlop={12}
+                  twcn={`${sortOrder != 'asc' ? 'bg-primary/10' : 'bg-primary'} rounded-xl p-2`}
+                  onPress={() =>
+                    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+                  }
+                >
+                  {sortOrder === 'desc' ? (
+                    <CalendarArrowDown
+                      size={16}
+                      color={Colors.primary}
+                    />
+                  ) : (
+                    <CalendarArrowUp
+                      size={16}
+                      color={'#FFFFFF'}
+                    />
+                  )}
+                </Button>
+
+                <Button
+                  hitSlop={12}
+                  onPress={handleResetAll}
+                  twcn="bg-primary/10 rounded-xl p-2"
+                >
+                  <RotateCcw
                     size={16}
                     color={Colors.primary}
                   />
-                ) : (
-                  <CalendarArrowUp
-                    size={24}
-                    color={Colors.primary}
-                  />
-                )}
-              </Button>
+                </Button>
+              </View>
             </View>
+
+            {selectedTags.length > 0 && (
+              <View
+                style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2`}
+              >
+                {renderedSelectedTags}
+              </View>
+            )}
           </View>
-          {selectedTags.length > 0 && (
-            <View
-              style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2 px-4`}
-            >
-              {renderedSelectedTags}
-            </View>
-          )}
-          <View>{renderedResultTags}</View>
+
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={tw`flex-1 -mx-4`}
+            contentContainerStyle={tw`flex-grow`}
+          >
+            {renderedResultTags}
+          </ScrollView>
         </Fragment>
       ) : (
         <View style={tw`items-center mx-4 mt-4 justify-center h-48 p-4`}>
