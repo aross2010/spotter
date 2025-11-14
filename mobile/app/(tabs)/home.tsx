@@ -126,7 +126,7 @@ const Home = () => {
 
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-4 text-base font-poppinsSemiBold">Activity</Txt>
+      <Txt twcn="mb-4 text-lg font-poppinsSemiBold">Activity</Txt>
       <View style={tw`p-4 rounded-xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
@@ -135,7 +135,7 @@ const Home = () => {
 
   const featuredWorkout = data?.featuredWorkout.status != 'none' && (
     <View>
-      <Txt twcn="mb-4 text-base font-poppinsSemiBold">
+      <Txt twcn="mb-4 text-lg font-poppinsSemiBold">
         {featuredWorkoutStatus === 'current'
           ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
@@ -292,7 +292,7 @@ const Home = () => {
   )
 
   const userPage = (
-    <View style={tw`mt-4 gap-8`}>
+    <View style={tw`mt-4 gap-6`}>
       {workoutPrompt}
       {appFeatures}
       {statsTogether}

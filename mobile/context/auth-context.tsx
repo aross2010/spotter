@@ -458,7 +458,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchWithAuth = async (url: string, options: RequestInit) => {
     if (!isConnected) {
-      console.error('No internet connection', isConnected, type)
     }
 
     const response = await fetch(url, {
