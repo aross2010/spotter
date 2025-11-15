@@ -19,7 +19,7 @@ const TabsLayout = () => {
   const { theme } = useTheme()
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <View style={tw`flex-1 bg-background dark:bg-dark-background`}>
       <Tabs
         tabBar={(props) => (
           <TopIndicatorTabBar

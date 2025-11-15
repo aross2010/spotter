@@ -108,18 +108,16 @@ const Auth = () => {
     }
   }
 
-  return isLoading ? (
-    <Spinner />
-  ) : (
+  return (
     <SafeView
       scroll={false}
       hasHeader={false}
-      twcnContentView="px-0 pb-0"
+      twcnContentView={`px-0 pb-0 ${isLoading ? 'relative' : ''}`}
     >
+      {isLoading && <Spinner overlay />}
       <View
-        style={tw`flex-1 justify-between gap-4 mb-6 dark:bg-dark-background bg-light-background`}
+        style={tw`flex-1 justify-between gap-4 mb-6 dark:bg-dark-background bg-light-background ${isLoading ? 'opacity-50' : ''}`}
       >
-        {/* Logo */}
         <View style={tw`items-center pt-6`}>
           <View
             style={{
@@ -198,15 +196,15 @@ const Auth = () => {
           </View>
         </View>
 
-        {/* Buttons Section */}
         <View style={tw`mt-6`}>
-          {/* Sign In Buttons */}
           <View style={tw`items-center flex-col gap-2 px-4`}>
-            <SignInWithGoogle onPress={signIn} />
+            <SignInWithGoogle
+              onPress={signIn}
+              disabled={isLoading}
+            />
             <SignInWithAppleIos />
           </View>
 
-          {/* Terms */}
           <View>
             <Txt twcn="text-center text-light-grayText dark:text-dark-grayText text-xs mt-2 px-12">
               By proceeding, you agree to the{' '}

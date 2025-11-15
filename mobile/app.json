@@ -28,7 +28,9 @@
         "UIDesignRequiresCompatibility": true,
         "UIDeviceFamily": [1],
         "UIRequiresFullScreen": true,
-        "CFBundleDisplayName": "Spotter"
+        "CFBundleDisplayName": "Spotter",
+        "NSPhotoLibraryAddUsageDescription": "Spotter saves your workout screenshots to your Photos.",
+        "NSPhotoLibraryUsageDescription": "Spotter saves your workout screenshots to your Photos."
       }
     },
     "android": {

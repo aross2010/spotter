@@ -1,17 +1,19 @@
-import { Redirect } from 'expo-router'
+import { router } from 'expo-router'
 import Auth from '../components/auth'
 import { useAuth } from '../context/auth-context'
-import { BASE_URL } from '../constants/auth'
 import { SplashScreen } from 'expo-router'
+import { useEffect } from 'react'
 
 SplashScreen.preventAutoHideAsync()
 
 export default function Index() {
   const { authUser, isLoading } = useAuth()
 
-  if (authUser) {
-    return <Redirect href="/home" />
-  }
+  useEffect(() => {
+    if (authUser) {
+      router.replace('/home')
+    }
+  }, [authUser, isLoading])
 
   return <Auth />
 }

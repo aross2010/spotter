@@ -11,6 +11,8 @@ type SpinnerProps = {
   twcn?: string
   fullScreen?: boolean
   text?: string
+  loadingTab?: boolean
+  overlay?: boolean
 }
 
 const Spinner = ({
@@ -19,6 +21,7 @@ const Spinner = ({
   twcn,
   fullScreen = true,
   text,
+  overlay = false,
 }: SpinnerProps) => {
   const { theme } = useTheme()
 
@@ -32,18 +35,18 @@ const Spinner = ({
 
   if (fullScreen) {
     return (
-      <SafeView>
-        <View style={tw`flex-1 flex-row justify-center items-center my-12`}>
-          {spinner}
-          {text && (
-            <Text
-              style={tw`ml-2 text-sm text-light-grayText dark:text-dark-grayText`}
-            >
-              {text}
-            </Text>
-          )}
-        </View>
-      </SafeView>
+      <View
+        style={tw`${overlay ? 'absolute inset-0 justify-center items-center' : 'flex-1 flex-row justify-center items-center bg-light-background dark:bg-dark-background'}`}
+      >
+        {spinner}
+        {text && (
+          <Text
+            style={tw`ml-2 text-sm text-light-grayText dark:text-dark-grayText`}
+          >
+            {text}
+          </Text>
+        )}
+      </View>
     )
   }
 

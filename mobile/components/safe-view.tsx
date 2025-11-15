@@ -35,7 +35,7 @@ const SafeView = ({
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()
 
-  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-4'}`
+  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-2'}`
 
   if (keyboardAvoiding && scroll) {
     return (

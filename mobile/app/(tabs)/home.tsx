@@ -303,9 +303,9 @@ const Home = () => {
 
   const greeting = getGreeting()
 
-  return loading ? (
-    <Spinner />
-  ) : (
+  if (loading) return <Spinner />
+
+  return (
     <SafeView
       hasTabBar
       hasHeader

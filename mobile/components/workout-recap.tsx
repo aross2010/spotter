@@ -84,28 +84,39 @@ const WorkoutRecap = (workout: Workout) => {
   ]
 
   return (
-    <View style={tw`flex-row justify-between gap-1 mt-2`}>
-      {stats &&
-        stats.map((stat, index) => {
-          return (
-            <View
-              key={stat.label}
-              style={tw`items-center flex-1 ${index !== stats.length - 1 ? 'border-r border-light-grayBorder dark:border-dark-grayBorder' : ''}`}
-            >
-              <Txt twcn="text-xs font-poppinsLight text-light-grayText dark:text-dark-grayText">
-                {stat.label}
-              </Txt>
-              <Txt twcn="text-base font-poppinsMedium text-light-text dark:text-dark-text">
-                {formatNumber(stat.value)}
-                {weightMetric === 'lbs' && stat.label === 'Lifted'
-                  ? ' lbs'
-                  : weightMetric === 'kgs' && stat.label === 'Lifted'
-                    ? ' kgs'
-                    : ''}
-              </Txt>
-            </View>
-          )
-        })}
+    <View
+      style={tw`border-r border-l mt-4 border-light-grayBorder/50 dark:border-dark-grayBorder/50 overflow-hidden `}
+    >
+      <View style={tw`flex-row`}>
+        {stats.map((stat, index) => (
+          <View
+            key={stat.label}
+            style={tw`flex-1 items-center ${index !== stats.length - 1 ? 'border-r border-light-grayBorder dark:border-dark-grayBorder' : ''}`}
+          >
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText ">
+              {stat.label}
+            </Txt>
+          </View>
+        ))}
+      </View>
+
+      <View style={tw`flex-row`}>
+        {stats.map((stat, index) => (
+          <View
+            key={stat.label}
+            style={tw`flex-1 items-center ${index !== stats.length - 1 ? 'border-r border-light-grayBorder dark:border-dark-grayBorder' : ''}`}
+          >
+            <Txt twcn="text-base font-poppinsMedium text-light-text dark:text-dark-text">
+              {formatNumber(stat.value)}
+              {weightMetric === 'lbs' && stat.label === 'Lifted'
+                ? ' lbs'
+                : weightMetric === 'kgs' && stat.label === 'Lifted'
+                  ? ' kgs'
+                  : ''}
+            </Txt>
+          </View>
+        ))}
+      </View>
     </View>
   )
 }

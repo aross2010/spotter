@@ -1,5 +1,5 @@
 import { Alert, Share as RNShare, StyleSheet, View } from 'react-native'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Link,
   router,
@@ -13,7 +13,7 @@ import { Workout } from '../../utils/types'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import tw from '../../tw'
-import { Check, Pencil, Share, Tag } from 'lucide-react-native'
+import { Camera, Check, Frame, Pencil, Share, Tag } from 'lucide-react-native'
 import { formatDate } from '../../functions/formatted-date'
 import Spinner from '../../components/activity-indicator'
 import Button from '../../components/button'
@@ -24,6 +24,8 @@ import { useUserStore } from '../../stores/user-store'
 import { useWorkoutStore, useWorkoutTabStore } from '../../stores/workout-store'
 import { useExerciseStore } from '../../stores/exercise-store'
 import WorkoutRecap from '../../components/workout-recap'
+import ViewShot from 'react-native-view-shot'
+import * as MediaLibrary from 'expo-media-library'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -32,10 +34,12 @@ const WorkoutDetails = () => {
   const { id, from } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
   const { preferences } = useUserStore()
+  const intensityMetric = preferences?.intensityMetric || 'rpe'
   const { shouldRefresh, clearRefresh } = useWorkoutStore()
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
   const [hasLoaded, setHasLoaded] = useState(false)
+  const ref = useRef<ViewShot>(null)
 
   const getWorkoutDetails = async () => {
     setIsLoading(true)
@@ -77,7 +81,7 @@ const WorkoutDetails = () => {
   useEffect(() => {
     const presentation = from === 'exercise' ? 'modal' : 'card'
     navigation.setOptions({
-      headerTitle: workout?.name || '',
+      headerTitle: '',
       headerShown: true,
       headerRight: workout
         ? () => (
@@ -101,6 +105,15 @@ const WorkoutDetails = () => {
                   color={Colors.primary}
                 />
               </Button>
+              <Button
+                onPress={() => handleScreenshotWorkout()}
+                twcn="bg-primary/10 rounded-2xl p-2"
+              >
+                <Camera
+                  size={20}
+                  color={Colors.primary}
+                />
+              </Button>
             </View>
           )
         : undefined,
@@ -118,6 +131,32 @@ const WorkoutDetails = () => {
       animationDuration: 350,
     })
   }, [navigation, workout?.name])
+
+  const handleScreenshotWorkout = async () => {
+    if (!ref.current || !ref.current.capture) return
+
+    try {
+      const uri = await ref.current.capture()
+      let perm = await MediaLibrary.getPermissionsAsync()
+
+      if (perm.status !== 'granted') {
+        perm = await MediaLibrary.requestPermissionsAsync()
+      }
+
+      if (perm.status === 'granted') {
+        await MediaLibrary.saveToLibraryAsync(uri)
+        Alert.alert('Success!', 'Workout screenshot saved to Photos.')
+      } else {
+        Alert.alert(
+          'Permission needed',
+          'Enable Photos access in Settings to save screenshots.'
+        )
+      }
+    } catch (error) {
+      console.error(error)
+      Alert.alert('Error', 'Failed to capture workout screenshot.')
+    }
+  }
 
   const renderedExercises =
     workout &&
@@ -147,7 +186,6 @@ const WorkoutDetails = () => {
           key={exerciseIndex}
           style={tw`flex-row gap-2 items-start`}
         >
-          {/* Timeline Component */}
           <View style={tw`gap-1 justify-center items-center`}>
             <View
               style={tw`${exerciseIndex !== 0 ? 'mt-1' : ''} w-8 h-8 rounded-full ${isInSuperset ? 'bg-secondary' : 'bg-primary'} items-center justify-center`}
@@ -172,16 +210,13 @@ const WorkoutDetails = () => {
             )}
           </View>
 
-          {/* Exercise Content */}
           <View
             style={tw`flex-1 mb-4 ${exerciseIndex != 0 ? 'mt-[7]' : 'mt-[3]'}`}
           >
-            {/* Exercise Name */}
             <View style={tw`pb-2`}>
               <Txt twcn="text-base">{exercise.name}</Txt>
             </View>
 
-            {/* Set Labels */}
             <View style={tw`mt-2 flex-row flex-wrap`}>
               <View style={tw`w-1/5 items-center`}>
                 <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
@@ -205,7 +240,7 @@ const WorkoutDetails = () => {
               </View>
               <View style={tw`w-1/5 items-center`}>
                 <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
-                  RPE
+                  {intensityMetric === 'rir' ? 'RIR' : 'RPE'}
                 </Txt>
               </View>
             </View>
@@ -228,6 +263,18 @@ const WorkoutDetails = () => {
                   const showPartialsSlash =
                     set.leftPartialReps !== set.rightPartialReps
                   const showRpeSlash = set.leftRpe !== set.rightRpe
+
+                  // Convert RPE to RIR if needed
+                  const leftIntensity = set.leftRpe
+                    ? intensityMetric === 'rir'
+                      ? 10 - set.leftRpe
+                      : set.leftRpe
+                    : null
+                  const rightIntensity = set.rightRpe
+                    ? intensityMetric === 'rir'
+                      ? 10 - set.rightRpe
+                      : set.rightRpe
+                    : null
 
                   return (
                     <View
@@ -273,17 +320,25 @@ const WorkoutDetails = () => {
                         )}
                       </View>
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
-                        {(set.leftRpe || set.rightRpe) && (
+                        {(leftIntensity !== null ||
+                          rightIntensity !== null) && (
                           <Txt twcn="text-center text-light-text dark:text-dark-text">
                             {showRpeSlash
-                              ? `${set.leftRpe || 0}/${set.rightRpe || 0}`
-                              : set.leftRpe || set.rightRpe}
+                              ? `${leftIntensity || 0}/${rightIntensity || 0}`
+                              : leftIntensity || rightIntensity}
                           </Txt>
                         )}
                       </View>
                     </View>
                   )
                 } else {
+                  // Convert RPE to RIR if needed
+                  const intensity = set.rpe
+                    ? intensityMetric === 'rir'
+                      ? 10 - set.rpe
+                      : set.rpe
+                    : null
+
                   return (
                     <View
                       key={set.id}
@@ -324,9 +379,9 @@ const WorkoutDetails = () => {
                         )}
                       </View>
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
-                        {set.rpe && (
+                        {intensity !== null && (
                           <Txt twcn="text-center text-light-text dark:text-dark-text">
-                            {set.rpe}
+                            {intensity}
                           </Txt>
                         )}
                       </View>
@@ -359,31 +414,41 @@ const WorkoutDetails = () => {
   ) : (
     workout && (
       <SafeView>
-        <View style={tw`gap-3`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide text-center">
-            {capString(
-              `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
-              40
+        <ViewShot
+          ref={ref}
+          options={{ format: 'jpg', quality: 0.9 }}
+          style={tw`bg-light-background dark:bg-dark-background -mx-4 -mt-2 px-4 pt-2 pb-12 -mb-12`}
+        >
+          <Txt twcn="text-2xl font-poppinsSemiBold mb-2">{workout.name}</Txt>
+          <View style={tw`gap-2`}>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide text-left">
+              {capString(
+                `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
+                40
+              )}
+            </Txt>
+            {workout.notes && (
+              <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                {workout.notes}
+              </Txt>
             )}
-          </Txt>
-          {workout && <WorkoutRecap {...workout} />}
-        </View>
-        <View style={tw`mt-6`}>{renderedExercises}</View>
-        <View style={tw`mt-4 gap-3`}>
-          {workout.notes && (
-            <Txt twcn="text-sm font-poppinsItalic">{workout.notes}</Txt>
-          )}
-          {workout.tags.length > 0 && (
-            <View style={tw`flex-row flex-wrap items-center gap-2`}>
-              <Tag
-                color={Colors.primary}
-                strokeWidth={1.5}
-                size={12}
-              />
-              {renderedTags}
-            </View>
-          )}
-        </View>
+            {workout && <WorkoutRecap {...workout} />}
+          </View>
+
+          <View style={tw`mt-6`}>{renderedExercises}</View>
+          <View style={tw`mt-4 gap-3`}>
+            {workout.tags.length > 0 && (
+              <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                <Tag
+                  color={Colors.primary}
+                  strokeWidth={1.5}
+                  size={12}
+                />
+                {renderedTags}
+              </View>
+            )}
+          </View>
+        </ViewShot>
       </SafeView>
     )
   )
