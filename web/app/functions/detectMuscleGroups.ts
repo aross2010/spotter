@@ -62,9 +62,11 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
   const cacheKey = normalizedName // Simple key: just the exercise name
 
   try {
+    console.log('Detecting muscle groups for exercise:', exerciseName)
     // Check Redis cache first
     const cached = await redis.get(cacheKey)
     if (cached) {
+      console.log('Muscle groups fetched from cache for:', exerciseName, cached)
       return JSON.parse(cached)
     }
 
@@ -112,8 +114,11 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
       ],
     })
 
+    console.log('OpenAI response received for exercise:', exerciseName)
+
     const content = response.choices[0]?.message?.content
     if (!content) {
+      console.log('No content in OpenAI response for:', exerciseName)
       throw new Error('No response from OpenAI')
     }
 
@@ -124,6 +129,8 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
       throw new Error('Invalid response format')
     }
 
+    console.log('Muscle groups detected for exercise:', exerciseName, result)
+
     const finalResult = {
       primaryMuscleGroup: result.primaryMuscleGroup || null,
       secondaryMuscleGroups: Array.isArray(result.secondaryMuscleGroups)
@@ -133,6 +140,7 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
 
     // Cache the result permanently (no expiration)
     await redis.set(cacheKey, JSON.stringify(finalResult))
+    console.log('Muscle groups are now cached for exercise:', exerciseName)
     return finalResult
   } catch (error) {
     console.error('Error detecting muscle groups:', error)
