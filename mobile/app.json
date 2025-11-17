@@ -3,7 +3,7 @@
     "scheme": "spotter-weightlifting",
     "name": "Spotter – Weightlifting Log",
     "slug": "Spotter",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "userInterfaceStyle": "automatic",
