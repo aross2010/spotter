@@ -64,7 +64,7 @@ const Workouts = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <View style={tw`flex-row items-center gap-2 mr-4`}>
+          <View style={tw`flex-row items-center gap-2 mr-4 pb-1`}>
             {workouts.length > 0 && (
               <View style={tw`relative`}>
                 <Link

@@ -91,7 +91,7 @@ const Exercises = () => {
       headerRight: () => {
         if (exercises.length === 0) return
         return (
-          <View style={tw`mr-4`}>
+          <View style={tw`mr-4 pb-1`}>
             <Button
               onPress={() => setIsFiltersModalOpen(true)}
               twcn="bg-primary/10 rounded-2xl p-2"
@@ -259,6 +259,7 @@ const Exercises = () => {
       hasTabBar
       keyboardAvoiding
       scroll={false}
+      twcnContentView="mb-0"
     >
       <View
         style={tw`px-3 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
@@ -285,12 +286,7 @@ const Exercises = () => {
           />
         </Button>
       </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={tw`-mx-4`}
-      >
-        {renderedExercises}
-      </ScrollView>
+      <ScrollView style={tw`-mx-4`}>{renderedExercises}</ScrollView>
       <MyModal
         isOpen={isFiltersModalOpen}
         setIsOpen={setIsFiltersModalOpen}

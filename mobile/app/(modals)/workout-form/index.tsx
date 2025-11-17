@@ -1,5 +1,5 @@
 import SafeView from '../../../components/safe-view'
-import { View, Keyboard } from 'react-native'
+import { View, Keyboard, Platform, Modal } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
@@ -23,7 +23,7 @@ import {
   Check,
 } from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
-import DatePicker from 'react-native-date-picker'
+import DateTimePicker from '@react-native-community/datetimepicker'
 import useTheme from '../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
 import { useWorkoutForm } from '../../../context/workout-form-context'
@@ -70,6 +70,7 @@ const WorkoutForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const [isNotesActive, setIsNotesActive] = useState(false)
   const navigation = useNavigation()
   const { theme, colorScheme } = useTheme()
   const {
@@ -275,7 +276,7 @@ const WorkoutForm = () => {
             ? 'Clone Workout'
             : 'New Workout',
       headerRight: () => (
-        <View style={tw`flex-row items-center gap-2`}>
+        <View style={tw`flex-row items-center gap-3`}>
           {!isLoading && (
             <Button
               onPress={() => setShowStatusMenu(true)}
@@ -473,35 +474,68 @@ const WorkoutForm = () => {
         <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
           <WorkoutNameInput />
           <Exercises />
-          <WorkoutNotes />
-          <WorkoutTags />
+          <View
+            style={tw`${isNotesActive || workoutData.notes ? 'gap-6' : 'gap-4 flex-row'}`}
+          >
+            <WorkoutNotes
+              isNotesActive={isNotesActive}
+              setIsNotesActive={setIsNotesActive}
+            />
+
+            <WorkoutTags />
+          </View>
         </View>
 
-        <DatePicker
-          modal
-          open={isDatePickerOpen}
-          date={workoutData.date}
-          onConfirm={(date) => {
-            setIsDatePickerOpen(false)
+        <Modal
+          visible={isDatePickerOpen}
+          transparent
+          animationType="fade"
+        >
+          <View style={tw`flex-1 justify-center items-center bg-black/50`}>
+            <View
+              style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
+            >
+              <DateTimePicker
+                value={workoutData.date}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) {
+                    // Check if the selected date is in the future
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0) // Reset time to start of day
+                    const newDate = new Date(selectedDate)
+                    newDate.setHours(0, 0, 0, 0)
 
-            // Check if the selected date is in the future
-            const today = new Date()
-            today.setHours(0, 0, 0, 0) // Reset time to start of day
-            const selectedDate = new Date(date)
-            selectedDate.setHours(0, 0, 0, 0)
+                    // If date is in the future, set status to planned
+                    if (newDate > today) {
+                      setWorkoutData({
+                        ...workoutData,
+                        date: selectedDate,
+                        status: 'planned',
+                      })
+                    } else {
+                      setWorkoutData({ ...workoutData, date: selectedDate })
+                    }
+                  }
 
-            // If date is in the future, set status to planned
-            if (selectedDate > today) {
-              setWorkoutData({ ...workoutData, date, status: 'planned' })
-            } else {
-              setWorkoutData({ ...workoutData, date })
-            }
-          }}
-          mode="date"
-          onCancel={() => {
-            setIsDatePickerOpen(false)
-          }}
-        />
+                  // Close immediately on Android after selection
+                  if (Platform.OS === 'android') {
+                    setIsDatePickerOpen(false)
+                  }
+                }}
+              />
+              {Platform.OS === 'ios' && (
+                <Button
+                  text="Done"
+                  onPress={() => setIsDatePickerOpen(false)}
+                  twcn="mt-2 bg-primary rounded-xl p-3"
+                  twcnText="text-center font-poppinsSemiBold text-dark-text"
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
 
         <MyModal
           isOpen={showStatusMenu}

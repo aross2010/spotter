@@ -90,7 +90,7 @@ const ExerciseDetails = () => {
         color: theme.text,
       },
       headerRight: () => (
-        <View style={tw`flex-row items-center gap-2`}>
+        <View style={tw`flex-row items-center gap-2 pb-1`}>
           <Button
             twcn="bg-primary/10 rounded-2xl p-2"
             onPress={() => {

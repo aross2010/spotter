@@ -13,7 +13,7 @@ const TagView = ({ tag, resultTag }: TagProps) => {
   return (
     <Txt
       key={id}
-      twcn="text-xs text-primary dark:text-primary"
+      twcn="text-primary dark:text-primary"
     >
       #{name}
     </Txt>

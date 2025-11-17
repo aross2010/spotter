@@ -85,7 +85,7 @@ const WorkoutDetails = () => {
       headerShown: true,
       headerRight: workout
         ? () => (
-            <View style={tw`flex-row items-center gap-2`}>
+            <View style={tw`flex-row items-center gap-2 pb-1`}>
               <Link
                 href={`/workout-form?id=${workout?.id}&from=workout-details`}
               >

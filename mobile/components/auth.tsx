@@ -23,7 +23,7 @@ import Spinner from './activity-indicator'
 const features = [
   {
     title: 'Intuitive Workout Logging',
-    description: 'Comes with all the features you need to log effectively',
+    description: 'All the features you need to log workouts effectively',
     image: require('../assets/screenshots/Workout Form - for in app.png'),
   },
   {

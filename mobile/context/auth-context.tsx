@@ -485,6 +485,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!response.ok) {
       const { error } = await response.json()
+      console.error('Throwing error from fetchWithAuth:', error)
       throw new Error(error)
     }
 

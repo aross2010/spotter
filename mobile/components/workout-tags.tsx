@@ -59,8 +59,14 @@ const WorkoutTags = () => {
         <Button
           onPress={handleAddTags}
           twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcn="flex-row-reverse mr-auto items-center gap-1"
           text="Add tags"
-        />
+        >
+          <Tag
+            color={Colors.primary}
+            size={16}
+          />
+        </Button>
       )}
     </View>
   )

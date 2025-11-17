@@ -76,17 +76,19 @@ const TabsLayout = () => {
               </View>
             ),
             headerRight: () => (
-              <Link
-                href="/settings"
-                accessibilityLabel="settings"
-                style={tw` mr-4 bg-primary/10 rounded-2xl p-2`}
-              >
-                <Settings
-                  height={24}
-                  width={24}
-                  color={Colors.primary}
-                />
-              </Link>
+              <View style={tw`mr-4 pb-1`}>
+                <Link
+                  href="/settings"
+                  accessibilityLabel="settings"
+                  style={tw`bg-primary/10 rounded-2xl p-2`}
+                >
+                  <Settings
+                    height={20}
+                    width={20}
+                    color={Colors.primary}
+                  />
+                </Link>
+              </View>
             ),
           }}
         />

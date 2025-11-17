@@ -5,7 +5,34 @@ const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_KEY,
 })
 
-const redis = new Redis(process.env.REDIS_DB_URL as string)
+const redis = new Redis(process.env.REDIS_DB_URL as string, {
+  maxRetriesPerRequest: 3,
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000)
+    return delay
+  },
+  enableReadyCheck: true,
+  reconnectOnError(err) {
+    const targetError = 'READONLY'
+    if (err.message.includes(targetError)) {
+      return true
+    }
+    return false
+  },
+})
+
+// Handle Redis errors gracefully
+redis.on('error', (err) => {
+  console.error('Redis connection error:', err.message)
+})
+
+redis.on('connect', () => {
+  console.log('Redis connected')
+})
+
+redis.on('ready', () => {
+  console.log('Redis ready')
+})
 
 type MuscleGroup =
   | 'quadriceps'

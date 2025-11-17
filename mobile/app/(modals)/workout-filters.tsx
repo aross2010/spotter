@@ -123,7 +123,7 @@ const WorkoutFilters = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <View style={tw`flex-row items-center gap-2`}>
+          <View style={tw`flex-row items-center gap-3`}>
             {!isLoading && (
               <Button
                 onPress={() => setShowStatusMenu(true)}
