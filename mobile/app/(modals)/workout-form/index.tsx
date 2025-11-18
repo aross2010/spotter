@@ -453,7 +453,7 @@ const WorkoutForm = () => {
         keyboardAvoiding
         bottomOffset={200}
       >
-        <View style={tw`gap-2 flex-row items-center`}>
+        <View style={tw`gap-4 flex-row items-center`}>
           <Button
             text={formatDate(workoutData.date)}
             onPress={() => {
@@ -473,18 +473,15 @@ const WorkoutForm = () => {
             text={
               workoutData.location.length > 0
                 ? capString(workoutData.location, 20)
-                : 'Location (optional)'
+                : 'Add location'
             }
             onPress={() => {
               router.push('/workout-form/location')
             }}
             hitSlop={12}
             twcn="flex-row-reverse items-center gap-1"
-            twcnText={`font-poppinsSemiBold ${
-              workoutData.location.length > 0
-                ? 'text-primary dark:text-primary'
-                : 'text-primary/50 dark:text-primary/50'
-            }`}
+            twcnText={`font-poppinsSemiBold text-primary dark:text-primary
+            `}
           >
             <MapPin
               size={16}

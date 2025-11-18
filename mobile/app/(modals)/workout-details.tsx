@@ -145,7 +145,10 @@ const WorkoutDetails = () => {
 
       if (perm.status === 'granted') {
         await MediaLibrary.saveToLibraryAsync(uri)
-        Alert.alert('Success!', 'Workout screenshot saved to Photos.')
+        Alert.alert(
+          'Workout saved',
+          'Your workout screenshot is now available in Photos.'
+        )
       } else {
         Alert.alert(
           'Permission needed',

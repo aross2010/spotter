@@ -1,5 +1,5 @@
 import { View, Keyboard } from 'react-native'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { WorkoutName } from '../utils/types'
 import tw from '../tw'
 import Txt from './text'
@@ -14,12 +14,17 @@ const WorkoutNameInput = () => {
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
     []
   )
+  const [localValue, setLocalValue] = useState('')
   const { workoutNames, setWorkoutData, workoutData, setFocusedInput } =
     useWorkoutForm()
 
   useEffect(() => {
     setWorkoutNamesResults(workoutNames)
   }, [workoutNames])
+
+  useEffect(() => {
+    setLocalValue(workoutData.name)
+  }, [workoutData.name])
 
   const handleSelectWorkoutName = (name: string) => {
     setWorkoutData((prev) => ({ ...prev, name }))
@@ -44,38 +49,49 @@ const WorkoutNameInput = () => {
       </Button>
     ))
 
-  const handleChange = (text: string) => {
-    setWorkoutData((prev) => ({ ...prev, name: text }))
-    const filtered = workoutNames.filter(
-      (workout) =>
-        workout.name.toLowerCase().includes(text.toLowerCase()) &&
-        workout.name.toLowerCase().trim() !== text.toLowerCase().trim()
-    )
-    setWorkoutNamesResults(filtered)
-    if (filtered.length === 0) {
-      setIsWorkoutNameSelectorOpen(false)
-    } else if (!isWorkoutNameSelectorOpen) {
-      setIsWorkoutNameSelectorOpen(true)
-    }
-  }
+  const handleChange = useCallback(
+    (text: string) => {
+      setLocalValue(text)
+      const filtered = workoutNames.filter(
+        (workout) =>
+          workout.name.toLowerCase().includes(text.toLowerCase()) &&
+          workout.name.toLowerCase().trim() !== text.toLowerCase().trim()
+      )
+      setWorkoutNamesResults(filtered)
+      if (filtered.length === 0) {
+        setIsWorkoutNameSelectorOpen(false)
+      } else if (!isWorkoutNameSelectorOpen) {
+        setIsWorkoutNameSelectorOpen(true)
+      }
+    },
+    [workoutNames, isWorkoutNameSelectorOpen]
+  )
+
+  const handleTextChange = useCallback(
+    (e: { nativeEvent: { text: string } }) => {
+      handleChange(e.nativeEvent.text)
+    },
+    [handleChange]
+  )
 
   return (
-    <View style={tw`relative flex-1`}>
+    <View style={tw`relative`}>
       <Input
         editable
-        value={workoutData.name}
+        value={localValue}
         onPress={() => {
           setIsWorkoutNameSelectorOpen(!isWorkoutNameSelectorOpen)
         }}
-        onChange={(e) => handleChange(e.nativeEvent.text)}
+        onChange={handleTextChange}
         onBlur={(e) => {
+          setWorkoutData((prev) => ({ ...prev, name: localValue }))
           setIsWorkoutNameSelectorOpen(false)
           setFocusedInput(null)
         }}
         placeholder="Workout Name (e.g., Legs, Push, Pull)"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="text-light-text dark:text-dark-text font-poppinsMedium text-base"
+        twcnInput="text-light-text dark:text-dark-text font-poppinsMedium text-base w-full h-10"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types
