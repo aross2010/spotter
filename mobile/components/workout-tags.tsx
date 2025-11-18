@@ -1,7 +1,6 @@
 import { View } from 'react-native'
 import { TagIcon, ArrowRight, Tag } from 'lucide-react-native'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect } from 'react'
 import Colors from '../constants/colors'
 import Button from './button'
 import TagView from './tag'
@@ -9,28 +8,19 @@ import tw from '../tw'
 import { useWorkoutForm } from '../context/workout-form-context'
 
 const WorkoutTags = () => {
-  const { workoutData, setWorkoutData, userTags } = useWorkoutForm()
-  const { tags } = useLocalSearchParams()
-
-  useEffect(() => {
-    if (tags)
-      setWorkoutData((prev) => {
-        return { ...prev, tags: tags ? JSON.parse(tags as string) : [] }
-      })
-  }, [tags])
+  const { workoutData } = useWorkoutForm()
 
   const handleAddTags = () => {
     router.push({
       pathname: '/tag-selector',
       params: {
-        formTags: JSON.stringify(workoutData.tags),
-        userTags: JSON.stringify(userTags),
         type: 'workout',
       },
     })
   }
 
   const renderedTags = workoutData.tags.map(({ id, name, userId }, index) => {
+    console.log('rendering tag:', name)
     return (
       <TagView
         key={id}
@@ -45,12 +35,12 @@ const WorkoutTags = () => {
         <Button
           hitSlop={16}
           onPress={handleAddTags}
+          twcn="w-full"
         >
-          <View style={tw`flex-row items-center gap-2 flex-1 flex-wrap pb-2`}>
+          <View style={tw`flex-row items-center gap-2 flex-wrap`}>
             <TagIcon
               color={Colors.primary}
-              size={12}
-              strokeWidth={1.5}
+              size={16}
             />
             {renderedTags}
           </View>

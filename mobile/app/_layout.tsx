@@ -31,6 +31,8 @@ import ThemedStatusBar from '../components/status-bar'
 import { WorkoutProvider } from '../context/workout-context'
 import ErrorBoundary from 'react-native-error-boundary'
 import Error from '../components/error'
+import { WorkoutFormProvider } from '../context/workout-form-context'
+import { NotebookFormProvider } from '../context/notebook-form-context'
 
 SplashScreen.setOptions({
   duration: 1000,
@@ -65,41 +67,45 @@ const RootLayout = () => {
         <KeyboardProvider>
           <SafeAreaProvider>
             <ThemedStatusBar />
-            <NotebookProvider>
-              <WorkoutProvider>
-                <ErrorBoundary FallbackComponent={Error}>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      headerBackButtonDisplayMode: 'minimal',
-                    }}
-                  >
-                    <Stack.Screen
-                      name="index"
-                      options={{ animation: 'none' }}
-                    />
-                    <Stack.Screen
-                      name="(tabs)"
-                      options={{
-                        animation: 'none',
-                        headerShown: false,
-                        headerBackButtonDisplayMode: 'minimal',
-                      }}
-                    />
-                    <Stack.Screen
-                      name="(modals)"
-                      options={{
-                        presentation: 'card',
-                        headerShown: false,
-                        animation: 'slide_from_bottom',
-                        animationDuration: 350,
-                        headerBackButtonDisplayMode: 'minimal',
-                      }}
-                    />
-                  </Stack>
-                </ErrorBoundary>
-              </WorkoutProvider>
-            </NotebookProvider>
+            <WorkoutProvider>
+              <NotebookProvider>
+                <WorkoutFormProvider>
+                  <NotebookFormProvider>
+                    <ErrorBoundary FallbackComponent={Error}>
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                          headerBackButtonDisplayMode: 'minimal',
+                        }}
+                      >
+                        <Stack.Screen
+                          name="index"
+                          options={{ animation: 'none' }}
+                        />
+                        <Stack.Screen
+                          name="(tabs)"
+                          options={{
+                            animation: 'none',
+                            headerShown: false,
+                            headerBackButtonDisplayMode: 'minimal',
+                          }}
+                        />
+                        <Stack.Screen
+                          name="(modals)"
+                          options={{
+                            presentation: 'card',
+                            headerShown: false,
+                            animation: 'slide_from_bottom',
+                            animationDuration: 350,
+                            headerBackButtonDisplayMode: 'minimal',
+                          }}
+                        />
+                      </Stack>
+                    </ErrorBoundary>
+                  </NotebookFormProvider>
+                </WorkoutFormProvider>
+              </NotebookProvider>
+            </WorkoutProvider>
           </SafeAreaProvider>
         </KeyboardProvider>
       </GestureHandlerRootView>

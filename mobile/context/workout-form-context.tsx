@@ -46,6 +46,7 @@ type WorkoutFormContextType = {
   handleExerciseNumberSubmitRef: React.MutableRefObject<(() => void) | null>
   getNames: () => Promise<void>
   userTags: TagWithCount[]
+  setUserTags: React.Dispatch<React.SetStateAction<TagWithCount[]>>
   resetWorkoutFormContext: () => void
 }
 
@@ -316,6 +317,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     getNames,
     userTags,
     resetWorkoutFormContext,
+    setUserTags,
   }
 
   return (

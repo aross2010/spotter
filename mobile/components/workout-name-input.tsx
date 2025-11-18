@@ -60,9 +60,7 @@ const WorkoutNameInput = () => {
   }
 
   return (
-    <View
-      style={tw`relative border-b border-light-grayBorder flex-1 dark:border-dark-grayBorder`}
-    >
+    <View style={tw`relative flex-1`}>
       <Input
         editable
         value={workoutData.name}
@@ -74,11 +72,10 @@ const WorkoutNameInput = () => {
           setIsWorkoutNameSelectorOpen(false)
           setFocusedInput(null)
         }}
-        label="Name"
-        placeholder="Legs, Push, Pull, Upper Body, etc..."
+        placeholder="Workout Name (e.g., Legs, Push, Pull)"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="text-light-text dark:text-dark-text font-poppinsMedium"
+        twcnInput="text-light-text dark:text-dark-text font-poppinsMedium text-base"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types

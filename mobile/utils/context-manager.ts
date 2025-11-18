@@ -12,6 +12,7 @@ type ContextResetters = {
   resetWorkoutContext?: () => void
   resetNotebookContext?: () => void
   resetWorkoutFormContext?: () => void
+  resetNotebookFormContext?: () => void
 }
 
 export const contextResetters: ContextResetters = {}

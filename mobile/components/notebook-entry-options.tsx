@@ -34,10 +34,6 @@ const NotebookEntryOptions = ({
       pathname: '/notebook-entry-form',
       params: {
         entryId: id,
-        entryTitle: title || '',
-        entryBody: body,
-        entryDate: date,
-        entryTags: JSON.stringify(tags),
       },
     })
   }

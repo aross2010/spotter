@@ -1,10 +1,17 @@
 import SafeView from '../../../components/safe-view'
-import { View, Keyboard, Platform, Modal } from 'react-native'
+import {
+  View,
+  Keyboard,
+  Platform,
+  Modal,
+  Pressable,
+  TouchableWithoutFeedback,
+} from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate } from '../../../functions/formatted-date'
 import { HeaderBackButton } from '@react-navigation/elements'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   DefaultKeyboardToolbarTheme,
   KeyboardToolbar,
@@ -46,6 +53,7 @@ import {
 } from '../../../stores/workout-store'
 import { WorkoutFormData } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
+import { capString } from '../../../functions/cap-string'
 
 const statusOptions = [
   {
@@ -83,6 +91,7 @@ const WorkoutForm = () => {
     exerciseNumberInputValue,
     setExerciseNumberInputValue,
     handleExerciseNumberSubmitRef,
+    resetWorkoutFormContext,
   } = useWorkoutForm()
   const { updateWorkout, refreshWorkouts } = useWorkout()
   const { fetchWithAuth } = useAuth()
@@ -100,6 +109,10 @@ const WorkoutForm = () => {
   const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
+  const handleCancelForm = useCallback(() => {
+    resetWorkoutFormContext()
+    router.back()
+  }, [resetWorkoutFormContext])
 
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
@@ -273,7 +286,7 @@ const WorkoutForm = () => {
         mode === 'edit'
           ? 'Edit Workout'
           : mode === 'clone'
-            ? 'Clone Workout'
+            ? 'New Workout'
             : 'New Workout',
       headerRight: () => (
         <View style={tw`flex-row items-center gap-3`}>
@@ -327,15 +340,25 @@ const WorkoutForm = () => {
             )
           : () => (
               <Button
-                onPress={() => router.back()}
+                onPress={handleCancelForm}
                 hitSlop={12}
                 accessibilityLabel="close workout form"
                 twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
                 text="Cancel"
+                disabled={isSaving}
               />
             ),
     })
-  }, [workoutData, isSaving, mode, isLoading, initialState, workoutId])
+  }, [
+    workoutData,
+    isSaving,
+    mode,
+    isLoading,
+    initialState,
+    workoutId,
+    handleCancelForm,
+    from,
+  ])
 
   const handleSubmitWorkout = async () => {
     setIsSaving(true)
@@ -430,48 +453,47 @@ const WorkoutForm = () => {
         keyboardAvoiding
         bottomOffset={200}
       >
-        <View style={tw`flex-row gap-2`}>
+        <View style={tw`gap-2 flex-row items-center`}>
           <Button
             text={formatDate(workoutData.date)}
             onPress={() => {
               setIsDatePickerOpen(true)
             }}
             hitSlop={12}
-            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-lg py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-            twcnText="text-xs  text-light-text dark:text-dark-text"
+            twcn="flex-row-reverse items-center gap-1"
+            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
           >
             <Calendar
               size={16}
-              color={theme.text}
+              color={Colors.primary}
             />
           </Button>
+
           <Button
             text={
               workoutData.location.length > 0
-                ? workoutData.location
+                ? capString(workoutData.location, 20)
                 : 'Location (optional)'
             }
             onPress={() => {
               router.push('/workout-form/location')
             }}
             hitSlop={12}
-            twcn="flex-1 bg-light-grayPrimary dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-lg py-2 px-3 flex-row flex-row-reverse justify-center items-center gap-2"
-            twcnText={`text-xs ${
+            twcn="flex-row-reverse items-center gap-1"
+            twcnText={`font-poppinsSemiBold ${
               workoutData.location.length > 0
-                ? 'text-light-text dark:text-dark-text'
-                : 'text-light-grayText dark:text-dark-grayText'
+                ? 'text-primary dark:text-primary'
+                : 'text-primary/50 dark:text-primary/50'
             }`}
           >
             <MapPin
               size={16}
-              color={
-                workoutData.location.length > 0 ? theme.text : theme.grayText
-              }
+              color={Colors.primary}
             />
           </Button>
         </View>
 
-        <View style={tw`mt-4 flex-1 gap-6 justify-between`}>
+        <View style={tw`mt-2 flex-1 gap-4 justify-between`}>
           <WorkoutNameInput />
           <Exercises />
           <View
@@ -491,50 +513,55 @@ const WorkoutForm = () => {
           transparent
           animationType="fade"
         >
-          <View style={tw`flex-1 justify-center items-center bg-black/50`}>
-            <View
-              style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
-            >
-              <DateTimePicker
-                value={workoutData.date}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                onChange={(event, selectedDate) => {
-                  if (selectedDate) {
-                    // Check if the selected date is in the future
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0) // Reset time to start of day
-                    const newDate = new Date(selectedDate)
-                    newDate.setHours(0, 0, 0, 0)
+          <Pressable
+            style={tw`flex-1 justify-center items-center bg-black/50`}
+            onPress={() => setIsDatePickerOpen(false)}
+          >
+            <TouchableWithoutFeedback>
+              <View
+                style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
+              >
+                <DateTimePicker
+                  value={workoutData.date}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) {
+                      // Check if the selected date is in the future
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0) // Reset time to start of day
+                      const newDate = new Date(selectedDate)
+                      newDate.setHours(0, 0, 0, 0)
 
-                    // If date is in the future, set status to planned
-                    if (newDate > today) {
-                      setWorkoutData({
-                        ...workoutData,
-                        date: selectedDate,
-                        status: 'planned',
-                      })
-                    } else {
-                      setWorkoutData({ ...workoutData, date: selectedDate })
+                      // If date is in the future, set status to planned
+                      if (newDate > today) {
+                        setWorkoutData({
+                          ...workoutData,
+                          date: selectedDate,
+                          status: 'planned',
+                        })
+                      } else {
+                        setWorkoutData({ ...workoutData, date: selectedDate })
+                      }
                     }
-                  }
 
-                  // Close immediately on Android after selection
-                  if (Platform.OS === 'android') {
-                    setIsDatePickerOpen(false)
-                  }
-                }}
-              />
-              {Platform.OS === 'ios' && (
-                <Button
-                  text="Done"
-                  onPress={() => setIsDatePickerOpen(false)}
-                  twcn="mt-2 bg-primary rounded-xl p-3"
-                  twcnText="text-center font-poppinsSemiBold text-dark-text"
+                    // Close immediately on Android after selection
+                    if (Platform.OS === 'android') {
+                      setIsDatePickerOpen(false)
+                    }
+                  }}
                 />
-              )}
-            </View>
-          </View>
+                {Platform.OS === 'ios' && (
+                  <Button
+                    text="Done"
+                    onPress={() => setIsDatePickerOpen(false)}
+                    twcn="mt-2 bg-primary rounded-xl p-3"
+                    twcnText="text-center font-poppinsSemiBold text-dark-text"
+                  />
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          </Pressable>
         </Modal>
 
         <MyModal

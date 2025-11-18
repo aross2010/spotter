@@ -1,46 +1,40 @@
-import { Alert } from 'react-native'
+import {
+  Alert,
+  Modal,
+  Platform,
+  Pressable,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native'
 import SafeView from '../../components/safe-view'
 import Button from '../../components/button'
 import { formatDate, toLocalDateString } from '../../functions/formatted-date'
 import Input from '../../components/input'
-import { View } from 'react-native'
 import Txt from '../../components/text'
 import tw from '../../tw'
-import {
-  Link,
-  router,
-  useFocusEffect,
-  useLocalSearchParams,
-  useNavigation,
-} from 'expo-router'
+import { Link, router, useLocalSearchParams, useNavigation } from 'expo-router'
 import Colors from '../../constants/colors'
 import { useState, useEffect, useCallback } from 'react'
 import { Tag } from '../../utils/types'
-import DatePicker from 'react-native-date-picker'
 import { useNotebook } from '../../context/notebook-context'
 import TagView from '../../components/tag'
-import { Tag as TagIcon } from 'lucide-react-native'
+import { Calendar, MapPin, Tag as TagIcon } from 'lucide-react-native'
+import { useNotebookForm } from '../../context/notebook-form-context'
+import Spinner from '../../components/activity-indicator'
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 const NotebookEntryForm = () => {
-  const { addEntry, updateEntry } = useNotebook()
-  const { tags, entryId, entryTitle, entryBody, entryDate, entryTags } =
-    useLocalSearchParams() // tags = sent back from tag selector, entryTags = existing tags for entry to edit
+  const { addEntry, updateEntry, fetchTags } = useNotebook()
+  const { entryId } = useLocalSearchParams() // tags = sent back from tag selector, entryTags = existing tags for entry to edit
   const isEditing = !!entryId
-  const [data, setData] = useState({
-    date: entryDate
-      ? (() => {
-          const [year, month, day] = (entryDate as string)
-            .split('-')
-            .map(Number)
-          return new Date(year, month - 1, day)
-        })()
-      : new Date(),
-    title: (entryTitle as string) || '',
-    body: (entryBody as string) || '',
-    tags: entryTags
-      ? (JSON.parse(entryTags as string) as Tag[])
-      : ([] as Tag[]),
-  })
+  const {
+    notebookFormData,
+    setNotebookFormData,
+    getNotebookData,
+    isLoading,
+    setUserNotebookTags,
+    resetNotebookFormContext,
+  } = useNotebookForm()
   const [initialState, setInitialState] = useState<{
     date: Date
     title: string
@@ -49,25 +43,13 @@ const NotebookEntryForm = () => {
   } | null>(null)
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [userTags, setUserTags] = useState<
-    (Tag & {
-      used: number
-    })[]
-  >([])
-  const { fetchTags } = useNotebook()
   const navigation = useNavigation()
-  const selectedTags = tags ? JSON.parse(tags as string) : []
 
-  useEffect(() => {
-    setInitialState({ ...data })
-  }, [])
-
-  // pre-fetch tags for tag selector
   useEffect(() => {
     const getTags = async () => {
       try {
         const tags = await fetchTags()
-        setUserTags(tags)
+        setUserNotebookTags(tags)
       } catch (error: any) {
         Alert.alert('Error', error.message)
       }
@@ -75,15 +57,30 @@ const NotebookEntryForm = () => {
     getTags()
   }, [])
 
+  useEffect(() => {
+    setInitialState({ ...notebookFormData })
+  }, [])
+
+  useEffect(() => {
+    if (isEditing && entryId) {
+      getNotebookData(entryId as string).then(() => {
+        setInitialState({ ...notebookFormData })
+      })
+    }
+  }, [entryId])
+
   const hasChanges = () => {
     if (!isEditing || !initialState) return true // For new entries or before initial state is set, always allow saving if body is not empty
 
-    const dateChanged = data.date.getTime() !== initialState.date.getTime()
-    const titleChanged = data.title.trim() !== initialState.title.trim()
-    const bodyChanged = data.body.trim() !== initialState.body.trim()
+    const dateChanged =
+      notebookFormData.date.getTime() !== initialState.date.getTime()
+    const titleChanged =
+      notebookFormData.title.trim() !== initialState.title.trim()
+    const bodyChanged =
+      notebookFormData.body.trim() !== initialState.body.trim()
     const tagsChanged =
-      data.tags.length !== initialState.tags.length ||
-      data.tags.some(
+      notebookFormData.tags.length !== initialState.tags.length ||
+      notebookFormData.tags.some(
         (tag) =>
           !initialState.tags.some((initial: Tag) => initial.id === tag.id)
       )
@@ -92,10 +89,15 @@ const NotebookEntryForm = () => {
   }
 
   const canSave = () => {
-    const hasContent = data.body.trim().length > 0
+    const hasContent = notebookFormData.body.trim().length > 0
     const hasValidChanges = hasChanges()
     return hasContent && hasValidChanges && !isSaving
   }
+
+  const handleCancelForm = useCallback(() => {
+    resetNotebookFormContext()
+    router.back()
+  }, [resetNotebookFormContext])
 
   useEffect(() => {
     const saveEnabled = canSave()
@@ -119,33 +121,31 @@ const NotebookEntryForm = () => {
           disabled={!saveEnabled}
         />
       ),
+      headerLeft: () => (
+        <Button
+          onPress={handleCancelForm}
+          hitSlop={12}
+          accessibilityLabel="cancel notebook entry"
+          twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
+          text="Cancel"
+          disabled={isSaving}
+        />
+      ),
     })
-  }, [navigation, isSaving, data, initialState])
-
-  useFocusEffect(
-    useCallback(() => {
-      if (tags) {
-        setData((prevData) => ({ ...prevData, tags: selectedTags }))
-        // If this is the first time setting tags (initial load), update initial state too
-        if (!isEditing && initialState) {
-          setInitialState({ ...initialState, tags: selectedTags })
-        }
-      }
-    }, [tags, isEditing])
-  )
+  }, [navigation, isSaving, notebookFormData, initialState, handleCancelForm])
 
   const handleSubmitEntry = async () => {
     setIsSaving(true)
     try {
       if (isEditing) {
         await updateEntry(entryId as string, {
-          ...data,
-          date: toLocalDateString(data.date), // Send local date (YYYY-MM-DD)
+          ...notebookFormData,
+          date: toLocalDateString(notebookFormData.date), // Send local date (YYYY-MM-DD)
         })
       } else {
         await addEntry({
-          ...data,
-          date: toLocalDateString(data.date), // Send local date (YYYY-MM-DD)
+          ...notebookFormData,
+          date: toLocalDateString(notebookFormData.date), // Send local date (YYYY-MM-DD)
         })
       }
 
@@ -157,14 +157,18 @@ const NotebookEntryForm = () => {
     }
   }
 
-  const renderedTags = data.tags.map(({ id, name, userId }, index) => {
-    return (
-      <TagView
-        key={id}
-        tag={{ id, name, userId }}
-      />
-    )
-  })
+  const renderedTags = notebookFormData.tags.map(
+    ({ id, name, userId }, index) => {
+      return (
+        <TagView
+          key={id}
+          tag={{ id, name, userId }}
+        />
+      )
+    }
+  )
+
+  if (isLoading) return <Spinner />
 
   return (
     <SafeView
@@ -174,29 +178,45 @@ const NotebookEntryForm = () => {
       <View style={tw`flex-1`}>
         <View style={tw`flex-row items-center justify-between mb-2`}>
           <Button
-            text={formatDate(data.date)}
+            text={formatDate(notebookFormData.date)}
             onPress={() => {
               setIsDatePickerOpen(true)
             }}
             hitSlop={12}
+            twcn="flex-row-reverse items-center gap-1"
             twcnText="text-xs font-poppinsSemiBold text-primary dark:text-primary uppercase"
-          />
+          >
+            <Calendar
+              size={16}
+              color={Colors.primary}
+            />
+          </Button>
         </View>
 
         <View style={tw`mb-4`}>
           <Input
             editable={!isSaving}
-            value={data.title}
-            onChange={(e) => setData({ ...data, title: e.nativeEvent.text })}
+            value={notebookFormData.title}
+            onChange={(e) =>
+              setNotebookFormData({
+                ...notebookFormData,
+                title: e.nativeEvent.text,
+              })
+            }
             placeholder="Entry title (optional)"
-            twcnInput="text-base h-10"
+            twcnInput="text-base h-10 font-poppinsMedium text-base"
           />
         </View>
 
         <Input
           editable={!isSaving}
-          value={data.body}
-          onChange={(e) => setData({ ...data, body: e.nativeEvent.text })}
+          value={notebookFormData.body}
+          onChange={(e) =>
+            setNotebookFormData({
+              ...notebookFormData,
+              body: e.nativeEvent.text,
+            })
+          }
           placeholder="Anything on your mind..."
           autoFocus
           numberOfLines={2}
@@ -208,65 +228,82 @@ const NotebookEntryForm = () => {
         />
       </View>
 
-      {data.tags.length > 0 ? (
+      {notebookFormData.tags.length > 0 ? (
         <View style={tw`flex-row justify-between items-center`}>
-          <Link
-            href={{
-              pathname: '/tag-selector',
-              params: {
-                formTags: JSON.stringify(data.tags),
-                userTags: JSON.stringify(userTags),
-                type: 'notebook',
-              },
-            }}
-          >
+          <Link href={'/tag-selector?type=notebook'}>
             <View style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}>
               <TagIcon
                 color={Colors.primary}
-                size={12}
-                strokeWidth={1.5}
+                size={16}
               />
               {renderedTags}
             </View>
           </Link>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
-            {data.body.length} / {500}
+            {notebookFormData.body.length} / {500}
           </Txt>
         </View>
       ) : (
         <View style={tw`flex-row justify-between items-center`}>
-          <Link
-            href={{
-              pathname: '/tag-selector',
-              params: {
-                formTags: JSON.stringify(data.tags),
-                userTags: JSON.stringify(userTags),
-                type: 'notebook',
-              },
-            }}
+          <Button
+            onPress={() => router.push('/tag-selector?type=notebook')}
+            style={tw`mr-auto flex-row-reverse items-center gap-1`}
           >
             <Txt twcn="font-poppinsSemiBold text-primary dark:text-primary">
               Add tags
             </Txt>
-          </Link>
+            <TagIcon
+              color={Colors.primary}
+              size={16}
+            />
+          </Button>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            {data.body.length} / {500}
+            {notebookFormData.body.length} / {500}
           </Txt>
         </View>
       )}
-      <DatePicker
-        modal
-        open={isDatePickerOpen}
-        date={data.date}
-        onConfirm={(date) => {
-          setIsDatePickerOpen(false)
-          setData({ ...data, date })
-        }}
-        mode="date"
-        onCancel={() => {
-          setIsDatePickerOpen(false)
-        }}
-      />
+      <Modal
+        visible={isDatePickerOpen}
+        transparent
+        animationType="fade"
+      >
+        <Pressable
+          style={tw`flex-1 justify-center items-center bg-black/50`}
+          onPress={() => setIsDatePickerOpen(false)}
+        >
+          <TouchableWithoutFeedback>
+            <View
+              style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
+            >
+              <DateTimePicker
+                value={notebookFormData.date}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) {
+                    setNotebookFormData({
+                      ...notebookFormData,
+                      date: selectedDate,
+                    })
+                  }
+
+                  if (Platform.OS === 'android') {
+                    setIsDatePickerOpen(false)
+                  }
+                }}
+              />
+              {Platform.OS === 'ios' && (
+                <Button
+                  text="Done"
+                  onPress={() => setIsDatePickerOpen(false)}
+                  twcn="mt-2 bg-primary rounded-xl p-3"
+                  twcnText="text-center font-poppinsSemiBold text-dark-text"
+                />
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+        </Pressable>
+      </Modal>
     </SafeView>
   )
 }
