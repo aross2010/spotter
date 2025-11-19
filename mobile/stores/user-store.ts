@@ -3,10 +3,11 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { UserProfile } from '../utils/types'
 
-type WeightMetric = 'lbs' | 'kgs'
-type IntensityMetric = 'rpe' | 'rir'
-type UnilateralLogging = 'sync' | 'separate'
-type HapticFeedback = 'enabled' | 'disabled'
+export type WeightMetric = 'lbs' | 'kgs'
+export type IntensityMetric = 'rpe' | 'rir'
+export type UnilateralLogging = 'sync' | 'separate'
+export type HapticFeedback = 'enabled' | 'disabled'
+export type DistanceMetric = 'km' | 'mi'
 
 type UserPreferences = {
   weightMetric: WeightMetric
@@ -14,6 +15,7 @@ type UserPreferences = {
   colorScheme: 'dark' | 'light' | 'system'
   unilateralLogging: UnilateralLogging
   hapticFeedback: HapticFeedback
+  distanceMetric: DistanceMetric
   location: string
 }
 
@@ -37,6 +39,7 @@ const initialUserPreferences: UserPreferences = {
   colorScheme: 'system',
   unilateralLogging: 'sync',
   hapticFeedback: 'enabled',
+  distanceMetric: 'mi',
   location: '',
 }
 
@@ -101,6 +104,10 @@ export const useUserStore = create<UserStore>()(
               p?.hapticFeedback ??
               s.preferences?.hapticFeedback ??
               initialUserPreferences.hapticFeedback,
+            distanceMetric:
+              p?.distanceMetric ??
+              s.preferences?.distanceMetric ??
+              initialUserPreferences.distanceMetric,
             location:
               p?.location !== undefined
                 ? p.location.trim()

@@ -3,7 +3,7 @@ import React from 'react'
 import { ActivityIndicator } from 'react-native'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
-import SafeView from './safe-view'
+import Txt from './text'
 
 type SpinnerProps = {
   size?: 'small' | 'large'
@@ -40,11 +40,11 @@ const Spinner = ({
       >
         {spinner}
         {text && (
-          <Text
+          <Txt
             style={tw`ml-2 text-sm text-light-grayText dark:text-dark-grayText`}
           >
             {text}
-          </Text>
+          </Txt>
         )}
       </View>
     )

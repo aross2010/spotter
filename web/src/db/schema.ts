@@ -14,8 +14,15 @@ import {
   index,
 } from 'drizzle-orm/pg-core'
 import { sql, relations } from 'drizzle-orm'
+import { start } from 'repl'
 
 export const authProvider = pgEnum('auth_provider', ['google', 'apple'])
+
+export const cardioMachineType = pgEnum('cardio_machine_type', [
+  'treadmill',
+  'stationary_bike',
+  'stair_climber',
+])
 
 export const muscleGroup = pgEnum('muscle_group', [
   'quadriceps',
@@ -209,6 +216,72 @@ export const exercises = pgTable(
   },
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )
+
+// seeded cardio machines for users to choose from
+export const cardioMachines = pgTable('cardio_machines', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: cardioMachineType('name').notNull(),
+})
+
+export const treadmillEntries = pgTable('treadmill_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  duration: numeric('duration', {
+    precision: 5,
+    scale: 1,
+  }).notNull(), // in seconds
+  distanceMiles: numeric('distance_miles', { precision: 5, scale: 2 }),
+  distanceKm: numeric('distance_km', { precision: 5, scale: 2 }),
+  averageSpeedMph: numeric('average_speed_mph', { precision: 4, scale: 2 }),
+  averageSpeedKph: numeric('average_speed_kph', { precision: 4, scale: 2 }),
+  averageIncline: numeric('average_incline', {
+    precision: 4,
+    scale: 1,
+  }),
+  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
+  startOfWorkout: boolean('start_of_workout').default(false),
+  endOfWorkout: boolean('end_of_workout').default(false),
+})
+
+export const stairClimberEntries = pgTable('stair_climber_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  duration: numeric('duration', {
+    precision: 5,
+    scale: 1,
+  }).notNull(), // in seconds
+  level: numeric('level', { precision: 4, scale: 0 }),
+  stepsClimbed: numeric('steps_climbed', { precision: 6, scale: 0 }),
+  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
+  startOfWorkout: boolean('start_of_workout').default(false),
+  endOfWorkout: boolean('end_of_workout').default(false),
+})
+
+export const stationary_bikeEntries = pgTable('stationary_bike_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  duration: numeric('duration', {
+    precision: 5,
+    scale: 1,
+  }).notNull(), // in seconds
+  distanceMiles: numeric('distance_miles', { precision: 5, scale: 2 }),
+  distanceKm: numeric('distance_km', { precision: 5, scale: 2 }),
+  averageSpeedMph: numeric('average_speed_mph', { precision: 4, scale: 2 }),
+  averageSpeedKph: numeric('average_speed_kph', { precision: 4, scale: 2 }),
+  averageResistanceLevel: numeric('average_resistance_level', {
+    precision: 4,
+    scale: 0,
+  }),
+  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
+  startOfWorkout: boolean('start_of_workout').default(false),
+  endOfWorkout: boolean('end_of_workout').default(false),
+})
 
 export const sets = pgTable(
   'sets',

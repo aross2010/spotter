@@ -20,7 +20,6 @@ const WorkoutTags = () => {
   }
 
   const renderedTags = workoutData.tags.map(({ id, name, userId }, index) => {
-    console.log('rendering tag:', name)
     return (
       <TagView
         key={id}

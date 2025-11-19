@@ -1,7 +1,14 @@
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import useTheme from '../../hooks/theme'
-import { useUserStore } from '../../../stores/user-store'
+import {
+  useUserStore,
+  type WeightMetric,
+  type IntensityMetric,
+  type UnilateralLogging,
+  type HapticFeedback,
+  type DistanceMetric,
+} from '../../../stores/user-store'
 import tw from '../../../tw'
 import { View } from 'react-native'
 import { useEffect, useState } from 'react'
@@ -62,6 +69,22 @@ const preferenceOptions = [
     category: 'Workouts',
   },
   {
+    title: 'Distance Unit',
+    subtitle: 'How distance is displayed in cardio activities',
+    options: [
+      {
+        value: 'miles',
+        label: 'Mi',
+      },
+      {
+        value: 'km',
+        label: 'Km',
+      },
+    ],
+    type: 'distanceMetric',
+    category: 'Workouts',
+  },
+  {
     title: 'Intensity Unit',
     subtitle: 'RIR: Reps in Reserves, RPE: Rate of Perceived Exertion',
     options: [
@@ -108,6 +131,7 @@ type PreferenceKey =
   | 'intensityMetric'
   | 'unilateralLogging'
   | 'hapticFeedback'
+  | 'distanceMetric'
   | 'location'
 
 const UserPreferences = () => {
@@ -119,6 +143,7 @@ const UserPreferences = () => {
     intensityMetric: preferences?.intensityMetric || 'rir',
     unilateralLogging: preferences?.unilateralLogging || 'sync',
     hapticFeedback: preferences?.hapticFeedback || 'enabled',
+    distanceMetric: preferences?.distanceMetric || 'miles',
     location: preferences?.location || '',
   })
 
@@ -131,6 +156,7 @@ const UserPreferences = () => {
         intensityMetric: preferences.intensityMetric || 'rir',
         unilateralLogging: preferences.unilateralLogging || 'sync',
         hapticFeedback: preferences.hapticFeedback || 'enabled',
+        distanceMetric: preferences.distanceMetric || 'miles',
         location: preferences.location || '',
       }
 
@@ -172,6 +198,11 @@ const UserPreferences = () => {
       setPreferences({
         ...preferences,
         hapticFeedback: value as 'enabled' | 'disabled',
+      })
+    } else if (type === 'distanceMetric' && preferences) {
+      setPreferences({
+        ...preferences,
+        distanceMetric: value as 'km' | 'mi',
       })
     } else if (type === 'location' && preferences) {
       setPreferences({
@@ -274,7 +305,12 @@ const UserPreferences = () => {
   )
 
   return (
-    <SafeView twcnContentView="gap-8">{renderedPreferenceCategories}</SafeView>
+    <SafeView
+      keyboardAvoiding
+      twcnContentView="gap-8"
+    >
+      {renderedPreferenceCategories}
+    </SafeView>
   )
 }
 

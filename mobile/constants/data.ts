@@ -38,3 +38,18 @@ export const MONTHS: Map<string, string> = new Map([
 ])
 
 export const APP_ID = '6754656428'
+
+export const cardioMachines = [
+  {
+    name: 'Treadmill',
+    iconName: 'figure.run.treadmill',
+  },
+  {
+    name: 'Stair Climber',
+    iconName: 'figure.run.stair.stepper',
+  },
+  {
+    name: 'Stationary Bike',
+    iconName: 'figure.indoor.cycle',
+  },
+] as const

@@ -86,6 +86,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const { user, preferences } = useUserStore()
   const defaultWeightMetric = preferences?.weightMetric || 'lbs'
   const defaultLocation = preferences?.location || ''
+  const defaultDistanceMetric = preferences?.distanceMetric || 'mi'
   const [workoutData, setWorkoutData] = useState<WorkoutFormData>({
     name: '',
     date: new Date(),
@@ -93,6 +94,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     tags: [],
     notes: '',
     weightUnit: defaultWeightMetric,
+    distanceUnit: defaultDistanceMetric,
     exercises: [starterExercise],
     setGroupings: [],
     status: 'completed',
@@ -282,6 +284,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
       notes: '',
       exercises: [starterExercise],
       weightUnit: defaultWeightMetric,
+      distanceUnit: defaultDistanceMetric,
       setGroupings: [],
       status: 'completed',
     })
