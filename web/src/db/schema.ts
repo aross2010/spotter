@@ -15,6 +15,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import { sql, relations } from 'drizzle-orm'
 import { start } from 'repl'
+import { machine } from 'os'
 
 export const authProvider = pgEnum('auth_provider', ['google', 'apple'])
 
@@ -217,71 +218,61 @@ export const exercises = pgTable(
   (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
 )
 
-// seeded cardio machines for users to choose from
-export const cardioMachines = pgTable('cardio_machines', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: cardioMachineType('name').notNull(),
-})
+// Single table for all cardio entries with machine-specific fields
+export const cardioEntries = pgTable(
+  'cardio_entries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    workoutId: uuid('workout_id').references(() => workouts.id, {
+      onDelete: 'cascade',
+    }), // nullable - can exist without workout
+    machineType: cardioMachineType('machine_type').notNull(),
+    duration: numeric('duration', {
+      precision: 5,
+      scale: 1,
+    }).notNull(), // in seconds
+    startOfWorkout: boolean('start_of_workout').default(false),
+    endOfWorkout: boolean('end_of_workout').default(false),
+    caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }),
 
-export const treadmillEntries = pgTable('treadmill_entries', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  duration: numeric('duration', {
-    precision: 5,
-    scale: 1,
-  }).notNull(), // in seconds
-  distanceMiles: numeric('distance_miles', { precision: 5, scale: 2 }),
-  distanceKm: numeric('distance_km', { precision: 5, scale: 2 }),
-  averageSpeedMph: numeric('average_speed_mph', { precision: 4, scale: 2 }),
-  averageSpeedKph: numeric('average_speed_kph', { precision: 4, scale: 2 }),
-  averageIncline: numeric('average_incline', {
-    precision: 4,
-    scale: 1,
-  }),
-  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
-  startOfWorkout: boolean('start_of_workout').default(false),
-  endOfWorkout: boolean('end_of_workout').default(false),
-})
+    // Treadmill & Bike shared fields
+    distanceMiles: numeric('distance_miles', { precision: 5, scale: 2 }),
+    distanceKm: numeric('distance_km', { precision: 5, scale: 2 }),
+    averageSpeedMph: numeric('average_speed_mph', { precision: 4, scale: 2 }),
+    averageSpeedKph: numeric('average_speed_kph', { precision: 4, scale: 2 }),
 
-export const stairClimberEntries = pgTable('stair_climber_entries', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  duration: numeric('duration', {
-    precision: 5,
-    scale: 1,
-  }).notNull(), // in seconds
-  level: numeric('level', { precision: 4, scale: 0 }),
-  stepsClimbed: numeric('steps_climbed', { precision: 6, scale: 0 }),
-  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
-  startOfWorkout: boolean('start_of_workout').default(false),
-  endOfWorkout: boolean('end_of_workout').default(false),
-})
+    // Treadmill specific
+    averageIncline: numeric('average_incline', {
+      precision: 4,
+      scale: 1,
+    }),
 
-export const stationary_bikeEntries = pgTable('stationary_bike_entries', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  duration: numeric('duration', {
-    precision: 5,
-    scale: 1,
-  }).notNull(), // in seconds
-  distanceMiles: numeric('distance_miles', { precision: 5, scale: 2 }),
-  distanceKm: numeric('distance_km', { precision: 5, scale: 2 }),
-  averageSpeedMph: numeric('average_speed_mph', { precision: 4, scale: 2 }),
-  averageSpeedKph: numeric('average_speed_kph', { precision: 4, scale: 2 }),
-  averageResistanceLevel: numeric('average_resistance_level', {
-    precision: 4,
-    scale: 0,
-  }),
-  caloriesBurned: numeric('calories_burned', { precision: 5, scale: 0 }),
-  startOfWorkout: boolean('start_of_workout').default(false),
-  endOfWorkout: boolean('end_of_workout').default(false),
-})
+    // Bike specific
+    averageResistanceLevel: numeric('average_resistance_level', {
+      precision: 4,
+      scale: 0,
+    }),
+
+    // Stair climber specific
+    level: numeric('level', { precision: 4, scale: 0 }),
+    stepsClimbed: numeric('steps_climbed', { precision: 6, scale: 0 }),
+  },
+  (t) => [
+    check(
+      'lbs_km_consistency',
+      sql`(distance_miles IS NULL OR distance_km IS NULL)`
+    ),
+    check(
+      'mph_kph_consistency',
+      sql`(average_speed_mph IS NULL OR average_speed_kph IS NULL)`
+    ),
+  ]
+)
 
 export const sets = pgTable(
   'sets',
@@ -430,10 +421,11 @@ export const notebookEntryTagLinksRelations = relations(
   })
 )
 
-// 1 workout to many exercises and tags
+// 1 workout to many exercises, tags, and cardio entries
 export const workoutsRelations = relations(workouts, ({ many }) => ({
   workoutExercises: many(workoutExercises),
   workoutTagLinks: many(workoutTagLinks),
+  cardioEntries: many(cardioEntries),
 }))
 
 // 1 workout exercise to 1 exercise, 1 workout, and many sets
@@ -492,6 +484,18 @@ export const workoutTagLinksRelations = relations(
 // 1 workout tag to many links (tag can be used in many workouts)
 export const workoutTagsRelations = relations(workoutTags, ({ many }) => ({
   workoutTagLinks: many(workoutTagLinks),
+}))
+
+// 1 cardio entry to 1 user and optionally 1 workout
+export const cardioEntriesRelations = relations(cardioEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [cardioEntries.userId],
+    references: [users.id],
+  }),
+  workout: one(workouts, {
+    fields: [cardioEntries.workoutId],
+    references: [workouts.id],
+  }),
 }))
 
 export * as schema from './schema'

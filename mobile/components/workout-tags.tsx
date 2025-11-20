@@ -6,9 +6,10 @@ import Button from './button'
 import TagView from './tag'
 import tw from '../tw'
 import { useWorkoutForm } from '../context/workout-form-context'
+import Txt from './text'
 
 const WorkoutTags = () => {
-  const { workoutData } = useWorkoutForm()
+  const { workoutData, setWorkoutData } = useWorkoutForm()
 
   const handleAddTags = () => {
     router.push({
@@ -22,6 +23,11 @@ const WorkoutTags = () => {
   const renderedTags = workoutData.tags.map(({ id, name, userId }, index) => {
     return (
       <TagView
+        onRemove={() => {
+          // Remove the tag from the workout data
+          const updatedTags = workoutData.tags.filter((tag) => tag.id !== id)
+          setWorkoutData({ ...workoutData, tags: updatedTags })
+        }}
         key={id}
         tag={{ id, name, userId }}
       />
@@ -31,19 +37,19 @@ const WorkoutTags = () => {
   return (
     <View>
       {workoutData.tags.length > 0 ? (
-        <Button
-          hitSlop={16}
-          onPress={handleAddTags}
-          twcn="w-full"
-        >
-          <View style={tw`flex-row items-center gap-2 flex-wrap`}>
-            <TagIcon
-              color={Colors.primary}
-              size={16}
+        <>
+          <View style={tw`flex-row items-center w-full justify-between mb-4`}>
+            <Txt twcn="font-poppinsSemiBold">Tags</Txt>
+            <Button
+              onPress={handleAddTags}
+              twcnText="font-poppinsSemiBold text-primary dark:text-primary text-sm"
+              text="Add More"
             />
+          </View>
+          <View style={tw`flex-row items-center gap-2 flex-wrap`}>
             {renderedTags}
           </View>
-        </Button>
+        </>
       ) : (
         <Button
           onPress={handleAddTags}

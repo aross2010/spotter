@@ -43,13 +43,75 @@ export const cardioMachines = [
   {
     name: 'Treadmill',
     iconName: 'figure.run.treadmill',
+    fields: [
+      {
+        label: 'Duration',
+        name: 'duration',
+      },
+      {
+        label: 'Distance',
+        name: 'distance',
+      },
+      {
+        label: 'Speed',
+        name: 'speed',
+      },
+      {
+        label: 'Incline',
+        name: 'incline',
+      },
+      {
+        label: 'Calories Burned',
+        name: 'caloriesBurned',
+      },
+    ],
   },
   {
     name: 'Stair Climber',
-    iconName: 'figure.run.stair.stepper',
+    iconName: 'figure.stair.stepper',
+    fields: [
+      {
+        label: 'Duration',
+        name: 'duration',
+      },
+      {
+        label: 'Level',
+        name: 'level',
+      },
+      {
+        label: 'Steps Climbed',
+        name: 'stepsClimbed',
+      },
+      {
+        label: 'Calories Burned',
+        name: 'caloriesBurned',
+      },
+    ],
   },
   {
     name: 'Stationary Bike',
     iconName: 'figure.indoor.cycle',
+    fields: [
+      {
+        label: 'Duration',
+        name: 'duration',
+      },
+      {
+        label: 'Distance',
+        name: 'distance',
+      },
+      {
+        label: 'Speed',
+        name: 'speed',
+      },
+      {
+        label: 'Resistance Level',
+        name: 'resistanceLevel',
+      },
+      {
+        label: 'Calories Burned',
+        name: 'caloriesBurned',
+      },
+    ],
   },
 ] as const

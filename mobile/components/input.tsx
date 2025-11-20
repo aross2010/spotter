@@ -62,7 +62,7 @@ const Input = forwardRef<TextInput, InputProps>(
     if (label) {
       return (
         <View style={tw`gap-2 ${twcnContainer ?? ''}`}>
-          <Txt twcn={`font-poppinsMedium ${twcnLabel}`}>{label}</Txt>
+          <Txt twcn={`font-poppinsSemiBold ${twcnLabel}`}>{label}</Txt>
           {standardInput}
         </View>
       )
