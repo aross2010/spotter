@@ -58,7 +58,7 @@ const Profile = () => {
       headerRight: () => {
         return (
           <Button
-            twcnText="text-primary font-poppinsSemiBold"
+            twcnText="text-primary font-poppinsSemiBold dark:text-primary"
             onPress={updateProfile}
             loading={loading}
             disabled={!canSubmit || loading}

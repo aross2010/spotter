@@ -471,7 +471,7 @@ const WorkoutFilters = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={tw`flex-1 -mx-4`}
-        contentContainerStyle={tw`flex-grow`}
+        contentContainerStyle={tw`flex-grow pb-12`}
       >
         {renderedResultOptions}
       </ScrollView>

@@ -26,6 +26,7 @@ const SettingsLayout = () => {
         },
         headerTitleAlign: 'left',
         headerTintColor: Colors.primary,
+        headerBackButtonDisplayMode: 'minimal',
       }}
     >
       <Stack.Screen

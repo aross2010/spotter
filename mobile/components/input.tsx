@@ -53,6 +53,7 @@ const Input = forwardRef<TextInput, InputProps>(
             : undefined,
         ]}
         placeholderTextColor={theme.grayText}
+        allowFontScaling={false}
         keyboardAppearance={colorScheme}
         multiline={props.numberOfLines ? true : props.multiline}
         {...props}
@@ -61,8 +62,8 @@ const Input = forwardRef<TextInput, InputProps>(
 
     if (label) {
       return (
-        <View style={tw`gap-2 ${twcnContainer ?? ''}`}>
-          <Txt twcn={`font-poppinsMedium ${twcnLabel}`}>{label}</Txt>
+        <View style={tw`gap-3 ${twcnContainer ?? ''}`}>
+          <Txt twcn={`font-poppinsSemiBold ${twcnLabel}`}>{label}</Txt>
           {standardInput}
         </View>
       )

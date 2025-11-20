@@ -54,7 +54,6 @@ import {
 import { WorkoutFormData } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
 import { capString } from '../../../functions/cap-string'
-import WorkoutCardio from '../../../components/workout-cardio'
 
 const statusOptions = [
   {
@@ -496,56 +495,41 @@ const WorkoutForm = () => {
           <Exercises />
           <View
             style={tw`${
-              isNotesActive ||
-              workoutData.notes ||
-              workoutData.tags.length > 0 ||
-              (workoutData.cardioEntries?.length || 0) > 0
-                ? 'gap-4 mt-4 items-start'
+              isNotesActive || workoutData.notes || workoutData.tags.length > 0
+                ? 'gap-6 mt-4 items-start'
                 : 'gap-4 mt-4 flex-row flex-wrap items-center'
             }`}
           >
-            {/* If any component has content, render with content first */}
+            {/* If notes or tags have content, render vertically with notes ALWAYS first */}
             {isNotesActive ||
             workoutData.notes ||
-            workoutData.tags.length > 0 ||
-            (workoutData.cardioEntries?.length || 0) > 0 ? (
+            workoutData.tags.length > 0 ? (
               <>
-                {/* Render components with content first (vertically) - Priority: cardio > notes > tags */}
-                {(workoutData.cardioEntries?.length || 0) > 0 && (
-                  <WorkoutCardio />
-                )}
-                {(isNotesActive || workoutData.notes) && (
+                {/* ALWAYS render notes first */}
+                {isNotesActive || workoutData.notes ? (
                   <View style={tw`w-full`}>
                     <WorkoutNotes
                       isNotesActive={isNotesActive}
                       setIsNotesActive={setIsNotesActive}
                     />
                   </View>
+                ) : (
+                  <WorkoutNotes
+                    isNotesActive={isNotesActive}
+                    setIsNotesActive={setIsNotesActive}
+                  />
                 )}
-                {workoutData.tags.length > 0 && <WorkoutTags />}
 
-                {/* Render components without content in horizontal row - Same priority order: cardio > notes > tags */}
-                {(!(isNotesActive || workoutData.notes) ||
-                  workoutData.tags.length === 0 ||
-                  (workoutData.cardioEntries?.length || 0) === 0) && (
-                  <View style={tw`flex-row gap-2 flex-wrap`}>
-                    {(workoutData.cardioEntries?.length || 0) === 0 && (
-                      <WorkoutCardio />
-                    )}
-                    {!(isNotesActive || workoutData.notes) && (
-                      <WorkoutNotes
-                        isNotesActive={isNotesActive}
-                        setIsNotesActive={setIsNotesActive}
-                      />
-                    )}
-                    {workoutData.tags.length === 0 && <WorkoutTags />}
-                  </View>
+                {/* Then render tags */}
+                {workoutData.tags.length > 0 ? (
+                  <WorkoutTags />
+                ) : (
+                  <WorkoutTags />
                 )}
               </>
             ) : (
               <>
-                {/* Default horizontal layout when no content - Same priority order: cardio > notes > tags */}
-                <WorkoutCardio />
+                {/* Default: render horizontally when both are empty */}
                 <WorkoutNotes
                   isNotesActive={isNotesActive}
                   setIsNotesActive={setIsNotesActive}

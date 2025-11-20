@@ -73,40 +73,6 @@ export type Exercise = {
   sets: Set[]
 }
 
-export type TreadmillEntry = {
-  duration: number // in seconds
-  distanceMiles: number
-  distanceKm: number
-  averageSpeedMph: number
-  averageSpeedKph: number
-  averageIncline: number
-  caloriesBurned: number
-}
-
-export type BikeEntry = {
-  duration: number // in seconds
-  distanceMiles: number
-  distanceKm: number
-  averageSpeedMph: number
-  averageSpeedKph: number
-  averageResistanceLevel: number
-  caloriesBurned: number
-}
-
-export type StairClimberEntry = {
-  duration: number // in seconds
-  stepsClimbed: number
-  caloriesBurned: number
-  level: number
-}
-
-export type CardioEntry = {
-  startOfWorkout?: boolean
-  endOfWorkout?: boolean
-  machineId: string
-  entryData: TreadmillEntry | BikeEntry | StairClimberEntry
-}
-
 export type WorkoutStatus = 'completed' | 'planned' | 'active'
 
 // for workout details page
@@ -124,7 +90,6 @@ export type Workout = {
   notes?: string
   location?: string
   status: WorkoutStatus
-  cardioEntries?: CardioEntry[]
 }
 
 type ExerciseInForm = {
@@ -147,7 +112,6 @@ export type WorkoutFormData = {
   distanceUnit: 'mi' | 'km'
   setGroupings: SetGrouping[]
   status: WorkoutStatus
-  cardioEntries?: CardioEntry[]
 }
 
 // for the workout tab workouts

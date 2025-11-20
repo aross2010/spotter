@@ -233,7 +233,7 @@ const ExerciseDetails = () => {
 
   const keyStats = (
     <View>
-      <Txt twcn="font-poppinsMedium mb-4">Key Stats</Txt>
+      <Txt twcn="font-poppinsSemiBold mb-4">Key Stats</Txt>
       <View style={tw`gap-1`}>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(0, 2)}</View>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(2, 5)}</View>
@@ -247,7 +247,7 @@ const ExerciseDetails = () => {
       exercise?.secondaryMuscleGroups.length > 0) && (
       <View>
         <View style={tw`flex-row justify-between items-center mb-4`}>
-          <Txt twcn="font-poppinsMedium">
+          <Txt twcn="font-poppinsSemiBold">
             Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
           </Txt>
           <Button onPress={() => navigateToEdit()}>
@@ -328,7 +328,7 @@ const ExerciseDetails = () => {
 
       return (
         <View style={tw`overflow-visible`}>
-          <Txt twcn="font-poppinsMedium mb-4">Progression </Txt>
+          <Txt twcn="font-poppinsSemiBold mb-4">Progression </Txt>
           <LineChart
             data={allData}
             xKey="date"

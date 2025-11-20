@@ -6,6 +6,7 @@ import Button from './button'
 import TagView from './tag'
 import tw from '../tw'
 import { useWorkoutForm } from '../context/workout-form-context'
+import Txt from './text'
 
 const WorkoutTags = () => {
   const { workoutData } = useWorkoutForm()
@@ -31,11 +32,15 @@ const WorkoutTags = () => {
   return (
     <View>
       {workoutData.tags.length > 0 ? (
-        <Button
-          hitSlop={16}
-          onPress={handleAddTags}
-          twcn="w-full"
-        >
+        <>
+          <View style={tw`mb-4 w-full flex-row items-center justify-between`}>
+            <Txt twcn="font-poppinsSemiBold ">Tags</Txt>
+            <Button
+              onPress={handleAddTags}
+              text="Add More"
+              twcnText="text-primary dark:text-primary font-poppinsSemiBold"
+            />
+          </View>
           <View style={tw`flex-row items-center gap-2 flex-wrap`}>
             <TagIcon
               color={Colors.primary}
@@ -43,7 +48,7 @@ const WorkoutTags = () => {
             />
             {renderedTags}
           </View>
-        </Button>
+        </>
       ) : (
         <Button
           onPress={handleAddTags}

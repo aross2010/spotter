@@ -166,7 +166,9 @@ const Settings = () => {
           style={tw`flex-col gap-4`}
           key={index}
         >
-          {sectionTitle && <Txt twcn="font-poppinsMedium">{sectionTitle}</Txt>}
+          {sectionTitle && (
+            <Txt twcn="font-poppinsSemiBold">{sectionTitle}</Txt>
+          )}
           <View
             style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
           >
@@ -177,7 +179,7 @@ const Settings = () => {
                   onPress={onPress ? onPress : promptSignOut}
                   twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'}`}
                 >
-                  <Txt twcn="">{label}</Txt>
+                  <Txt>{label}</Txt>
                   <ChevronRight
                     strokeWidth={1.5}
                     color={theme.grayText}

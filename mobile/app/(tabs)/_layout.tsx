@@ -52,6 +52,7 @@ const TabsLayout = () => {
           sceneStyle: {
             backgroundColor: 'transparent',
           },
+          headerTitleAllowFontScaling: false,
         }}
       >
         <Tabs.Screen

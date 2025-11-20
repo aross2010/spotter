@@ -319,7 +319,7 @@ const ExerciseForm = () => {
           placeholder="Form cues, equipment information, etc."
         />
         <View>
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">Primary Muscle Group</Txt>
+          <Txt twcn="mb-3 font-poppinsSemiBold">Primary Muscle Group</Txt>
           {exercise.primaryMuscleGroup ? (
             <Button
               onPress={() => {
@@ -357,7 +357,7 @@ const ExerciseForm = () => {
           )}
         </View>
         <View>
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">
+          <Txt twcn="mb-3 font-poppinsSemiBold text-sm">
             Secondary Muscle Groups
           </Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
@@ -381,7 +381,7 @@ const ExerciseForm = () => {
         </View>
 
         <View>
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">Workout Type</Txt>
+          <Txt twcn="mb-3 font-poppinsSemiBold">Workout Type</Txt>
           <View style={tw`flex-row gap-2`}>
             <Button
               onPress={() =>

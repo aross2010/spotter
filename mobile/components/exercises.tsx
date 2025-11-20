@@ -132,7 +132,7 @@ const Exercises = () => {
     <View>
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt twcn="font-poppinsMedium">Exercises</Txt>
+          <Txt twcn="font-poppinsSemiBold">Exercises</Txt>
           <Button onPress={() => setIsHelpModalOpen(true)}>
             <HelpCircle
               size={16}

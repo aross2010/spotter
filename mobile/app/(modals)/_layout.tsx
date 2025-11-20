@@ -92,14 +92,6 @@ export default function ModalLayout() {
           }}
         />
         <Stack.Screen
-          name="cardio-form"
-          options={{
-            title: 'Cardio Form',
-            headerTitle: 'Add Cardio',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
           name="workout-details"
           options={{
             title: 'Workout Details',
