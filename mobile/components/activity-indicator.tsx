@@ -40,9 +40,7 @@ const Spinner = ({
       >
         {spinner}
         {text && (
-          <Txt
-            style={tw`ml-2 text-sm text-light-grayText dark:text-dark-grayText`}
-          >
+          <Txt twcn="ml-2 text-sm text-light-grayText dark:text-dark-grayText">
             {text}
           </Txt>
         )}

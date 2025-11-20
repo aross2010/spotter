@@ -30,13 +30,34 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
     },
   ]
 
-  const canCreateSuperset = workoutData.exercises.length >= 2
+  const canCreateSuperset =
+    workoutData.exercises.length >= 2 &&
+    workoutData.exercises.filter(
+      (ex) => ex.name.trim() !== '' && ex.sets.length >= 1
+    ).length >= 2
+
   const canCreateDropset =
     workoutData.exercises.length >= 1 &&
-    workoutData.exercises.some((ex) => ex.sets.length >= 2)
+    workoutData.exercises.some((ex) => {
+      const setsWithData = ex.sets.filter((set) => {
+        const hasWeight =
+          (set.weightLbs !== null && set.weightLbs !== undefined) ||
+          (set.weightKg !== null && set.weightKg !== undefined)
+        const hasReps =
+          (set.reps !== null && set.reps !== undefined) ||
+          (set.leftReps !== null && set.leftReps !== undefined) ||
+          (set.rightReps !== null && set.rightReps !== undefined)
+        return hasWeight || hasReps
+      })
+      return setsWithData.length >= 2
+    })
 
   const renderedOptions = exerciseOptions.map(
     ({ title, description, icon: Icon, href }, index) => {
+      const isDisabled =
+        (title === 'Supersets' && !canCreateSuperset) ||
+        (title === 'Drop Sets' && !canCreateDropset)
+
       return (
         <Button
           onPress={() => {
@@ -44,15 +65,12 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
             closeModal()
             router.push(href)
           }}
-          disabled={
-            (title === 'Superset' && !canCreateSuperset) ||
-            (title === 'Drop Set' && !canCreateDropset)
-          }
+          disabled={isDisabled}
           key={title}
         >
           <View
             key={index}
-            style={tw`flex-row gap-6 p-3 items-center rounded-xl`}
+            style={tw`flex-row gap-6 p-3 items-center rounded-xl ${isDisabled ? 'opacity-40' : ''}`}
           >
             <View style={tw`flex-1`}>
               <Txt twcn="mb-0.5">{title}</Txt>
