@@ -14,6 +14,31 @@ import {
 import { setExercise, setSuperOrDropsets, setTags } from '../route'
 import { eq, and, sql } from 'drizzle-orm'
 import { withAuth } from '../../middleware'
+import { detectMuscleGroups } from '@/app/functions/detectMuscleGroups'
+
+// Background function to update muscle groups for new exercises
+async function updateMuscleGroupsInBackground(
+  exerciseId: string,
+  exerciseName: string
+) {
+  try {
+    const { primaryMuscleGroup, secondaryMuscleGroups } =
+      await detectMuscleGroups(exerciseName)
+
+    await db
+      .update(exercises)
+      .set({
+        primaryMuscleGroup,
+        secondaryMuscleGroups,
+      })
+      .where(eq(exercises.id, exerciseId))
+  } catch (error) {
+    console.error(
+      `Failed to update muscle groups for exercise ${exerciseName}:`,
+      error
+    )
+  }
+}
 
 // clear data not in the workout table – tags, then exercises (which will delete sets), then clean up empty set groups
 // NOTE: We do NOT delete exercises themselves - they should persist even if not used in any workouts
@@ -50,6 +75,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   }
 
   const setIdMap = new Map<string, string>()
+  const newExercises: { id: string; name: string }[] = []
   let exNum = 1
 
   let {
@@ -189,7 +215,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
       }
 
       for (const exercise of exercises) {
-        await setExercise(
+        const exerciseData = await setExercise(
           exercise,
           status || 'completed',
           setIdMap,
@@ -198,6 +224,12 @@ export const PUT = withAuth(async (req: Request, user: any) => {
           updatedWorkout.id,
           tx
         )
+
+        // Track new exercises for background processing
+        if (exerciseData.isNew) {
+          newExercises.push({ id: exerciseData.id, name: exerciseData.name })
+        }
+
         exNum++
       }
 
@@ -212,13 +244,34 @@ export const PUT = withAuth(async (req: Request, user: any) => {
       return updatedWorkout.id
     })
 
-    return NextResponse.json(
+    // Send response first
+    const response = NextResponse.json(
       {
         message: 'Workout updated successfully',
         id: result,
       },
       { status: 200 }
     )
+
+    // Trigger background muscle group updates for new exercises after response
+    if (newExercises.length > 0) {
+      // Use setImmediate or process.nextTick to ensure this runs after response is sent
+      process.nextTick(async () => {
+        try {
+          await Promise.all(
+            newExercises.map(async (exercise) => {
+              console.log('Updating muscle groups for exercise:', exercise.name)
+              await updateMuscleGroupsInBackground(exercise.id, exercise.name)
+            })
+          )
+          console.log('All muscle group updates completed')
+        } catch (error) {
+          console.error('Background muscle group update failed:', error)
+        }
+      })
+    }
+
+    return response
   } catch (error: any) {
     const msg =
       error instanceof Error ? error.message : 'Unexpected error occurred'
