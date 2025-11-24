@@ -2,7 +2,7 @@ import { withAuth } from '@/app/api/middleware'
 import db from '@/src'
 import { exercises, workoutExercises, workouts } from '@/src/db/schema'
 import { NextResponse } from 'next/server'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const GET = withAuth(async (req, user) => {
   const url = new URL(req.url)
@@ -34,9 +34,20 @@ export const GET = withAuth(async (req, user) => {
       .where(
         and(eq(exercises.userId, userId), eq(workouts.status, 'completed'))
       )
-      .orderBy(exercises.name)
 
-    const result = userExercises.map((exercise) => ({
+    // Sort in JavaScript to ensure correct ordering
+    const sortedExercises = userExercises.sort((a, b) => {
+      // First sort by primaryMuscleGroup
+      const groupA = a.primaryMuscleGroup || ''
+      const groupB = b.primaryMuscleGroup || ''
+      const groupCompare = groupA.localeCompare(groupB)
+      if (groupCompare !== 0) return groupCompare
+
+      // Then sort by name within the same group
+      return a.name.localeCompare(b.name)
+    })
+
+    const result = sortedExercises.map((exercise) => ({
       id: exercise.id,
       name: exercise.name,
       primaryMuscleGroup: exercise.primaryMuscleGroup,

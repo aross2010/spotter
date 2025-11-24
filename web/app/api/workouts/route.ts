@@ -494,8 +494,11 @@ export const POST = withAuth(async (req, user) => {
     // Trigger background muscle group updates for new exercises (don't await)
     if (newExercises.length > 0) {
       Promise.all(
-        newExercises.map((exercise) =>
-          updateMuscleGroupsInBackground(exercise.id, exercise.name)
+        newExercises.map(
+          (exercise) => (
+            console.log('Updating muscle groups for exercise:', exercise.name),
+            updateMuscleGroupsInBackground(exercise.id, exercise.name)
+          )
         )
       ).catch((error) => {
         console.error('Background muscle group update failed:', error)
