@@ -491,27 +491,34 @@ export const POST = withAuth(async (req, user) => {
       return workout.id
     })
 
-    // Trigger background muscle group updates for new exercises (don't await)
-    if (newExercises.length > 0) {
-      Promise.all(
-        newExercises.map(
-          (exercise) => (
-            console.log('Updating muscle groups for exercise:', exercise.name),
-            updateMuscleGroupsInBackground(exercise.id, exercise.name)
-          )
-        )
-      ).catch((error) => {
-        console.error('Background muscle group update failed:', error)
-      })
-    }
-
-    return NextResponse.json(
+    // Send response first
+    const response = NextResponse.json(
       {
         message: 'Workout created successfully',
         id: result,
       },
       { status: 201 }
     )
+
+    // Trigger background muscle group updates for new exercises after response
+    if (newExercises.length > 0) {
+      // Use setImmediate or process.nextTick to ensure this runs after response is sent
+      process.nextTick(async () => {
+        try {
+          await Promise.all(
+            newExercises.map(async (exercise) => {
+              console.log('Updating muscle groups for exercise:', exercise.name)
+              await updateMuscleGroupsInBackground(exercise.id, exercise.name)
+            })
+          )
+          console.log('All muscle group updates completed')
+        } catch (error) {
+          console.error('Background muscle group update failed:', error)
+        }
+      })
+    }
+
+    return response
   } catch (error: any) {
     const msg =
       error instanceof Error ? error.message : 'Unexpected error occurred'
