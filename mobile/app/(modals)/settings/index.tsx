@@ -167,7 +167,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="font-poppinsSemiBold">{sectionTitle}</Txt>
+            <Txt twcn="font-poppinsSemiBold text-base">{sectionTitle}</Txt>
           )}
           <View
             style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}

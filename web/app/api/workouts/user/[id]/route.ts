@@ -8,7 +8,6 @@ import {
   sets,
   workoutTagLinks,
   workoutTags,
-  setGroupings,
 } from '@/src/db/schema'
 import { desc, asc, eq, and, inArray, sql, min, max, count } from 'drizzle-orm'
 

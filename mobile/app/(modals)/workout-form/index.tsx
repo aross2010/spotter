@@ -366,29 +366,36 @@ const WorkoutForm = () => {
       if (mode === 'create') {
         const res = await addWorkout()
         triggerHomeDataRefresh()
+        triggerWorkoutTabRefresh()
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
           if (res?.id) {
             setWorkoutId(res.id)
             setMode('edit') // Transition to edit mode after first save
           }
-        } else router.replace('/workouts')
+        } else {
+          resetWorkoutFormContext()
+          router.replace('/workouts')
+        }
       } else if (mode === 'edit' && workoutId) {
         await updateWorkout(workoutId, workoutData)
+        triggerWorkoutTabRefresh()
+        triggerHomeDataRefresh()
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
         } else {
           if (from === 'workout-details') {
             triggerRefresh()
+            resetWorkoutFormContext()
             router.back()
           } else if (from === 'home') {
-            triggerHomeDataRefresh()
+            resetWorkoutFormContext()
             router.back()
           } else if (from == 'exercise') {
+            resetWorkoutFormContext()
             triggerExerciseDetailsRefresh()
-            triggerWorkoutTabRefresh()
           } else {
-            triggerWorkoutTabRefresh()
+            resetWorkoutFormContext()
             router.replace('/workouts')
           }
         }
@@ -490,14 +497,14 @@ const WorkoutForm = () => {
           </Button>
         </View>
 
-        <View style={tw`mt-2 flex-1 gap-4 justify-between`}>
+        <View style={tw`mt-2 flex-1 gap-6 justify-between`}>
           <WorkoutNameInput />
           <Exercises />
           <View
             style={tw`${
               isNotesActive || workoutData.notes || workoutData.tags.length > 0
-                ? 'gap-6 mt-4 items-start'
-                : 'gap-4 mt-4 flex-row flex-wrap items-center'
+                ? 'gap-6 items-start'
+                : 'gap-4 flex-row flex-wrap items-center'
             }`}
           >
             {/* If notes or tags have content, render vertically with notes ALWAYS first */}

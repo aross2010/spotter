@@ -234,7 +234,7 @@ const Home = () => {
                     strokeWidth={1.5}
                   />
                 </View>
-                <Txt twcn="text-base font-poppinsMedium">{feature.title}</Txt>
+                <Txt twcn="text-base font-poppinsSemiBold">{feature.title}</Txt>
               </View>
               <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
                 {feature.description}

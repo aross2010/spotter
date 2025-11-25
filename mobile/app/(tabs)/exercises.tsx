@@ -2,19 +2,11 @@ import { Alert, Keyboard, ScrollView, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
-import { router, useFocusEffect, useNavigation } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import Button from '../../components/button'
-import {
-  ChevronRight,
-  Dumbbell,
-  ListFilter,
-  Plus,
-  Search,
-  X,
-} from 'lucide-react-native'
+import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import tw from '../../tw'
-import MyModal from '../../components/modal'
 import { MUSCLE_GROUPS } from '../../constants/data'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
@@ -25,23 +17,20 @@ import {
   useExerciseStore,
   useExerciseTabStore,
 } from '../../stores/exercise-store'
+import { toTitleCase } from '../../functions/utils'
 
 type ExerciseMinimal = {
   id: string
   name: string
-  primaryMuscleGroup: (typeof MUSCLE_GROUPS)[number]
+  primaryMuscleGroup: (typeof MUSCLE_GROUPS)[number] | null
   secondaryMuscleGroups: (typeof MUSCLE_GROUPS)[number][]
 }
 
 const Exercises = () => {
-  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
   const [exercises, setExercises] = useState<ExerciseMinimal[]>([])
   const [filteredExercises, setFilteredExercises] = useState<ExerciseMinimal[]>(
     []
   )
-  const [muscleGroupFilters, setMuscleGroupFilters] = useState<
-    (typeof MUSCLE_GROUPS)[number][]
-  >([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const { fetchWithAuth, authUser } = useAuth()
@@ -61,7 +50,7 @@ const Exercises = () => {
           },
         }
       )
-      const data = await res.json()
+      const data: ExerciseMinimal[] = await res.json()
       setExercises(data)
       setFilteredExercises(data)
     } catch (error: any) {
@@ -85,141 +74,69 @@ const Exercises = () => {
     getExercises()
   }, [])
 
-  const navigation = useNavigation()
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => {
-        if (exercises.length === 0) return
-        return (
-          <View style={tw`mr-4 pb-1`}>
-            <Button
-              onPress={() => setIsFiltersModalOpen(true)}
-              twcn="bg-primary/10 rounded-2xl p-2"
-            >
-              <ListFilter
-                size={20}
-                color={Colors.primary}
-              />
-            </Button>
-          </View>
-        )
-      },
-    })
-  }, [navigation, exercises])
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text)
 
-  const applyAllFilters = (
-    searchText: string = searchQuery,
-    muscleFilters: (typeof MUSCLE_GROUPS)[number][] = muscleGroupFilters
-  ) => {
-    const filtered = exercises.filter((exercise) => {
-      // Search filter - must match if search text exists
-      const matchesSearch =
-        !searchText.trim() ||
-        exercise.name.toLowerCase().includes(searchText.toLowerCase())
+    if (!text.trim()) {
+      setFilteredExercises(exercises)
+      return
+    }
 
-      // Muscle group filter - must match ALL selected muscle groups (AND logic)
-      const allMuscleGroups = [
-        exercise.primaryMuscleGroup,
-        ...(exercise.secondaryMuscleGroups || []),
-      ].map((mg) => mg?.toLowerCase())
-
-      const matchesMuscleGroups =
-        muscleFilters.length === 0 ||
-        muscleFilters.every((filter) =>
-          allMuscleGroups.includes(filter.toLowerCase())
-        )
-
-      return matchesSearch && matchesMuscleGroups
-    })
-
+    const filtered = exercises.filter((exercise) =>
+      exercise.name.toLowerCase().includes(text.toLowerCase())
+    )
     setFilteredExercises(filtered)
   }
 
-  const handleSearchChange = (text: string) => {
-    setSearchQuery(text)
-    applyAllFilters(text, muscleGroupFilters)
-  }
+  const renderedExercises = filteredExercises.map((exercise, index) => {
+    const prevExercise = index > 0 ? filteredExercises[index - 1] : null
+    const showMuscleGroupHeader =
+      !prevExercise ||
+      prevExercise.primaryMuscleGroup !== exercise.primaryMuscleGroup
 
-  const handleFilterMuscleGroup = (
-    muscleGroup: (typeof MUSCLE_GROUPS)[number]
-  ) => {
-    let updatedFilters = [...muscleGroupFilters]
-    if (muscleGroupFilters.includes(muscleGroup)) {
-      updatedFilters = updatedFilters.filter((mg) => mg !== muscleGroup)
-    } else {
-      updatedFilters.push(muscleGroup)
-    }
-    setMuscleGroupFilters(updatedFilters)
-    applyAllFilters(searchQuery, updatedFilters)
-  }
+    const nextExercise =
+      index < filteredExercises.length - 1 ? filteredExercises[index + 1] : null
+    const isLastInGroup =
+      !nextExercise ||
+      nextExercise.primaryMuscleGroup !== exercise.primaryMuscleGroup
 
-  const renderedMuscleGroups = MUSCLE_GROUPS.map((m) => {
-    const isSelected = muscleGroupFilters.includes(m)
     return (
-      <Button
-        key={m}
-        onPress={() => handleFilterMuscleGroup(m)}
-        style={tw`px-3 py-1.5 ${isSelected ? 'bg-primary/10 dark:bg-primary./10 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder'} rounded-lg border`}
-      >
-        <Txt
-          twcn={`text-xs ${isSelected ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-        >
-          {m}
-        </Txt>
-      </Button>
-    )
-  })
-
-  const renderedExercises =
-    filteredExercises &&
-    filteredExercises.map((exercises) => {
-      return (
+      <View key={exercise.id}>
+        {showMuscleGroupHeader && (
+          <View style={tw`${index === 0 ? 'mb-4' : 'my-4'}`}>
+            <Txt twcn="font-poppinsSemiBold text-base">
+              {exercise.primaryMuscleGroup
+                ? toTitleCase(exercise.primaryMuscleGroup as string)
+                : 'Unknown'}
+            </Txt>
+          </View>
+        )}
         <Button
-          key={exercises.id}
           onPress={() => {
             router.push({
               pathname: '/exercise-details',
               params: {
-                id: exercises.id,
+                id: exercise.id,
               },
             })
           }}
-          twcn="flex-row items-center justify-between p-4 border-b border-light-grayBorder dark:border-dark-grayBorder"
+          twcn={`p-4 bg-white dark:bg-dark-grayPrimary flex-row items-center justify-between ${
+            showMuscleGroupHeader ? 'rounded-t-2xl' : ''
+          } ${
+            isLastInGroup
+              ? 'rounded-b-2xl'
+              : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
+          } ${index === filteredExercises.length - 1 ? 'mb-4' : ''}`}
         >
-          <View style={tw`gap-0`}>
-            <Txt twcn="text-sm">{exercises.name}</Txt>
-            {(exercises.primaryMuscleGroup ||
-              exercises.secondaryMuscleGroups.length > 0) && (
-              <>
-                <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                  {exercises.primaryMuscleGroup
-                    ?.split(' ')
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')}
-                  {exercises.secondaryMuscleGroups.length > 0
-                    ? `${exercises.primaryMuscleGroup ? ' • ' : ''}${exercises.secondaryMuscleGroups
-                        .map((mg) =>
-                          mg
-                            .split(' ')
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() + word.slice(1)
-                            )
-                            .join(' ')
-                        )
-                        .join(', ')}`
-                    : ''}
-                </Txt>
-              </>
-            )}
-          </View>
+          <Txt twcn="text-sm">{exercise.name}</Txt>
           <ChevronRight
             size={20}
             color={theme.grayText}
           />
         </Button>
-      )
-    })
+      </View>
+    )
+  })
 
   const exercisesPrompt = (
     <SafeView
@@ -286,18 +203,12 @@ const Exercises = () => {
           />
         </Button>
       </View>
-      <ScrollView style={tw`-mx-4`}>{renderedExercises}</ScrollView>
-      <MyModal
-        isOpen={isFiltersModalOpen}
-        setIsOpen={setIsFiltersModalOpen}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={tw`pt-4`}
       >
-        <Txt twcn="font-poppinsMedium text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText">
-          Filter by Muscle Groups
-        </Txt>
-        <View style={tw`flex-row flex-wrap gap-1.5`}>
-          {renderedMuscleGroups}
-        </View>
-      </MyModal>
+        {renderedExercises}
+      </ScrollView>
     </SafeView>
   )
 

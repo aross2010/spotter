@@ -30,7 +30,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       wrapperPadding
 
     const targetWeeks = 20
-    const gapSize = 3 // Minimal gap between squares
+    const gapSize = 2 // Minimal gap between squares
 
     // Calculate square width to fill available width: (width - all gaps) / columns
     const squareWidth =
@@ -329,7 +329,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
                       style={{
                         width: visibleWeeks.squareWidth,
                         height: visibleWeeks.squareWidth,
-                        borderRadius: 2,
+                        borderRadius: 4,
                         backgroundColor: getColorForStatus(day.status),
                       }}
                     />
@@ -346,7 +346,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         <View style={tw`flex-row gap-1 items-center`}>
           <View
             style={[
-              tw`w-3 h-3 rounded-sm`,
+              tw`w-3 h-3 rounded-[4px]`,
               { backgroundColor: Colors.primary },
             ]}
           />
@@ -357,7 +357,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         <View style={tw`flex-row gap-1 items-center`}>
           <View
             style={[
-              tw`w-3 h-3 rounded-sm`,
+              tw`w-3 h-3 rounded-[4px]`,
               { backgroundColor: Colors.secondary },
             ]}
           />
@@ -367,7 +367,10 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         </View>
         <View style={tw`flex-row gap-1 items-center`}>
           <View
-            style={[tw`w-3 h-3 rounded-sm`, { backgroundColor: Colors.blue }]}
+            style={[
+              tw`w-3 h-3 rounded-[4px]`,
+              { backgroundColor: Colors.blue },
+            ]}
           />
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
             Active

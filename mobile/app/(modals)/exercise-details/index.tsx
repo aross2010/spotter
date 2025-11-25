@@ -322,6 +322,7 @@ const ExerciseDetails = () => {
       const allData = [
         ...exercise.stats.progressionChart.map((point) => ({
           weight: point.data.weight,
+          reps: point.data.reps,
           date: point.date,
         })),
       ]
@@ -346,9 +347,16 @@ const ExerciseDetails = () => {
                 return ''
               }
             }}
-            formatYLabel={(val) =>
-              `${weightMetric === 'kgs' ? val.toFixed(1) : Math.round(val)} ${weightMetric}`
-            }
+            formatYLabel={(val) => {
+              if (weightMetric === 'kgs') {
+                return `${val.toFixed(1)} ${weightMetric}`
+              } else {
+                // For lbs, show decimal if it's a half value, otherwise whole number
+                return val % 1 === 0
+                  ? `${val} ${weightMetric}`
+                  : `${val.toFixed(1)} ${weightMetric}`
+              }
+            }}
             toolTips={renderedToolTips}
           />
         </View>

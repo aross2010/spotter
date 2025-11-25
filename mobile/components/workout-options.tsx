@@ -10,6 +10,7 @@ import { router } from 'expo-router'
 import { useWorkout } from '../context/workout-context'
 import { WorkoutMinimal } from '../utils/types'
 import { useHomeDataStore } from '../stores/workout-store'
+import { useExerciseTabStore } from '../stores/exercise-store'
 
 type WorkoutOptionsProps = {
   workout: WorkoutMinimal
@@ -26,6 +27,7 @@ const WorkoutOptions = ({
   const { deleteWorkout } = useWorkout()
   const { theme } = useTheme()
   const { triggerRefresh } = useHomeDataStore()
+  const { triggerRefresh: triggerExerciseTabRefresh } = useExerciseTabStore()
 
   const handleViewDetails = () => {
     setIsOptionsOpen(false)
@@ -52,6 +54,7 @@ const WorkoutOptions = ({
     await deleteWorkout(id)
     setIsOptionsOpen(false)
     triggerRefresh()
+    triggerExerciseTabRefresh()
   }
 
   const handleCloneWorkout = () => {

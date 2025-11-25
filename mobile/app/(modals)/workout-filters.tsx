@@ -11,6 +11,7 @@ import {
   CircleCheck,
   CircleDot,
   Layers,
+  ListCheck,
   RotateCcw,
   Search,
   X,
@@ -27,7 +28,7 @@ const statusOptions = [
   {
     value: 'all' as const,
     label: 'All',
-    icon: Layers,
+    icon: ListCheck,
   },
   {
     value: 'completed' as const,
@@ -485,6 +486,7 @@ const WorkoutFilters = () => {
           {statusOptions.map((option) => {
             const isSelected = (statusFilter || 'all') === option.value
             const StatusIcon = option.icon
+            const isAll = option.value === 'all'
 
             return (
               <Button

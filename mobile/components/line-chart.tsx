@@ -154,10 +154,33 @@ const LineChart = ({
       data.map((point, index) => ({
         x: index,
         y: point[yKey],
+        reps: point.reps ?? 1, // Include reps in chartData
         original: point,
       })),
     [data, yKey]
   )
+
+  // Calculate min and max reps for radius scaling
+  const { minReps, maxReps } = useMemo(() => {
+    if (chartData.length === 0) return { minReps: 1, maxReps: 1 }
+    const repsValues = chartData.map((d) => d.reps)
+    const min = Math.min(...repsValues)
+    const max = Math.max(...repsValues)
+    return { minReps: min, maxReps: max }
+  }, [chartData])
+
+  // Calculate radius based on reps, capping the range at 12
+  const getRadius = (reps: number) => {
+    const range = Math.min(maxReps - minReps, 12)
+    if (range === 0) return 8 // If all reps are the same, use middle size
+
+    // Clamp the reps to minReps + 12 range
+    const clampedReps = Math.min(reps, minReps + 12)
+
+    // Scale from minReps to minReps+12 (or maxReps if smaller) to radius 4-12
+    const normalizedReps = (clampedReps - minReps) / range
+    return 4 + normalizedReps * 8 // maps to 4-12 range
+  }
 
   const xTickValues = () => {
     const n = data.length
@@ -212,8 +235,77 @@ const LineChart = ({
     return formatXLabel ? formatXLabel(raw, index) : String(raw ?? '')
   }
 
-  const yFormatter = (value: number) =>
-    formatYLabel ? formatYLabel(value) : `${Math.round(value)}`
+  const yTickValues = () => {
+    if (chartData.length === 0) return []
+
+    // Find min and max Y values
+    const yValues = chartData.map((d) => d.y)
+    const minY = Math.min(...yValues)
+    const maxY = Math.max(...yValues)
+    const range = maxY - minY
+
+    // Determine step size to have max 6 ticks with minimum 2.5 step
+    // Calculate what step would give us ~5-6 ticks
+    const idealSteps = 5 // We want 5 intervals = 6 ticks
+    let step = Math.ceil(range / idealSteps / 2.5) * 2.5 // Round up to nearest 2.5
+
+    // Ensure minimum step of 2.5
+    step = Math.max(2.5, step)
+
+    // Determine rounding factor (use step for rounding)
+    const roundingFactor = step
+
+    // Round down to nearest step for min, round up for max
+    const minTick = Math.floor(minY / roundingFactor) * roundingFactor
+    const maxTick = Math.ceil(maxY / roundingFactor) * roundingFactor
+
+    // Generate ticks in increments
+    const ticks: number[] = []
+    for (let tick = minTick; tick <= maxTick; tick += step) {
+      ticks.push(tick)
+    }
+
+    // Ensure we don't exceed 6 ticks
+    return ticks.slice(0, 6)
+  }
+
+  const yDomain = useMemo(() => {
+    if (chartData.length === 0) return [0, 100] as [number, number]
+
+    const yValues = chartData.map((d) => d.y)
+    const minY = Math.min(...yValues)
+    const maxY = Math.max(...yValues)
+    const range = maxY - minY
+
+    // Use same logic as yTickValues for consistency
+    const idealSteps = 5
+    const step = Math.max(2.5, Math.ceil(range / idealSteps / 2.5) * 2.5)
+
+    // Round down to nearest step for min, round up for max
+    const minDomain = Math.floor(minY / step) * step
+    const maxDomain = Math.ceil(maxY / step) * step
+
+    return [minDomain, maxDomain] as [number, number]
+  }, [chartData])
+
+  const yFormatter = (value: number) => {
+    if (formatYLabel) return formatYLabel(value)
+
+    // Check the step size to determine if we should show decimals
+    const yValues = chartData.map((d) => d.y)
+    const minY = Math.min(...yValues)
+    const maxY = Math.max(...yValues)
+    const range = maxY - minY
+    const idealSteps = 5
+    const step = Math.max(2.5, Math.ceil(range / idealSteps / 2.5) * 2.5)
+
+    // Show decimals only if step is 2.5 and value has decimal
+    if (step === 2.5 && value % 1 !== 0) {
+      return value.toFixed(1)
+    } else {
+      return `${Math.round(value)}`
+    }
+  }
 
   const boundsLeft = useSharedValue(0)
   const boundsTop = useSharedValue(0)
@@ -224,7 +316,7 @@ const LineChart = ({
         data={chartData}
         xKey="x"
         yKeys={['y']}
-        domain={{ x: [0, Math.max(0, data.length - 1)] }}
+        domain={{ x: [0, Math.max(0, data.length - 1)], y: yDomain }}
         domainPadding={{ left: 5, right: 25, top: 20, bottom: 10 }}
         padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
         xAxis={{
@@ -237,7 +329,7 @@ const LineChart = ({
         yAxis={[
           {
             font,
-            tickCount: 5,
+            tickValues: yTickValues(),
             formatYLabel: (v: number) => yFormatter(v),
             labelColor: theme.grayText,
             lineColor: theme.grayBorder,
@@ -274,14 +366,18 @@ const LineChart = ({
             />
             <Scatter
               points={points.y}
-              radius={2}
+              radius={0}
               color={Colors.primary}
               animate={{ type: 'timing', duration: 350 }}
             />
             {currentIndex != null && points.y[currentIndex] ? (
               <Scatter
                 points={[points.y[currentIndex]]} // only the active point
-                radius={6} // bigger radius
+                radius={(point) => {
+                  // Get reps from chartData for the current index
+                  const reps = chartData[currentIndex]?.reps ?? 1
+                  return getRadius(reps)
+                }}
                 color={Colors.primary}
                 animate={{ type: 'timing', duration: 350 }}
               />

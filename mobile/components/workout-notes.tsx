@@ -34,12 +34,13 @@ const WorkoutNotes = ({
           setWorkoutData({ ...workoutData, notes: e.nativeEvent.text })
         }
         placeholder="Add your notes here..."
+        twcnLabel="font-poppinsSemiBold"
         multiline
         label="Notes"
         numberOfLines={6}
         textAlignVertical="top"
         fullBorder
-        twcnInput="mt-2 text-sm border border-light-grayBorder dark:border-dark-grayBorder p-3"
+        twcnInput="text-sm border border-light-grayBorder dark:border-dark-grayBorder p-3"
       />
     </View>
   ) : (

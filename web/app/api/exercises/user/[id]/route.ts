@@ -38,8 +38,8 @@ export const GET = withAuth(async (req, user) => {
     // Sort in JavaScript to ensure correct ordering
     const sortedExercises = userExercises.sort((a, b) => {
       // First sort by primaryMuscleGroup
-      const groupA = a.primaryMuscleGroup || ''
-      const groupB = b.primaryMuscleGroup || ''
+      const groupA = a.primaryMuscleGroup || 'Undefined'
+      const groupB = b.primaryMuscleGroup || 'Undefined'
       const groupCompare = groupA.localeCompare(groupB)
       if (groupCompare !== 0) return groupCompare
 
