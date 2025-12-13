@@ -145,7 +145,7 @@ const LineChart = ({
       left: 0,
       zIndex: 10,
       opacity: 1,
-      transform: [{ translateX: tx + offsetX }, { translateY: ty - 60 }],
+      transform: [{ translateX: tx + offsetX }, { translateY: ty - 80 }],
     }
   }, [])
 

@@ -33,7 +33,7 @@ const ExerciseDetailsLayout = () => {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Exercise Details',
+          title: '',
           headerLeft: () => (
             <Button
               onPress={() => router.back()}

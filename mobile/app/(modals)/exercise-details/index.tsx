@@ -82,7 +82,7 @@ const ExerciseDetails = () => {
   useEffect(() => {
     if (!exercise) return
     navigation.setOptions({
-      headerTitle: exercise ? capString(exercise.name, 35) : 'Exercise Details',
+      headerTitle: '',
       headerTitleStyle: {
         fontSize:
           exercise.name.length > 30 ? 16 : exercise.name.length > 20 ? 18 : 20,
@@ -330,35 +330,42 @@ const ExerciseDetails = () => {
       return (
         <View style={tw`overflow-visible`}>
           <Txt twcn="font-poppinsSemiBold mb-4">Progression </Txt>
-          <LineChart
-            data={allData}
-            xKey="date"
-            yKey="weight"
-            maxXLabels={5}
-            formatXLabel={(dateStr) => {
-              try {
-                // Parse as UTC to avoid timezone shifting
-                const date = new Date(dateStr)
-                const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-                const day = String(date.getUTCDate()).padStart(2, '0')
-                const year = String(date.getUTCFullYear()).slice(-2)
-                return `${month}/${day}/${year}`
-              } catch {
-                return ''
-              }
-            }}
-            formatYLabel={(val) => {
-              if (weightMetric === 'kgs') {
-                return `${val.toFixed(1)} ${weightMetric}`
-              } else {
-                // For lbs, show decimal if it's a half value, otherwise whole number
-                return val % 1 === 0
-                  ? `${val} ${weightMetric}`
-                  : `${val.toFixed(1)} ${weightMetric}`
-              }
-            }}
-            toolTips={renderedToolTips}
-          />
+          {allData.length > 1 ? (
+            <LineChart
+              data={allData}
+              xKey="date"
+              yKey="weight"
+              maxXLabels={5}
+              formatXLabel={(dateStr) => {
+                try {
+                  // Parse as UTC to avoid timezone shifting
+                  const date = new Date(dateStr)
+                  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+                  const day = String(date.getUTCDate()).padStart(2, '0')
+                  const year = String(date.getUTCFullYear()).slice(-2)
+                  return `${month}/${day}/${year}`
+                } catch {
+                  return ''
+                }
+              }}
+              formatYLabel={(val) => {
+                if (weightMetric === 'kgs') {
+                  return `${val.toFixed(1)} ${weightMetric}`
+                } else {
+                  // For lbs, show decimal if it's a half value, otherwise whole number
+                  return val % 1 === 0
+                    ? `${val} ${weightMetric}`
+                    : `${val.toFixed(1)} ${weightMetric}`
+                }
+              }}
+              toolTips={renderedToolTips}
+            />
+          ) : (
+            <Txt twcn="text-light-grayText dark:text-dark-grayText">
+              Perform {exercise.name} in multiple workouts to see progression
+              over time.
+            </Txt>
+          )}
         </View>
       )
     })()
@@ -453,6 +460,7 @@ const ExerciseDetails = () => {
     <Spinner text="Gathering data..." />
   ) : (
     <SafeView twcnContentView="gap-6">
+      <Txt twcn="font-poppinsSemiBold text-2xl -mb-4">{exercise?.name}</Txt>
       {description}
       {keyStats}
       {musclesWorked}

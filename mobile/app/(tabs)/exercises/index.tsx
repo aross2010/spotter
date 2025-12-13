@@ -1,23 +1,23 @@
 import { Alert, Keyboard, ScrollView, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
 import { router, useFocusEffect } from 'expo-router'
-import Button from '../../components/button'
+import Button from '../../../components/button'
 import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react-native'
-import Colors from '../../constants/colors'
-import tw from '../../tw'
-import { MUSCLE_GROUPS } from '../../constants/data'
-import { useAuth } from '../../context/auth-context'
-import { BASE_URL } from '../../constants/auth'
-import Spinner from '../../components/activity-indicator'
-import useTheme from '../hooks/theme'
-import Input from '../../components/input'
+import Colors from '../../../constants/colors'
+import tw from '../../../tw'
+import { MUSCLE_GROUPS } from '../../../constants/data'
+import { useAuth } from '../../../context/auth-context'
+import { BASE_URL } from '../../../constants/auth'
+import Spinner from '../../../components/activity-indicator'
+import useTheme from '../../hooks/theme'
+import Input from '../../../components/input'
 import {
   useExerciseStore,
   useExerciseTabStore,
-} from '../../stores/exercise-store'
-import { toTitleCase } from '../../functions/utils'
+} from '../../../stores/exercise-store'
+import { toTitleCase } from '../../../functions/utils'
 
 type ExerciseMinimal = {
   id: string

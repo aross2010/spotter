@@ -74,8 +74,8 @@ const RootLayout = () => {
                     <ErrorBoundary FallbackComponent={Error}>
                       <Stack
                         screenOptions={{
-                          headerShown: false,
                           headerBackButtonDisplayMode: 'minimal',
+                          headerShown: false,
                         }}
                       >
                         <Stack.Screen
@@ -86,7 +86,6 @@ const RootLayout = () => {
                           name="(tabs)"
                           options={{
                             animation: 'none',
-                            headerShown: false,
                             headerBackButtonDisplayMode: 'minimal',
                           }}
                         />

@@ -11,6 +11,7 @@ import MyModal from './modal'
 import { useWorkout } from '../context/workout-context'
 import WorkoutOptions from './workout-options'
 import { WorkoutMinimal } from '../utils/types'
+import { GlassView } from 'expo-glass-effect'
 
 const WorkoutView = ({
   workout,

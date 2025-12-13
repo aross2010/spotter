@@ -1,14 +1,15 @@
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
-import { useUserStore } from '../../stores/user-store'
-import tw from '../../tw'
-import { formattedDate } from '../../functions/formatted-date'
-import { formatNumber } from '../../functions/format-number'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
+import { useUserStore } from '../../../stores/user-store'
+import tw from '../../../tw'
+import { formattedDate } from '../../../functions/formatted-date'
+import { formatNumber } from '../../../functions/format-number'
 import { Alert, View } from 'react-native'
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../context/auth-context'
-import { BASE_URL } from '../../constants/auth'
-import { HomeData, WorkoutMinimal } from '../../utils/types'
+import { useAuth } from '../../../context/auth-context'
+import { BASE_URL } from '../../../constants/auth'
+import { HomeData, WorkoutMinimal } from '../../../utils/types'
+import TextLogo from '../../../assets/spotter-text-logo.svg'
 import {
   Book,
   Calendar,
@@ -17,15 +18,17 @@ import {
   Dumbbell,
   Repeat,
 } from 'lucide-react-native'
-import WorkoutView from '../../components/workout'
-import Button from '../../components/button'
+import WorkoutView from '../../../components/workout'
+import Button from '../../../components/button'
 import { router, SplashScreen, useFocusEffect } from 'expo-router'
-import ActivityMap from '../../components/activity-map'
+import ActivityMap from '../../../components/activity-map'
 import { useCallback } from 'react'
-import { useHomeDataStore } from '../../stores/workout-store'
-import Spinner from '../../components/activity-indicator'
-import Colors from '../../constants/colors'
+import { useHomeDataStore } from '../../../stores/workout-store'
+import Spinner from '../../../components/activity-indicator'
+import Colors from '../../../constants/colors'
 import { Link } from 'expo-router'
+import { GlassView } from 'expo-glass-effect'
+import useTheme from '../../hooks/theme'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -65,6 +68,7 @@ const Home = () => {
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
+  const { theme } = useTheme()
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
@@ -127,7 +131,7 @@ const Home = () => {
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
       <Txt twcn="mb-4 text-lg font-poppinsSemiBold">Activity</Txt>
-      <View style={tw`p-4 rounded-xl bg-white dark:bg-dark-grayPrimary`}>
+      <View style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
     </View>
@@ -253,10 +257,12 @@ const Home = () => {
     : ''
 
   const statsTogether = data && data.totalWorkouts > 0 && (
-    <View style={tw`rounded-2xl p-3 bg-primary relative overflow-hidden`}>
+    <View
+      style={tw`rounded-2xl p-3 relative overflow-hidden bg-white dark:bg-dark-grayPrimary`}
+    >
       <View style={tw`items-center flex-row gap-4`}>
         <View
-          style={tw`rounded-full bg-white/25 h-10 w-10 items-center justify-center`}
+          style={tw`rounded-full bg-primary/50 h-10 w-10 items-center justify-center`}
         >
           <Txt twcn="text-2xl">🚀</Txt>
         </View>
@@ -272,10 +278,8 @@ const Home = () => {
                 key={stat.label}
                 style={tw`items-center flex-1`}
               >
-                <Txt twcn="text-white text-sm font-poppinsLight">
-                  {stat.label}
-                </Txt>
-                <Txt twcn="text-white text-xl font-poppinsSemiBold">
+                <Txt twcn="text-sm font-poppinsLight">{stat.label}</Txt>
+                <Txt twcn="text-xl font-poppinsSemiBold">
                   {formatNumber(stat.value)}
                 </Txt>
               </View>
@@ -283,10 +287,10 @@ const Home = () => {
           })}
       </View>
       <View
-        style={tw`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-white/10`}
+        style={tw`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-primary/50`}
       />
       <View
-        style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-white/10`}
+        style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-primary/50`}
       />
     </View>
   )

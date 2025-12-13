@@ -2,18 +2,18 @@ import { View, FlatList } from 'react-native'
 import React, { useEffect, useCallback } from 'react'
 import { useNavigation, router } from 'expo-router'
 import { Link } from 'expo-router'
-import tw from '../../tw'
-import Colors from '../../constants/colors'
+import tw from '../../../tw'
+import Colors from '../../../constants/colors'
 import { ListFilter, Plus, Calendar } from 'lucide-react-native'
-import SafeView from '../../components/safe-view'
-import Txt from '../../components/text'
-import Button from '../../components/button'
-import { useWorkout } from '../../context/workout-context'
-import Spinner from '../../components/activity-indicator'
-import WorkoutView from '../../components/workout'
-import { MONTHS } from '../../constants/data'
-import { WorkoutMinimal } from '../../utils/types'
-import { useWorkoutTabStore } from '../../stores/workout-store'
+import SafeView from '../../../components/safe-view'
+import Txt from '../../../components/text'
+import Button from '../../../components/button'
+import { useWorkout } from '../../../context/workout-context'
+import Spinner from '../../../components/activity-indicator'
+import WorkoutView from '../../../components/workout'
+import { MONTHS } from '../../../constants/data'
+import { WorkoutMinimal } from '../../../utils/types'
+import { useWorkoutTabStore } from '../../../stores/workout-store'
 import { useFocusEffect } from 'expo-router'
 
 const Workouts = () => {
@@ -267,7 +267,7 @@ const Workouts = () => {
       </View>
     </SafeView>
   ) : (
-    <View style={tw`flex-1`}>
+    <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
       <FlatList
         data={currentWorkouts}
         renderItem={renderEntry}

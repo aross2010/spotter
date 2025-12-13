@@ -25,7 +25,6 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIDesignRequiresCompatibility": true,
         "UIDeviceFamily": [1],
         "UIRequiresFullScreen": true,
         "CFBundleDisplayName": "Spotter",
