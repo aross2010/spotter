@@ -5,19 +5,21 @@ export default function WorkoutsLayout() {
   const { theme } = useTheme()
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: theme.background },
-      }}
-    >
+    <Stack>
       <Stack.Screen
         name="index"
         options={{
           title: 'Workouts',
-          headerLargeTitleEnabled: true,
+          headerLargeTitle: true,
           headerTransparent: true,
-          headerShadowVisible: false,
+          headerTitleStyle: {
+            color: theme.text,
+            fontFamily: 'Poppins_600SemiBold',
+          },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontFamily: 'Poppins_600SemiBold',
+          },
         }}
       />
     </Stack>

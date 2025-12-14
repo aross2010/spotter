@@ -17,7 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.aross.spotter",
       "usesAppleSignIn": true,
-      "deploymentTarget": "16.0",
+      "deploymentTarget": "26.0",
       "icon": {
         "dark": "./assets/icons/ios-dark.png",
         "light": "./assets/icons/ios-light.png",

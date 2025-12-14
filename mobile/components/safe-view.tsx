@@ -35,7 +35,7 @@ const SafeView = ({
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()
 
-  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-0'}`
+  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-2'}`
 
   if (keyboardAvoiding && scroll) {
     return (
@@ -71,7 +71,7 @@ const SafeView = ({
       <ScrollView
         {...rest}
         style={tw`bg-light-background dark:bg-dark-background flex-1`}
-        contentContainerStyle={tw`flex-grow ${paddingClasses} ${twcnContentView ?? ''}`}
+        contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
         contentInsetAdjustmentBehavior="automatic"
         automaticallyAdjustContentInsets={true}
       >

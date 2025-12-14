@@ -18,25 +18,46 @@ export default function HomeLayout() {
         name="index"
         options={{
           headerRight: () => (
-            <Button
-              hitSlop={48}
-              onPress={() => {
-                router.push('/settings')
-              }}
-              accessibilityLabel="settings"
-              twcn="w-9 flex-row items-center justify-center h-full"
-            >
-              <SFIcon
-                name="gear"
-                color={Colors.primary}
-                size={26}
-              />
-            </Button>
+            <View style={tw`flex-row items-center gap-6 px-2`}>
+              <Button
+                hitSlop={8}
+                onPress={() => {
+                  console.log('navigate to settings')
+                  router.push('/settings')
+                }}
+                accessibilityLabel="settings"
+              >
+                <SFIcon
+                  name="gear"
+                  color={Colors.primary}
+                  size={26}
+                />
+              </Button>
+              <Button
+                hitSlop={8}
+                onPress={() => {
+                  console.log('open add menu')
+                  // open pop-up menu (add workout or notebook entry)
+                }}
+                accessibilityLabel="settings"
+                // twcn="w-9 flex-row items-center justify-center h-full" for single icon button header
+              >
+                <SFIcon
+                  name="plus"
+                  color={Colors.primary}
+                  size={26}
+                />
+              </Button>
+            </View>
           ),
           title: 'Home',
           headerLargeTitle: true,
           headerTransparent: true,
           headerTitleStyle: {
+            color: theme.text,
+            fontFamily: 'Poppins_600SemiBold',
+          },
+          headerLargeTitleStyle: {
             color: theme.text,
             fontFamily: 'Poppins_600SemiBold',
           },

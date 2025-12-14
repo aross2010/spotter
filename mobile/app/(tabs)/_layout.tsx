@@ -21,7 +21,14 @@ const TabsLayout = () => {
   const { theme } = useTheme()
 
   const liquidGlassTabs = (
-    <NativeTabs iconColor={Colors.primary}>
+    <NativeTabs
+      iconColor={Colors.primary}
+      labelStyle={
+        {
+          // fontFamily: 'Poppins400_Regular',
+        }
+      }
+    >
       <NativeTabs.Trigger name="home">
         <Label>Home</Label>
         <Icon sf="house.fill" />

@@ -340,43 +340,6 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
           </View>
         </ScrollView>
       </View>
-
-      {/* Legend */}
-      <View style={tw`flex-row items-center gap-3 mt-2`}>
-        <View style={tw`flex-row gap-1 items-center`}>
-          <View
-            style={[
-              tw`w-3 h-3 rounded-[4px]`,
-              { backgroundColor: Colors.primary },
-            ]}
-          />
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            Workout
-          </Txt>
-        </View>
-        <View style={tw`flex-row gap-1 items-center`}>
-          <View
-            style={[
-              tw`w-3 h-3 rounded-[4px]`,
-              { backgroundColor: Colors.secondary },
-            ]}
-          />
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            Planned
-          </Txt>
-        </View>
-        <View style={tw`flex-row gap-1 items-center`}>
-          <View
-            style={[
-              tw`w-3 h-3 rounded-[4px]`,
-              { backgroundColor: Colors.blue },
-            ]}
-          />
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            Active
-          </Txt>
-        </View>
-      </View>
     </View>
   )
 }

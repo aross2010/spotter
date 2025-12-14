@@ -15,6 +15,7 @@ import { MONTHS } from '../../../constants/data'
 import { WorkoutMinimal } from '../../../utils/types'
 import { useWorkoutTabStore } from '../../../stores/workout-store'
 import { useFocusEffect } from 'expo-router'
+import SFIcon from '../../../components/sf-icon'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -64,18 +65,22 @@ const Workouts = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <View style={tw`flex-row items-center gap-2 mr-4 pb-1`}>
+          <View style={tw`flex-row items-center gap-6 px-2`}>
             {workouts.length > 0 && (
               <View style={tw`relative`}>
-                <Link
-                  href="/workout-filters"
-                  style={tw` bg-primary/10 rounded-2xl p-2`}
+                <Button
+                  onPress={() => {
+                    router.push('/workout-filters')
+                  }}
+                  hitSlop={8}
+                  accessibilityLabel="filter workouts"
                 >
-                  <ListFilter
-                    size={20}
+                  <SFIcon
+                    name="line.horizontal.3.decrease"
+                    size={26}
                     color={Colors.primary}
                   />
-                </Link>
+                </Button>
                 {numActiveFilters > 0 && (
                   <View
                     style={tw.style(
@@ -91,15 +96,19 @@ const Workouts = () => {
               </View>
             )}
 
-            <Link
-              href="/workout-form"
-              style={tw` bg-primary/10 rounded-2xl p-2`}
+            <Button
+              onPress={() => {
+                router.push('/workout-form')
+              }}
+              hitSlop={8}
+              accessibilityLabel="add workout"
             >
-              <Plus
-                size={20}
+              <SFIcon
+                name="plus"
+                size={26}
                 color={Colors.primary}
               />
-            </Link>
+            </Button>
           </View>
         )
       },
@@ -267,22 +276,22 @@ const Workouts = () => {
       </View>
     </SafeView>
   ) : (
-    <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
-      <FlatList
-        data={currentWorkouts}
-        renderItem={renderEntry}
-        keyExtractor={(item) => item.id}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4`}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={false}
-        disableVirtualization={true}
-        initialNumToRender={currentWorkouts.length}
-        maxToRenderPerBatch={currentWorkouts.length}
-      />
-    </View>
+    <FlatList
+      data={currentWorkouts}
+      renderItem={renderEntry}
+      keyExtractor={(item) => item.id}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.1}
+      ListFooterComponent={renderFooter}
+      style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+      contentContainerStyle={tw`px-4 pt-2 pb-4`}
+      removeClippedSubviews={false}
+      disableVirtualization={true}
+      initialNumToRender={currentWorkouts.length}
+      maxToRenderPerBatch={currentWorkouts.length}
+      contentInsetAdjustmentBehavior="automatic"
+      scrollEventThrottle={16}
+    />
   )
 
   return !isLoading && workouts.length === 0 ? workoutPrompt : workoutsView

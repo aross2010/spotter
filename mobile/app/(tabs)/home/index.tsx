@@ -68,7 +68,7 @@ const Home = () => {
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
@@ -130,7 +130,7 @@ const Home = () => {
 
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-4 text-lg font-poppinsSemiBold">Activity</Txt>
+      <Txt twcn="mb-3 text-lg font-poppinsSemiBold">Workout Activity</Txt>
       <View style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
@@ -139,7 +139,7 @@ const Home = () => {
 
   const featuredWorkout = data?.featuredWorkout.status != 'none' && (
     <View>
-      <Txt twcn="mb-4 text-lg font-poppinsSemiBold">
+      <Txt twcn="mb-3 text-lg font-poppinsSemiBold">
         {featuredWorkoutStatus === 'current'
           ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
@@ -257,8 +257,9 @@ const Home = () => {
     : ''
 
   const statsTogether = data && data.totalWorkouts > 0 && (
-    <View
-      style={tw`rounded-2xl p-3 relative overflow-hidden bg-white dark:bg-dark-grayPrimary`}
+    <GlassView
+      style={tw`rounded-2xl p-3 relative overflow-hidden`}
+      tintColor={colorScheme == 'dark' ? theme.grayPrimary : theme.background}
     >
       <View style={tw`items-center flex-row gap-4`}>
         <View
@@ -292,7 +293,7 @@ const Home = () => {
       <View
         style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-primary/50`}
       />
-    </View>
+    </GlassView>
   )
 
   const userPage = (
@@ -319,7 +320,7 @@ const Home = () => {
       </Txt>
       <Txt
         numberOfLines={1}
-        twcn="text-xl font-poppinsSemiBold"
+        twcn="text-lg font-poppinsSemiBold"
       >
         {greeting}, {user?.firstName} 👋
       </Txt>
