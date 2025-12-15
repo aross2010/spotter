@@ -1,26 +1,37 @@
-import { Stack } from 'expo-router'
+import { router, Stack } from 'expo-router'
 import useTheme from '../../hooks/theme'
+import Colors from '../../../constants/colors'
 
 export default function ExercisesLayout() {
   const { theme } = useTheme()
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: theme.background },
-        headerTitleAlign: 'left',
-        headerTitleStyle: {
-          fontSize: 26,
-          fontFamily: 'Poppins_600SemiBold',
-          color: theme.text,
-        },
-      }}
-    >
+    <Stack>
       <Stack.Screen
         name="index"
-        options={{ title: 'Exercises' }}
+        options={{
+          title: 'Exercises',
+          headerSearchBarOptions: {
+            onChangeText: (event) => {
+              router.setParams({
+                q: event.nativeEvent.text,
+              })
+            },
+            placeholder: 'Search Exercises',
+            shouldShowHintSearchIcon: true,
+            placement: 'integratedButton',
+          },
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerTitleStyle: {
+            color: theme.text,
+            fontFamily: 'Poppins_600SemiBold',
+          },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontFamily: 'Poppins_600SemiBold',
+          },
+        }}
       />
     </Stack>
   )

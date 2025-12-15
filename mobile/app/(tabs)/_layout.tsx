@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import { Link, Tabs } from 'expo-router'
+import { Link, router, Tabs, usePathname } from 'expo-router'
 import {
   Dumbbell,
   Book,
@@ -19,6 +19,8 @@ import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs'
 
 const TabsLayout = () => {
   const { theme } = useTheme()
+
+  const pathname = usePathname()
 
   const liquidGlassTabs = (
     <NativeTabs
@@ -44,6 +46,10 @@ const TabsLayout = () => {
       <NativeTabs.Trigger name="notebook">
         <Label>Notebook</Label>
         <Icon sf="book.pages.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="test">
+        <Label>Test</Label>
+        <Icon sf="questionmark.circle.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   )

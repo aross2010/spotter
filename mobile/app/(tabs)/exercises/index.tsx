@@ -174,41 +174,10 @@ const Exercises = () => {
   const exercisesView = (
     <SafeView
       hasTabBar
-      keyboardAvoiding
-      scroll={false}
+      scroll
       twcnContentView="mb-0"
     >
-      <View
-        style={tw`px-3 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-      >
-        <Search
-          size={16}
-          color={theme.grayText}
-        />
-        <Input
-          twcnInput="flex-1"
-          placeholder="Search exercises..."
-          value={searchQuery}
-          onChangeText={handleSearchChange}
-        />
-        <Button
-          onPress={() => {
-            if (searchQuery === '') Keyboard.dismiss()
-            handleSearchChange('')
-          }}
-        >
-          <X
-            size={16}
-            color={theme.grayText}
-          />
-        </Button>
-      </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={tw`pt-4`}
-      >
-        {renderedExercises}
-      </ScrollView>
+      {renderedExercises}
     </SafeView>
   )
 
