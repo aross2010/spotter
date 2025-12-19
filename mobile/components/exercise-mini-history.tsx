@@ -133,7 +133,7 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
         <Spinner />
       ) : exercise ? (
         <>
-          <Txt twcn={`font-poppinsMedium text-lg mb-2`}>{exercise.name}</Txt>
+          <Txt twcn={`font-medium text-lg mb-2`}>{exercise.name}</Txt>
           {exercise.description && (
             <Txt twcn="text-light-grayText dark:text-dark-grayText mb-4">
               {exercise.description}
@@ -142,7 +142,7 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
 
           {exercise.history && exercise.history.length > 0 && (
             <View>
-              <Txt twcn="font-poppinsMedium mb-4">Recent Sets</Txt>
+              <Txt twcn="font-medium mb-4">Recent Sets</Txt>
               <View
                 style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
               >
@@ -179,7 +179,7 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
 
           {!exercise.history && (
             <>
-              <Txt twcn="font-poppinsMedium mb-4">Recent Sets</Txt>
+              <Txt twcn="font-medium mb-4">Recent Sets</Txt>
               <Txt twcn="text-light-grayText dark:text-dark-grayText flex-1">
                 No Exercise History available.
               </Txt>

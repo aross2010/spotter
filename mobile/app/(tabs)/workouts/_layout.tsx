@@ -14,11 +14,11 @@ export default function WorkoutsLayout() {
           headerTransparent: true,
           headerTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: 600,
           },
           headerLargeTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: '600',
           },
         }}
       />

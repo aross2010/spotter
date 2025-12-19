@@ -81,7 +81,7 @@ const LinkedAccounts = () => {
             style={{ width: 24, height: 24 }}
             resizeMode="contain"
           />
-          <Txt twcn="font-poppinsMedium">{title}</Txt>
+          <Txt twcn="font-medium">{title}</Txt>
         </View>
         {isLinked ? (
           <View style={tw`flex-row items-center gap-2`}>
@@ -93,7 +93,7 @@ const LinkedAccounts = () => {
         ) : (
           <Button
             text="Link Account"
-            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+            twcnText="font-semibold text-primary dark:text-primary"
             onPress={() => handleLinking(provider)}
           />
         )}

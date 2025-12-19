@@ -13,7 +13,7 @@ const SettingsLayout = () => {
       screenOptions={{
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: 'Poppins_600SemiBold',
+          fontWeight: 600,
           color: theme.text,
         },
         headerShadowVisible: false,
@@ -22,7 +22,6 @@ const SettingsLayout = () => {
         },
         headerBackTitleStyle: {
           fontSize: 16,
-          fontFamily: 'Poppins_500Medium',
         },
         headerTitleAlign: 'left',
         headerTintColor: Colors.primary,
@@ -38,7 +37,7 @@ const SettingsLayout = () => {
               onPress={() => router.back()}
               hitSlop={12}
               accessibilityLabel="close modal"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+              twcnText={`font-semibold text-primary dark:text-primary`}
               text="Close"
             />
           ),

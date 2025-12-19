@@ -109,7 +109,7 @@ const Exercises = () => {
         />
       </View>
       <View style={tw`flex-1`}>
-        <Txt twcn="font-poppinsMedium text-sm">{title}</Txt>
+        <Txt twcn="font-medium text-sm">{title}</Txt>
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-0.5">
           {description}
         </Txt>
@@ -132,7 +132,7 @@ const Exercises = () => {
     <View>
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt twcn="font-poppinsSemiBold">Exercises</Txt>
+          <Txt twcn="font-semibold">Exercises</Txt>
           <Button onPress={() => setIsHelpModalOpen(true)}>
             <HelpCircle
               size={16}
@@ -175,7 +175,7 @@ const Exercises = () => {
         isOpen={isHelpModalOpen}
         setIsOpen={setIsHelpModalOpen}
       >
-        <Txt twcn="font-poppinsMedium mb-4">Exercises Guide</Txt>
+        <Txt twcn="font-medium mb-4">Exercises Guide</Txt>
         <View style={tw`gap-4`}>{renderedGuide}</View>
       </MyModal>
     </View>

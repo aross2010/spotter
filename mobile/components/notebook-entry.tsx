@@ -51,7 +51,7 @@ const NotebookEntryView = ({
         style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl mb-2' : ''} ${roundBottom ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
+          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium ">
             {formatDate(date)}
           </Txt>
           <Button
@@ -65,7 +65,7 @@ const NotebookEntryView = ({
           </Button>
         </View>
 
-        {title && <Txt twcn="font-poppinsMedium text-base">{title}</Txt>}
+        {title && <Txt twcn="font-medium text-base">{title}</Txt>}
 
         <View style={tw`mt-2`}>
           <Txt twcn="text-sm leading-relaxed">{displayText}</Txt>
@@ -75,7 +75,7 @@ const NotebookEntryView = ({
               onPress={() => setIsExpanded(!isExpanded)}
               style={tw`flex-row items-center gap-1 mt-1 self-start`}
             >
-              <Txt twcn="text-xs font-poppinsMedium text-primary">
+              <Txt twcn="text-xs font-medium text-primary">
                 {isExpanded ? 'Show less' : 'Show more'}
               </Txt>
               {isExpanded ? (

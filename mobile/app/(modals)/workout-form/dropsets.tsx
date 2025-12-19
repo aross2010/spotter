@@ -110,7 +110,7 @@ const Dropsets = () => {
           onPress={createDropset}
           hitSlop={12}
           accessibilityLabel="create dropset"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           text="Create"
           disabled={selectedSets.size < 2}
         />
@@ -437,12 +437,12 @@ const Dropsets = () => {
     <SafeView twcnContentView="px-0">
       {workoutData.setGroupings.some((g) => g.groupingType === 'dropset') && (
         <View style={tw`mb-4 w-full px-4`}>
-          <Txt twcn="font-poppinsMedium mb-4">Dropsets</Txt>
+          <Txt twcn="font-medium mb-4">Dropsets</Txt>
           <View style={tw`gap-2`}>{renderedDropsets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="font-poppinsMedium px-4">Exercises</Txt>
+        <Txt twcn="font-medium px-4">Exercises</Txt>
 
         {renderedExercises}
       </View>

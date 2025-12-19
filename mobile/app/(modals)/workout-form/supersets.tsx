@@ -109,7 +109,7 @@ const Supersets = () => {
           onPress={createSuperSet}
           hitSlop={12}
           accessibilityLabel="create superset"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           text="Create"
           disabled={selectedSets.size < 2}
         />
@@ -476,12 +476,12 @@ const Supersets = () => {
     <SafeView twcnContentView="px-0">
       {workoutData.setGroupings.length > 0 && (
         <View style={tw`mb-4 w-full px-4`}>
-          <Txt twcn="font-poppinsMedium mb-4">Supersets</Txt>
+          <Txt twcn="font-medium mb-4">Supersets</Txt>
           <View style={tw`gap-2`}>{renderedSuperSets}</View>
         </View>
       )}
       <View style={tw`w-full flex-1`}>
-        <Txt twcn="font-poppinsMedium px-4">Exercises</Txt>
+        <Txt twcn="font-medium px-4">Exercises</Txt>
 
         {renderedExercises}
       </View>

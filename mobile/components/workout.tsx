@@ -76,11 +76,11 @@ const WorkoutView = ({
       >
         <View style={tw`flex-row justify-between flex-1 items-center`}>
           <View>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide">
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium ">
               {formatDate(date)}
               {location && (
                 <Txt
-                  twcn={`text-xs uppercase font-poppinsMedium tracking-wide ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+                  twcn={`text-xs uppercase font-medium  ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
                 >
                   {' '}
                   @ {location}
@@ -103,7 +103,7 @@ const WorkoutView = ({
           <View style={tw`flex-row items-center gap-1`}>
             <Txt
               numberOfLines={1}
-              twcn={`font-poppinsSemiBold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+              twcn={`font-semibold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
             >
               {name}
             </Txt>

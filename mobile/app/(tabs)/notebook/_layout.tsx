@@ -5,22 +5,22 @@ export default function NotebookLayout() {
   const { theme } = useTheme()
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: theme.background },
-        headerTitleAlign: 'left',
-        headerTitleStyle: {
-          fontSize: 26,
-          fontFamily: 'Poppins_600SemiBold',
-          color: theme.text,
-        },
-      }}
-    >
+    <Stack>
       <Stack.Screen
         name="index"
-        options={{ title: 'Notebook' }}
+        options={{
+          title: 'Notebook',
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerTitleStyle: {
+            color: theme.text,
+            fontWeight: 600,
+          },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontWeight: '600',
+          },
+        }}
       />
     </Stack>
   )

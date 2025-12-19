@@ -5,9 +5,10 @@ import TextLogo from '../../../assets/spotter-text-logo.svg'
 import Colors from '../../../constants/colors'
 import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
-import Button from '../../../components/button'
+import MyButton from '../../../components/button'
 import SFIcon from '../../../components/sf-icon'
 import { size } from '@shopify/react-native-skia'
+import { Button, ContextMenu, Host } from '@expo/ui/swift-ui'
 
 export default function HomeLayout() {
   const { theme } = useTheme()
@@ -19,10 +20,9 @@ export default function HomeLayout() {
         options={{
           headerRight: () => (
             <View style={tw`flex-row items-center gap-6 px-2`}>
-              <Button
+              <MyButton
                 hitSlop={8}
                 onPress={() => {
-                  console.log('navigate to settings')
                   router.push('/settings')
                 }}
                 accessibilityLabel="settings"
@@ -32,22 +32,32 @@ export default function HomeLayout() {
                   color={Colors.primary}
                   size={26}
                 />
-              </Button>
-              <Button
-                hitSlop={8}
-                onPress={() => {
-                  console.log('open add menu')
-                  // open pop-up menu (add workout or notebook entry)
-                }}
-                accessibilityLabel="settings"
-                // twcn="w-9 flex-row items-center justify-center h-full" for single icon button header
-              >
-                <SFIcon
-                  name="plus"
-                  color={Colors.primary}
-                  size={26}
-                />
-              </Button>
+              </MyButton>
+              <Host style={{ width: 26, height: 26 }}>
+                <ContextMenu>
+                  <ContextMenu.Items>
+                    <Button
+                      systemImage="figure.strengthtraining.traditional"
+                      onPress={() => router.push('/workout-form')}
+                    >
+                      New Workout
+                    </Button>
+                    <Button
+                      systemImage="book.pages.fill"
+                      onPress={() => router.push('/notebook-entry-form')}
+                    >
+                      New Notebook Entry
+                    </Button>
+                  </ContextMenu.Items>
+                  <ContextMenu.Trigger>
+                    <SFIcon
+                      name="plus"
+                      color={Colors.primary}
+                      size={26}
+                    />
+                  </ContextMenu.Trigger>
+                </ContextMenu>
+              </Host>
             </View>
           ),
           title: 'Home',
@@ -55,11 +65,11 @@ export default function HomeLayout() {
           headerTransparent: true,
           headerTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: 600,
           },
           headerLargeTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: '600',
           },
         }}
       />

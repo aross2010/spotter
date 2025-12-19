@@ -2,7 +2,7 @@ import { Alert, Keyboard, ScrollView, StyleSheet, View } from 'react-native'
 import React, { useEffect, useState, useCallback } from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { router, useFocusEffect } from 'expo-router'
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import Button from '../../../components/button'
 import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react-native'
 import Colors from '../../../constants/colors'
@@ -27,6 +27,7 @@ type ExerciseMinimal = {
 }
 
 const Exercises = () => {
+  const { q } = useLocalSearchParams<{ q?: string }>()
   const [exercises, setExercises] = useState<ExerciseMinimal[]>([])
   const [filteredExercises, setFilteredExercises] = useState<ExerciseMinimal[]>(
     []
@@ -74,6 +75,10 @@ const Exercises = () => {
     getExercises()
   }, [])
 
+  useEffect(() => {
+    handleSearchChange(q || '')
+  }, [q, exercises])
+
   const handleSearchChange = (text: string) => {
     setSearchQuery(text)
 
@@ -104,7 +109,7 @@ const Exercises = () => {
       <View key={exercise.id}>
         {showMuscleGroupHeader && (
           <View style={tw`${index === 0 ? 'mb-4' : 'my-4'}`}>
-            <Txt twcn="font-poppinsSemiBold text-base">
+            <Txt twcn="font-semibold text-base">
               {exercise.primaryMuscleGroup
                 ? toTitleCase(exercise.primaryMuscleGroup as string)
                 : 'Unknown'}
@@ -149,7 +154,7 @@ const Exercises = () => {
           strokeWidth={1}
           size={64}
         />
-        <Txt twcn="text-xl font-poppinsMedium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
           Your Exercises
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
@@ -159,7 +164,7 @@ const Exercises = () => {
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
           twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
-          twcnText="font-poppinsMedium text-dark-text"
+          twcnText="font-medium text-dark-text"
         >
           <Plus
             color={Colors.dark.text}
@@ -174,7 +179,6 @@ const Exercises = () => {
   const exercisesView = (
     <SafeView
       hasTabBar
-      scroll
       twcnContentView="mb-0"
     >
       {renderedExercises}

@@ -1096,7 +1096,7 @@ const ExerciseInput = ({
         onPress={onPress}
         text="Add Set"
         hitSlop={12}
-        twcnText="text-primary dark:text-primary font-poppinsSemiBold"
+        twcnText="text-primary dark:text-primary font-semibold"
         twcn="px-2"
       />
     )
@@ -1108,7 +1108,7 @@ const ExerciseInput = ({
         key={value}
         style={tw`flex-1 items-center`}
       >
-        <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
           {label}
         </Txt>
       </View>
@@ -1426,7 +1426,7 @@ const ExerciseInput = ({
         {isEditingExerciseNumber ? (
           <TextInput
             ref={exerciseNumberInputRef}
-            style={tw`text-base text-dark-text font-poppinsSemiBold w-full h-full`}
+            style={tw`text-base text-dark-text font-semibold w-full h-full`}
             textAlign="center"
             textAlignVertical="center"
             value={exerciseNumberInput}
@@ -1439,7 +1439,7 @@ const ExerciseInput = ({
           />
         ) : (
           <Button onPress={handleExerciseNumberEdit}>
-            <Txt twcn="text-base text-dark-text font-poppinsSemiBold">
+            <Txt twcn="text-base text-dark-text font-semibold">
               {exerciseNumber ?? '+'}
             </Txt>
           </Button>

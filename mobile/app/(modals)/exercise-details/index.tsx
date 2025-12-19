@@ -86,7 +86,7 @@ const ExerciseDetails = () => {
       headerTitleStyle: {
         fontSize:
           exercise.name.length > 30 ? 16 : exercise.name.length > 20 ? 18 : 20,
-        fontFamily: 'Poppins_600SemiBold',
+        fontWeight: 600,
         color: theme.text,
       },
       headerRight: () => (
@@ -220,7 +220,7 @@ const ExerciseDetails = () => {
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
           {s.label}
         </Txt>
-        <Txt twcn="font-poppinsSemiBold text-base">{s.value}</Txt>
+        <Txt twcn="font-semibold text-base">{s.value}</Txt>
       </View>
     )
   })
@@ -233,7 +233,7 @@ const ExerciseDetails = () => {
 
   const keyStats = (
     <View>
-      <Txt twcn="font-poppinsSemiBold mb-4">Key Stats</Txt>
+      <Txt twcn="font-semibold mb-4">Key Stats</Txt>
       <View style={tw`gap-1`}>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(0, 2)}</View>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(2, 5)}</View>
@@ -247,13 +247,11 @@ const ExerciseDetails = () => {
       exercise?.secondaryMuscleGroups.length > 0) && (
       <View>
         <View style={tw`flex-row justify-between items-center mb-4`}>
-          <Txt twcn="font-poppinsSemiBold">
+          <Txt twcn="font-semibold">
             Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
           </Txt>
           <Button onPress={() => navigateToEdit()}>
-            <Txt twcn="font-poppinsSemiBold text-primary dark:text-primary">
-              Edit
-            </Txt>
+            <Txt twcn="font-semibold text-primary dark:text-primary">Edit</Txt>
           </Button>
         </View>
         <View style={tw`flex-row flex-wrap gap-2 items-center`}>
@@ -329,7 +327,7 @@ const ExerciseDetails = () => {
 
       return (
         <View style={tw`overflow-visible`}>
-          <Txt twcn="font-poppinsSemiBold mb-4">Progression </Txt>
+          <Txt twcn="font-semibold mb-4">Progression </Txt>
           {allData.length > 1 ? (
             <LineChart
               data={allData}
@@ -426,7 +424,7 @@ const ExerciseDetails = () => {
 
   const history = (
     <View>
-      <Txt twcn="font-poppinsMedium mb-4">History</Txt>
+      <Txt twcn="font-medium mb-4">History</Txt>
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
@@ -460,7 +458,7 @@ const ExerciseDetails = () => {
     <Spinner text="Gathering data..." />
   ) : (
     <SafeView twcnContentView="gap-6">
-      <Txt twcn="font-poppinsSemiBold text-2xl -mb-4">{exercise?.name}</Txt>
+      <Txt twcn="font-semibold text-2xl -mb-4">{exercise?.name}</Txt>
       {description}
       {keyStats}
       {musclesWorked}

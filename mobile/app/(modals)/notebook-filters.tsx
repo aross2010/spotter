@@ -69,7 +69,7 @@ const NotebookFilters = () => {
               onPress={changesExist ? handleApplyFiltersAndSort : undefined}
               hitSlop={12}
               accessibilityLabel="apply filters and sort method"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+              twcnText={`font-semibold text-primary dark:text-primary`}
               text={isLoading ? 'Applying...' : 'Apply'}
               disabled={!changesExist || isLoading}
             />
@@ -274,9 +274,7 @@ const NotebookFilters = () => {
         </Fragment>
       ) : (
         <View style={tw`items-center mx-4 mt-4 justify-center h-48 p-4`}>
-          <Txt twcn="text-center text-xl font-poppinsSemiBold mb-4">
-            No tags found
-          </Txt>
+          <Txt twcn="text-center text-xl font-semibold mb-4">No tags found</Txt>
           <Txt twcn="text-light-grayText dark:text-dark-grayText text-center">
             Start tagging your entries to organize and filter them more
             effectively.

@@ -14,7 +14,7 @@ const ExerciseDetailsLayout = () => {
       screenOptions={{
         headerTitleStyle: {
           fontSize: 18,
-          fontFamily: 'Poppins_600SemiBold',
+          fontWeight: 600,
           color: theme.text,
         },
         headerShadowVisible: false,
@@ -23,7 +23,6 @@ const ExerciseDetailsLayout = () => {
         },
         headerBackTitleStyle: {
           fontSize: 16,
-          fontFamily: 'Poppins_500Medium',
         },
         headerTitleAlign: 'left',
         headerTintColor: Colors.primary,
@@ -39,7 +38,7 @@ const ExerciseDetailsLayout = () => {
               onPress={() => router.back()}
               hitSlop={12}
               accessibilityLabel="close exercise details"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+              twcnText={`font-semibold text-primary dark:text-primary`}
               text="Close"
             />
           ),

@@ -34,7 +34,7 @@ const WorkoutNotes = ({
           setWorkoutData({ ...workoutData, notes: e.nativeEvent.text })
         }
         placeholder="Add your notes here..."
-        twcnLabel="font-poppinsSemiBold"
+        twcnLabel="font-semibold"
         multiline
         label="Notes"
         numberOfLines={6}
@@ -46,7 +46,7 @@ const WorkoutNotes = ({
   ) : (
     <Button
       onPress={() => setIsNotesActive(true)}
-      twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+      twcnText="font-semibold text-primary dark:text-primary"
       twcn="flex-row-reverse items-center gap-1"
       text="Add Notes"
     >

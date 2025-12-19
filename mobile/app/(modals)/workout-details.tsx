@@ -122,7 +122,7 @@ const WorkoutDetails = () => {
           onPress={() => router.back()}
           hitSlop={12}
           accessibilityLabel="close workout details"
-          twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+          twcnText={`font-semibold text-primary dark:text-primary`}
           text="Close"
         />
       ),
@@ -193,7 +193,7 @@ const WorkoutDetails = () => {
             <View
               style={tw`${exerciseIndex !== 0 ? 'mt-1' : ''} w-8 h-8 rounded-full ${isInSuperset ? 'bg-secondary' : 'bg-primary'} items-center justify-center`}
             >
-              <Txt twcn="text-base text-dark-text font-poppinsSemiBold">
+              <Txt twcn="text-base text-dark-text font-semibold">
                 {exerciseIndex + 1}
               </Txt>
             </View>
@@ -222,27 +222,27 @@ const WorkoutDetails = () => {
 
             <View style={tw`mt-2 flex-row flex-wrap`}>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
                   Set
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
                   {preferences?.weightMetric === 'kgs' ? 'Kg' : 'Lbs'}
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
                   Reps
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
                   Part.
                 </Txt>
               </View>
               <View style={tw`w-1/5 items-center`}>
-                <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+                <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
                   {intensityMetric === 'rir' ? 'RIR' : 'RPE'}
                 </Txt>
               </View>
@@ -422,9 +422,9 @@ const WorkoutDetails = () => {
           options={{ format: 'jpg', quality: 0.9 }}
           style={tw`bg-light-background dark:bg-dark-background -mx-4 -mt-2 px-4 pt-2 pb-12 -mb-12`}
         >
-          <Txt twcn="text-2xl font-poppinsSemiBold mb-2">{workout.name}</Txt>
+          <Txt twcn="text-2xl font-semibold mb-2">{workout.name}</Txt>
           <View style={tw`gap-2`}>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-poppinsMedium tracking-wide text-left">
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium  text-left">
               {capString(
                 `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
                 40

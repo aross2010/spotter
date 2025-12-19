@@ -91,7 +91,7 @@ const WorkoutNameInput = () => {
         placeholder="Workout Name [e.g., Legs, Push, Pull]"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="text-light-text border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 dark:text-dark-text font-poppinsMedium text-base w-full h-10"
+        twcnInput="text-light-text border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 dark:text-dark-text font-medium text-base w-full h-10"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types

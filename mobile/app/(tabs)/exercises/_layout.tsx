@@ -19,17 +19,18 @@ export default function ExercisesLayout() {
             },
             placeholder: 'Search Exercises',
             shouldShowHintSearchIcon: true,
+
             placement: 'integratedButton',
           },
           headerLargeTitle: true,
           headerTransparent: true,
           headerTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: 600,
           },
           headerLargeTitleStyle: {
             color: theme.text,
-            fontFamily: 'Poppins_600SemiBold',
+            fontWeight: '600',
           },
         }}
       />

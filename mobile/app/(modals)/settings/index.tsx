@@ -167,7 +167,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="font-poppinsSemiBold text-base">{sectionTitle}</Txt>
+            <Txt twcn="font-semibold text-base">{sectionTitle}</Txt>
           )}
           <View
             style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
@@ -201,7 +201,7 @@ const Settings = () => {
           onPress={promptDeleteAccount}
           style={tw`px-2 py-4`}
           text="Delete Account"
-          twcnText="font-poppinsSemiBold text-light-grayText dark:text-dark-grayText"
+          twcnText="font-semibold text-light-grayText dark:text-dark-grayText"
         />
       </View>
     </SafeView>

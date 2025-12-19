@@ -108,7 +108,7 @@ const NotebookEntryForm = () => {
           onPress={saveEnabled ? handleSubmitEntry : undefined}
           hitSlop={12}
           accessibilityLabel="submit notebook entry"
-          twcnText={`font-poppinsSemiBold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+          twcnText={`font-semibold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
           text={
             isEditing && isSaving
               ? 'Updating...'
@@ -126,7 +126,7 @@ const NotebookEntryForm = () => {
           onPress={handleCancelForm}
           hitSlop={12}
           accessibilityLabel="cancel notebook entry"
-          twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
+          twcnText={`font-semibold text-light-grayText dark:text-dark-grayText`}
           text="Cancel"
           disabled={isSaving}
         />
@@ -184,7 +184,7 @@ const NotebookEntryForm = () => {
             }}
             hitSlop={12}
             twcn="flex-row-reverse items-center gap-1"
-            twcnText="text-xs font-poppinsSemiBold text-primary dark:text-primary uppercase"
+            twcnText="text-xs font-semibold text-primary dark:text-primary uppercase"
           >
             <Calendar
               size={16}
@@ -204,7 +204,7 @@ const NotebookEntryForm = () => {
               })
             }
             placeholder="Entry title (optional)"
-            twcnInput="text-base h-10 font-poppinsMedium text-base"
+            twcnInput="text-base h-10 font-medium text-base"
           />
         </View>
 
@@ -249,7 +249,7 @@ const NotebookEntryForm = () => {
             onPress={() => router.push('/tag-selector?type=notebook')}
             style={tw`mr-auto flex-row-reverse items-center gap-1`}
           >
-            <Txt twcn="font-poppinsSemiBold text-primary dark:text-primary">
+            <Txt twcn="font-semibold text-primary dark:text-primary">
               Add tags
             </Txt>
             <TagIcon
@@ -297,7 +297,7 @@ const NotebookEntryForm = () => {
                   text="Done"
                   onPress={() => setIsDatePickerOpen(false)}
                   twcn="mt-2 bg-primary rounded-xl p-3"
-                  twcnText="text-center font-poppinsSemiBold text-dark-text"
+                  twcnText="text-center font-semibold text-dark-text"
                 />
               )}
             </View>

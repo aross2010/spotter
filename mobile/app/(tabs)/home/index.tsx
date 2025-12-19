@@ -130,7 +130,7 @@ const Home = () => {
 
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-3 text-lg font-poppinsSemiBold">Workout Activity</Txt>
+      <Txt twcn="mb-3 text-lg font-semibold">Workout Activity</Txt>
       <View style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
@@ -139,7 +139,7 @@ const Home = () => {
 
   const featuredWorkout = data?.featuredWorkout.status != 'none' && (
     <View>
-      <Txt twcn="mb-3 text-lg font-poppinsSemiBold">
+      <Txt twcn="mb-3 text-lg font-semibold">
         {featuredWorkoutStatus === 'current'
           ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
@@ -166,7 +166,7 @@ const Home = () => {
         </View>
         <View style={tw`flex-1`}>
           <View style={tw`flex-row items-center justify-between`}>
-            <Txt twcn="text-lg font-poppinsSemiBold text-white mb-1">
+            <Txt twcn="text-lg font-semibold text-white mb-1">
               Ready to Start?
             </Txt>
             <ChevronRight
@@ -215,9 +215,7 @@ const Home = () => {
 
   const appFeatures = data?.totalWorkouts == 0 && (
     <View>
-      <Txt twcn="text-base font-poppinsSemiBold mb-4">
-        ✨ Featured in Spotter
-      </Txt>
+      <Txt twcn="text-base font-semibold mb-4">✨ Featured in Spotter</Txt>
       <View style={tw`gap-3`}>
         {features.map((feature) => (
           <Link
@@ -238,7 +236,7 @@ const Home = () => {
                     strokeWidth={1.5}
                   />
                 </View>
-                <Txt twcn="text-base font-poppinsSemiBold">{feature.title}</Txt>
+                <Txt twcn="text-base font-semibold">{feature.title}</Txt>
               </View>
               <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
                 {feature.description}
@@ -267,7 +265,7 @@ const Home = () => {
         >
           <Txt twcn="text-2xl">🚀</Txt>
         </View>
-        <Txt twcn="text-white text-lg font-poppinsSemiBold">
+        <Txt twcn="text-white text-lg font-semibold">
           {timeSinceFirst} on Spotter
         </Txt>
       </View>
@@ -279,8 +277,8 @@ const Home = () => {
                 key={stat.label}
                 style={tw`items-center flex-1`}
               >
-                <Txt twcn="text-sm font-poppinsLight">{stat.label}</Txt>
-                <Txt twcn="text-xl font-poppinsSemiBold">
+                <Txt twcn="text-sm font-light">{stat.label}</Txt>
+                <Txt twcn="text-xl font-semibold">
                   {formatNumber(stat.value)}
                 </Txt>
               </View>
@@ -315,12 +313,12 @@ const Home = () => {
       hasTabBar
       hasHeader
     >
-      <Txt twcn="text-xs uppercase tracking-wide text-light-grayText dark:text-dark-grayText font-poppinsMedium">
+      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-medium">
         {formattedDate}
       </Txt>
       <Txt
         numberOfLines={1}
-        twcn="text-lg font-poppinsSemiBold"
+        twcn="text-lg font-semibold"
       >
         {greeting}, {user?.firstName} 👋
       </Txt>

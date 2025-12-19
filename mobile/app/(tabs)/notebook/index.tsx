@@ -13,6 +13,7 @@ import NotebookEntryView from '../../../components/notebook-entry'
 import { useNotebook } from '../../../context/notebook-context'
 import { NotebookEntry } from '../../../utils/types'
 import { MONTHS } from '../../../constants/data'
+import SFIcon from '../../../components/sf-icon'
 
 const Notebook = () => {
   const {
@@ -33,19 +34,26 @@ const Notebook = () => {
     navigation.setOptions({
       headerRight: () => {
         const numFilters = tagFilters.length + (sortOrder !== 'desc' ? 1 : 0)
+        const showFilterIcon = hasEntries || noResults
         return (
-          <View style={tw`flex-row items-center gap-2 mr-4 pb-1`}>
-            {(hasEntries || noResults) && (
+          <View
+            style={tw`flex-row items-center ${showFilterIcon ? 'gap-6 px-2' : ''}`}
+          >
+            {showFilterIcon && (
               <View style={tw`relative`}>
-                <Link
-                  href="/notebook-filters"
-                  style={tw` bg-primary/10 rounded-2xl p-2`}
+                <Button
+                  onPress={() => {
+                    router.push('/notebook-filters')
+                  }}
+                  hitSlop={8}
+                  accessibilityLabel="filter notebooks"
                 >
-                  <ListFilter
-                    size={20}
+                  <SFIcon
+                    name="line.horizontal.3.decrease"
+                    size={26}
                     color={Colors.primary}
                   />
-                </Link>
+                </Button>
                 {numFilters > 0 && (
                   <View
                     style={tw.style(
@@ -53,7 +61,7 @@ const Notebook = () => {
                       { pointerEvents: 'none' }
                     )}
                   >
-                    <Txt twcn="text-xs font-poppinsMedium text-white">
+                    <Txt twcn="text-xs font-medium text-white">
                       {numFilters}
                     </Txt>
                   </View>
@@ -61,15 +69,20 @@ const Notebook = () => {
               </View>
             )}
 
-            <Link
-              href="/notebook-entry-form"
-              style={tw`bg-primary/10 rounded-2xl p-2`}
+            <Button
+              onPress={() => {
+                router.push('/notebook-entry-form')
+              }}
+              hitSlop={8}
+              accessibilityLabel="add notebook entry"
+              twcn={`${!showFilterIcon ? 'w-9 flex-row items-center justify-center h-full' : ''}`}
             >
-              <Plus
-                size={20}
+              <SFIcon
+                name="plus"
+                size={26}
                 color={Colors.primary}
               />
-            </Link>
+            </Button>
           </View>
         )
       },
@@ -82,7 +95,7 @@ const Notebook = () => {
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-4`}>
-      <Txt twcn="font-poppinsSemiBold text-lg">📌 Pinned</Txt>
+      <Txt twcn="font-semibold text-lg">📌 Pinned</Txt>
     </View>
   )
 
@@ -190,7 +203,7 @@ const Notebook = () => {
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
       >
-        <Txt twcn="font-poppinsSemiBold text-lg">
+        <Txt twcn="font-semibold text-lg">
           {MONTHS.get(displayMonthNum)} {displayYear}
         </Txt>
       </View>
@@ -237,7 +250,7 @@ const Notebook = () => {
           strokeWidth={1}
           size={64}
         />
-        <Txt twcn="text-xl font-poppinsMedium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
           Your Notebook
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
@@ -247,7 +260,7 @@ const Notebook = () => {
           onPress={() => router.push('/notebook-entry-form')}
           text="Start Writing"
           twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
-          twcnText="font-poppinsMedium text-dark-text"
+          twcnText="font-medium text-dark-text"
         >
           <PenLine
             color={Colors.dark.text}
@@ -265,7 +278,7 @@ const Notebook = () => {
       scroll={false}
     >
       <View style={tw`flex-1 items-center justify-center`}>
-        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+        <Txt twcn="text-center text-xl mb-4 font-semibold">
           No results found
         </Txt>
         <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">

@@ -106,7 +106,7 @@ const WorkoutRecap = (workout: Workout) => {
             key={stat.label}
             style={tw`flex-1 items-center ${index !== stats.length - 1 ? 'border-r border-light-grayBorder dark:border-dark-grayBorder' : ''}`}
           >
-            <Txt twcn="text-base font-poppinsMedium text-light-text dark:text-dark-text">
+            <Txt twcn="text-base font-medium text-light-text dark:text-dark-text">
               {formatNumber(stat.value)}
               {weightMetric === 'lbs' && stat.label === 'Lifted'
                 ? ' lbs'

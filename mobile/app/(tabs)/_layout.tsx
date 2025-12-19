@@ -37,7 +37,7 @@ const TabsLayout = () => {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="workouts">
         <Label>Workouts</Label>
-        <Icon sf="calendar" />
+        <Icon sf="figure.strengthtraining.traditional" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="exercises">
         <Label>Exercises</Label>
@@ -49,7 +49,7 @@ const TabsLayout = () => {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="test">
         <Label>Test</Label>
-        <Icon sf="questionmark.circle.fill" />
+        <Icon sf="questionmark.app" />
       </NativeTabs.Trigger>
     </NativeTabs>
   )

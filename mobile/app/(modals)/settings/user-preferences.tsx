@@ -250,7 +250,7 @@ const UserPreferences = () => {
           key={category}
           style={tw`gap-4`}
         >
-          <Txt twcn="text-base font-poppinsSemiBold text-light-text dark:text-dark-text">
+          <Txt twcn="text-base font-semibold text-light-text dark:text-dark-text">
             {category}
           </Txt>
           <View style={tw`gap-6`}>

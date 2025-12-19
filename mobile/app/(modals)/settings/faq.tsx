@@ -338,7 +338,7 @@ const FAQ = () => {
                 key={category}
                 style={tw`mb-4`}
               >
-                <Txt twcn="mb-4 font-poppinsMedium">{category}</Txt>
+                <Txt twcn="mb-4 font-medium">{category}</Txt>
                 <View
                   style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl overflow-hidden`}
                 >

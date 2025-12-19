@@ -68,7 +68,7 @@ const ExerciseForm = () => {
             onPress={handleSaveExercise}
             hitSlop={12}
             accessibilityLabel="Save Workout"
-            twcnText={`font-poppinsSemiBold ${canUpdate ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+            twcnText={`font-semibold ${canUpdate ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
             text={loading ? 'Updating...' : 'Update'}
             disabled={!canUpdate}
           />
@@ -319,7 +319,7 @@ const ExerciseForm = () => {
           placeholder="Form cues, equipment information, etc."
         />
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold">Primary Muscle Group</Txt>
+          <Txt twcn="mb-3 font-semibold">Primary Muscle Group</Txt>
           {exercise.primaryMuscleGroup ? (
             <Button
               onPress={() => {
@@ -357,9 +357,7 @@ const ExerciseForm = () => {
           )}
         </View>
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold text-sm">
-            Secondary Muscle Groups
-          </Txt>
+          <Txt twcn="mb-3 font-semibold text-sm">Secondary Muscle Groups</Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedSecondaryMuscleGroups}
             <Button
@@ -381,7 +379,7 @@ const ExerciseForm = () => {
         </View>
 
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold">Workout Type</Txt>
+          <Txt twcn="mb-3 font-semibold">Workout Type</Txt>
           <View style={tw`flex-row gap-2`}>
             <Button
               onPress={() =>
@@ -460,7 +458,7 @@ const ExerciseForm = () => {
             if (!open) setIsSwapMode(false)
           }}
         >
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">
+          <Txt twcn="mb-2 font-medium text-sm">
             {isSwapMode ? 'Swap Primary Muscle Group' : 'Muscle Groups'}
           </Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>

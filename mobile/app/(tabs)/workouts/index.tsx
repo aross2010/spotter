@@ -88,7 +88,7 @@ const Workouts = () => {
                       { pointerEvents: 'none' }
                     )}
                   >
-                    <Txt twcn="text-xs font-poppinsMedium text-white">
+                    <Txt twcn="text-xs font-medium text-white">
                       {numActiveFilters}
                     </Txt>
                   </View>
@@ -132,7 +132,7 @@ const Workouts = () => {
           strokeWidth={1}
           size={64}
         />
-        <Txt twcn="text-xl font-poppinsMedium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
           Your Workouts
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
@@ -142,7 +142,7 @@ const Workouts = () => {
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
           twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
-          twcnText="font-poppinsMedium text-dark-text"
+          twcnText="font-medium text-dark-text"
         >
           <Plus
             color={Colors.dark.text}
@@ -235,7 +235,7 @@ const Workouts = () => {
       <View
         style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
       >
-        <Txt twcn="font-poppinsSemiBold text-lg">
+        <Txt twcn="font-semibold text-lg">
           {MONTHS.get(displayMonthNum)} {displayYear}
         </Txt>
       </View>
@@ -266,7 +266,7 @@ const Workouts = () => {
       scroll={false}
     >
       <View style={tw`flex-1 items-center justify-center`}>
-        <Txt twcn="text-center text-xl mb-4 font-poppinsSemiBold">
+        <Txt twcn="text-center text-xl mb-4 font-semibold">
           No results found
         </Txt>
         <Txt twcn="text-center px-8 text-sm text-light-grayText dark:text-dark-grayText mt-2">

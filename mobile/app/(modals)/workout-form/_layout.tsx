@@ -10,37 +10,21 @@ const WorkoutFormLayout = () => {
   const { theme } = useTheme()
 
   return (
-    <Stack
-      screenOptions={{
-        headerTitleStyle: {
-          fontSize: 18,
-          fontFamily: 'Poppins_600SemiBold',
-          color: theme.text,
-        },
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: theme.background,
-        },
-        headerBackTitleStyle: {
-          fontSize: 16,
-          fontFamily: 'Poppins_500Medium',
-        },
-        headerTintColor: Colors.primary,
-      }}
-    >
+    <Stack>
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: 'New Workout',
-          headerRight: () => (
-            <Button
-              onPress={() => router.back()}
-              hitSlop={12}
-              accessibilityLabel="close modal"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-              text="Close"
-            />
-          ),
+          title: 'New Workout',
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerTitleStyle: {
+            color: theme.text,
+            fontWeight: 600,
+          },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontWeight: '600',
+          },
         }}
       />
       <Stack.Screen

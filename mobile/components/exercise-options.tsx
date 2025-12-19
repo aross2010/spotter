@@ -86,7 +86,7 @@ const ExerciseOptions = ({ closeModal }: ExerciseOptionsProps) => {
   return (
     <>
       <View style={tw`flex-row items-center justify-between`}>
-        <Txt twcn=" font-poppinsMedium">Exercises Options</Txt>
+        <Txt twcn=" font-medium">Exercises Options</Txt>
         <View style={tw`flex-row items-center gap-2`}>
           <Selector
             selectedValue={workoutData.weightUnit}

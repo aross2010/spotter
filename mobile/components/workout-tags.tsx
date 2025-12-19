@@ -34,11 +34,11 @@ const WorkoutTags = () => {
       {workoutData.tags.length > 0 ? (
         <>
           <View style={tw`mb-4 w-full flex-row items-center justify-between`}>
-            <Txt twcn="font-poppinsSemiBold ">Tags</Txt>
+            <Txt twcn="font-semibold ">Tags</Txt>
             <Button
               onPress={handleAddTags}
               text="Add More"
-              twcnText="text-primary dark:text-primary font-poppinsSemiBold"
+              twcnText="text-primary dark:text-primary font-semibold"
             />
           </View>
           <View style={tw`flex-row items-center gap-2 flex-wrap`}>
@@ -52,7 +52,7 @@ const WorkoutTags = () => {
       ) : (
         <Button
           onPress={handleAddTags}
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
+          twcnText="font-semibold text-primary dark:text-primary"
           twcn="flex-row-reverse mr-auto items-center gap-1"
           text="Add tags"
         >

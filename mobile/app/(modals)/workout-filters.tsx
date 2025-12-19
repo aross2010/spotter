@@ -148,7 +148,7 @@ const WorkoutFilters = () => {
               onPress={changesExist ? handleApplyFilters : undefined}
               hitSlop={12}
               accessibilityLabel="apply filters and sort method"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
+              twcnText={`font-semibold text-primary dark:text-primary`}
               text={isLoading ? 'Applying...' : 'Apply'}
               disabled={!changesExist || isLoading}
             />
@@ -163,7 +163,7 @@ const WorkoutFilters = () => {
           }}
           hitSlop={12}
           accessibilityLabel="close workout filters"
-          twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
+          twcnText={`font-semibold text-light-grayText dark:text-dark-grayText`}
           text="Cancel"
         />
       ),
@@ -481,7 +481,7 @@ const WorkoutFilters = () => {
         isOpen={showStatusMenu}
         setIsOpen={setShowStatusMenu}
       >
-        <Txt twcn="font-poppinsMedium mb-2">Workout Status</Txt>
+        <Txt twcn="font-medium mb-2">Workout Status</Txt>
         <View>
           {statusOptions.map((option) => {
             const isSelected = (statusFilter || 'all') === option.value
