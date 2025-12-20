@@ -20,6 +20,14 @@ import Colors from '../constants/colors'
 import { nanoid } from 'nanoid/non-secure'
 import MyModal from './modal'
 import ExerciseOptions from './exercise-options'
+import {
+  ContextMenu,
+  Host,
+  Picker,
+  Button as SwiftButton,
+} from '@expo/ui/swift-ui'
+import SFIcon from './sf-icon'
+import { router } from 'expo-router'
 
 const MAX_EXERCISES = 25
 
@@ -128,11 +136,33 @@ const Exercises = () => {
     )
   })
 
+  const canCreateSuperset =
+    workoutData.exercises.length >= 2 &&
+    workoutData.exercises.filter(
+      (ex) => ex.name.trim() !== '' && ex.sets.length >= 1
+    ).length >= 2
+
+  const canCreateDropset =
+    workoutData.exercises.length >= 1 &&
+    workoutData.exercises.some((ex) => {
+      const setsWithData = ex.sets.filter((set) => {
+        const hasWeight =
+          (set.weightLbs !== null && set.weightLbs !== undefined) ||
+          (set.weightKg !== null && set.weightKg !== undefined)
+        const hasReps =
+          (set.reps !== null && set.reps !== undefined) ||
+          (set.leftReps !== null && set.leftReps !== undefined) ||
+          (set.rightReps !== null && set.rightReps !== undefined)
+        return hasWeight || hasReps
+      })
+      return setsWithData.length >= 2
+    })
+
   return (
     <View>
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt twcn="font-semibold">Exercises</Txt>
+          <Txt twcn="font-semibold text-base">Exercises</Txt>
           <Button onPress={() => setIsHelpModalOpen(true)}>
             <HelpCircle
               size={16}
@@ -141,16 +171,50 @@ const Exercises = () => {
           </Button>
         </View>
 
-        <Button onPress={() => setIsOptionsModalOpen(true)}>
-          <Ellipsis
-            size={20}
-            color={theme.grayText}
-            hitSlop={12}
-            strokeWidth={1.5}
-          />
-        </Button>
+        <Host style={{ width: 26, height: 26 }}>
+          <ContextMenu>
+            <ContextMenu.Items>
+              <SwiftButton
+                disabled={!canCreateSuperset}
+                onPress={() => {
+                  router.push('/workout-form/supersets')
+                }}
+              >
+                Supersets
+              </SwiftButton>
+              <SwiftButton
+                disabled={!canCreateDropset}
+                onPress={() => {
+                  router.push('/workout-form/dropsets')
+                }}
+              >
+                Dropsets
+              </SwiftButton>
+
+              <Picker
+                label="Weight Unit"
+                options={['Lbs.', 'Kg.']}
+                variant="menu"
+                selectedIndex={workoutData.weightUnit === 'lbs' ? 0 : 1}
+                onOptionSelected={({ nativeEvent: { index } }) =>
+                  setWorkoutData({
+                    ...workoutData,
+                    weightUnit: index === 0 ? 'lbs' : 'kgs',
+                  })
+                }
+              />
+            </ContextMenu.Items>
+            <ContextMenu.Trigger>
+              <SFIcon
+                name="ellipsis"
+                color={theme.text}
+                size={26}
+              />
+            </ContextMenu.Trigger>
+          </ContextMenu>
+        </Host>
       </View>
-      <View style={tw`mt-4`}>{renderedExercises}</View>
+      <View style={tw`mt-6`}>{renderedExercises}</View>
       <View
         style={tw`w-8 h-8 mt-1 rounded-full bg-primary items-center justify-center`}
       >

@@ -30,6 +30,7 @@ import MyModal from './modal'
 import ExerciseMiniHistory from './exercise-mini-history'
 import { useUserStore } from '../stores/user-store'
 import { ExerciseName } from '../utils/types'
+import { GlassView } from 'expo-glass-effect'
 
 const MAX_SETS = 20
 
@@ -87,7 +88,7 @@ const ExerciseInput = ({
     preferences?.unilateralLogging === 'sync'
   )
   const { exercises } = workoutData
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
   const exercise = exercises[exerciseNumber - 1]
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
@@ -819,7 +820,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={() => handleSelectExistingExercise(id, name, used)}
-          style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+          style={tw`flex-row items-center justify-between p-3 w-full ${
             index === exerciseNameResults.length - 1
               ? ''
               : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
@@ -1492,21 +1493,20 @@ const ExerciseInput = ({
             {isExerciseNameSelectorOpen &&
               exerciseNameResults.length > 0 &&
               exercise.name.trim().length > 0 && (
-                <BlurView
-                  intensity={25}
-                  tint="default"
-                  style={[
-                    tw`absolute top-full bg-white dark:bg-dark-grayPrimary left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
-                  ]}
+                <GlassView
+                  tintColor={
+                    colorScheme === 'dark' ? theme.grayPrimary : '#FFFFFF'
+                  }
+                  style={tw`absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-10`}
                 >
                   <ScrollView
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                    style={tw`max-h-44`}
+                    style={tw`max-h-44 bg-transparent`}
                   >
                     {renderedExerciseNames}
                   </ScrollView>
-                </BlurView>
+                </GlassView>
               )}
           </View>
           <View style={tw`flex-row gap-1 items-center`}>
@@ -1525,7 +1525,7 @@ const ExerciseInput = ({
   )
 
   return (
-    <View style={tw`flex-row gap-2 items-start`}>
+    <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
       <MyModal

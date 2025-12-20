@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
-import { formatDate } from '../../../functions/formatted-date'
+import { formatDate, formattedDate } from '../../../functions/formatted-date'
 import { HeaderBackButton } from '@react-navigation/elements'
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -28,6 +28,7 @@ import {
   Plus,
   Minus,
   Check,
+  Ellipsis,
 } from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -54,6 +55,14 @@ import {
 import { WorkoutFormData } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
 import { capString } from '../../../functions/cap-string'
+import SFIcon from '../../../components/sf-icon'
+import {
+  ContextMenu,
+  Host,
+  Picker,
+  Button as SwiftButton,
+} from '@expo/ui/swift-ui'
+import { toTitleCase } from '../../../functions/utils'
 
 const statusOptions = [
   {
@@ -289,43 +298,83 @@ const WorkoutForm = () => {
             ? 'New Workout'
             : 'New Workout',
       headerRight: () => (
-        <View style={tw`flex-row items-center gap-3`}>
-          {!isLoading && (
-            <Button
-              onPress={() => setShowStatusMenu(true)}
-              hitSlop={12}
-              twcn="p-1.5 rounded-xl bg-primary/10"
-            >
-              {(() => {
-                const StatusIcon = statusOptions.find(
-                  (opt) => opt.value === workoutData.status
-                )?.icon
-                return StatusIcon ? (
-                  <StatusIcon
-                    size={16}
-                    color={Colors.primary}
-                  />
-                ) : null
-              })()}
-            </Button>
-          )}
-
+        <View style={tw`flex-row items-center gap-6 px-2`}>
+          <Host style={{ width: 26, height: 26 }}>
+            <ContextMenu>
+              <ContextMenu.Items>
+                <SwiftButton
+                  systemImage="calendar"
+                  onPress={() => setIsDatePickerOpen(true)}
+                >
+                  {formatDate(workoutData.date)}
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="mappin"
+                  onPress={() => router.push('/workout-form/location')}
+                >
+                  {workoutData.location || 'Location'}
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="tag"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/tag-selector',
+                      params: {
+                        type: 'workout',
+                      },
+                    })
+                  }
+                >
+                  Tags
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="pencil.and.scribble"
+                  onPress={() => router.push('/workout-form/notes')}
+                >
+                  Notes
+                </SwiftButton>
+                <Picker
+                  label={toTitleCase(workoutData.status)}
+                  options={['Completed', 'Planned', 'Active']}
+                  variant="menu"
+                  selectedIndex={
+                    workoutData.status === 'completed'
+                      ? 0
+                      : workoutData.status === 'planned'
+                        ? 1
+                        : 2
+                  }
+                  onOptionSelected={({ nativeEvent: { index } }) =>
+                    index === 0
+                      ? handleStatusChange('completed')
+                      : index === 1
+                        ? handleStatusChange('planned')
+                        : handleStatusChange('active')
+                  }
+                />
+              </ContextMenu.Items>
+              <ContextMenu.Trigger>
+                <SFIcon
+                  name="info.circle"
+                  color={Colors.primary}
+                  size={26}
+                />
+              </ContextMenu.Trigger>
+            </ContextMenu>
+          </Host>
           <Button
             onPress={handleSubmitWorkout}
             hitSlop={12}
             accessibilityLabel="Save Workout"
-            twcnText={`font-semibold ${saveEnabled ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-            text={
-              mode !== 'create' && isSaving
-                ? 'Updating...'
-                : mode === 'edit'
-                  ? 'Update'
-                  : isSaving
-                    ? 'Saving...'
-                    : 'Save'
-            }
             disabled={isSaving || !saveEnabled}
-          />
+            twcn="w-9 flex-row items-center justify-center h-full"
+          >
+            <SFIcon
+              name="checkmark"
+              size={26}
+              color={saveEnabled ? Colors.primary : theme.grayText}
+            />
+          </Button>
         </View>
       ),
       headerLeft:
@@ -343,10 +392,15 @@ const WorkoutForm = () => {
                 onPress={handleCancelForm}
                 hitSlop={12}
                 accessibilityLabel="close workout form"
-                twcnText={`font-semibold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
+                twcn="w-9 flex-row items-center justify-center h-full"
                 disabled={isSaving}
-              />
+              >
+                <SFIcon
+                  name="xmark"
+                  size={26}
+                  color={theme.text}
+                />
+              </Button>
             ),
     })
   }, [
@@ -460,87 +514,11 @@ const WorkoutForm = () => {
       keyboardAvoiding
       bottomOffset={200}
     >
-      <View style={tw`gap-4 flex-row items-center`}>
-        <Button
-          text={formatDate(workoutData.date)}
-          onPress={() => {
-            setIsDatePickerOpen(true)
-          }}
-          hitSlop={12}
-          twcn="flex-row-reverse items-center gap-1"
-          twcnText="font-semibold text-primary dark:text-primary"
-        >
-          <Calendar
-            size={16}
-            color={Colors.primary}
-          />
-        </Button>
-
-        <Button
-          text={
-            workoutData.location.length > 0
-              ? capString(workoutData.location, 20)
-              : 'Add location'
-          }
-          onPress={() => {
-            router.push('/workout-form/location')
-          }}
-          hitSlop={12}
-          twcn="flex-row-reverse items-center gap-1"
-          twcnText={`font-semibold text-primary dark:text-primary
-            `}
-        >
-          <MapPin
-            size={16}
-            color={Colors.primary}
-          />
-        </Button>
-      </View>
-
-      <View style={tw`mt-2 flex-1 gap-6 justify-between`}>
+      <View style={tw`flex-1 gap-6 justify-between`}>
         <WorkoutNameInput />
         <Exercises />
-        <View
-          style={tw`${
-            isNotesActive || workoutData.notes || workoutData.tags.length > 0
-              ? 'gap-6 items-start'
-              : 'gap-4 flex-row flex-wrap items-center'
-          }`}
-        >
-          {/* If notes or tags have content, render vertically with notes ALWAYS first */}
-          {isNotesActive || workoutData.notes || workoutData.tags.length > 0 ? (
-            <>
-              {/* ALWAYS render notes first */}
-              {isNotesActive || workoutData.notes ? (
-                <View style={tw`w-full`}>
-                  <WorkoutNotes
-                    isNotesActive={isNotesActive}
-                    setIsNotesActive={setIsNotesActive}
-                  />
-                </View>
-              ) : (
-                <WorkoutNotes
-                  isNotesActive={isNotesActive}
-                  setIsNotesActive={setIsNotesActive}
-                />
-              )}
-
-              {/* Then render tags */}
-              {workoutData.tags.length > 0 ? <WorkoutTags /> : <WorkoutTags />}
-            </>
-          ) : (
-            <>
-              {/* Default: render horizontally when both are empty */}
-              <WorkoutNotes
-                isNotesActive={isNotesActive}
-                setIsNotesActive={setIsNotesActive}
-              />
-              <WorkoutTags />
-            </>
-          )}
-        </View>
       </View>
-      {/* 
+
       <Modal
         visible={isDatePickerOpen}
         transparent
@@ -624,7 +602,7 @@ const WorkoutForm = () => {
             )
           })}
         </View>
-      </MyModal> */}
+      </MyModal>
     </SafeView>
     //   {/* <View
     //     collapsable={false}
