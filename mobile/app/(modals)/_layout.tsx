@@ -35,27 +35,18 @@ export default function ModalLayout() {
         <Stack.Screen
           name="notebook-entry-form"
           options={{
-            title: 'Notebook Entry',
-            headerTitle: 'Notebook Entry',
+            title: '',
             headerShown: true,
-            headerRight: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="save notebook entry"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Save"
-              />
-            ),
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
-            ),
+            // headerLargeTitle: true,
+            // headerTransparent: true,
+            // headerTitleStyle: {
+            //   color: theme.text,
+            //   fontWeight: 600,
+            // },
+            // headerLargeTitleStyle: {
+            //   color: theme.text,
+            //   fontWeight: '600',
+            // },
           }}
         />
 

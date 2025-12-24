@@ -46,7 +46,6 @@ const SafeView = ({
         contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
         bottomOffset={bottomOffset}
         extraKeyboardSpace={extraKeyboardSpace}
-        automaticallyAdjustContentInsets={true}
       >
         {children}
       </KeyboardAwareScrollView>

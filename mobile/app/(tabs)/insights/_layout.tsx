@@ -14,7 +14,7 @@ const WorkoutFormLayout = () => {
       <Stack.Screen
         name="index"
         options={{
-          title: 'New Workout',
+          title: 'Insights',
           headerLargeTitle: true,
           headerTransparent: true,
           headerTitleStyle: {

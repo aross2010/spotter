@@ -47,9 +47,9 @@ const TabsLayout = () => {
         <Label>Notebook</Label>
         <Icon sf="book.pages.fill" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="test">
-        <Label>Test</Label>
-        <Icon sf="questionmark.app" />
+      <NativeTabs.Trigger name="insights">
+        <Label>Insights</Label>
+        <Icon sf="chart.bar.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   )

@@ -1,16 +1,18 @@
-import { View, Pressable } from 'react-native'
+import { View, Pressable, useWindowDimensions } from 'react-native'
 import { NotebookEntry } from '../utils/types'
 import tw from '../tw'
 import Txt from './text'
-import Button from './button'
 import { Fragment, useState } from 'react'
 import { formatDate } from '../functions/formatted-date'
-import { Ellipsis, ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
+import { ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
-import MyModal from './modal'
-import NotebookEntryOptions from './notebook-entry-options'
 import Colors from '../constants/colors'
 import TagView from './tag'
+import RenderHtml from 'react-native-render-html'
+import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
+import { useNotebook } from '../context/notebook-context'
+import { router } from 'expo-router'
+import SFIcon from './sf-icon'
 
 type NotebookEntryProps = {
   entry: NotebookEntry
@@ -23,10 +25,11 @@ const NotebookEntryView = ({
   roundTop,
   roundBottom,
 }: NotebookEntryProps) => {
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const { theme } = useTheme()
-  const { date, title, body, tags } = entry
+  const { theme, colorScheme } = useTheme()
+  const { width } = useWindowDimensions()
+  const { date, title, body, tags, pinned, id } = entry
+  const { pinEntry, unpinEntry, deleteEntry } = useNotebook()
 
   const CHARACTER_LIMIT = 400
   const shouldTruncate = body.length > CHARACTER_LIMIT
@@ -45,6 +48,24 @@ const NotebookEntryView = ({
     )
   })
 
+  const handlePinToggle = async () => {
+    if (pinned) await unpinEntry(id)
+    else await pinEntry(id)
+  }
+
+  const handleEdit = () => {
+    router.push({
+      pathname: '/notebook-entry-form',
+      params: {
+        entryId: id,
+      },
+    })
+  }
+
+  const handleDelete = async () => {
+    await deleteEntry(id)
+  }
+
   return (
     <Fragment>
       <View
@@ -54,21 +75,68 @@ const NotebookEntryView = ({
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium ">
             {formatDate(date)}
           </Txt>
-          <Button
-            hitSlop={12}
-            onPress={() => setIsOptionsOpen(true)}
-          >
-            <Ellipsis
-              size={24}
-              color={theme.grayText}
-            />
-          </Button>
+          <Host style={{ width: 26, height: 26 }}>
+            <ContextMenu>
+              <ContextMenu.Items>
+                <SwiftButton
+                  systemImage="pin"
+                  onPress={handlePinToggle}
+                >
+                  {pinned ? 'Unpin' : 'Pin'}
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="pencil"
+                  onPress={handleEdit}
+                >
+                  Edit
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="trash"
+                  onPress={handleDelete}
+                >
+                  Delete
+                </SwiftButton>
+              </ContextMenu.Items>
+              <ContextMenu.Trigger>
+                <SFIcon
+                  name="ellipsis"
+                  color={theme.text}
+                  size={26}
+                />
+              </ContextMenu.Trigger>
+            </ContextMenu>
+          </Host>
         </View>
 
-        {title && <Txt twcn="font-medium text-base">{title}</Txt>}
+        {title && <Txt twcn="font-semibold text-lg">{title}</Txt>}
 
         <View style={tw`mt-2`}>
-          <Txt twcn="text-sm leading-relaxed">{displayText}</Txt>
+          <RenderHtml
+            contentWidth={width - 32}
+            source={{ html: displayText }}
+            baseStyle={{
+              color: theme.text,
+              fontSize: 14,
+              lineHeight: 18,
+            }}
+            enableExperimentalBRCollapsing
+            tagsStyles={{
+              p: { marginTop: 0, marginBottom: 0 },
+              ul: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+              ol: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+              li: {
+                paddingLeft: 6,
+                paddingBottom: 0,
+                paddingTop: 0,
+              },
+              strong: { fontWeight: 'bold' },
+              b: { fontWeight: 'bold' },
+              em: { fontStyle: 'italic' },
+              i: { fontStyle: 'italic' },
+              u: { textDecorationLine: 'underline' },
+              a: { color: Colors.primary, fontWeight: 'bold' },
+            }}
+          />
 
           {shouldTruncate && (
             <Pressable
@@ -103,15 +171,6 @@ const NotebookEntryView = ({
           </View>
         )}
       </View>
-      <MyModal
-        isOpen={isOptionsOpen}
-        setIsOpen={setIsOptionsOpen}
-      >
-        <NotebookEntryOptions
-          setIsOptionsOpen={setIsOptionsOpen}
-          entry={entry}
-        />
-      </MyModal>
     </Fragment>
   )
 }

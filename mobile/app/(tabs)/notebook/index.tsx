@@ -244,28 +244,29 @@ const Notebook = () => {
       hasTabBar
       scroll={false}
     >
-      <View style={tw`flex-1 items-center justify-center px-16`}>
-        <BookOpen
+      <View style={tw`flex-1 items-center justify-center px-12`}>
+        <SFIcon
+          name="book.badge.plus"
           color={Colors.primary}
-          strokeWidth={1}
-          size={64}
+          size={72}
         />
-        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-semibold text-center mt-6 mb-3">
           Your Notebook
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
-          Capture everything beyond your workouts
+          Capture everything beyond your workouts — thoughts, goals, warm-up
+          routines, injuries, and more.
         </Txt>
         <Button
           onPress={() => router.push('/notebook-entry-form')}
           text="Start Writing"
-          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
-          twcnText="font-medium text-dark-text"
+          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary gap-2"
+          twcnText="font-semibold text-base text-dark-text"
         >
-          <PenLine
+          <SFIcon
+            name="pencil.and.scribble"
             color={Colors.dark.text}
-            size={16}
-            style={tw`ml-2`}
+            size={24}
           />
         </Button>
       </View>
@@ -288,22 +289,23 @@ const Notebook = () => {
       </View>
     </SafeView>
   ) : (
-    <View style={tw`flex-1`}>
-      <FlatList
-        data={currentNotebookEntries}
-        renderItem={renderEntry}
-        keyExtractor={(item) => item.id}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={tw`p-4`}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={false}
-        disableVirtualization={true}
-        initialNumToRender={currentNotebookEntries.length}
-        maxToRenderPerBatch={currentNotebookEntries.length}
-      />
-    </View>
+    <FlatList
+      data={currentNotebookEntries}
+      renderItem={renderEntry}
+      keyExtractor={(item) => item.id}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.1}
+      ListFooterComponent={renderFooter}
+      style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+      contentContainerStyle={tw`px-4 pt-2 pb-4`}
+      showsVerticalScrollIndicator={true}
+      removeClippedSubviews={false}
+      disableVirtualization={true}
+      initialNumToRender={currentNotebookEntries.length}
+      maxToRenderPerBatch={currentNotebookEntries.length}
+      contentInsetAdjustmentBehavior="automatic"
+      scrollEventThrottle={16}
+    />
   )
 
   return isLoading ? (

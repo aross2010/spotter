@@ -114,9 +114,6 @@ const Supersets = () => {
           disabled={selectedSets.size < 2}
         />
       ),
-      headerBackTitle: workoutData.name
-        ? capString(workoutData.name, 15)
-        : 'Workout',
     })
   }, [navigation, workoutData.name, selectedSets])
 

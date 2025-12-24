@@ -534,8 +534,11 @@ const ExerciseInput = ({
       // Cap RPE/RIR at 10
       if ((fieldValue === 'rpe' || fieldValue === 'rir') && numValue > 10) {
         finalValue = 10
+      } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+        // For RPE/RIR, 0 is a valid value (max effort)
+        finalValue = numValue
       } else {
-        // Treat 0 as undefined (empty state)
+        // Treat 0 as undefined (empty state) for other fields
         finalValue = numValue === 0 ? undefined : numValue
       }
     }
@@ -1146,14 +1149,14 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.leftRpe === 'string'
                     ? set.leftRpe
-                    : set.leftRpe && set.leftRpe !== 0
+                    : set.leftRpe !== undefined && set.leftRpe !== null
                       ? set.leftRpe.toString()
                       : ''
               } else if (value === 'rir') {
                 displayValue =
                   typeof set.leftRir === 'string'
                     ? set.leftRir
-                    : set.leftRir && set.leftRir !== 0
+                    : set.leftRir !== undefined && set.leftRir !== null
                       ? set.leftRir.toString()
                       : ''
               } else {
@@ -1242,14 +1245,14 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.rightRpe === 'string'
                     ? set.rightRpe
-                    : set.rightRpe && set.rightRpe !== 0
+                    : set.rightRpe !== undefined && set.rightRpe !== null
                       ? set.rightRpe.toString()
                       : ''
               } else if (value === 'rir') {
                 displayValue =
                   typeof set.rightRir === 'string'
                     ? set.rightRir
-                    : set.rightRir && set.rightRir !== 0
+                    : set.rightRir !== undefined && set.rightRir !== null
                       ? set.rightRir.toString()
                       : ''
               } else {
@@ -1343,12 +1346,24 @@ const ExerciseInput = ({
             // Map 'partials' to 'partialReps' for display
             const displayField = value === 'partials' ? 'partialReps' : value
             const rawValue = set[displayField as keyof typeof set]
-            const displayValue =
-              typeof rawValue === 'string'
-                ? rawValue
-                : rawValue && rawValue !== 0
-                  ? rawValue.toString()
-                  : ''
+
+            // Special handling for RPE/RIR to allow 0 values
+            let displayValue = ''
+            if (value === 'rpe' || value === 'rir') {
+              displayValue =
+                typeof rawValue === 'string'
+                  ? rawValue
+                  : rawValue !== undefined && rawValue !== null
+                    ? rawValue.toString()
+                    : ''
+            } else {
+              displayValue =
+                typeof rawValue === 'string'
+                  ? rawValue
+                  : rawValue && rawValue !== 0
+                    ? rawValue.toString()
+                    : ''
+            }
 
             return (
               <Input

@@ -76,6 +76,13 @@ export const NotebookFormProvider = ({
         }
       )
       const { title, id, body, tags, date } = await res.json()
+      console.log('Fetched notebook entryyyyy:', {
+        title,
+        id,
+        body,
+        tags,
+        date,
+      })
       setNotebookFormData({
         date: new Date(date),
         title,

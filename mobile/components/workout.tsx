@@ -1,17 +1,18 @@
 import { StyleSheet, View } from 'react-native'
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
 import tw from '../tw'
-import Button from './button'
-import { Ellipsis, Tag } from 'lucide-react-native'
+import { Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
-import MyModal from './modal'
 import { useWorkout } from '../context/workout-context'
-import WorkoutOptions from './workout-options'
 import { WorkoutMinimal } from '../utils/types'
-import { GlassView } from 'expo-glass-effect'
+import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
+import { router } from 'expo-router'
+import { useHomeDataStore } from '../stores/workout-store'
+import { useExerciseTabStore } from '../stores/exercise-store'
+import SFIcon from './sf-icon'
 
 const WorkoutView = ({
   workout,
@@ -24,10 +25,11 @@ const WorkoutView = ({
   roundBottom: boolean
   isHome?: boolean
 }) => {
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
   const { theme, colorScheme } = useTheme()
-  const { filters } = useWorkout()
-  const { date, tags, name, location, exercises } = workout
+  const { filters, deleteWorkout } = useWorkout()
+  const { date, tags, name, location, exercises, id } = workout
+  const { triggerRefresh } = useHomeDataStore()
+  const { triggerRefresh: triggerExerciseTabRefresh } = useExerciseTabStore()
 
   const isTagFiltered = (tag: string) =>
     filters.tags.some((t) => t === tag) || false
@@ -36,6 +38,12 @@ const WorkoutView = ({
     (location && filters.locations.includes(location)) || false
   const isExerciseFiltered = (exerciseName: string) =>
     filters.exerciseNames.includes(exerciseName) || false
+
+  const handleDeleteWorkout = async () => {
+    await deleteWorkout(id)
+    triggerRefresh()
+    triggerExerciseTabRefresh()
+  }
 
   const renderedTags = tags.map((tag) => {
     const isFiltered = isTagFiltered(tag)
@@ -88,22 +96,72 @@ const WorkoutView = ({
               )}
             </Txt>
           </View>
-          <Button
-            hitSlop={12}
-            onPress={() => setIsOptionsOpen(true)}
-          >
-            <Ellipsis
-              size={24}
-              color={theme.grayText}
-            />
-          </Button>
+          <Host style={{ width: 26, height: 26 }}>
+            <ContextMenu>
+              <ContextMenu.Items>
+                <SwiftButton
+                  systemImage="info"
+                  onPress={() => {
+                    router.push({
+                      pathname: '/workout-details',
+                      params: {
+                        id: workout.id,
+                      },
+                    })
+                  }}
+                >
+                  View Details
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="doc.on.doc"
+                  onPress={() => {
+                    router.push({
+                      pathname: '/workout-form',
+                      params: {
+                        cloneId: workout.id,
+                      },
+                    })
+                  }}
+                >
+                  Create Copy
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="pencil"
+                  onPress={() => {
+                    router.push({
+                      pathname: '/workout-form',
+                      params: {
+                        id: workout.id,
+                        ...(isHome ? { from: 'home' } : {}),
+                      },
+                    })
+                  }}
+                >
+                  Edit
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="trash"
+                  onPress={handleDeleteWorkout}
+                >
+                  Delete
+                </SwiftButton>
+              </ContextMenu.Items>
+              <ContextMenu.Trigger>
+                <SFIcon
+                  name="ellipsis"
+                  color={theme.text}
+                  size={26}
+                />
+              </ContextMenu.Trigger>
+            </ContextMenu>
+          </Host>
         </View>
 
         <View>
           <View style={tw`flex-row items-center gap-1`}>
             <Txt
               numberOfLines={1}
-              twcn={`font-semibold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+              twcn={`font-semibold text-lg -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
             >
               {name}
             </Txt>
@@ -130,16 +188,6 @@ const WorkoutView = ({
           </View>
         )}
       </View>
-      <MyModal
-        isOpen={isOptionsOpen}
-        setIsOpen={setIsOptionsOpen}
-      >
-        <WorkoutOptions
-          setIsOptionsOpen={setIsOptionsOpen}
-          workout={workout}
-          isHome={isHome}
-        />
-      </MyModal>
     </Fragment>
   )
 }
