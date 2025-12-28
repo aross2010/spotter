@@ -108,7 +108,7 @@ const NotebookEntryView = ({
           </Host>
         </View>
 
-        {title && <Txt twcn="font-semibold text-lg">{title}</Txt>}
+        {title && <Txt twcn="font-semibold text-xl">{title}</Txt>}
 
         <View style={tw`mt-2`}>
           <RenderHtml
@@ -162,10 +162,10 @@ const NotebookEntryView = ({
         </View>
         {tags.length > 0 && (
           <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>
-            <Tag
+            <SFIcon
+              name="tag"
               color={Colors.primary}
-              strokeWidth={1.5}
-              size={12}
+              size={18}
             />
             {renderedTags}
           </View>

@@ -170,7 +170,9 @@ const NotebookEntryForm = () => {
                     })
                   }
                 >
-                  Tags
+                  {notebookFormData.tags.length > 0
+                    ? notebookFormData.tags.map((tag) => tag.name).join(', ')
+                    : 'Add Tags'}
                 </SwiftButton>
               </ContextMenu.Items>
               <ContextMenu.Trigger>
@@ -189,11 +191,15 @@ const NotebookEntryForm = () => {
             disabled={isSaving || !saveEnabled}
             twcn="w-9 flex-row items-center justify-center h-full"
           >
-            <SFIcon
-              name="checkmark"
-              size={26}
-              color={saveEnabled ? Colors.primary : theme.grayText}
-            />
+            {isSaving ? (
+              <Spinner fullScreen={false} />
+            ) : (
+              <SFIcon
+                name="checkmark"
+                size={26}
+                color={saveEnabled ? Colors.primary : theme.grayText}
+              />
+            )}
           </Button>
         </View>
       ),
@@ -260,27 +266,10 @@ const NotebookEntryForm = () => {
       <SafeView
         keyboardAvoiding
         scroll={false}
-        keyboardVerticalOffset={180}
+        // keyboardVerticalOffset={180}
       >
         <View style={tw`flex-1`}>
-          {/* <View style={tw`flex-row items-center justify-between mb-2`}>
-          <Button
-            text={formatDate(notebookFormData.date)}
-            onPress={() => {
-              setIsDatePickerOpen(true)
-            }}
-            hitSlop={12}
-            twcn="flex-row-reverse items-center gap-1"
-            twcnText="text-xs font-semibold text-primary dark:text-primary uppercase"
-          >
-            <Calendar
-              size={16}
-              color={Colors.primary}
-            />
-          </Button>
-        </View> */}
-
-          <View style={tw`mb-3`}>
+          <View style={tw`mb-4`}>
             <Input
               editable={!isSaving}
               value={notebookFormData.title}
@@ -300,12 +289,15 @@ const NotebookEntryForm = () => {
             ref={bodyInputRef}
             editable={!isSaving}
             onChangeState={(e) => setStylesState(e.nativeEvent)}
-            onChangeText={(e) =>
-              setNotebookFormData({
-                ...notebookFormData,
-                body: e.nativeEvent.value,
-              })
-            }
+            onChangeText={(e) => {
+              const newValue = e.nativeEvent.value
+              if (newValue.trim().length <= 1000) {
+                setNotebookFormData({
+                  ...notebookFormData,
+                  body: newValue,
+                })
+              }
+            }}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="Entry Content..."
@@ -314,7 +306,7 @@ const NotebookEntryForm = () => {
                 ? 'rgba(186, 186, 186, 0.75)'
                 : 'rgba(116, 116, 116, 0.75)'
             }
-            style={tw`dark:text-dark-text text-base flex-1 leading-[18]`}
+            style={tw`dark:text-dark-text text-base flex-1 leading-[18] h-full`}
             htmlStyle={{
               ul: {
                 bulletColor: theme.text,
@@ -329,41 +321,6 @@ const NotebookEntryForm = () => {
             }}
           />
         </View>
-
-        {/* {notebookFormData.tags.length > 0 ? (
-        <View style={tw`flex-row justify-between items-center`}>
-          <Link href={'/tag-selector?type=notebook'}>
-            <View style={tw`flex-row gap-2 flex-1 flex-wrap items-center`}>
-              <TagIcon
-                color={Colors.primary}
-                size={16}
-              />
-              {renderedTags}
-            </View>
-          </Link>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText self-end">
-            {notebookFormData.body.length} / {500}
-          </Txt>
-        </View>
-      ) : (
-        <View style={tw`flex-row justify-between items-center`}>
-          <Button
-            onPress={() => router.push('/tag-selector?type=notebook')}
-            style={tw`mr-auto flex-row-reverse items-center gap-1`}
-          >
-            <Txt twcn="font-semibold text-primary dark:text-primary">
-              Add tags
-            </Txt>
-            <TagIcon
-              color={Colors.primary}
-              size={16}
-            />
-          </Button>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            {notebookFormData.body.length} / {500}
-          </Txt>
-        </View>
-      )} */}
         <Modal
           visible={isDatePickerOpen}
           transparent
@@ -489,7 +446,13 @@ const NotebookEntryForm = () => {
                   />
                 </Button>
                 <View style={tw`w-16`}>
-                  <Txt twcn="text-xs dark:text-dark-grayText text-grayText">
+                  <Txt
+                    twcn={`text-xs ${
+                      notebookFormData.body.trim().length >= 1000
+                        ? 'text-red'
+                        : 'dark:text-dark-grayText text-grayText'
+                    }`}
+                  >
                     {notebookFormData.body.trim().length} / 1000
                   </Txt>
                 </View>

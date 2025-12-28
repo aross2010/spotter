@@ -1,28 +1,22 @@
 import { router, Stack, useNavigation } from 'expo-router'
 import useTheme from '../hooks/theme'
 import Button from '../../components/button'
-import Colors from '../../constants/colors'
+import tw from '../../tw'
+import { View } from 'react-native'
 
 export default function ModalLayout() {
   const { theme, colorScheme } = useTheme()
 
   return (
-    <>
+    <View style={tw`flex-1 bg-background dark:bg-dark-background`}>
       <Stack
         screenOptions={{
-          headerShown: false,
-          headerTitleStyle: {
-            fontSize: 20,
-            fontFamily: 'Poppins_600SemiBold',
-            color: theme.text,
-          },
-
-          headerBackButtonDisplayMode: 'minimal',
-          headerShadowVisible: false,
+          //   headerShown: true,
+          //   headerShadowVisible: false,
+          //   headerBackButtonDisplayMode: 'minimal',
           headerStyle: {
             backgroundColor: theme.background,
           },
-          headerTintColor: Colors.primary,
         }}
       >
         <Stack.Screen
@@ -35,18 +29,11 @@ export default function ModalLayout() {
         <Stack.Screen
           name="notebook-entry-form"
           options={{
-            title: '',
-            headerShown: true,
-            // headerLargeTitle: true,
-            // headerTransparent: true,
-            // headerTitleStyle: {
-            //   color: theme.text,
-            //   fontWeight: 600,
-            // },
-            // headerLargeTitleStyle: {
-            //   color: theme.text,
-            //   fontWeight: '600',
-            // },
+            headerTitle: '',
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
+            headerShadowVisible: false,
           }}
         />
 
@@ -70,16 +57,44 @@ export default function ModalLayout() {
         <Stack.Screen
           name="tag-selector"
           options={{
-            title: 'Tag Selector',
-            headerTitle: 'Add Tags',
+            title: '',
+            // // headerLargeTitle: true,
+            // headerTransparent: true,
+            // headerTitleStyle: {
+            //   color: theme.text,
+            //   fontWeight: 600,
+            // },
+            // headerLargeTitleStyle: {
+            //   color: theme.text,
+            //   fontWeight: '600',
+            // },
+            // headerStyle: {
+            //   backgroundColor: theme.background,
+            // }, making white flash on screen transition
+
+            headerSearchBarOptions: {
+              onChangeText: (event: any) => {
+                router.setParams({
+                  q: event.nativeEvent.text,
+                })
+              },
+              placeholder: 'Search or add tags...',
+              shouldShowHintSearchIcon: true,
+              placement: 'stacked',
+              hideWhenScrolling: false,
+              autoCapitalize: 'none',
+              autoFocus: true,
+            },
+
             headerShown: true,
+            headerBackButtonDisplayMode: 'minimal',
+            headerShadowVisible: false,
           }}
         />
         <Stack.Screen
           name="workout-form"
           options={{
-            title: 'Workout',
-            headerTitle: 'New Workout',
+            headerShown: false,
           }}
         />
         <Stack.Screen
@@ -113,6 +128,6 @@ export default function ModalLayout() {
           }}
         />
       </Stack>
-    </>
+    </View>
   )
 }

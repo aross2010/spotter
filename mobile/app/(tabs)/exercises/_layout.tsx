@@ -19,7 +19,8 @@ export default function ExercisesLayout() {
             },
             placeholder: 'Search Exercises',
             shouldShowHintSearchIcon: true,
-
+            autoCapitalize: 'none',
+            autoFocus: true,
             placement: 'integratedButton',
           },
           headerLargeTitle: true,

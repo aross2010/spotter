@@ -326,13 +326,13 @@ const WorkoutForm = () => {
                     })
                   }
                 >
-                  Tags
+                  {workoutData.tags.map((tag) => tag.name).join(', ') || 'Tags'}
                 </SwiftButton>
                 <SwiftButton
                   systemImage="pencil.and.scribble"
                   onPress={() => router.push('/workout-form/notes')}
                 >
-                  Notes
+                  {workoutData.notes.trim().length > 0 ? 'Edit Notes' : 'Notes'}
                 </SwiftButton>
                 <Picker
                   label={toTitleCase(workoutData.status)}
