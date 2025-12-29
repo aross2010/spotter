@@ -43,7 +43,7 @@ const Input = forwardRef<TextInput, InputProps>(
       <TextInput
         ref={ref}
         style={[
-          tw` text-light-text dark:text-dark-text py-2 ${fullBorder ? 'bg-white dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl p-2.5' : ''} ${twcnInput ?? ''}`,
+          tw` text-light-text dark:text-dark-text py-2 ${fullBorder ? 'bg-white dark:bg-dark-grayPrimary border border-light-grayBorder/25 dark:border-dark-grayBorder/25 rounded-full p-3' : ''} ${twcnInput ?? ''}`,
           props.numberOfLines
             ? {
                 height: getMultilineHeight(),

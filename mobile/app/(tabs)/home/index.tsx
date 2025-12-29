@@ -130,7 +130,7 @@ const Home = () => {
 
   const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
     <View>
-      <Txt twcn="mb-3 text-lg font-semibold">Workout Activity</Txt>
+      <Txt twcn="mb-2 text-lg font-semibold">Workout Activity</Txt>
       <View style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
@@ -139,7 +139,7 @@ const Home = () => {
 
   const featuredWorkout = data?.featuredWorkout.status != 'none' && (
     <View>
-      <Txt twcn="mb-3 text-lg font-semibold">
+      <Txt twcn="mb-2 text-lg font-semibold">
         {featuredWorkoutStatus === 'current'
           ? '💪 Current Workout'
           : featuredWorkoutStatus === 'upcoming'
@@ -215,7 +215,7 @@ const Home = () => {
 
   const appFeatures = data?.totalWorkouts == 0 && (
     <View>
-      <Txt twcn="text-base font-semibold mb-4">✨ Featured in Spotter</Txt>
+      <Txt twcn="text-base font-semibold mb-2">✨ Featured in Spotter</Txt>
       <View style={tw`gap-3`}>
         {features.map((feature) => (
           <Link
@@ -295,7 +295,7 @@ const Home = () => {
   )
 
   const userPage = (
-    <View style={tw`mt-4 gap-6`}>
+    <View style={tw`mt-2 gap-6`}>
       {workoutPrompt}
       {appFeatures}
       {statsTogether}

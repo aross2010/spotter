@@ -120,7 +120,6 @@ const Profile = () => {
         }
         editable={field.name !== 'email'}
         fullBorder
-        twcnInput="border-b border-light-grayBorder dark:border-dark-grayBorder"
         {...field}
       />
     )
@@ -128,7 +127,7 @@ const Profile = () => {
 
   return (
     <SafeView scroll={false}>
-      <View style={tw`gap-4`}>{renderedFields}</View>
+      <View style={tw`gap-6`}>{renderedFields}</View>
     </SafeView>
   )
 }

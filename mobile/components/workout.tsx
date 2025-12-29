@@ -1,11 +1,13 @@
 import { StyleSheet, View } from 'react-native'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
 import tw from '../tw'
-import { Tag } from 'lucide-react-native'
+import Button from './button'
+import { Ellipsis, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
+import MyModal from './modal'
 import { useWorkout } from '../context/workout-context'
 import { WorkoutMinimal } from '../utils/types'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
@@ -82,13 +84,13 @@ const WorkoutView = ({
       <View
         style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl mb-2' : ''} ${roundBottom ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
-        <View style={tw`flex-row justify-between flex-1 items-center`}>
+        <View style={tw`flex-row justify-between items-center`}>
           <View>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium ">
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide">
               {formatDate(date)}
               {location && (
                 <Txt
-                  twcn={`text-xs uppercase font-medium  ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+                  twcn={`text-xs uppercase font-medium tracking-wide ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
                 >
                   {' '}
                   @ {location}
@@ -155,13 +157,24 @@ const WorkoutView = ({
               </ContextMenu.Trigger>
             </ContextMenu>
           </Host>
+          {/* <View>
+            <Button
+              hitSlop={12}
+              onPress={() => {}}
+            >
+              <Ellipsis
+                size={24}
+                color={theme.grayText}
+              />
+            </Button>
+          </View> */}
         </View>
 
         <View>
           <View style={tw`flex-row items-center gap-1`}>
             <Txt
               numberOfLines={1}
-              twcn={`font-semibold text-lg -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+              twcn={`font-semibold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
             >
               {name}
             </Txt>

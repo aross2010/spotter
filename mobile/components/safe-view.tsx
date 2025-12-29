@@ -57,7 +57,7 @@ const SafeView = ({
       <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
         <KeyboardAvoidingView
           behavior="padding"
-          style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-16' : 'mb-4'} ${twcnContentView ?? ''}`}
+          style={tw`flex-1 bg-light-background dark:bg-dark-background  ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-16' : 'mb-4'} ${twcnContentView ?? ''}`}
           keyboardVerticalOffset={keyboardVerticalOffset}
         >
           {children}

@@ -266,7 +266,7 @@ const NotebookEntryForm = () => {
       <SafeView
         keyboardAvoiding
         scroll={false}
-        // keyboardVerticalOffset={180}
+        keyboardVerticalOffset={75}
       >
         <View style={tw`flex-1`}>
           <View style={tw`mb-4`}>

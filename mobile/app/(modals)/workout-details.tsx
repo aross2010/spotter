@@ -26,12 +26,14 @@ import { useExerciseStore } from '../../stores/exercise-store'
 import WorkoutRecap from '../../components/workout-recap'
 import ViewShot from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
+import useTheme from '../hooks/theme'
+import SFIcon from '../../components/sf-icon'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation()
-  const { id, from } = useLocalSearchParams()
+  const { id, from, workoutName } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
   const { preferences } = useUserStore()
   const intensityMetric = preferences?.intensityMetric || 'rpe'
@@ -40,6 +42,7 @@ const WorkoutDetails = () => {
   const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
   const [hasLoaded, setHasLoaded] = useState(false)
   const ref = useRef<ViewShot>(null)
+  const { theme } = useTheme()
 
   const getWorkoutDetails = async () => {
     setIsLoading(true)
@@ -81,36 +84,34 @@ const WorkoutDetails = () => {
   useEffect(() => {
     const presentation = from === 'exercise' ? 'modal' : 'card'
     navigation.setOptions({
-      headerTitle: '',
-      headerShown: true,
+      title: workout?.name || (workoutName ? String(workoutName) : 'Workout'),
       headerRight: workout
         ? () => (
-            <View style={tw`flex-row items-center gap-2 pb-1`}>
-              <Link
-                href={`/workout-form?id=${workout?.id}&from=workout-details`}
-              >
-                <View style={tw`bg-primary/10 rounded-2xl p-2`}>
-                  <Pencil
-                    size={20}
-                    color={Colors.primary}
-                  />
-                </View>
-              </Link>
+            <View style={tw`flex-row items-center gap-6 px-2`}>
               <Button
-                onPress={() => handleShareWorkout(workout)}
-                twcn="bg-primary/10 rounded-2xl p-2"
+                onPress={() =>
+                  router.push(
+                    `/workout-form?id=${workout?.id}&from=workout-details`
+                  )
+                }
               >
-                <Share
-                  size={20}
+                <SFIcon
+                  name="pencil"
+                  size={26}
                   color={Colors.primary}
                 />
               </Button>
-              <Button
-                onPress={() => handleScreenshotWorkout()}
-                twcn="bg-primary/10 rounded-2xl p-2"
-              >
-                <Camera
-                  size={20}
+              <Button onPress={() => handleShareWorkout(workout)}>
+                <SFIcon
+                  name="square.and.arrow.up"
+                  size={26}
+                  color={Colors.primary}
+                />
+              </Button>
+              <Button onPress={() => handleScreenshotWorkout()}>
+                <SFIcon
+                  name="camera.viewfinder"
+                  size={26}
                   color={Colors.primary}
                 />
               </Button>
@@ -122,13 +123,15 @@ const WorkoutDetails = () => {
           onPress={() => router.back()}
           hitSlop={12}
           accessibilityLabel="close workout details"
-          twcnText={`font-semibold text-primary dark:text-primary`}
-          text="Close"
-        />
+          twcn="w-9 flex-row items-center justify-center h-full"
+        >
+          <SFIcon
+            name="xmark"
+            size={26}
+            color={theme.text}
+          />
+        </Button>
       ),
-      presentation,
-      animation: 'slide_from_bottom',
-      animationDuration: 350,
     })
   }, [navigation, workout?.name])
 
@@ -422,7 +425,7 @@ const WorkoutDetails = () => {
           options={{ format: 'jpg', quality: 0.9 }}
           style={tw`bg-light-background dark:bg-dark-background -mx-4 -mt-2 px-4 pt-2 pb-12 -mb-12`}
         >
-          <Txt twcn="text-2xl font-semibold mb-2">{workout.name}</Txt>
+          {/* <Txt twcn="text-2xl font-semibold mb-2">{workout.name}</Txt> */}
           <View style={tw`gap-2`}>
             <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium  text-left">
               {capString(

@@ -45,20 +45,20 @@ const WorkoutNotes = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Button
-          onPress={handleSave}
-          hitSlop={12}
-          accessibilityLabel="Save Notes"
-          twcn="w-9 flex-row items-center justify-center h-full px-2"
-        >
-          <SFIcon
-            name="checkmark"
-            size={26}
-            color={Colors.primary}
-          />
-        </Button>
-      ),
+      //   headerRight: () => (
+      //     <Button
+      //       onPress={handleSave}
+      //       hitSlop={12}
+      //       accessibilityLabel="Save Notes"
+      //       twcn="w-9 flex-row items-center justify-center h-full px-2"
+      //     >
+      //       <SFIcon
+      //         name="checkmark"
+      //         size={26}
+      //         color={Colors.primary}
+      //       />
+      //     </Button>
+      //   ),
     })
   }, [navigation])
 
@@ -76,7 +76,7 @@ const WorkoutNotes = () => {
       <SafeView
         keyboardAvoiding
         scroll={false}
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={75}
       >
         <View style={tw`flex-1`}>
           <EnrichedTextInput

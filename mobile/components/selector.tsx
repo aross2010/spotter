@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import tw from '../tw'
 import Button from './button'
 import Txt from './text'
+import { GlassView } from 'expo-glass-effect'
 
 type SelectorProps = {
   onSelect: (value: string) => void
@@ -64,7 +65,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
       >
         <Button
           onPress={() => onSelect(option.value)}
-          style={tw`py-1.5 px-3 rounded-xl`}
+          style={tw`py-2 px-3 rounded-xl`}
         >
           <Txt
             twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary dark:text-dark-text' : ''}`}
@@ -77,8 +78,8 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
   })
 
   return (
-    <View
-      style={tw`flex-row self-start items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-lg relative`}
+    <GlassView
+      style={tw`flex-row self-start items-center overflow-hidden bg-white dark:bg-dark-grayPrimary rounded-full relative`}
     >
       {buttonLayouts.length === options.length && (
         <Animated.View
@@ -93,7 +94,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
         />
       )}
       {renderedOptions}
-    </View>
+    </GlassView>
   )
 }
 

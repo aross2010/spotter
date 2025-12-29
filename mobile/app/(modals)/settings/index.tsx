@@ -65,7 +65,7 @@ const settingsData = [
       {
         label: 'Contact',
         onPress: async () => {
-          const url = 'mailto:spotterapphelp@gmail.com'
+          const url = 'mailto:adross1027@gmail.com'
           const ok = await Linking.canOpenURL(url)
           if (ok) Linking.openURL(url)
           else Alert.alert('Error', 'Unable to open email client.')
@@ -167,7 +167,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="font-semibold text-base">{sectionTitle}</Txt>
+            <Txt twcn="font-semibold text-lg">{sectionTitle}</Txt>
           )}
           <View
             style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}

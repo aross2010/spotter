@@ -11,29 +11,36 @@ export default function ModalLayout() {
     <View style={tw`flex-1 bg-background dark:bg-dark-background`}>
       <Stack
         screenOptions={{
-          //   headerShown: true,
-          //   headerShadowVisible: false,
-          //   headerBackButtonDisplayMode: 'minimal',
-          headerStyle: {
-            backgroundColor: theme.background,
+          headerShown: true,
+          headerTransparent: true,
+          headerShadowVisible: false,
+          headerLargeTitle: true,
+          headerTitleStyle: {
+            color: theme.text,
+            fontWeight: 600,
           },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontWeight: '600',
+          },
+          headerBackButtonDisplayMode: 'minimal',
         }}
       >
         <Stack.Screen
           name="settings"
           options={{
-            title: 'Settings',
-            headerTitle: 'Settings',
+            headerShown: false, // defined in settings/_layout.tsx
           }}
         />
         <Stack.Screen
           name="notebook-entry-form"
           options={{
-            headerTitle: '',
+            title: '',
+            headerLargeTitle: false,
+            headerTransparent: false,
             headerStyle: {
               backgroundColor: theme.background,
             },
-            headerShadowVisible: false,
           }}
         />
 
@@ -68,9 +75,9 @@ export default function ModalLayout() {
             //   color: theme.text,
             //   fontWeight: '600',
             // },
-            // headerStyle: {
-            //   backgroundColor: theme.background,
-            // }, making white flash on screen transition
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
 
             headerSearchBarOptions: {
               onChangeText: (event: any) => {
@@ -85,7 +92,7 @@ export default function ModalLayout() {
               autoCapitalize: 'none',
               autoFocus: true,
             },
-
+            headerLargeTitle: false,
             headerShown: true,
             headerBackButtonDisplayMode: 'minimal',
             headerShadowVisible: false,
@@ -94,25 +101,10 @@ export default function ModalLayout() {
         <Stack.Screen
           name="workout-form"
           options={{
-            headerShown: false,
+            headerShown: false, // defined in workout-form/_layout.tsx
           }}
         />
-        <Stack.Screen
-          name="workout-details"
-          options={{
-            title: 'Workout Details',
-            headerTitleAlign: 'left',
-            headerLeft: () => (
-              <Button
-                onPress={() => router.back()}
-                hitSlop={12}
-                accessibilityLabel="close workout details"
-                twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-                text="Close"
-              />
-            ),
-          }}
-        />
+        <Stack.Screen name="workout-details" />
         <Stack.Screen
           name="workout-filters"
           options={{

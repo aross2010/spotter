@@ -1,4 +1,4 @@
-import { View, FlatList } from 'react-native'
+import { View, FlatList, ActivityIndicator } from 'react-native'
 import React, { useEffect, useCallback } from 'react'
 import { useNavigation, router } from 'expo-router'
 import { Link } from 'expo-router'
@@ -115,10 +115,14 @@ const Workouts = () => {
     })
   }, [currentWorkouts, filters])
 
+  const loadingMoreRef = React.useRef(false)
+
   const handleLoadMore = () => {
-    if (hasMore && !isLoadingMore) {
-      loadMoreWorkouts()
-    }
+    if (!hasMore || isLoadingMore || loadingMoreRef.current) return
+    loadingMoreRef.current = true
+    loadMoreWorkouts().finally(() => {
+      loadingMoreRef.current = false
+    })
   }
 
   const workoutPrompt = (
@@ -164,6 +168,9 @@ const Workouts = () => {
     let addMonth = false
     let lastInMonth = false
     const { date, pinned, id } = item
+    console.log(
+      `rendering workout number ${index} with id ${id} and date ${date}`
+    )
 
     // Parse date in local timezone to avoid UTC shifts
     const [year, monthNum, day] = date.split('-').map(Number)
@@ -233,7 +240,7 @@ const Workouts = () => {
 
     const monthTitle = addMonth && (
       <View
-        style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}`}
+        style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-2' : 'mb-2 mt-6'}`}
       >
         <Txt twcn="font-semibold text-lg">
           {MONTHS.get(displayMonthNum)} {displayYear}
@@ -249,13 +256,24 @@ const Workouts = () => {
           roundTop={addMonth}
           roundBottom={lastInMonth || index === currentWorkouts.length - 1}
         />
+        {/* <View style={tw`h-24 border border-purple-500`}>
+          <Txt>
+            Workout View Placeholder for {item.id} with date {item.date}
+          </Txt>
+        </View> */}
       </View>
     )
   }
 
   const renderFooter = () => {
+    console.log({ isLoadingMore })
     if (!isLoadingMore) return null
-    return <Spinner />
+    return (
+      <ActivityIndicator
+        size={12}
+        style={tw` border border-red`}
+      />
+    )
   }
 
   const workoutsView = isLoading ? (
@@ -277,20 +295,19 @@ const Workouts = () => {
     </SafeView>
   ) : (
     <FlatList
+      style={tw` bg-light-background dark:bg-dark-background border border-green`}
+      contentContainerStyle={tw`px-4 pt-2 pb-6 border border-blue`}
       data={currentWorkouts}
       renderItem={renderEntry}
       keyExtractor={(item) => item.id}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.1}
       ListFooterComponent={renderFooter}
-      style={tw`flex-1 bg-light-background dark:bg-dark-background`}
-      contentContainerStyle={tw`px-4 pt-2 pb-4`}
+      showsVerticalScrollIndicator={false}
       removeClippedSubviews={false}
       disableVirtualization={true}
       initialNumToRender={currentWorkouts.length}
       maxToRenderPerBatch={currentWorkouts.length}
-      contentInsetAdjustmentBehavior="automatic"
-      scrollEventThrottle={16}
     />
   )
 
