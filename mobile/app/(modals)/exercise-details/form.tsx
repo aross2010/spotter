@@ -26,6 +26,9 @@ import MyModal from '../../../components/modal'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import { toTitleCase } from '../../../functions/utils'
+import SFIcon from '../../../components/sf-icon'
+import { isLoading } from 'expo-font'
+import Spinner from '../../../components/activity-indicator'
 
 type ExerciseInfo = {
   id: string
@@ -64,14 +67,28 @@ const ExerciseForm = () => {
       headerRight: () => {
         const canUpdate = hasChanges && !loading
         return (
-          <Button
-            onPress={handleSaveExercise}
-            hitSlop={12}
-            accessibilityLabel="Save Workout"
-            twcnText={`font-semibold ${canUpdate ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-            text={loading ? 'Updating...' : 'Update'}
-            disabled={!canUpdate}
-          />
+          <View style={tw`flex-row items-center`}>
+            {loading ? (
+              <Spinner
+                fullScreen={false}
+                twcn="w-9"
+              />
+            ) : (
+              <Button
+                onPress={handleSaveExercise}
+                hitSlop={12}
+                accessibilityLabel="Save Exercise Details"
+                disabled={!canUpdate}
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="checkmark"
+                  size={26}
+                  color={canUpdate ? Colors.primary : theme.grayText}
+                />
+              </Button>
+            )}
+          </View>
         )
       },
     })
@@ -317,9 +334,10 @@ const ExerciseForm = () => {
           value={exercise?.description}
           onChangeText={(text) => handleChange('description', text)}
           placeholder="Form cues, equipment information, etc."
+          twcnInput="rounded-2xl"
         />
         <View>
-          <Txt twcn="mb-3 font-semibold">Primary Muscle Group</Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Primary Muscle Group</Txt>
           {exercise.primaryMuscleGroup ? (
             <Button
               onPress={() => {
@@ -357,7 +375,7 @@ const ExerciseForm = () => {
           )}
         </View>
         <View>
-          <Txt twcn="mb-3 font-semibold text-sm">Secondary Muscle Groups</Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Secondary Muscle Groups</Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedSecondaryMuscleGroups}
             <Button
@@ -379,7 +397,7 @@ const ExerciseForm = () => {
         </View>
 
         <View>
-          <Txt twcn="mb-3 font-semibold">Workout Type</Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Workout Type</Txt>
           <View style={tw`flex-row gap-2`}>
             <Button
               onPress={() =>
@@ -458,7 +476,7 @@ const ExerciseForm = () => {
             if (!open) setIsSwapMode(false)
           }}
         >
-          <Txt twcn="mb-2 font-medium text-sm">
+          <Txt twcn="mb-2 font-semibold text-base">
             {isSwapMode ? 'Swap Primary Muscle Group' : 'Muscle Groups'}
           </Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>

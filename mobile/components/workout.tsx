@@ -157,17 +157,6 @@ const WorkoutView = ({
               </ContextMenu.Trigger>
             </ContextMenu>
           </Host>
-          {/* <View>
-            <Button
-              hitSlop={12}
-              onPress={() => {}}
-            >
-              <Ellipsis
-                size={24}
-                color={theme.grayText}
-              />
-            </Button>
-          </View> */}
         </View>
 
         <View>

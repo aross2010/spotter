@@ -5,6 +5,7 @@ import {
   Keyboard,
   TextInputProps,
   TextInput,
+  TouchableWithoutFeedback,
 } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
 import { useWorkoutForm } from '../context/workout-form-context'
@@ -26,7 +27,13 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
-import MyModal from './modal'
+import { OverKeyboardView } from 'react-native-keyboard-controller'
+import Animated, {
+  FadeIn,
+  FadeOut,
+  SlideInDown,
+  SlideOutDown,
+} from 'react-native-reanimated'
 import ExerciseMiniHistory from './exercise-mini-history'
 import { useUserStore } from '../stores/user-store'
 import { ExerciseName } from '../utils/types'
@@ -53,6 +60,7 @@ const ExerciseInput = ({
     ExerciseName[]
   >([])
   const exerciseNameInputRef = useRef<TextInput>(null)
+  const lastFocusedInputRef = useRef<TextInput | null>(null)
   const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
   const [shouldFocusFirstSetWeight, setShouldFocusFirstSetWeight] =
     useState(false)
@@ -326,7 +334,22 @@ const ExerciseInput = ({
   }
 
   const handleDisplayExerciseInfo = () => {
+    // Store currently focused input
+    const currentlyFocused = TextInput.State.currentlyFocusedInput()
+    if (currentlyFocused) {
+      lastFocusedInputRef.current = currentlyFocused as any
+    }
     setIsExerciseInfoOpen(true)
+  }
+
+  const handleCloseExerciseInfo = () => {
+    setIsExerciseInfoOpen(false)
+    // Re-focus the input to keep keyboard open
+    if (lastFocusedInputRef.current) {
+      requestAnimationFrame(() => {
+        lastFocusedInputRef.current?.focus()
+      })
+    }
   }
 
   const handleAddNewSet = () => {
@@ -1509,9 +1532,6 @@ const ExerciseInput = ({
               exerciseNameResults.length > 0 &&
               exercise.name.trim().length > 0 && (
                 <GlassView
-                  tintColor={
-                    colorScheme === 'dark' ? theme.grayPrimary : '#FFFFFF'
-                  }
                   style={tw`absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-10`}
                 >
                   <ScrollView
@@ -1539,16 +1559,60 @@ const ExerciseInput = ({
     </View>
   )
 
+  console.log(
+    'date',
+    workoutData.date,
+    typeof workoutData.date,
+    workoutData.date.getDate()
+  )
+
   return (
     <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
-      <MyModal
-        isOpen={isExerciseInfoOpen}
-        setIsOpen={setIsExerciseInfoOpen}
-      >
-        <ExerciseMiniHistory id={exercise.id as string} />
-      </MyModal>
+      {isExerciseInfoOpen && (
+        <OverKeyboardView visible={isExerciseInfoOpen}>
+          <Animated.View
+            style={[
+              tw`flex-1 justify-end`,
+              { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+            ]}
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+          >
+            <TouchableWithoutFeedback
+              onPress={() => {
+                setIsExerciseInfoOpen(false)
+                // Re-focus immediately
+                if (lastFocusedInputRef.current) {
+                  lastFocusedInputRef.current.focus()
+                }
+              }}
+            >
+              <View style={tw`flex-1 justify-end`}>
+                <TouchableWithoutFeedback onPress={(e) => {}}>
+                  <Animated.View
+                    entering={SlideInDown.duration(300)}
+                    exiting={SlideOutDown.duration(250)}
+                  >
+                    <GlassView
+                      style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
+                    >
+                      <ExerciseMiniHistory
+                        id={exercise.id as string}
+                        exerciseIndex={exerciseNumber - 1}
+                        workoutDate={workoutData.date
+                          .toISOString()
+                          .slice(0, 10)}
+                      />
+                    </GlassView>
+                  </Animated.View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Animated.View>
+        </OverKeyboardView>
+      )}
     </View>
   )
 }

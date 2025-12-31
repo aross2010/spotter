@@ -27,7 +27,7 @@ const WorkoutFormLayout = () => {
               color: theme.text,
               fontWeight: '600',
             },
-            // headerBackButtonDisplayMode: 'minimal',
+            headerBackButtonDisplayMode: 'minimal',
             // headerStyle: {
             //   backgroundColor: theme.background,
             // },

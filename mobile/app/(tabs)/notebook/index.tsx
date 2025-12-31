@@ -57,7 +57,7 @@ const Notebook = () => {
                 {numFilters > 0 && (
                   <View
                     style={tw.style(
-                      'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
+                      'absolute -top-0 -right-1 min-w-4 h-4 rounded-full items-center justify-center bg-primary',
                       { pointerEvents: 'none' }
                     )}
                   >
@@ -201,7 +201,7 @@ const Notebook = () => {
 
     const monthTitle = addMonth && (
       <View
-        style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-4' : 'my-4'}}`}
+        style={tw`flex-row items-center gap-2 ${index === 0 ? 'mb-2' : 'mb-2 mt-6'}`}
       >
         <Txt twcn="font-semibold text-lg">
           {MONTHS.get(displayMonthNum)} {displayYear}

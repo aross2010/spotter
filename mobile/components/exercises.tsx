@@ -56,6 +56,10 @@ const Exercises = () => {
         },
       ],
       setGroupings: [],
+      details: {
+        loading: true,
+        data: null,
+      },
     }
     const newExerciseNumber = workoutData.exercises.length + 1
     setWorkoutData({

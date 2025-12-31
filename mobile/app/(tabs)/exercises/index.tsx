@@ -108,8 +108,8 @@ const Exercises = () => {
     return (
       <View key={exercise.id}>
         {showMuscleGroupHeader && (
-          <View style={tw`${index === 0 ? 'mb-4' : 'my-4'}`}>
-            <Txt twcn="font-semibold text-base">
+          <View style={tw`${index === 0 ? 'mb-2' : 'mb-2 mt-6'}`}>
+            <Txt twcn="font-semibold text-lg">
               {exercise.primaryMuscleGroup
                 ? toTitleCase(exercise.primaryMuscleGroup as string)
                 : 'Unknown'}

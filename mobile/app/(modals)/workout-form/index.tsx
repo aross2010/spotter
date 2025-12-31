@@ -363,30 +363,37 @@ const WorkoutForm = () => {
               </ContextMenu.Trigger>
             </ContextMenu>
           </Host>
-          <Button
-            onPress={handleSubmitWorkout}
-            hitSlop={12}
-            accessibilityLabel="Save Workout"
-            disabled={isSaving || !saveEnabled}
-            twcn="w-9 flex-row items-center justify-center h-full"
-          >
-            <SFIcon
-              name="checkmark"
-              size={26}
-              color={saveEnabled ? Colors.primary : theme.grayText}
-            />
-          </Button>
+          {isSaving ? (
+            <Spinner fullScreen={false} />
+          ) : (
+            <Button
+              onPress={handleSubmitWorkout}
+              hitSlop={12}
+              accessibilityLabel="Save Workout"
+              disabled={isSaving || !saveEnabled}
+              twcn="w-9 flex-row items-center justify-center h-full"
+            >
+              <SFIcon
+                name="checkmark"
+                size={26}
+                color={saveEnabled ? Colors.primary : theme.grayText}
+              />
+            </Button>
+          )}
         </View>
       ),
       headerLeft:
         from === 'workout-details'
           ? () => (
-              <HeaderBackButton
-                displayMode="minimal"
-                tintColor={Colors.primary}
-                onPress={() => router.back()}
-                disabled={isSaving}
-              />
+              <View style={tw`flex-row items-center w-9`}>
+                <HeaderBackButton
+                  displayMode="minimal"
+                  tintColor={theme.text}
+                  onPress={handleCancelForm}
+                  disabled={isSaving}
+                  style={tw`w-9 h-full`}
+                />
+              </View>
             )
           : () => (
               <Button

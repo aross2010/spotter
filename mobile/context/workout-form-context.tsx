@@ -47,6 +47,11 @@ type WorkoutFormContextType = {
   getNames: () => Promise<void>
   userTags: TagWithCount[]
   setUserTags: React.Dispatch<React.SetStateAction<TagWithCount[]>>
+  updateExerciseDetails: (
+    exerciseIndex: number,
+    details: any,
+    loading: boolean
+  ) => void
   resetWorkoutFormContext: () => void
 }
 
@@ -64,6 +69,10 @@ const starterExercise = {
       id: nanoid(),
     },
   ],
+  details: {
+    loading: false,
+    data: null,
+  },
 }
 
 const WorkoutFormContext = createContext<WorkoutFormContextType | undefined>(
@@ -296,6 +305,29 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     setFocusedInput(null)
   }
 
+  const updateExerciseDetails = (
+    exerciseIndex: number,
+    details: any,
+    loading: boolean
+  ) => {
+    setWorkoutData((prev) => {
+      const updatedExercises = [...prev.exercises]
+      if (updatedExercises[exerciseIndex]) {
+        updatedExercises[exerciseIndex] = {
+          ...updatedExercises[exerciseIndex],
+          details: {
+            loading,
+            data: details,
+          },
+        }
+      }
+      return {
+        ...prev,
+        exercises: updatedExercises,
+      }
+    })
+  }
+
   // Register reset function on mount
   useEffect(() => {
     registerContextResetter('resetWorkoutFormContext', resetWorkoutFormContext)
@@ -321,6 +353,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     userTags,
     resetWorkoutFormContext,
     setUserTags,
+    updateExerciseDetails,
   }
 
   return (

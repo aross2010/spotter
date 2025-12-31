@@ -3,6 +3,7 @@ import useTheme from '../hooks/theme'
 import Button from '../../components/button'
 import tw from '../../tw'
 import { View } from 'react-native'
+import SFIcon from '../../components/sf-icon'
 
 export default function ModalLayout() {
   const { theme, colorScheme } = useTheme()
@@ -47,17 +48,39 @@ export default function ModalLayout() {
         <Stack.Screen
           name="notebook-filters"
           options={{
-            title: 'Notebook Filters',
-            headerTitle: 'Filter Entries',
+            title: '',
             headerShown: true,
+            headerTransparent: false,
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
+            headerSearchBarOptions: {
+              onChangeText: (event: any) => {
+                router.setParams({
+                  q: event.nativeEvent.text,
+                })
+              },
+              placeholder: 'Search tags...',
+              placement: 'stacked',
+              hideWhenScrolling: false,
+              autoCapitalize: 'none',
+            },
+            headerLargeTitle: false,
+            headerBackButtonDisplayMode: 'minimal',
+            headerShadowVisible: false,
             headerLeft: () => (
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
-                accessibilityLabel="close notebook entry"
-                twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-                text="Cancel"
-              />
+                accessibilityLabel="close workout details"
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="xmark"
+                  size={26}
+                  color={theme.text}
+                />
+              </Button>
             ),
           }}
         />
@@ -65,16 +88,6 @@ export default function ModalLayout() {
           name="tag-selector"
           options={{
             title: '',
-            // // headerLargeTitle: true,
-            // headerTransparent: true,
-            // headerTitleStyle: {
-            //   color: theme.text,
-            //   fontWeight: 600,
-            // },
-            // headerLargeTitleStyle: {
-            //   color: theme.text,
-            //   fontWeight: '600',
-            // },
             headerStyle: {
               backgroundColor: theme.background,
             },
@@ -108,15 +121,47 @@ export default function ModalLayout() {
         <Stack.Screen
           name="workout-filters"
           options={{
-            title: 'Workout Filters',
+            title: '',
             headerShown: true,
-            headerTitle: 'Filter Workouts',
+            headerTransparent: false,
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
+
+            headerSearchBarOptions: {
+              onChangeText: (event: any) => {
+                router.setParams({
+                  q: event.nativeEvent.text,
+                })
+              },
+              placeholder: 'Search filters...',
+              placement: 'stacked',
+              hideWhenScrolling: false,
+              autoCapitalize: 'none',
+            },
+            headerLargeTitle: false,
+            headerBackButtonDisplayMode: 'minimal',
+            headerShadowVisible: false,
+            headerLeft: () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close workout details"
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="xmark"
+                  size={26}
+                  color={theme.text}
+                />
+              </Button>
+            ),
           }}
         />
         <Stack.Screen
           name="exercise-details"
           options={{
-            title: 'Exercise',
+            headerShown: false,
           }}
         />
       </Stack>

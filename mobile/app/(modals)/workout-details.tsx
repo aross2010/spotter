@@ -1,4 +1,10 @@
-import { Alert, Share as RNShare, StyleSheet, View } from 'react-native'
+import {
+  Alert,
+  Share as RNShare,
+  StyleSheet,
+  View,
+  Dimensions,
+} from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Link,
@@ -24,7 +30,7 @@ import { useUserStore } from '../../stores/user-store'
 import { useWorkoutStore, useWorkoutTabStore } from '../../stores/workout-store'
 import { useExerciseStore } from '../../stores/exercise-store'
 import WorkoutRecap from '../../components/workout-recap'
-import ViewShot from 'react-native-view-shot'
+import { captureRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
 import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
@@ -32,6 +38,9 @@ import SFIcon from '../../components/sf-icon'
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCapturing, setIsCapturing] = useState(false)
+  const contentRef = useRef<View>(null)
+  const screenshotRef = useRef<View>(null)
   const navigation = useNavigation()
   const { id, from, workoutName } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
@@ -41,7 +50,6 @@ const WorkoutDetails = () => {
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
   const [hasLoaded, setHasLoaded] = useState(false)
-  const ref = useRef<ViewShot>(null)
   const { theme } = useTheme()
 
   const getWorkoutDetails = async () => {
@@ -84,7 +92,7 @@ const WorkoutDetails = () => {
   useEffect(() => {
     const presentation = from === 'exercise' ? 'modal' : 'card'
     navigation.setOptions({
-      title: workout?.name || (workoutName ? String(workoutName) : 'Workout'),
+      title: workout?.name || (workoutName ? String(workoutName) : ''),
       headerRight: workout
         ? () => (
             <View style={tw`flex-row items-center gap-6 px-2`}>
@@ -118,28 +126,44 @@ const WorkoutDetails = () => {
             </View>
           )
         : undefined,
-      headerLeft: () => (
-        <Button
-          onPress={() => router.back()}
-          hitSlop={12}
-          accessibilityLabel="close workout details"
-          twcn="w-9 flex-row items-center justify-center h-full"
-        >
-          <SFIcon
-            name="xmark"
-            size={26}
-            color={theme.text}
-          />
-        </Button>
-      ),
+      headerLeft:
+        from != 'workout-form' &&
+        (() => (
+          <Button
+            onPress={() => router.back()}
+            hitSlop={12}
+            accessibilityLabel="close workout details"
+            twcn="w-9 flex-row items-center justify-center h-full"
+          >
+            <SFIcon
+              name="xmark"
+              size={26}
+              color={theme.text}
+            />
+          </Button>
+        )),
     })
   }, [navigation, workout?.name])
 
   const handleScreenshotWorkout = async () => {
-    if (!ref.current || !ref.current.capture) return
-
     try {
-      const uri = await ref.current.capture()
+      setIsCapturing(true)
+      // Small delay to ensure the off-screen view renders
+      await new Promise((resolve) => setTimeout(resolve, 150))
+
+      if (!screenshotRef.current) {
+        setIsCapturing(false)
+        Alert.alert('Error', 'Failed to capture workout screenshot.')
+        return
+      }
+
+      const uri = await captureRef(screenshotRef, {
+        format: 'png',
+        quality: 1,
+      })
+
+      setIsCapturing(false)
+
       let perm = await MediaLibrary.getPermissionsAsync()
 
       if (perm.status !== 'granted') {
@@ -419,43 +443,92 @@ const WorkoutDetails = () => {
     <Spinner />
   ) : (
     workout && (
-      <SafeView>
-        <ViewShot
-          ref={ref}
-          options={{ format: 'jpg', quality: 0.9 }}
-          style={tw`bg-light-background dark:bg-dark-background -mx-4 -mt-2 px-4 pt-2 pb-12 -mb-12`}
-        >
-          {/* <Txt twcn="text-2xl font-semibold mb-2">{workout.name}</Txt> */}
-          <View style={tw`gap-2`}>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium  text-left">
-              {capString(
-                `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
-                40
-              )}
-            </Txt>
-            {workout.notes && (
-              <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-                {workout.notes}
+      <>
+        <SafeView>
+          <View
+            ref={contentRef}
+            collapsable={false}
+            style={tw`bg-light-background dark:bg-dark-background -mx-4 -mt-2 px-4 pt-2 pb-12 -mb-12`}
+          >
+            <View style={tw`gap-2`}>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium  text-left">
+                {capString(
+                  `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
+                  40
+                )}
               </Txt>
-            )}
-            {workout && <WorkoutRecap {...workout} />}
-          </View>
+              {workout.notes && (
+                <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                  {workout.notes}
+                </Txt>
+              )}
+              {workout && <WorkoutRecap {...workout} />}
+            </View>
 
-          <View style={tw`mt-6`}>{renderedExercises}</View>
-          <View style={tw`mt-4 gap-3`}>
-            {workout.tags.length > 0 && (
-              <View style={tw`flex-row flex-wrap items-center gap-2`}>
-                <Tag
-                  color={Colors.primary}
-                  strokeWidth={1.5}
-                  size={12}
-                />
-                {renderedTags}
-              </View>
-            )}
+            <View style={tw`mt-6`}>{renderedExercises}</View>
+            <View style={tw`mt-4 gap-3`}>
+              {workout.tags.length > 0 && (
+                <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                  <Tag
+                    color={Colors.primary}
+                    strokeWidth={1.5}
+                    size={12}
+                  />
+                  {renderedTags}
+                </View>
+              )}
+            </View>
           </View>
-        </ViewShot>
-      </SafeView>
+        </SafeView>
+
+        {/* Off-screen view for screenshots */}
+        {isCapturing && (
+          <View style={{ position: 'absolute', left: -10000, top: 0 }}>
+            <View
+              ref={screenshotRef}
+              collapsable={false}
+              style={{
+                width: Dimensions.get('window').width,
+                backgroundColor: theme.background,
+                paddingVertical: 32,
+                paddingHorizontal: 16,
+              }}
+            >
+              <Txt twcn="text-4xl font-semibold mb-4 text-light-text dark:text-dark-text">
+                {workout.name}
+              </Txt>
+              <View style={tw`gap-2`}>
+                <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium text-left">
+                  {capString(
+                    `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
+                    40
+                  )}
+                </Txt>
+                {workout.notes && (
+                  <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                    {workout.notes}
+                  </Txt>
+                )}
+                {workout && <WorkoutRecap {...workout} />}
+              </View>
+
+              <View style={tw`mt-6`}>{renderedExercises}</View>
+              <View style={tw`mt-4 gap-3`}>
+                {workout.tags.length > 0 && (
+                  <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                    <Tag
+                      color={Colors.primary}
+                      strokeWidth={1.5}
+                      size={12}
+                    />
+                    {renderedTags}
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+      </>
     )
   )
 }

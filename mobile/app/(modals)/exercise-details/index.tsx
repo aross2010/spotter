@@ -19,7 +19,7 @@ import tw from '../../../tw'
 import Button from '../../../components/button'
 import { useUserStore } from '../../../stores/user-store'
 import LineChart from '../../../components/line-chart'
-import { BlurView } from 'expo-blur'
+import { GlassView } from 'expo-glass-effect'
 import {
   ChevronsLeftRight,
   ChevronsLeftRightEllipsis,
@@ -31,6 +31,7 @@ import { handleShareExercise } from '../../../functions/share'
 import { useExerciseStore } from '../../../stores/exercise-store'
 import { ExerciseDetails as ExerciseDetailsType } from '../../../utils/types'
 import { estimate1RM } from '../../../functions/one-rm'
+import SFIcon from '../../../components/sf-icon'
 
 const ExerciseDetails = () => {
   const { id } = useLocalSearchParams()
@@ -82,23 +83,17 @@ const ExerciseDetails = () => {
   useEffect(() => {
     if (!exercise) return
     navigation.setOptions({
-      headerTitle: '',
-      headerTitleStyle: {
-        fontSize:
-          exercise.name.length > 30 ? 16 : exercise.name.length > 20 ? 18 : 20,
-        fontWeight: 600,
-        color: theme.text,
-      },
+      title: exercise.name ?? 'Exercise Details',
       headerRight: () => (
-        <View style={tw`flex-row items-center gap-2 pb-1`}>
+        <View style={tw`flex-row items-center gap-6 px-2`}>
           <Button
-            twcn="bg-primary/10 rounded-2xl p-2"
             onPress={() => {
               navigateToEdit()
             }}
           >
-            <Pencil
-              size={20}
+            <SFIcon
+              name="pencil"
+              size={26}
               color={Colors.primary}
             />
           </Button>
@@ -107,10 +102,10 @@ const ExerciseDetails = () => {
             onPress={() =>
               handleShareExercise(exercise, weightMetric, intensityMetric)
             }
-            twcn="bg-primary/10 rounded-2xl p-2"
           >
-            <Share
-              size={20}
+            <SFIcon
+              name="square.and.arrow.up"
+              size={26}
               color={Colors.primary}
             />
           </Button>
@@ -233,7 +228,7 @@ const ExerciseDetails = () => {
 
   const keyStats = (
     <View>
-      <Txt twcn="font-semibold mb-4">Key Stats</Txt>
+      <Txt twcn="font-semibold text-lg mb-2">Key Stats</Txt>
       <View style={tw`gap-1`}>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(0, 2)}</View>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(2, 5)}</View>
@@ -246,8 +241,8 @@ const ExerciseDetails = () => {
     (exercise.primaryMuscleGroup ||
       exercise?.secondaryMuscleGroups.length > 0) && (
       <View>
-        <View style={tw`flex-row justify-between items-center mb-4`}>
-          <Txt twcn="font-semibold">
+        <View style={tw`flex-row justify-between items-center mb-2`}>
+          <Txt twcn="font-semibold text-lg">
             Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
           </Txt>
           <Button onPress={() => navigateToEdit()}>
@@ -295,10 +290,9 @@ const ExerciseDetails = () => {
     const year = String(dateObj.getUTCFullYear()).slice(-2)
     const formattedDate = `${month}/${day}/${year}`
     return (
-      <BlurView
+      <GlassView
         key={date}
-        intensity={50}
-        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl border border-light-grayBorder dark:border-dark-grayBorder shadow-md`}
+        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl shadow-md`}
       >
         <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
           {formattedDate}
@@ -309,7 +303,7 @@ const ExerciseDetails = () => {
           {hasIntensity &&
             ` @ ${data.rir ? `RIR ${data.rir}` : `RPE ${data.rpe}`}`}
         </Txt>
-      </BlurView>
+      </GlassView>
     )
   })
 
@@ -327,7 +321,7 @@ const ExerciseDetails = () => {
 
       return (
         <View style={tw`overflow-visible`}>
-          <Txt twcn="font-semibold mb-4">Progression </Txt>
+          <Txt twcn="font-semibold mb-2 text-lg">Progression </Txt>
           {allData.length > 1 ? (
             <LineChart
               data={allData}
@@ -424,7 +418,7 @@ const ExerciseDetails = () => {
 
   const history = (
     <View>
-      <Txt twcn="font-medium mb-4">History</Txt>
+      <Txt twcn="font-medium mb-2 text-lg">History</Txt>
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
@@ -458,7 +452,6 @@ const ExerciseDetails = () => {
     <Spinner text="Gathering data..." />
   ) : (
     <SafeView twcnContentView="gap-6">
-      <Txt twcn="font-semibold text-2xl -mb-4">{exercise?.name}</Txt>
       {description}
       {keyStats}
       {musclesWorked}

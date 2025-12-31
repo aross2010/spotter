@@ -84,7 +84,7 @@ const Workouts = () => {
                 {numActiveFilters > 0 && (
                   <View
                     style={tw.style(
-                      'absolute -top-1 -right-1 min-w-5 h-5 rounded-full items-center justify-center bg-primary',
+                      'absolute -top-0 -right-1 min-w-4 h-4 rounded-full items-center justify-center bg-primary',
                       { pointerEvents: 'none' }
                     )}
                   >
@@ -168,9 +168,6 @@ const Workouts = () => {
     let addMonth = false
     let lastInMonth = false
     const { date, pinned, id } = item
-    console.log(
-      `rendering workout number ${index} with id ${id} and date ${date}`
-    )
 
     // Parse date in local timezone to avoid UTC shifts
     const [year, monthNum, day] = date.split('-').map(Number)
@@ -256,22 +253,16 @@ const Workouts = () => {
           roundTop={addMonth}
           roundBottom={lastInMonth || index === currentWorkouts.length - 1}
         />
-        {/* <View style={tw`h-24 border border-purple-500`}>
-          <Txt>
-            Workout View Placeholder for {item.id} with date {item.date}
-          </Txt>
-        </View> */}
       </View>
     )
   }
 
   const renderFooter = () => {
-    console.log({ isLoadingMore })
     if (!isLoadingMore) return null
     return (
-      <ActivityIndicator
-        size={12}
-        style={tw` border border-red`}
+      <Spinner
+        fullScreen={false}
+        twcn="py-6"
       />
     )
   }
@@ -295,8 +286,8 @@ const Workouts = () => {
     </SafeView>
   ) : (
     <FlatList
-      style={tw` bg-light-background dark:bg-dark-background border border-green`}
-      contentContainerStyle={tw`px-4 pt-2 pb-6 border border-blue`}
+      style={tw` bg-light-background dark:bg-dark-background`}
+      contentContainerStyle={tw`px-4 pt-2 pb-6`}
       data={currentWorkouts}
       renderItem={renderEntry}
       keyExtractor={(item) => item.id}
@@ -308,6 +299,7 @@ const Workouts = () => {
       disableVirtualization={true}
       initialNumToRender={currentWorkouts.length}
       maxToRenderPerBatch={currentWorkouts.length}
+      contentInsetAdjustmentBehavior="automatic"
     />
   )
 

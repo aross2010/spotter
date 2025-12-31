@@ -92,6 +92,25 @@ export type Workout = {
   status: WorkoutStatus
 }
 
+export type ExerciseDetailsMini = {
+  id: string
+  name: string
+  description?: string
+  isUnilateral: boolean
+  history?: {
+    workoutId: string
+    date: string
+    exerciseNumber: number
+    sets: {
+      setNumber: number
+      weight: number
+      reps: number
+      partials?: number
+      intensity?: number
+    }[]
+  }[]
+}
+
 type ExerciseInForm = {
   name: string
   isUnilateral: boolean
@@ -99,6 +118,10 @@ type ExerciseInForm = {
   id?: string // existing exercise ID
   sets: Set[]
   used?: number
+  details: {
+    loading: boolean
+    data: ExerciseDetailsMini | null
+  }
 }
 
 export type WorkoutFormData = {

@@ -8,45 +8,48 @@ import { useAuth } from '../context/auth-context'
 import { BASE_URL } from '../constants/auth'
 import Spinner from './activity-indicator'
 import { ScrollView } from 'react-native-gesture-handler'
-
-type ExerciseDetailsMini = {
-  id: string
-  name: string
-  description?: string
-  isUnilateral: boolean
-  history?: {
-    workoutId: string
-    date: string
-    exerciseNumber: number
-    sets: {
-      setNumber: number
-      weight: number
-      reps: number
-      partials?: number
-      intensity?: number
-    }[]
-  }[]
-}
+import { useWorkoutForm } from '../context/workout-form-context'
+import { ExerciseDetailsMini } from '../utils/types'
 
 type ExerciseMiniHistoryProps = {
   id: string
+  exerciseIndex: number
+  workoutDate: string
 }
 
-const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
+const ExerciseMiniHistory = ({
+  id,
+  exerciseIndex,
+  workoutDate,
+}: ExerciseMiniHistoryProps) => {
   const { preferences } = useUserStore()
   const { fetchWithAuth } = useAuth()
-  const [exercise, setExercise] = useState<ExerciseDetailsMini | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { workoutData, updateExerciseDetails } = useWorkoutForm()
+
+  const cachedDetails = workoutData.exercises[exerciseIndex]?.details
+  const [isLoading, setIsLoading] = useState(cachedDetails?.loading ?? true)
+  const [exercise, setExercise] = useState<ExerciseDetailsMini | null>(
+    cachedDetails?.data ?? null
+  )
 
   const weightMetric = preferences?.weightMetric || 'lbs'
   const intensityMetric = preferences?.intensityMetric || 'rpe'
 
   useEffect(() => {
+    // If we already have cached data, use it
+    if (cachedDetails?.data && !cachedDetails?.loading) {
+      setExercise(cachedDetails.data)
+      setIsLoading(false)
+      return
+    }
+
     const fetchExercise = async () => {
       setIsLoading(true)
+      updateExerciseDetails(exerciseIndex, null, true)
+
       try {
         const res = await fetchWithAuth(
-          `${BASE_URL}/api/exercises/mini/${id}?weight=${weightMetric}&intensity=${intensityMetric}`,
+          `${BASE_URL}/api/exercises/mini/${id}?weight=${weightMetric}&intensity=${intensityMetric}&date=${workoutDate}`,
           {
             method: 'GET',
             headers: {
@@ -56,8 +59,10 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
         )
         const data = (await res.json()) as ExerciseDetailsMini
         setExercise(data)
+        updateExerciseDetails(exerciseIndex, data, false)
       } catch (error) {
         console.error('Error fetching exercise mini history:', error)
+        updateExerciseDetails(exerciseIndex, null, false)
       } finally {
         setIsLoading(false)
       }
@@ -130,7 +135,7 @@ const ExerciseMiniHistory = ({ id }: ExerciseMiniHistoryProps) => {
   const content = (
     <>
       {isLoading ? (
-        <Spinner />
+        <Spinner fullScreen={false} />
       ) : exercise ? (
         <>
           <Txt twcn={`font-medium text-lg mb-2`}>{exercise.name}</Txt>

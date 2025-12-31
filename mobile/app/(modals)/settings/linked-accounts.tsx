@@ -19,7 +19,7 @@ const providerOptions = [
   {
     title: 'Google',
     provider: 'google',
-    color: '#4285F4',
+    color: '#FFFFFF',
     logo: googleLogo,
   },
   {
@@ -96,13 +96,15 @@ const LinkedAccounts = () => {
             }}
             resizeMode="contain"
           />
-          <Txt twcn="font-semibold text-sm text-white">
+          <Txt
+            twcn={`font-semibold text-sm ${provider === 'apple' ? 'text-white' : 'dark:text-light-text text-light-text'}`}
+          >
             {isLinked ? `${title} Connected` : `Connect ${title}`}
           </Txt>
           <SFIcon
             name={isLinked ? 'checkmark.circle.fill' : 'plus.circle.fill'}
             size={20}
-            color="#ffffff"
+            color={provider === 'apple' ? '#FFFFFF' : '#000000'}
           />
         </Button>
         {isLinked && providerEmail && (
