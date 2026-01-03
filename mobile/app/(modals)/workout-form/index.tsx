@@ -6,12 +6,15 @@ import {
   Modal,
   Pressable,
   TouchableWithoutFeedback,
+  TextInput,
 } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import { formatDate, formattedDate } from '../../../functions/formatted-date'
+import { formatNumber } from '../../../functions/format-number'
+import { toKg, toLbs } from '../../../functions/metric-conversions'
 import { HeaderBackButton } from '@react-navigation/elements'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import {
   DefaultKeyboardToolbarTheme,
   KeyboardToolbar,
@@ -35,6 +38,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import useTheme from '../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
 import { useWorkoutForm } from '../../../context/workout-form-context'
+import { useUserStore } from '../../../stores/user-store'
 import Exercises from '../../../components/exercises'
 import WorkoutNotes from '../../../components/workout-notes'
 import WorkoutTags from '../../../components/workout-tags'
@@ -64,6 +68,7 @@ import {
 } from '@expo/ui/swift-ui'
 import { toTitleCase } from '../../../functions/utils'
 import { GlassView } from 'expo-glass-effect'
+import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated'
 
 const statusOptions = [
   {
@@ -88,7 +93,8 @@ const WorkoutForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [showStatusMenu, setShowStatusMenu] = useState(false)
-  const [isNotesActive, setIsNotesActive] = useState(false)
+  const [showStatsModal, setShowStatsModal] = useState(false)
+  const lastFocusedInputRef = useRef<TextInput | null>(null)
   const navigation = useNavigation()
   const { theme, colorScheme } = useTheme()
   const {
@@ -123,6 +129,23 @@ const WorkoutForm = () => {
     resetWorkoutFormContext()
     router.back()
   }, [resetWorkoutFormContext])
+
+  const handleOpenStatsModal = () => {
+    const currentlyFocused = TextInput.State.currentlyFocusedInput()
+    if (currentlyFocused) {
+      lastFocusedInputRef.current = currentlyFocused as any
+    }
+    setShowStatsModal(true)
+  }
+
+  const handleCloseStatsModal = () => {
+    setShowStatsModal(false)
+    if (lastFocusedInputRef.current) {
+      requestAnimationFrame(() => {
+        lastFocusedInputRef.current?.focus()
+      })
+    }
+  }
 
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
@@ -353,6 +376,12 @@ const WorkoutForm = () => {
                         : handleStatusChange('active')
                   }
                 />
+                <SwiftButton
+                  systemImage="chart.bar"
+                  onPress={handleOpenStatsModal}
+                >
+                  Stats
+                </SwiftButton>
               </ContextMenu.Items>
               <ContextMenu.Trigger>
                 <SFIcon
@@ -364,7 +393,10 @@ const WorkoutForm = () => {
             </ContextMenu>
           </Host>
           {isSaving ? (
-            <Spinner fullScreen={false} />
+            <Spinner
+              twcn="w-9"
+              fullScreen={false}
+            />
           ) : (
             <Button
               onPress={handleSubmitWorkout}
@@ -514,6 +546,7 @@ const WorkoutForm = () => {
     !!focusedInput &&
     focusedInput.field !== 'exerciseName' &&
     focusedInput.field !== 'workoutName'
+
   return isLoading ? (
     <Spinner />
   ) : (
@@ -521,6 +554,8 @@ const WorkoutForm = () => {
       <SafeView
         keyboardAvoiding
         bottomOffset={200}
+        extraKeyboardSpace={25}
+        ignoreInset
       >
         <View style={tw`flex-1 gap-6 justify-between`}>
           <WorkoutNameInput />
@@ -583,118 +618,178 @@ const WorkoutForm = () => {
           </Pressable>
         </Modal>
 
-        <MyModal
-          isOpen={showStatusMenu}
-          setIsOpen={setShowStatusMenu}
+        <Modal
+          visible={showStatsModal}
+          transparent
+          animationType="fade"
+          onRequestClose={handleCloseStatsModal}
         >
-          <Txt twcn="font-medium ">Workout Status</Txt>
-          <View>
-            {statusOptions.map((option) => {
-              const isSelected = workoutData.status === option.value
-              const StatusIcon = option.icon
+          <TouchableWithoutFeedback onPress={handleCloseStatsModal}>
+            <View
+              style={[
+                tw`flex-1 justify-end`,
+                { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+              ]}
+            >
+              <TouchableWithoutFeedback onPress={() => {}}>
+                <Animated.View
+                  entering={SlideInDown.duration(300)}
+                  exiting={SlideOutDown.duration(250)}
+                >
+                  <GlassView
+                    style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
+                  >
+                    <Txt twcn="font-semibold text-lg mb-2">Workout Stats</Txt>
+                    <View style={tw`gap-3`}>
+                      <View style={tw`flex-row justify-between items-center`}>
+                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                          Sets
+                        </Txt>
+                        <Txt twcn="font-semibold text-base">
+                          {formatNumber(
+                            workoutData.exercises.reduce(
+                              (acc, exercise) => acc + exercise.sets.length,
+                              0
+                            )
+                          )}
+                        </Txt>
+                      </View>
+                      <View style={tw`flex-row justify-between items-center`}>
+                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                          Reps
+                        </Txt>
+                        <Txt twcn="font-semibold text-base">
+                          {formatNumber(
+                            workoutData.exercises.reduce(
+                              (acc, exercise) =>
+                                acc +
+                                exercise.sets.reduce((setAcc, exerciseSet) => {
+                                  if (exercise.isUnilateral) {
+                                    const leftReps = exerciseSet.leftReps || 0
+                                    const rightReps = exerciseSet.rightReps || 0
+                                    return (
+                                      setAcc + Math.max(leftReps, rightReps)
+                                    )
+                                  }
+                                  return setAcc + (exerciseSet.reps || 0)
+                                }, 0),
+                              0
+                            )
+                          )}
+                        </Txt>
+                      </View>
+                      <View style={tw`flex-row justify-between items-center`}>
+                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                          Exercises
+                        </Txt>
+                        <Txt twcn="font-semibold text-base">
+                          {formatNumber(
+                            new Set(
+                              workoutData.exercises.map(
+                                (exercise) => exercise.name
+                              )
+                            ).size
+                          )}
+                        </Txt>
+                      </View>
+                      <View style={tw`flex-row justify-between items-center`}>
+                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                          {workoutData.status === 'completed'
+                            ? 'Lifted'
+                            : 'Lift'}
+                        </Txt>
+                        <Txt twcn="font-semibold text-base">
+                          {formatNumber(
+                            Math.floor(
+                              workoutData.exercises.reduce((acc, exercise) => {
+                                return (
+                                  acc +
+                                  exercise.sets.reduce(
+                                    (setAcc, exerciseSet) => {
+                                      const { preferences } =
+                                        useUserStore.getState()
+                                      const weightMetric =
+                                        preferences?.weightMetric || 'lbs'
+                                      const setWeight =
+                                        exerciseSet.weightLbs ||
+                                        exerciseSet.weightKg ||
+                                        0
+                                      const setMetric = exerciseSet.weightLbs
+                                        ? 'lbs'
+                                        : 'kgs'
 
-              return (
-                <Button
-                  key={option.value}
-                  onPress={() => handleStatusChange(option.value)}
-                  twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
-                    isSelected ? 'bg-primary/10' : ''
-                  }`}
-                >
-                  <StatusIcon
-                    size={20}
-                    color={isSelected ? Colors.primary : theme.text}
-                  />
-                  <Txt twcn="text-sm">{option.label}</Txt>
-                </Button>
-              )
-            })}
-          </View>
-        </MyModal>
+                                      const weight =
+                                        setMetric === weightMetric
+                                          ? setWeight
+                                          : weightMetric === 'lbs'
+                                            ? toLbs(setWeight)
+                                            : toKg(setWeight)
+
+                                      let reps = 0
+                                      if (exercise.isUnilateral) {
+                                        const leftReps =
+                                          exerciseSet.leftReps || 0
+                                        const rightReps =
+                                          exerciseSet.rightReps || 0
+                                        reps = Math.max(leftReps, rightReps)
+                                      } else {
+                                        reps = exerciseSet.reps || 0
+                                      }
+
+                                      return setAcc + weight * reps
+                                    },
+                                    0
+                                  )
+                                )
+                              }, 0)
+                            )
+                          )}{' '}
+                          {useUserStore.getState().preferences?.weightMetric ||
+                            'lbs'}
+                        </Txt>
+                      </View>
+                    </View>
+                  </GlassView>
+                </Animated.View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
       </SafeView>
-      <View
-        collapsable={false}
-        pointerEvents={shouldShowToolbar ? 'auto' : 'none'}
-        style={!shouldShowToolbar ? { height: 0, opacity: 0 } : undefined}
-      >
-        <KeyboardToolbar
-          theme={{
-            ...DefaultKeyboardToolbarTheme,
-            dark: {
-              ...DefaultKeyboardToolbarTheme.dark,
-              primary: Colors.dark.text,
-              background: Colors.dark.background,
-            },
-            light: {
-              ...DefaultKeyboardToolbarTheme.light,
-              primary: Colors.light.text,
-              background: Colors.light.background,
-            },
-          }}
+      {shouldShowToolbar && (
+        <Animated.View
+          entering={SlideInDown.duration(150).damping(20)}
+          exiting={SlideOutDown.duration(100)}
+          collapsable={false}
         >
-          <KeyboardToolbar.Content>
-            {focusedInput && focusedInput.field === 'exerciseNumber' ? (
-              <View
-                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
-              >
-                <View style={tw`flex-row items-center gap-1`}>
-                  <Button
-                    onPress={() => {
-                      const currentValue =
-                        parseInt(exerciseNumberInputValue) || 1
-                      const newValue = Math.max(currentValue - 1, 1)
-                      setExerciseNumberInputValue(newValue.toString())
-                    }}
-                    twcn="p-2"
-                  >
-                    <Minus
-                      size={24}
-                      color={Colors.red}
-                    />
-                  </Button>
-                  <Txt twcn="font-medium">1</Txt>
-                  <Button
-                    onPress={() => {
-                      const currentValue =
-                        parseInt(exerciseNumberInputValue) || 1
-                      const maxNumber = workoutData.exercises.length
-                      const newValue = Math.min(currentValue + 1, maxNumber)
-                      setExerciseNumberInputValue(newValue.toString())
-                    }}
-                    twcn="p-2"
-                  >
-                    <Plus
-                      size={24}
-                      color={Colors.green}
-                    />
-                  </Button>
-                </View>
-                <Button
-                  onPress={() => {
-                    Keyboard.dismiss()
-                    handleExerciseNumberSubmitRef.current?.()
-                  }}
+          <KeyboardToolbar
+            theme={{
+              ...DefaultKeyboardToolbarTheme,
+              dark: {
+                ...DefaultKeyboardToolbarTheme.dark,
+                primary: Colors.dark.text,
+                background: Colors.dark.background,
+              },
+              light: {
+                ...DefaultKeyboardToolbarTheme.light,
+                primary: Colors.light.text,
+                background: Colors.light.background,
+              },
+            }}
+          >
+            <KeyboardToolbar.Content>
+              {focusedInput && focusedInput.field === 'exerciseNumber' ? (
+                <GlassView
+                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
                 >
-                  <Check
-                    size={32}
-                    color={Colors.primary}
-                  />
-                </Button>
-              </View>
-            ) : focusedInput &&
-              (focusedInput.field === 'weightLbs' ||
-                focusedInput.field === 'weightKg') ? (
-              <View
-                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
-              >
-                <View style={tw`flex-row items-center gap-2`}>
-                  <KeyboardToolbar.Prev button={CustomLeftButton} />
-                  <KeyboardToolbar.Next button={CustomRightButton} />
-                </View>
-                <View style={tw`flex-row gap-2 items-center`}>
                   <View style={tw`flex-row items-center gap-1`}>
                     <Button
-                      onPress={() => adjustFocusedInputValue(false, 2.5)}
+                      onPress={() => {
+                        const currentValue =
+                          parseInt(exerciseNumberInputValue) || 1
+                        const newValue = Math.max(currentValue - 1, 1)
+                        setExerciseNumberInputValue(newValue.toString())
+                      }}
                       twcn="p-2"
                     >
                       <Minus
@@ -702,9 +797,15 @@ const WorkoutForm = () => {
                         color={Colors.red}
                       />
                     </Button>
-                    <Txt twcn="font-medium">2.5</Txt>
+                    <Txt twcn="font-medium">1</Txt>
                     <Button
-                      onPress={() => adjustFocusedInputValue(true, 2.5)}
+                      onPress={() => {
+                        const currentValue =
+                          parseInt(exerciseNumberInputValue) || 1
+                        const maxNumber = workoutData.exercises.length
+                        const newValue = Math.min(currentValue + 1, maxNumber)
+                        setExerciseNumberInputValue(newValue.toString())
+                      }}
                       twcn="p-2"
                     >
                       <Plus
@@ -713,73 +814,118 @@ const WorkoutForm = () => {
                       />
                     </Button>
                   </View>
-                  <View style={tw`flex-row items-center gap-1`}>
-                    <Button
-                      onPress={() => adjustFocusedInputValue(false, 5)}
-                      twcn="p-2"
-                    >
-                      <Minus
-                        size={24}
-                        color={Colors.red}
-                      />
-                    </Button>
-                    <Txt twcn="font-medium">5</Txt>
-                    <Button
-                      onPress={() => adjustFocusedInputValue(true, 5)}
-                      twcn="p-2"
-                    >
-                      <Plus
-                        size={24}
-                        color={Colors.green}
-                      />
-                    </Button>
-                  </View>
-                </View>
-                <KeyboardToolbar.Done button={CustomDoneButton} />
-              </View>
-            ) : (
-              <View
-                style={tw`flex-row items-center justify-between gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
-              >
-                <View style={tw`flex-row items-center gap-4`}>
+                  <Button
+                    onPress={() => {
+                      Keyboard.dismiss()
+                      handleExerciseNumberSubmitRef.current?.()
+                    }}
+                  >
+                    <Check
+                      size={32}
+                      color={Colors.primary}
+                    />
+                  </Button>
+                </GlassView>
+              ) : focusedInput &&
+                (focusedInput.field === 'weightLbs' ||
+                  focusedInput.field === 'weightKg') ? (
+                <GlassView
+                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
+                >
                   <View style={tw`flex-row items-center gap-2`}>
                     <KeyboardToolbar.Prev button={CustomLeftButton} />
                     <KeyboardToolbar.Next button={CustomRightButton} />
                   </View>
-                  <View style={tw`flex-row items-center gap-1`}>
-                    <Button
-                      onPress={() => adjustFocusedInputValue(false)}
-                      twcn="p-2"
-                    >
-                      <Minus
-                        size={24}
-                        color={Colors.red}
-                      />
-                    </Button>
-                    <Txt twcn="font-medium">
-                      {focusedInput &&
-                      (focusedInput.field === 'rpe' ||
-                        focusedInput.field === 'rir')
-                        ? '0.5'
-                        : '1'}
-                    </Txt>
-                    <Button
-                      onPress={() => adjustFocusedInputValue(true)}
-                      twcn="p-2"
-                    >
-                      <Plus
-                        size={24}
-                        color={Colors.green}
-                      />
-                    </Button>
+                  <View style={tw`flex-row gap-2 items-center`}>
+                    <View style={tw`flex-row items-center gap-1`}>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(false, 2.5)}
+                        twcn="p-2"
+                      >
+                        <Minus
+                          size={24}
+                          color={Colors.red}
+                        />
+                      </Button>
+                      <Txt twcn="font-medium">2.5</Txt>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(true, 2.5)}
+                        twcn="p-2"
+                      >
+                        <Plus
+                          size={24}
+                          color={Colors.green}
+                        />
+                      </Button>
+                    </View>
+                    <View style={tw`flex-row items-center gap-1`}>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(false, 5)}
+                        twcn="p-2"
+                      >
+                        <Minus
+                          size={24}
+                          color={Colors.red}
+                        />
+                      </Button>
+                      <Txt twcn="font-medium">5</Txt>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(true, 5)}
+                        twcn="p-2"
+                      >
+                        <Plus
+                          size={24}
+                          color={Colors.green}
+                        />
+                      </Button>
+                    </View>
                   </View>
-                </View>
-                <KeyboardToolbar.Done button={CustomDoneButton} />
-              </View>
-            )}
-          </KeyboardToolbar.Content>
-        </KeyboardToolbar>
-      </View>
+                  <KeyboardToolbar.Done button={CustomDoneButton} />
+                </GlassView>
+              ) : (
+                <GlassView
+                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
+                >
+                  <View style={tw`flex-row items-center gap-4`}>
+                    <View style={tw`flex-row items-center gap-2`}>
+                      <KeyboardToolbar.Prev button={CustomLeftButton} />
+                      <KeyboardToolbar.Next button={CustomRightButton} />
+                    </View>
+                    <View style={tw`flex-row items-center gap-1`}>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(false)}
+                        twcn="p-2"
+                      >
+                        <Minus
+                          size={24}
+                          color={Colors.red}
+                        />
+                      </Button>
+                      <Txt twcn="font-medium">
+                        {focusedInput &&
+                        (focusedInput.field === 'rpe' ||
+                          focusedInput.field === 'rir')
+                          ? '0.5'
+                          : '1'}
+                      </Txt>
+                      <Button
+                        onPress={() => adjustFocusedInputValue(true)}
+                        twcn="p-2"
+                      >
+                        <Plus
+                          size={24}
+                          color={Colors.green}
+                        />
+                      </Button>
+                    </View>
+                  </View>
+                  <KeyboardToolbar.Done button={CustomDoneButton} />
+                </GlassView>
+              )}
+            </KeyboardToolbar.Content>
+          </KeyboardToolbar>
+        </Animated.View>
+      )}
     </>
   )
 }

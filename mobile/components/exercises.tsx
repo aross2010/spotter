@@ -166,7 +166,7 @@ const Exercises = () => {
     <View>
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt twcn="font-semibold text-base">Exercises</Txt>
+          <Txt twcn="font-semibold text-lg">Exercises</Txt>
           <Button onPress={() => setIsHelpModalOpen(true)}>
             <HelpCircle
               size={16}
@@ -234,16 +234,10 @@ const Exercises = () => {
         </Button>
       </View>
       <MyModal
-        isOpen={isOptionsModalOpen}
-        setIsOpen={setIsOptionsModalOpen}
-      >
-        <ExerciseOptions closeModal={() => setIsOptionsModalOpen(false)} />
-      </MyModal>
-      <MyModal
         isOpen={isHelpModalOpen}
         setIsOpen={setIsHelpModalOpen}
       >
-        <Txt twcn="font-medium mb-4">Exercises Guide</Txt>
+        <Txt twcn="font-semibold text-base mb-2">Exercises Guide</Txt>
         <View style={tw`gap-4`}>{renderedGuide}</View>
       </MyModal>
     </View>

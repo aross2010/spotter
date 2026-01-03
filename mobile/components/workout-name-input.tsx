@@ -15,9 +15,9 @@ const WorkoutNameInput = () => {
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
     []
   )
-  const [localValue, setLocalValue] = useState('')
   const { workoutNames, setWorkoutData, workoutData, setFocusedInput } =
     useWorkoutForm()
+  const [localValue, setLocalValue] = useState(workoutData.name)
 
   useEffect(() => {
     setWorkoutNamesResults(workoutNames)
@@ -39,7 +39,7 @@ const WorkoutNameInput = () => {
       <Button
         key={name}
         onPress={() => handleSelectWorkoutName(name)}
-        style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+        style={tw`flex-row items-center justify-between p-4 w-full bg-transparent ${
           index === workoutNamesResults.length - 1
             ? ''
             : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
@@ -76,14 +76,16 @@ const WorkoutNameInput = () => {
   )
 
   return (
-    <View style={tw`relative`}>
+    <View
+      style={tw`flex-1 shrink border-b border-light-grayBorder dark:border-dark-grayBorder`}
+    >
       <Input
         editable
         value={localValue}
         onPress={() => {
           setIsWorkoutNameSelectorOpen(!isWorkoutNameSelectorOpen)
         }}
-        onChange={handleTextChange}
+        onChange={(e) => handleTextChange(e)}
         onBlur={(e) => {
           setWorkoutData((prev) => ({ ...prev, name: localValue }))
           setIsWorkoutNameSelectorOpen(false)
@@ -92,7 +94,7 @@ const WorkoutNameInput = () => {
         placeholder="Workout Name (e.g. Legs, Push, Pull)"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="text-light-text border-b border-light-grayBorder dark:border-dark-grayBorder dark:text-dark-text font-medium text-lg w-full h-12"
+        twcnInput="font-semibold text-lg h-12 leading-6 pb-1"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types
@@ -112,7 +114,7 @@ const WorkoutNameInput = () => {
       {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (
         <GlassView
           style={[
-            tw`absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
+            tw`absolute top-full left-0 max-h-37 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
           ]}
         >
           {renderedWorkoutNames}

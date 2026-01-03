@@ -18,11 +18,12 @@ type SafeViewProps = {
   scroll?: boolean
   keyboardVerticalOffset?: number
   keyboardShouldPersistTaps?: 'never' | 'always' | 'handled'
+  ignoreInset?: boolean
 } & ViewProps
 
 const SafeView = ({
   keyboardAvoiding,
-  bottomOffset = 50,
+  bottomOffset = 150,
   extraKeyboardSpace = 0,
   children,
   hasTabBar = false,
@@ -31,6 +32,7 @@ const SafeView = ({
   scroll = true,
   keyboardVerticalOffset = 115,
   keyboardShouldPersistTaps = 'handled',
+  ignoreInset = false,
   ...rest
 }: SafeViewProps) => {
   const insets = useSafeAreaInsets()
@@ -40,10 +42,10 @@ const SafeView = ({
   if (keyboardAvoiding && scroll) {
     return (
       <KeyboardAwareScrollView
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior={ignoreInset ? 'never' : 'automatic'}
         keyboardShouldPersistTaps="handled"
         style={tw`flex-1 bg-light-background dark:bg-dark-background`}
-        contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
+        contentContainerStyle={tw`${ignoreInset ? 'mt-40' : ''} ${paddingClasses} ${twcnContentView ?? ''}`}
         bottomOffset={bottomOffset}
         extraKeyboardSpace={extraKeyboardSpace}
       >

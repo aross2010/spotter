@@ -97,6 +97,8 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
       return JSON.parse(cached)
     }
 
+    console.log('No cache found, querying OpenAI for exercise:', exerciseName)
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,

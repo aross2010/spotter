@@ -6,6 +6,7 @@ import {
   TextInputProps,
   TextInput,
   TouchableWithoutFeedback,
+  Modal,
 } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
 import { useWorkoutForm } from '../context/workout-form-context'
@@ -27,7 +28,6 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
-import { OverKeyboardView } from 'react-native-keyboard-controller'
 import Animated, {
   FadeIn,
   FadeOut,
@@ -92,12 +92,20 @@ const ExerciseInput = ({
     handleExerciseNumberSubmitRef,
   } = useWorkoutForm()
   const { preferences } = useUserStore()
-  const [isSynced, setIsSynced] = useState(
-    preferences?.unilateralLogging === 'sync'
-  )
   const { exercises } = workoutData
   const { theme, colorScheme } = useTheme()
   const exercise = exercises[exerciseNumber - 1]
+  const [isSynced, setIsSynced] = useState(
+    exercise?.isSynced ?? preferences?.unilateralLogging === 'sync'
+  )
+
+  // Sync local isSynced state with exercise data when exercise changes
+  useEffect(() => {
+    if (exercise?.isSynced !== undefined) {
+      setIsSynced(exercise.isSynced)
+    }
+  }, [exercise?.isSynced])
+
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
   const intensityMetric = preferences?.intensityMetric || 'rir'
@@ -117,7 +125,7 @@ const ExerciseInput = ({
       const timeoutId = setTimeout(() => {
         exerciseNameInputRef.current?.focus()
         setNewlyAddedExerciseNumber(null) // Clear the flag after focusing
-      }, 10)
+      }, 50)
       return () => clearTimeout(timeoutId)
     }
   }, [newlyAddedExerciseNumber, exerciseNumber, setNewlyAddedExerciseNumber])
@@ -570,20 +578,25 @@ const ExerciseInput = ({
     const updatedSets = [...(updatedExercises[exerciseNumber - 1]?.sets || [])]
 
     let fieldToUpdate: string = fieldValue
+    let leftFieldToUpdate: string | undefined
     let rightFieldToUpdate: string | undefined
 
     if (isUnilateral && isLeftSide !== undefined) {
       if (fieldValue === 'reps') {
         fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
+        leftFieldToUpdate = 'leftReps'
         rightFieldToUpdate = 'rightReps'
       } else if (fieldValue === 'partials') {
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
+        leftFieldToUpdate = 'leftPartialReps'
         rightFieldToUpdate = 'rightPartialReps'
       } else if (fieldValue === 'rpe') {
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+        leftFieldToUpdate = 'leftRpe'
         rightFieldToUpdate = 'rightRpe'
       } else if (fieldValue === 'rir') {
         fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+        leftFieldToUpdate = 'leftRir'
         rightFieldToUpdate = 'rightRir'
       }
     } else {
@@ -594,29 +607,43 @@ const ExerciseInput = ({
     const finalValueToSet = isNaN(finalValue as number) ? undefined : finalValue
 
     // Update both left and right at the same time for sync mode
-    if (isUnilateral && isSynced && isLeftSide === true && rightFieldToUpdate) {
+    if (isUnilateral && isSynced && leftFieldToUpdate && rightFieldToUpdate) {
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        [fieldToUpdate]: finalValueToSet,
+        [leftFieldToUpdate]: finalValueToSet,
         [rightFieldToUpdate]: finalValueToSet,
       } as any
 
-      // Immediately update the right side input's displayed text using ref
+      // Immediately update the opposite side input's displayed text using ref
       const currentSet = updatedSets[setIndex]
       const setId = currentSet.id
       const displayText =
         finalValueToSet === undefined ? '' : finalValueToSet.toString()
 
-      // Update the appropriate right-side input ref
-      if (fieldValue === 'reps') {
-        const rightRef = rightRepsInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
-      } else if (fieldValue === 'partials') {
-        const rightRef = rightPartialsInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
-      } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
-        const rightRef = rightRpeInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
+      if (isLeftSide === true) {
+        // Left side changed, update right side input
+        if (fieldValue === 'reps') {
+          const rightRef = rightRepsInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'partials') {
+          const rightRef = rightPartialsInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+          const rightRef = rightRpeInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        }
+      } else if (isLeftSide === false) {
+        // Right side changed, update left side input
+        if (fieldValue === 'reps') {
+          const leftRef = leftRepsInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'partials') {
+          const leftRef = leftPartialsInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+          const leftRef = leftRpeInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        }
       }
     } else {
       updatedSets[setIndex] = {
@@ -684,7 +711,23 @@ const ExerciseInput = ({
   }
 
   const handleToggleSync = () => {
-    setIsSynced(!isSynced)
+    const newSyncState = !isSynced
+    setIsSynced(newSyncState)
+
+    // Update the exercise's isSynced property in workout data
+    setWorkoutData((prev) => {
+      const updatedExercises = [...prev.exercises]
+      if (exerciseNumber && updatedExercises[exerciseNumber - 1]) {
+        updatedExercises[exerciseNumber - 1] = {
+          ...updatedExercises[exerciseNumber - 1],
+          isSynced: newSyncState,
+        }
+      }
+      return {
+        ...prev,
+        exercises: updatedExercises,
+      }
+    })
   }
 
   const buttons = [
@@ -846,7 +889,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={() => handleSelectExistingExercise(id, name, used)}
-          style={tw`flex-row items-center justify-between p-3 w-full ${
+          style={tw`flex-row items-center justify-between p-4 w-full ${
             index === exerciseNameResults.length - 1
               ? ''
               : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
@@ -1526,6 +1569,7 @@ const ExerciseInput = ({
               autoComplete="off"
               autoCorrect={false}
               autoCapitalize="words"
+              twcnInput="pb-1"
               {...rest}
             />
             {isExerciseNameSelectorOpen &&
@@ -1537,7 +1581,7 @@ const ExerciseInput = ({
                   <ScrollView
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                    style={tw`max-h-44 bg-transparent`}
+                    style={tw`max-h-37 bg-transparent`}
                   >
                     {renderedExerciseNames}
                   </ScrollView>
@@ -1559,60 +1603,58 @@ const ExerciseInput = ({
     </View>
   )
 
-  console.log(
-    'date',
-    workoutData.date,
-    typeof workoutData.date,
-    workoutData.date.getDate()
-  )
-
   return (
     <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
-      {isExerciseInfoOpen && (
-        <OverKeyboardView visible={isExerciseInfoOpen}>
-          <Animated.View
+      <Modal
+        visible={isExerciseInfoOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setIsExerciseInfoOpen(false)
+          if (lastFocusedInputRef.current) {
+            requestAnimationFrame(() => {
+              lastFocusedInputRef.current?.focus()
+            })
+          }
+        }}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setIsExerciseInfoOpen(false)
+            if (lastFocusedInputRef.current) {
+              requestAnimationFrame(() => {
+                lastFocusedInputRef.current?.focus()
+              })
+            }
+          }}
+        >
+          <View
             style={[
               tw`flex-1 justify-end`,
               { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
             ]}
-            entering={FadeIn.duration(200)}
-            exiting={FadeOut.duration(200)}
           >
-            <TouchableWithoutFeedback
-              onPress={() => {
-                setIsExerciseInfoOpen(false)
-                // Re-focus immediately
-                if (lastFocusedInputRef.current) {
-                  lastFocusedInputRef.current.focus()
-                }
-              }}
-            >
-              <View style={tw`flex-1 justify-end`}>
-                <TouchableWithoutFeedback onPress={(e) => {}}>
-                  <Animated.View
-                    entering={SlideInDown.duration(300)}
-                    exiting={SlideOutDown.duration(250)}
-                  >
-                    <GlassView
-                      style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
-                    >
-                      <ExerciseMiniHistory
-                        id={exercise.id as string}
-                        exerciseIndex={exerciseNumber - 1}
-                        workoutDate={workoutData.date
-                          .toISOString()
-                          .slice(0, 10)}
-                      />
-                    </GlassView>
-                  </Animated.View>
-                </TouchableWithoutFeedback>
-              </View>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <Animated.View
+                entering={SlideInDown.duration(300)}
+                exiting={SlideOutDown.duration(250)}
+              >
+                <GlassView
+                  style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
+                >
+                  <ExerciseMiniHistory
+                    id={exercise.id as string}
+                    exerciseIndex={exerciseNumber - 1}
+                    workoutDate={workoutData.date.toISOString().slice(0, 10)}
+                  />
+                </GlassView>
+              </Animated.View>
             </TouchableWithoutFeedback>
-          </Animated.View>
-        </OverKeyboardView>
-      )}
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   )
 }

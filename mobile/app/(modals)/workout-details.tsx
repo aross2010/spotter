@@ -19,6 +19,7 @@ import { Workout } from '../../utils/types'
 import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import tw from '../../tw'
+import { HeaderBackButton } from '@react-navigation/elements'
 import { Camera, Check, Frame, Pencil, Share, Tag } from 'lucide-react-native'
 import { formatDate } from '../../functions/formatted-date'
 import Spinner from '../../components/activity-indicator'
@@ -127,21 +128,31 @@ const WorkoutDetails = () => {
           )
         : undefined,
       headerLeft:
-        from != 'workout-form' &&
-        (() => (
-          <Button
-            onPress={() => router.back()}
-            hitSlop={12}
-            accessibilityLabel="close workout details"
-            twcn="w-9 flex-row items-center justify-center h-full"
-          >
-            <SFIcon
-              name="xmark"
-              size={26}
-              color={theme.text}
-            />
-          </Button>
-        )),
+        from === 'workout-details' || from === 'exercise'
+          ? () => (
+              <View style={tw`flex-row items-center w-9`}>
+                <HeaderBackButton
+                  displayMode="minimal"
+                  tintColor={theme.text}
+                  onPress={() => router.back()}
+                  style={tw`w-9 h-full`}
+                />
+              </View>
+            )
+          : () => (
+              <Button
+                onPress={() => router.back()}
+                hitSlop={12}
+                accessibilityLabel="close workout form"
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="xmark"
+                  size={26}
+                  color={theme.text}
+                />
+              </Button>
+            ),
     })
   }, [navigation, workout?.name])
 

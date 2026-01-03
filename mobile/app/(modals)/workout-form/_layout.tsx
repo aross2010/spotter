@@ -16,9 +16,10 @@ const WorkoutFormLayout = () => {
         <Stack.Screen
           name="index"
           options={{
-            title: 'New Workout',
+            title: 'Workout',
             headerLargeTitle: true,
             headerTransparent: true,
+            headerShadowVisible: false,
             headerTitleStyle: {
               color: theme.text,
               fontWeight: 600,
@@ -47,13 +48,35 @@ const WorkoutFormLayout = () => {
         <Stack.Screen
           name="supersets"
           options={{
-            headerTitle: 'Super Sets',
+            title: 'Supersets',
+            headerLargeTitle: true,
+            headerTransparent: true,
+            headerTitleStyle: {
+              color: theme.text,
+              fontWeight: 600,
+            },
+            headerLargeTitleStyle: {
+              color: theme.text,
+              fontWeight: '600',
+            },
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <Stack.Screen
           name="dropsets"
           options={{
-            headerTitle: 'Create Drop Set',
+            title: 'Dropsets',
+            headerLargeTitle: true,
+            headerTransparent: true,
+            headerTitleStyle: {
+              color: theme.text,
+              fontWeight: 600,
+            },
+            headerLargeTitleStyle: {
+              color: theme.text,
+              fontWeight: '600',
+            },
+            headerBackButtonDisplayMode: 'minimal',
           }}
         />
         <Stack.Screen

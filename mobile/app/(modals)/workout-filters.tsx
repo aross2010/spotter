@@ -160,7 +160,10 @@ const WorkoutFilters = () => {
               />
             </Button>
             {isLoading && changesExist ? (
-              <Spinner fullScreen={false} />
+              <Spinner
+                twcn="w-9"
+                fullScreen={false}
+              />
             ) : (
               <Button
                 onPress={changesExist ? handleApplyFilters : undefined}

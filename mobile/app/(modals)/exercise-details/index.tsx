@@ -382,11 +382,74 @@ const ExerciseDetails = () => {
           if (entry.date === previousDate) needsDate = false
           previousDate = entry.date
 
-          // For unilateral exercises, determine if this is L or R
           const isUnilateral = exercise.isUnilateral
-          const setLabel = isUnilateral
-            ? `${set.setNumber}${index % 2 === 0 ? 'L' : 'R'}`
-            : set.setNumber.toString()
+
+          // For unilateral exercises, check if we should skip this set (if it's a right set that matches left)
+          if (isUnilateral && index % 2 === 1) {
+            const leftSet = entry.sets[index - 1]
+            const rightSet = set
+
+            // Check if left and right sets have matching values
+            const sameWeight = leftSet.weight === rightSet.weight
+            const sameReps = leftSet.reps === rightSet.reps
+            const samePartials =
+              (leftSet.partials || 0) === (rightSet.partials || 0)
+            const sameIntensity =
+              (leftSet.intensity || 0) === (rightSet.intensity || 0)
+
+            if (sameWeight && sameReps && samePartials && sameIntensity) {
+              return null // Skip right set when it matches left
+            }
+          }
+
+          // Determine set label and values
+          let setLabel: string
+          let repsValue: string | number
+          let partialsValue: string | number
+          let intensityValue: string | number
+
+          if (isUnilateral) {
+            if (index % 2 === 0 && index + 1 < entry.sets.length) {
+              const leftSet = set
+              const rightSet = entry.sets[index + 1]
+
+              const sameWeight = leftSet.weight === rightSet.weight
+              const sameReps = leftSet.reps === rightSet.reps
+              const samePartials =
+                (leftSet.partials || 0) === (rightSet.partials || 0)
+              const sameIntensity =
+                (leftSet.intensity || 0) === (rightSet.intensity || 0)
+
+              if (sameWeight && sameReps && samePartials && sameIntensity) {
+                // Show combined L/R
+                setLabel = `${set.setNumber} L/R`
+                repsValue = set.reps
+                partialsValue = set.partials || ' '
+                intensityValue =
+                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+              } else {
+                // Show L
+                setLabel = `${set.setNumber}L`
+                repsValue = set.reps
+                partialsValue = set.partials || ' '
+                intensityValue =
+                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+              }
+            } else {
+              // This is a right set that doesn't match left
+              setLabel = `${set.setNumber}R`
+              repsValue = set.reps
+              partialsValue = set.partials || ' '
+              intensityValue =
+                set.intensity || set.intensity === 0 ? set.intensity : ' '
+            }
+          } else {
+            setLabel = set.setNumber.toString()
+            repsValue = set.reps
+            partialsValue = set.partials || ' '
+            intensityValue =
+              set.intensity || set.intensity === 0 ? set.intensity : ' '
+          }
 
           return (
             <View
@@ -402,13 +465,9 @@ const ExerciseDetails = () => {
               <Txt twcn="text-xs flex-1 text-center">
                 {weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight}
               </Txt>
-              <Txt twcn="text-xs flex-1 text-center">{set.reps}</Txt>
-              <Txt twcn="text-xs flex-1 text-center">
-                {set.partials ? set.partials : ' '}
-              </Txt>
-              <Txt twcn="text-xs flex-1 text-center">
-                {set.intensity || set.intensity === 0 ? set.intensity : ' '}
-              </Txt>
+              <Txt twcn="text-xs flex-1 text-center">{repsValue}</Txt>
+              <Txt twcn="text-xs flex-1 text-center">{partialsValue}</Txt>
+              <Txt twcn="text-xs flex-1 text-center">{intensityValue}</Txt>
             </View>
           )
         })}

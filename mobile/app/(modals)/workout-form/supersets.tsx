@@ -2,7 +2,7 @@ import { StyleSheet, View, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { useNavigation } from 'expo-router'
+import { router, useNavigation } from 'expo-router'
 import Button from '../../../components/button'
 import { useWorkoutForm } from '../../../context/workout-form-context'
 import { SetGroupingType } from '../../../utils/types'
@@ -11,6 +11,9 @@ import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
 import { Ellipsis, Trash } from 'lucide-react-native'
 import MyModal from '../../../components/modal'
+import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
+import SFIcon from '../../../components/sf-icon'
+import Colors from '../../../constants/colors'
 
 const Supersets = () => {
   const navigation = useNavigation()
@@ -108,11 +111,16 @@ const Supersets = () => {
         <Button
           onPress={createSuperSet}
           hitSlop={12}
-          accessibilityLabel="create superset"
-          twcnText="font-semibold text-primary dark:text-primary"
-          text="Create"
+          accessibilityLabel="Create Superset"
           disabled={selectedSets.size < 2}
-        />
+          twcn="w-9 flex-row items-center justify-center h-full"
+        >
+          <SFIcon
+            name="checkmark"
+            size={26}
+            color={selectedSets.size >= 2 ? Colors.primary : theme.grayText}
+          />
+        </Button>
       ),
     })
   }, [navigation, workoutData.name, selectedSets])
@@ -299,12 +307,12 @@ const Supersets = () => {
     return (
       <View
         key={exerciseIndex}
-        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayBorder dark:border-dark-grayBorder`}
+        style={tw`flex-row flex-wrap gap-4 px-4 py-2`}
       >
-        <Txt twcn="w-full text-sm">
-          {exerciseIndex + 1}. {capString(ex.name, 30)}
+        <Txt twcn="w-full text-sm text-base font-semibold">
+          {exerciseIndex + 1} — {capString(ex.name, 30)}
         </Txt>
-        <View style={tw`w-full flex-row flex-wrap items-center mb-2 gap-2`}>
+        <View style={tw`w-full flex-row flex-wrap items-center mb-4 gap-2`}>
           {ex.sets.map((set: any, setIndex: number) => {
             const hasRepsOrWeight =
               set.reps ||
@@ -362,7 +370,7 @@ const Supersets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative px-3 py-1 rounded-lg border rounded-lg border ${isSelected ? 'bg-primary/10 dark:bg-primary/10 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder  dark:bg-dark-grayPrimary'}`}
+                twcn={`relative px-3 py-1.5 rounded-full border ${isSelected ? 'bg-primary/25 dark:bg-primary/25 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder  dark:bg-dark-grayPrimary'}`}
                 disabled={isSetDisabled}
               >
                 <Txt
@@ -415,26 +423,58 @@ const Supersets = () => {
   const exerciseGroupings = getExerciseGroupings()
 
   const renderedSuperSets = Array.from(exerciseGroupings.entries()).map(
-    ([exerciseCombo, supersets]) => {
+    ([exerciseCombo, supersets], groupIndex) => {
+      const handleDeleteSuperset = () => {
+        const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
+          if (grouping.groupingType !== 'superset') return true
+
+          const exerciseData = grouping.groupSets
+            .map((set) => ({
+              name: workoutData.exercises[set.exerciseNumber - 1]?.name,
+              exerciseNumber: set.exerciseNumber,
+            }))
+            .filter((ex) => ex.name)
+            .sort((a, b) => a.exerciseNumber - b.exerciseNumber)
+
+          const names = exerciseData.map((ex) => ex.name).join(' → ')
+
+          return names !== exerciseCombo
+        })
+
+        setWorkoutData({
+          ...workoutData,
+          setGroupings: updatedGroupings,
+        })
+      }
+
       return (
         <View
           key={exerciseCombo}
-          style={tw`bg-white dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl p-4`}
+          style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl p-4`}
         >
           <View style={tw`flex-row items-start justify-between gap-4 mb-4`}>
-            <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">
+            <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text font-semibold">
               {exerciseCombo}
             </Txt>
-            <Button
-              onPress={() =>
-                openSupersetOptions(supersets[0].supersetIndex - 1)
-              }
-            >
-              <Ellipsis
-                size={20}
-                color={theme.grayText}
-              />
-            </Button>
+            <Host style={{ width: 26, height: 26 }}>
+              <ContextMenu>
+                <ContextMenu.Items>
+                  <SwiftButton
+                    systemImage="trash"
+                    onPress={handleDeleteSuperset}
+                  >
+                    Delete Superset
+                  </SwiftButton>
+                </ContextMenu.Items>
+                <ContextMenu.Trigger>
+                  <SFIcon
+                    name="ellipsis"
+                    color={theme.text}
+                    size={26}
+                  />
+                </ContextMenu.Trigger>
+              </ContextMenu>
+            </Host>
           </View>
 
           {supersets.map((superset, index) => (
@@ -472,16 +512,11 @@ const Supersets = () => {
   return (
     <SafeView twcnContentView="px-0">
       {workoutData.setGroupings.length > 0 && (
-        <View style={tw`mb-4 w-full px-4`}>
-          <Txt twcn="font-medium mb-4">Supersets</Txt>
+        <View style={tw`mb-6 w-full px-4`}>
           <View style={tw`gap-2`}>{renderedSuperSets}</View>
         </View>
       )}
-      <View style={tw`w-full flex-1`}>
-        <Txt twcn="font-medium px-4">Exercises</Txt>
-
-        {renderedExercises}
-      </View>
+      <View style={tw`w-full flex-1`}>{renderedExercises}</View>
       <MyModal
         isOpen={isSupersetOptionsOpen}
         setIsOpen={setIsSupersetOptionsOpen}

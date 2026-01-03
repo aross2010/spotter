@@ -114,6 +114,7 @@ export type ExerciseDetailsMini = {
 type ExerciseInForm = {
   name: string
   isUnilateral: boolean
+  isSynced?: boolean // for unilateral exercises: whether left/right are synced
   existing?: boolean // whether this exercise already exists in the user's exercise names
   id?: string // existing exercise ID
   sets: Set[]

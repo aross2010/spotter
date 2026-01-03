@@ -8,6 +8,10 @@ import { BASE_URL } from '../../../constants/auth'
 import { useUserStore } from '../../../stores/user-store'
 import { useNavigation } from 'expo-router'
 import tw from '../../../tw'
+import SFIcon from '../../../components/sf-icon'
+import Spinner from '../../../components/activity-indicator'
+import useTheme from '../../hooks/theme'
+import Colors from '../../../constants/colors'
 
 const profileFields = [
   {
@@ -43,6 +47,7 @@ const Profile = () => {
   })
   const [loading, setLoading] = useState(false)
   const [canSubmit, setCanSubmit] = useState(false)
+  const { theme } = useTheme()
   const navigation = useNavigation()
   useEffect(() => {
     const hasChanges =
@@ -57,13 +62,30 @@ const Profile = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <Button
-            twcnText="text-primary font-semibold dark:text-primary"
-            onPress={updateProfile}
-            loading={loading}
-            disabled={!canSubmit || loading}
-            text="Save"
-          />
+          <View style={tw`flex-row items-center`}>
+            {loading ? (
+              <Spinner
+                twcn="w-9"
+                fullScreen={false}
+              />
+            ) : (
+              <Button
+                onPress={updateProfile}
+                hitSlop={12}
+                accessibilityLabel="Save Profile Changes"
+                disabled={!canSubmit || loading}
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="checkmark"
+                  size={26}
+                  color={
+                    !canSubmit || loading ? theme.grayText : Colors.primary
+                  }
+                />
+              </Button>
+            )}
+          </View>
         )
       },
     })
@@ -126,7 +148,11 @@ const Profile = () => {
   })
 
   return (
-    <SafeView scroll={false}>
+    <SafeView
+      keyboardAvoiding
+      bottomOffset={200}
+      scroll={false}
+    >
       <View style={tw`gap-6`}>{renderedFields}</View>
     </SafeView>
   )
