@@ -1,7 +1,14 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  Keyboard,
+  Alert,
+} from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Txt from './text'
-import { formatDate } from '../functions/formatted-date'
+import { formatDate, toLocalDateString } from '../functions/formatted-date'
 import {
   Modal,
   Platform,
@@ -14,34 +21,130 @@ import Button from './button'
 import SFIcon from './sf-icon'
 import Colors from '../constants/colors'
 import SafeView from './safe-view'
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated'
+import { GlassView } from 'expo-glass-effect'
+import { useUserStore } from '../stores/user-store'
+import Spinner from './activity-indicator'
+import { useAuth } from '../context/auth-context'
+import { BASE_URL } from '../constants/auth'
 
-const WeightEntryForm = () => {
-  const [data, setData] = useState({
-    weight: 1,
-    date: new Date(), // disable future dates
-  })
-  const [weightText, setWeightText] = useState('1.0')
+type PreviousWeightEntry = {
+  weight: number
+  date: string
+  difference?: number
+}
+
+type WeightEntryFormProps = {
+  closeModal?: () => void
+}
+
+const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
+  const [previousEntry, setPreviousEntry] =
+    useState<PreviousWeightEntry | null>(null)
+  const [weightText, setWeightText] = useState('200.0')
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const { fetchWithAuth } = useAuth()
+  const [isSaving, setIsSaving] = useState(false)
+  const { preferences, user } = useUserStore()
+  const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
+  const [data, setData] = useState({
+    weight: 200,
+    date: new Date(), // disable future dates
+    metric: weightUnit,
+  })
+
+  const identicalDate =
+    previousEntry?.date === data.date.toISOString().split('T')[0]
 
   const getWeightData = async () => {
+    try {
+      const response = await fetchWithAuth(
+        `${BASE_URL}/api/weightEntries/previous/${user?.id}?unit=${weightUnit}&date=${toLocalDateString(data.date)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const previousEntry = (await response.json()) as PreviousWeightEntry
+      setPreviousEntry(previousEntry)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setLoading(false)
+    }
     // fetch weight data
     // { previousEntry: { weight: number, date: string, difference?: number } }
     // if previous entry date is today, tell user it will overwrite existing entry
   }
 
+  const handleSubmitEntry = async () => {
+    setIsSaving(true)
+    try {
+      await fetchWithAuth(`${BASE_URL}/api/weightEntries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          weight: data.weight,
+          date: toLocalDateString(data.date),
+          metric: data.metric,
+        }),
+      })
+      setTimeout(() => {
+        closeModal?.()
+      }, 100)
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    getWeightData()
+  }, [data.date])
+
   useEffect(() => {
     getWeightData()
   }, [])
 
+  if (loading) return <Spinner twcn="min-h-44" />
+
   return (
     <>
       <View>
-        <Txt twcn="text-xl font-semibold mb-1">Log Weight</Txt>
-        <Button onPress={() => setIsDatePickerOpen(true)}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide">
-            {formatDate(data.date)}
-          </Txt>
-        </Button>
+        <View style={tw`flex-row justify-between items-center`}>
+          <View>
+            <Txt twcn="text-xl font-semibold mb-1">Log Weight</Txt>
+            <Button onPress={() => setIsDatePickerOpen(true)}>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide">
+                {formatDate(data.date)}
+              </Txt>
+            </Button>
+          </View>
+
+          <GlassView style={tw`rounded-full px-2 flex-row items-center h-full`}>
+            {isSaving ? (
+              <Spinner
+                twcn="w-8"
+                fullScreen={false}
+              />
+            ) : (
+              <Button onPress={handleSubmitEntry}>
+                <SFIcon
+                  name="checkmark"
+                  size={32}
+                  color={Colors.primary}
+                />
+              </Button>
+            )}
+          </GlassView>
+        </View>
         <View style={tw`mt-12 flex-row gap-8 self-center items-center`}>
           <Button
             onPress={() => {
@@ -62,7 +165,8 @@ const WeightEntryForm = () => {
               color={Colors.red}
             />
           </Button>
-          <TextInput
+          <BottomSheetTextInput
+            autoFocus={true}
             style={tw`text-4xl font-black text-center text-light-text dark:text-dark-text min-w-32`}
             keyboardType="decimal-pad"
             value={weightText}
@@ -95,6 +199,7 @@ const WeightEntryForm = () => {
             }}
             selectTextOnFocus
             maxLength={5}
+            editable={!isSaving}
           />
           <Button
             onPress={() => {
@@ -116,6 +221,32 @@ const WeightEntryForm = () => {
             />
           </Button>
         </View>
+        <View style={tw`mt-6`}>
+          {previousEntry && (
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+              Previous: {previousEntry.weight} {weightUnit},{' '}
+              {formatDate(previousEntry.date)}
+              {previousEntry.difference !== undefined &&
+                previousEntry.difference !== null && (
+                  <Txt
+                    twcn={`text-xs ${
+                      previousEntry.difference < 0
+                        ? 'text-red'
+                        : previousEntry.difference > 0
+                          ? 'text-green'
+                          : 'text-light-grayText dark:text-dark-grayText'
+                    }`}
+                  >
+                    {' '}
+                    ({previousEntry.difference >= 0 ? '+' : ''}
+                    {previousEntry.difference} {weightUnit})
+                  </Txt>
+                )}
+              {identicalDate &&
+                '. This entry will overwrite your existing entry for this date.'}
+            </Txt>
+          )}
+        </View>
       </View>
       <Modal
         visible={isDatePickerOpen}
@@ -133,6 +264,7 @@ const WeightEntryForm = () => {
               <DateTimePicker
                 value={data.date}
                 mode="date"
+                accentColor={Colors.primary}
                 maximumDate={new Date()}
                 display={Platform.OS === 'ios' ? 'inline' : 'default'}
                 onChange={(event, selectedDate) => {
@@ -158,7 +290,7 @@ const WeightEntryForm = () => {
                 <Button
                   text="Done"
                   onPress={() => setIsDatePickerOpen(false)}
-                  twcn="mt-2 bg-primary rounded-xl p-3"
+                  twcn="mt-2 bg-primary rounded-full p-3"
                   twcnText="text-center font-semibold text-dark-text"
                 />
               )}

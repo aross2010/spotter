@@ -422,9 +422,11 @@ const Home = () => {
         backdropComponent={backDrop}
       >
         <BottomSheetView
-          style={tw`bg-light-background dark:bg-dark-background p-4 pb-24`}
+          style={tw`bg-light-background dark:bg-dark-background p-4 relative`}
         >
-          <WeightEntryForm />
+          <WeightEntryForm
+            closeModal={() => weightEntryRef.current?.dismiss()}
+          />
         </BottomSheetView>
       </BottomSheetModal>
     </>

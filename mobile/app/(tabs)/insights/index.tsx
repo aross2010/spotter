@@ -565,7 +565,7 @@ const Insights = () => {
                   <Button
                     text="Done"
                     onPress={() => setIsDatePickerOpen(false)}
-                    twcn="mt-2 bg-primary rounded-xl p-3"
+                    twcn="mt-2 bg-primary rounded-full p-3"
                     twcnText="text-center font-semibold text-dark-text"
                   />
                 )}

@@ -335,6 +335,7 @@ const NotebookEntryForm = () => {
                 style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
               >
                 <DateTimePicker
+                  accentColor={Colors.primary}
                   value={notebookFormData.date}
                   mode="date"
                   display={Platform.OS === 'ios' ? 'inline' : 'default'}
@@ -355,7 +356,7 @@ const NotebookEntryForm = () => {
                   <Button
                     text="Done"
                     onPress={() => setIsDatePickerOpen(false)}
-                    twcn="mt-2 bg-primary rounded-xl p-3"
+                    twcn="mt-2 bg-primary rounded-full p-3"
                     twcnText="text-center font-semibold text-dark-text"
                   />
                 )}

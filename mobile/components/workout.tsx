@@ -15,6 +15,8 @@ import { router } from 'expo-router'
 import { useHomeDataStore } from '../stores/workout-store'
 import { useExerciseTabStore } from '../stores/exercise-store'
 import SFIcon from './sf-icon'
+import TagView from './tag'
+import { useUserStore } from '../stores/user-store'
 
 const WorkoutView = ({
   workout,
@@ -32,6 +34,7 @@ const WorkoutView = ({
   const { date, tags, name, location, exercises, id } = workout
   const { triggerRefresh } = useHomeDataStore()
   const { triggerRefresh: triggerExerciseTabRefresh } = useExerciseTabStore()
+  const { user } = useUserStore()
 
   const isTagFiltered = (tag: string) =>
     filters.tags.some((t) => t === tag) || false
@@ -47,15 +50,14 @@ const WorkoutView = ({
     triggerExerciseTabRefresh()
   }
 
-  const renderedTags = tags.map((tag) => {
+  const renderedTags = tags.map((tag, index) => {
     const isFiltered = isTagFiltered(tag)
     return (
-      <View
-        key={tag}
-        style={tw`${isFiltered ? 'bg-primary/10 px-2 py-1 rounded-full' : ''}`}
-      >
-        <Txt twcn="text-xs text-primary">#{tag}</Txt>
-      </View>
+      <TagView
+        key={index}
+        tag={{ id: index.toString(), name: tag, userId: user?.id ?? '1' }}
+        resultTag={isFiltered}
+      />
     )
   })
 
@@ -184,7 +186,7 @@ const WorkoutView = ({
             <Tag
               color={Colors.primary}
               strokeWidth={1.5}
-              size={12}
+              size={16}
             />
             {renderedTags}
           </View>

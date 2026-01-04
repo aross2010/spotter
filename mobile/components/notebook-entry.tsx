@@ -165,7 +165,7 @@ const NotebookEntryView = ({
             <SFIcon
               name="tag"
               color={Colors.primary}
-              size={18}
+              size={16}
             />
             {renderedTags}
           </View>
