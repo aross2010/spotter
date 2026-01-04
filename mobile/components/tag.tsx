@@ -20,7 +20,7 @@ const TagView = ({ tag, resultTag, canDelete }: TagProps) => {
       key={id}
       style={tw`
         px-2 py-0.5
-        rounded-full
+        rounded-full 
         bg-primary/10 dark:bg-primary/20
         ${resultTag ? 'bg-primary/20 dark:bg-primary/30' : ''} flex-row items-center gap-2
       `}

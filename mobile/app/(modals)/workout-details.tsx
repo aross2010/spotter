@@ -35,6 +35,7 @@ import { captureRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
 import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
+import TagView from '../../components/tag'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -440,13 +441,12 @@ const WorkoutDetails = () => {
     workout &&
     workout.tags.map((tag) => {
       const { id, name } = tag
+      console.log('TAG:', tag)
       return (
-        <Txt
+        <TagView
           key={id}
-          twcn="text-xs text-primary"
-        >
-          #{name}
-        </Txt>
+          tag={tag}
+        />
       )
     })
 
@@ -473,22 +473,19 @@ const WorkoutDetails = () => {
                   {workout.notes}
                 </Txt>
               )}
+              <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                <SFIcon
+                  name="tag"
+                  size={18}
+                  color={Colors.primary}
+                />
+                {renderedTags}
+              </View>
+
               {workout && <WorkoutRecap {...workout} />}
             </View>
 
             <View style={tw`mt-6`}>{renderedExercises}</View>
-            <View style={tw`mt-4 gap-3`}>
-              {workout.tags.length > 0 && (
-                <View style={tw`flex-row flex-wrap items-center gap-2`}>
-                  <Tag
-                    color={Colors.primary}
-                    strokeWidth={1.5}
-                    size={12}
-                  />
-                  {renderedTags}
-                </View>
-              )}
-            </View>
           </View>
         </SafeView>
 
@@ -508,7 +505,7 @@ const WorkoutDetails = () => {
               <Txt twcn="text-4xl font-semibold mb-4 text-light-text dark:text-dark-text">
                 {workout.name}
               </Txt>
-              <View style={tw`gap-2`}>
+              <View style={tw`gap-3`}>
                 <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium text-left">
                   {capString(
                     `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
@@ -520,22 +517,17 @@ const WorkoutDetails = () => {
                     {workout.notes}
                   </Txt>
                 )}
+                <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                  <SFIcon
+                    name="tag"
+                    size={18}
+                    color={Colors.primary}
+                  />
+                  {renderedTags}
+                </View>
                 {workout && <WorkoutRecap {...workout} />}
               </View>
-
               <View style={tw`mt-6`}>{renderedExercises}</View>
-              <View style={tw`mt-4 gap-3`}>
-                {workout.tags.length > 0 && (
-                  <View style={tw`flex-row flex-wrap items-center gap-2`}>
-                    <Tag
-                      color={Colors.primary}
-                      strokeWidth={1.5}
-                      size={12}
-                    />
-                    {renderedTags}
-                  </View>
-                )}
-              </View>
             </View>
           </View>
         )}

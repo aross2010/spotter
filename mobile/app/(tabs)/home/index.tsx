@@ -20,7 +20,12 @@ import {
 } from 'lucide-react-native'
 import WorkoutView from '../../../components/workout'
 import Button from '../../../components/button'
-import { router, SplashScreen, useFocusEffect } from 'expo-router'
+import {
+  router,
+  SplashScreen,
+  useFocusEffect,
+  useNavigation,
+} from 'expo-router'
 import ActivityMap from '../../../components/activity-map'
 import { useCallback } from 'react'
 import { useHomeDataStore } from '../../../stores/workout-store'
@@ -29,6 +34,17 @@ import Colors from '../../../constants/colors'
 import { Link } from 'expo-router'
 import { GlassView } from 'expo-glass-effect'
 import useTheme from '../../hooks/theme'
+import MyModal from '../../../components/modal'
+import WeightEntryForm from '../../../components/weight-entry-form'
+import { Button as SwiftButton, ContextMenu, Host } from '@expo/ui/swift-ui'
+import SFIcon from '../../../components/sf-icon'
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+} from '@gorhom/bottom-sheet'
+import { useRef } from 'react'
+import { BottomSheetModalRef } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetModalProvider/types'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -67,8 +83,11 @@ const Home = () => {
   const { fetchWithAuth, isLoading } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isWeightEntryFormOpen, setIsWeightEntryFormOpen] = useState(false)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
   const { theme, colorScheme } = useTheme()
+  const navigation = useNavigation()
+  const weightEntryRef = useRef<BottomSheetModal>(null)
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
@@ -90,6 +109,17 @@ const Home = () => {
     }
   }
 
+  const backDrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  )
+
   useFocusEffect(
     useCallback(() => {
       if (shouldRefresh) {
@@ -103,6 +133,59 @@ const Home = () => {
   useEffect(() => {
     SplashScreen.hideAsync()
     getHomeData()
+  }, [])
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={tw`flex-row items-center gap-6 px-2`}>
+          <Button
+            hitSlop={8}
+            onPress={() => {
+              router.push('/settings')
+            }}
+            accessibilityLabel="settings"
+          >
+            <SFIcon
+              name="gear"
+              color={Colors.primary}
+              size={26}
+            />
+          </Button>
+          <Host style={{ width: 26, height: 26 }}>
+            <ContextMenu>
+              <ContextMenu.Items>
+                <SwiftButton
+                  systemImage="figure.strengthtraining.traditional"
+                  onPress={() => router.push('/workout-form')}
+                >
+                  Workout
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="book.pages.fill"
+                  onPress={() => router.push('/notebook-entry-form')}
+                >
+                  Notebook Entry
+                </SwiftButton>
+                <SwiftButton
+                  systemImage="scalemass.fill"
+                  onPress={openWeightEntryForm}
+                >
+                  Weight Entry
+                </SwiftButton>
+              </ContextMenu.Items>
+              <ContextMenu.Trigger>
+                <SFIcon
+                  name="plus"
+                  color={Colors.primary}
+                  size={26}
+                />
+              </ContextMenu.Trigger>
+            </ContextMenu>
+          </Host>
+        </View>
+      ),
+    })
   }, [])
 
   const stats = data && [
@@ -306,24 +389,45 @@ const Home = () => {
 
   const greeting = getGreeting()
 
+  const openWeightEntryForm = () => {
+    weightEntryRef.current?.present()
+  }
+
   if (loading) return <Spinner />
 
   return (
-    <SafeView
-      hasTabBar
-      hasHeader
-    >
-      <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-medium">
-        {formattedDate}
-      </Txt>
-      <Txt
-        numberOfLines={1}
-        twcn="text-lg font-semibold"
+    <>
+      <SafeView
+        hasTabBar
+        hasHeader
       >
-        {greeting}, {user?.firstName} 👋
-      </Txt>
-      {userPage}
-    </SafeView>
+        <Txt twcn="text-xs uppercase text-light-grayText dark:text-dark-grayText font-medium">
+          {formattedDate}
+        </Txt>
+        <Txt
+          numberOfLines={1}
+          twcn="text-lg font-semibold"
+        >
+          {greeting}, {user?.firstName} 👋
+        </Txt>
+        {userPage}
+      </SafeView>
+      <BottomSheetModal
+        ref={weightEntryRef}
+        handleIndicatorStyle={tw`bg-light-grayText dark:bg-dark-grayText w-12`}
+        backgroundStyle={{
+          backgroundColor: theme.background,
+        }}
+        enablePanDownToClose
+        backdropComponent={backDrop}
+      >
+        <BottomSheetView
+          style={tw`bg-light-background dark:bg-dark-background p-4 pb-24`}
+        >
+          <WeightEntryForm />
+        </BottomSheetView>
+      </BottomSheetModal>
+    </>
   )
 }
 export default Home

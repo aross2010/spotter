@@ -33,6 +33,7 @@ import ErrorBoundary from 'react-native-error-boundary'
 import Error from '../components/error'
 import { WorkoutFormProvider } from '../context/workout-form-context'
 import { NotebookFormProvider } from '../context/notebook-form-context'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 
 SplashScreen.setOptions({
   duration: 1000,
@@ -71,36 +72,38 @@ const RootLayout = () => {
               <NotebookProvider>
                 <WorkoutFormProvider>
                   <NotebookFormProvider>
-                    <ErrorBoundary FallbackComponent={Error}>
-                      <Stack
-                        screenOptions={{
-                          headerBackButtonDisplayMode: 'minimal',
-                          headerShown: false,
-                        }}
-                      >
-                        <Stack.Screen
-                          name="index"
-                          options={{ animation: 'none' }}
-                        />
-                        <Stack.Screen
-                          name="(tabs)"
-                          options={{
-                            animation: 'none',
+                    <BottomSheetModalProvider>
+                      <ErrorBoundary FallbackComponent={Error}>
+                        <Stack
+                          screenOptions={{
                             headerBackButtonDisplayMode: 'minimal',
-                          }}
-                        />
-                        <Stack.Screen
-                          name="(modals)"
-                          options={{
-                            presentation: 'card',
                             headerShown: false,
-                            animation: 'slide_from_bottom',
-                            animationDuration: 350,
-                            headerBackButtonDisplayMode: 'minimal',
                           }}
-                        />
-                      </Stack>
-                    </ErrorBoundary>
+                        >
+                          <Stack.Screen
+                            name="index"
+                            options={{ animation: 'none' }}
+                          />
+                          <Stack.Screen
+                            name="(tabs)"
+                            options={{
+                              animation: 'none',
+                              headerBackButtonDisplayMode: 'minimal',
+                            }}
+                          />
+                          <Stack.Screen
+                            name="(modals)"
+                            options={{
+                              presentation: 'card',
+                              headerShown: false,
+                              animation: 'slide_from_bottom',
+                              animationDuration: 350,
+                              headerBackButtonDisplayMode: 'minimal',
+                            }}
+                          />
+                        </Stack>
+                      </ErrorBoundary>
+                    </BottomSheetModalProvider>
                   </NotebookFormProvider>
                 </WorkoutFormProvider>
               </NotebookProvider>
