@@ -198,7 +198,7 @@ const ExerciseMiniHistory = ({
   return (
     <ScrollView
       showsHorizontalScrollIndicator={false}
-      style={tw`gap-4 h-80`}
+      style={tw`gap-4 max-h-80`}
     >
       {content}
     </ScrollView>

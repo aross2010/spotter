@@ -9,15 +9,6 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import { HomeData, WorkoutMinimal } from '../../../utils/types'
-import TextLogo from '../../../assets/spotter-text-logo.svg'
-import {
-  Book,
-  Calendar,
-  ChevronRight,
-  CurlyBraces,
-  Dumbbell,
-  Repeat,
-} from 'lucide-react-native'
 import WorkoutView from '../../../components/workout'
 import Button from '../../../components/button'
 import {
@@ -34,17 +25,13 @@ import Colors from '../../../constants/colors'
 import { Link } from 'expo-router'
 import { GlassView } from 'expo-glass-effect'
 import useTheme from '../../hooks/theme'
-import MyModal from '../../../components/modal'
 import WeightEntryForm from '../../../components/weight-entry-form'
 import { Button as SwiftButton, ContextMenu, Host } from '@expo/ui/swift-ui'
 import SFIcon from '../../../components/sf-icon'
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { useRef } from 'react'
-import { BottomSheetModalRef } from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheetModalProvider/types'
+import MyBottomSheet from '../../../components/bottom-sheet'
+import { SFSymbol } from 'expo-symbols'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -83,11 +70,10 @@ const Home = () => {
   const { fetchWithAuth, isLoading } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isWeightEntryFormOpen, setIsWeightEntryFormOpen] = useState(false)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
   const { theme, colorScheme } = useTheme()
   const navigation = useNavigation()
-  const weightEntryRef = useRef<BottomSheetModal>(null)
+  const ref = useRef<BottomSheetModal>(null)
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
@@ -108,17 +94,6 @@ const Home = () => {
       setLoading(false)
     }
   }
-
-  const backDrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-      />
-    ),
-    []
-  )
 
   useFocusEffect(
     useCallback(() => {
@@ -169,7 +144,7 @@ const Home = () => {
                 </SwiftButton>
                 <SwiftButton
                   systemImage="scalemass.fill"
-                  onPress={openWeightEntryForm}
+                  onPress={() => ref.current?.present()}
                 >
                   Weight Entry
                 </SwiftButton>
@@ -192,22 +167,18 @@ const Home = () => {
     {
       label: 'Workouts',
       value: data.totalWorkouts,
-      icon: Calendar,
     },
     {
       label: 'Exercises',
       value: data.totalExercises,
-      icon: Dumbbell,
     },
     {
       label: 'Sets',
       value: data.totalSets,
-      icon: CurlyBraces,
     },
     {
       label: 'Reps',
       value: data.totalReps,
-      icon: Repeat,
     },
   ]
 
@@ -252,9 +223,9 @@ const Home = () => {
             <Txt twcn="text-lg font-semibold text-white mb-1">
               Ready to Start?
             </Txt>
-            <ChevronRight
+            <SFIcon
+              name="arrow.right"
               size={22}
-              strokeWidth={2}
               color={'#FFFFFF'}
             />
           </View>
@@ -274,21 +245,21 @@ const Home = () => {
 
   const features = [
     {
-      icon: Calendar,
+      iconName: 'calendar',
       title: 'Track Workouts',
       href: '/workouts',
       description:
         'Log your training sessions with ease. Add exercises, sets, reps, and weight. Schedule future workouts and track your consistency over time.',
     },
     {
-      icon: Dumbbell,
+      iconName: 'dumbbell.fill',
       title: 'Exercise Library',
       href: '/exercises',
       description:
         'Build your personal exercise database. View detailed progression charts, track personal records, and analyze performance trends.',
     },
     {
-      icon: Book,
+      iconName: 'book.pages.fill',
       title: 'Training Notebook',
       href: '/notebook',
       description:
@@ -313,10 +284,10 @@ const Home = () => {
                 <View
                   style={tw`rounded-full bg-primary/10 p-2 items-center justify-center`}
                 >
-                  <feature.icon
+                  <SFIcon
+                    name={feature.iconName as SFSymbol}
                     size={20}
                     color={Colors.primary}
-                    strokeWidth={1.5}
                   />
                 </View>
                 <Txt twcn="text-base font-semibold">{feature.title}</Txt>
@@ -389,10 +360,6 @@ const Home = () => {
 
   const greeting = getGreeting()
 
-  const openWeightEntryForm = () => {
-    weightEntryRef.current?.present()
-  }
-
   if (loading) return <Spinner />
 
   return (
@@ -412,23 +379,12 @@ const Home = () => {
         </Txt>
         {userPage}
       </SafeView>
-      <BottomSheetModal
-        ref={weightEntryRef}
-        handleIndicatorStyle={tw`bg-light-grayText dark:bg-dark-grayText w-12`}
-        backgroundStyle={{
-          backgroundColor: theme.background,
-        }}
-        enablePanDownToClose
-        backdropComponent={backDrop}
+      <MyBottomSheet
+        ref={ref}
+        usesKeyboard
       >
-        <BottomSheetView
-          style={tw`bg-light-background dark:bg-dark-background p-4 relative`}
-        >
-          <WeightEntryForm
-            closeModal={() => weightEntryRef.current?.dismiss()}
-          />
-        </BottomSheetView>
-      </BottomSheetModal>
+        <WeightEntryForm closeModal={() => ref.current?.dismiss()} />
+      </MyBottomSheet>
     </>
   )
 }

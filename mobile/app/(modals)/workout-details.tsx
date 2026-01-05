@@ -7,7 +7,6 @@ import {
 } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  Link,
   router,
   useFocusEffect,
   useLocalSearchParams,
@@ -20,7 +19,6 @@ import { useAuth } from '../../context/auth-context'
 import { BASE_URL } from '../../constants/auth'
 import tw from '../../tw'
 import { HeaderBackButton } from '@react-navigation/elements'
-import { Camera, Check, Frame, Pencil, Share, Tag } from 'lucide-react-native'
 import { formatDate } from '../../functions/formatted-date'
 import Spinner from '../../components/activity-indicator'
 import Button from '../../components/button'
@@ -243,10 +241,10 @@ const WorkoutDetails = () => {
               <View
                 style={tw`w-7 h-7 rounded-full ${isInSuperset ? 'bg-secondary' : 'bg-primary'} items-center justify-center`}
               >
-                <Check
+                <SFIcon
+                  name="checkmark"
                   size={16}
                   color={Colors.dark.text}
-                  strokeWidth={3}
                 />
               </View>
             )}

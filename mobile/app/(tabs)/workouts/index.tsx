@@ -1,10 +1,8 @@
-import { View, FlatList, ActivityIndicator } from 'react-native'
+import { View, FlatList } from 'react-native'
 import React, { useEffect, useCallback } from 'react'
 import { useNavigation, router } from 'expo-router'
-import { Link } from 'expo-router'
 import tw from '../../../tw'
 import Colors from '../../../constants/colors'
-import { ListFilter, Plus, Calendar } from 'lucide-react-native'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import Button from '../../../components/button'
@@ -131,9 +129,9 @@ const Workouts = () => {
       scroll={false}
     >
       <View style={tw`flex-1 items-center justify-center px-16`}>
-        <Calendar
+        <SFIcon
+          name="calendar"
           color={Colors.primary}
-          strokeWidth={1}
           size={64}
         />
         <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
@@ -145,13 +143,13 @@ const Workouts = () => {
         <Button
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
-          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
+          twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
           twcnText="font-medium text-dark-text"
         >
-          <Plus
+          <SFIcon
+            name="plus"
             color={Colors.dark.text}
             size={16}
-            style={tw`ml-2`}
           />
         </Button>
       </View>

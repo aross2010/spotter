@@ -28,6 +28,7 @@ import { useUserStore } from '../stores/user-store'
 import Spinner from './activity-indicator'
 import { useAuth } from '../context/auth-context'
 import { BASE_URL } from '../constants/auth'
+import MyDatePicker from './date-picker'
 
 type PreviousWeightEntry = {
   weight: number
@@ -42,7 +43,6 @@ type WeightEntryFormProps = {
 const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
   const [previousEntry, setPreviousEntry] =
     useState<PreviousWeightEntry | null>(null)
-  const [weightText, setWeightText] = useState('200.0')
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const { fetchWithAuth } = useAuth()
@@ -54,6 +54,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
     date: new Date(), // disable future dates
     metric: weightUnit,
   })
+  const [weightText, setWeightText] = useState(data.weight.toFixed(1))
 
   const identicalDate =
     previousEntry?.date === data.date.toISOString().split('T')[0]
@@ -71,6 +72,11 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
       )
       const previousEntry = (await response.json()) as PreviousWeightEntry
       setPreviousEntry(previousEntry)
+      setData((prevData) => ({
+        ...prevData,
+        weight: previousEntry ? previousEntry.weight : 200,
+      }))
+      setWeightText(previousEntry ? previousEntry.weight.toFixed(1) : '200.0')
     } catch (error: any) {
       Alert.alert('Error', error.message)
     } finally {
@@ -248,56 +254,30 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
           )}
         </View>
       </View>
-      <Modal
-        visible={isDatePickerOpen}
-        transparent
-        animationType="fade"
-      >
-        <Pressable
-          style={tw`flex-1 justify-center items-center bg-black/50`}
-          onPress={() => setIsDatePickerOpen(false)}
-        >
-          <TouchableWithoutFeedback>
-            <View
-              style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
-            >
-              <DateTimePicker
-                value={data.date}
-                mode="date"
-                accentColor={Colors.primary}
-                maximumDate={new Date()}
-                display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                onChange={(event, selectedDate) => {
-                  if (selectedDate) {
-                    // Check if the selected date is in the future
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0) // Reset time to start of day
-                    const newDate = new Date(selectedDate)
-                    newDate.setHours(0, 0, 0, 0)
-                    setData((prevData) => ({
-                      ...prevData,
-                      date: newDate > today ? today : newDate,
-                    }))
-                  }
 
-                  // Close immediately on Android after selection
-                  if (Platform.OS === 'android') {
-                    setIsDatePickerOpen(false)
-                  }
-                }}
-              />
-              {Platform.OS === 'ios' && (
-                <Button
-                  text="Done"
-                  onPress={() => setIsDatePickerOpen(false)}
-                  twcn="mt-2 bg-primary rounded-full p-3"
-                  twcnText="text-center font-semibold text-dark-text"
-                />
-              )}
-            </View>
-          </TouchableWithoutFeedback>
-        </Pressable>
-      </Modal>
+      <MyDatePicker
+        value={data.date}
+        isOpen={isDatePickerOpen}
+        closePicker={() => setIsDatePickerOpen(false)}
+        onChange={(event, selectedDate) => {
+          if (selectedDate) {
+            // Check if the selected date is in the future
+            const today = new Date()
+            today.setHours(0, 0, 0, 0) // Reset time to start of day
+            const newDate = new Date(selectedDate)
+            newDate.setHours(0, 0, 0, 0)
+            setData((prevData) => ({
+              ...prevData,
+              date: newDate > today ? today : newDate,
+            }))
+          }
+
+          // Close immediately on Android after selection
+          if (Platform.OS === 'android') {
+            setIsDatePickerOpen(false)
+          }
+        }}
+      />
     </>
   )
 }

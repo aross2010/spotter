@@ -4,7 +4,6 @@ import tw from '../tw'
 import Txt from './text'
 import { Fragment, useState } from 'react'
 import { formatDate } from '../functions/formatted-date'
-import { ChevronDown, ChevronUp, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
 import TagView from './tag'
@@ -147,12 +146,14 @@ const NotebookEntryView = ({
                 {isExpanded ? 'Show less' : 'Show more'}
               </Txt>
               {isExpanded ? (
-                <ChevronUp
+                <SFIcon
+                  name="chevron.up"
                   size={14}
                   color={Colors.primary}
                 />
               ) : (
-                <ChevronDown
+                <SFIcon
+                  name="chevron.down"
                   size={14}
                   color={Colors.primary}
                 />

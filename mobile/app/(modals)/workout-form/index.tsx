@@ -1,16 +1,8 @@
 import SafeView from '../../../components/safe-view'
-import {
-  View,
-  Keyboard,
-  Platform,
-  Modal,
-  Pressable,
-  TouchableWithoutFeedback,
-  TextInput,
-} from 'react-native'
+import { View, Keyboard, Platform } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
-import { formatDate, formattedDate } from '../../../functions/formatted-date'
+import { formatDate } from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
 import { toKg, toLbs } from '../../../functions/metric-conversions'
 import { HeaderBackButton } from '@react-navigation/elements'
@@ -20,28 +12,12 @@ import {
   KeyboardToolbar,
   KeyboardToolbarProps,
 } from 'react-native-keyboard-controller'
-import {
-  Calendar,
-  MapPin,
-  Circle,
-  CircleDot,
-  CircleCheck,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Minus,
-  Check,
-  Ellipsis,
-} from 'lucide-react-native'
 import { router, useNavigation } from 'expo-router'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import useTheme from '../../hooks/theme'
 import WorkoutNameInput from '../../../components/workout-name-input'
 import { useWorkoutForm } from '../../../context/workout-form-context'
 import { useUserStore } from '../../../stores/user-store'
 import Exercises from '../../../components/exercises'
-import WorkoutNotes from '../../../components/workout-notes'
-import WorkoutTags from '../../../components/workout-tags'
 import { Alert } from 'react-native'
 import { useWorkout } from '../../../context/workout-context'
 import { useLocalSearchParams } from 'expo-router'
@@ -49,7 +25,6 @@ import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
 import Txt from '../../../components/text'
-import MyModal from '../../../components/modal'
 import Colors from '../../../constants/colors'
 import {
   useHomeDataStore,
@@ -58,7 +33,6 @@ import {
 } from '../../../stores/workout-store'
 import { WorkoutFormData } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
-import { capString } from '../../../functions/cap-string'
 import SFIcon from '../../../components/sf-icon'
 import {
   ContextMenu,
@@ -69,34 +43,16 @@ import {
 import { toTitleCase } from '../../../functions/utils'
 import { GlassView } from 'expo-glass-effect'
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated'
-
-const statusOptions = [
-  {
-    value: 'completed' as const,
-    label: 'Completed',
-    icon: CircleCheck,
-  },
-  {
-    value: 'planned' as const,
-    label: 'Planned',
-    icon: Circle,
-  },
-  {
-    value: 'active' as const,
-    label: 'Active',
-    icon: CircleDot,
-  },
-]
+import MyDatePicker from '../../../components/date-picker'
+import MyBottomSheet from '../../../components/bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [showStatusMenu, setShowStatusMenu] = useState(false)
-  const [showStatsModal, setShowStatsModal] = useState(false)
-  const lastFocusedInputRef = useRef<TextInput | null>(null)
   const navigation = useNavigation()
-  const { theme, colorScheme } = useTheme()
+  const { theme } = useTheme()
   const {
     workoutData,
     setWorkoutData,
@@ -109,7 +65,7 @@ const WorkoutForm = () => {
     handleExerciseNumberSubmitRef,
     resetWorkoutFormContext,
   } = useWorkoutForm()
-  const { updateWorkout, refreshWorkouts } = useWorkout()
+  const { updateWorkout } = useWorkout()
   const { fetchWithAuth } = useAuth()
   const { id, cloneId, from } = useLocalSearchParams()
   const [mode, setMode] = useState<'create' | 'edit' | 'clone'>(
@@ -121,31 +77,37 @@ const WorkoutForm = () => {
   const [initialState, setInitialState] = useState<typeof workoutData | null>(
     null
   )
+  const ref = useRef<BottomSheetModal | null>(null)
   const { triggerRefresh } = useWorkoutStore()
   const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
+
   const handleCancelForm = useCallback(() => {
-    resetWorkoutFormContext()
-    router.back()
+    if (hasChanges()) {
+      Alert.alert(
+        'Are you sure you want to exit?',
+        'Your changes will be lost.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Exit',
+            style: 'destructive',
+            onPress: () => {
+              resetWorkoutFormContext()
+              router.back()
+            },
+          },
+        ]
+      )
+    } else {
+      resetWorkoutFormContext()
+      router.back()
+    }
   }, [resetWorkoutFormContext])
-
-  const handleOpenStatsModal = () => {
-    const currentlyFocused = TextInput.State.currentlyFocusedInput()
-    if (currentlyFocused) {
-      lastFocusedInputRef.current = currentlyFocused as any
-    }
-    setShowStatsModal(true)
-  }
-
-  const handleCloseStatsModal = () => {
-    setShowStatsModal(false)
-    if (lastFocusedInputRef.current) {
-      requestAnimationFrame(() => {
-        lastFocusedInputRef.current?.focus()
-      })
-    }
-  }
 
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
@@ -378,7 +340,10 @@ const WorkoutForm = () => {
                 />
                 <SwiftButton
                   systemImage="chart.bar"
-                  onPress={handleOpenStatsModal}
+                  onPress={() => {
+                    Keyboard.dismiss()
+                    ref.current?.present()
+                  }}
                 >
                   Stats
                 </SwiftButton>
@@ -503,7 +468,6 @@ const WorkoutForm = () => {
 
   const handleStatusChange = (status: 'completed' | 'planned' | 'active') => {
     setWorkoutData({ ...workoutData, status })
-    setShowStatusMenu(false)
   }
 
   const CustomLeftButton: KeyboardToolbarProps['button'] = ({
@@ -511,7 +475,8 @@ const WorkoutForm = () => {
     onPress,
   }) => (
     <Button onPress={onPress}>
-      <ChevronLeft
+      <SFIcon
+        name="chevron.left"
         size={32}
         color={Colors.primary}
       />
@@ -523,7 +488,8 @@ const WorkoutForm = () => {
     onPress,
   }) => (
     <Button onPress={onPress}>
-      <ChevronRight
+      <SFIcon
+        name="chevron.right"
         size={32}
         color={Colors.primary}
       />
@@ -535,7 +501,8 @@ const WorkoutForm = () => {
     onPress,
   }) => (
     <Button onPress={onPress}>
-      <Check
+      <SFIcon
+        name="checkmark"
         size={32}
         color={Colors.primary}
       />
@@ -562,200 +529,136 @@ const WorkoutForm = () => {
           <Exercises />
         </View>
 
-        <Modal
-          visible={isDatePickerOpen}
-          transparent
-          animationType="fade"
-        >
-          <Pressable
-            style={tw`flex-1 justify-center items-center bg-black/50`}
-            onPress={() => setIsDatePickerOpen(false)}
-          >
-            <TouchableWithoutFeedback>
-              <View
-                style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
-              >
-                <DateTimePicker
-                  accentColor={Colors.primary}
-                  value={workoutData.date}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      // Check if the selected date is in the future
-                      const today = new Date()
-                      today.setHours(0, 0, 0, 0) // Reset time to start of day
-                      const newDate = new Date(selectedDate)
-                      newDate.setHours(0, 0, 0, 0)
+        <MyDatePicker
+          isOpen={isDatePickerOpen}
+          closePicker={() => setIsDatePickerOpen(false)}
+          value={workoutData.date}
+          onChange={(event, selectedDate) => {
+            if (selectedDate) {
+              // Check if the selected date is in the future
+              const today = new Date()
+              today.setHours(0, 0, 0, 0) // Reset time to start of day
+              const newDate = new Date(selectedDate)
+              newDate.setHours(0, 0, 0, 0)
 
-                      // If date is in the future, set status to planned
-                      if (newDate > today) {
-                        setWorkoutData({
-                          ...workoutData,
-                          date: selectedDate,
-                          status: 'planned',
-                        })
-                      } else {
-                        setWorkoutData({ ...workoutData, date: selectedDate })
-                      }
-                    }
+              // If date is in the future, set status to planned
+              if (newDate > today) {
+                setWorkoutData({
+                  ...workoutData,
+                  date: selectedDate,
+                  status: 'planned',
+                })
+              } else {
+                setWorkoutData({ ...workoutData, date: selectedDate })
+              }
+            }
 
-                    // Close immediately on Android after selection
-                    if (Platform.OS === 'android') {
-                      setIsDatePickerOpen(false)
-                    }
-                  }}
-                />
-                {Platform.OS === 'ios' && (
-                  <Button
-                    text="Done"
-                    onPress={() => setIsDatePickerOpen(false)}
-                    twcn="mt-2 bg-primary rounded-full p-3"
-                    twcnText="text-center font-semibold text-dark-text"
-                  />
-                )}
+            // Close immediately on Android after selection
+            if (Platform.OS === 'android') {
+              setIsDatePickerOpen(false)
+            }
+          }}
+        />
+
+        <MyBottomSheet ref={ref}>
+          <>
+            <Txt twcn="font-semibold text-lg mb-2">Workout Stats</Txt>
+            <View style={tw`gap-3`}>
+              <View style={tw`flex-row justify-between items-center`}>
+                <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                  Sets
+                </Txt>
+                <Txt twcn="font-semibold text-base">
+                  {formatNumber(
+                    workoutData.exercises.reduce(
+                      (acc, exercise) => acc + exercise.sets.length,
+                      0
+                    )
+                  )}
+                </Txt>
               </View>
-            </TouchableWithoutFeedback>
-          </Pressable>
-        </Modal>
+              <View style={tw`flex-row justify-between items-center`}>
+                <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                  Reps
+                </Txt>
+                <Txt twcn="font-semibold text-base">
+                  {formatNumber(
+                    workoutData.exercises.reduce(
+                      (acc, exercise) =>
+                        acc +
+                        exercise.sets.reduce((setAcc, exerciseSet) => {
+                          if (exercise.isUnilateral) {
+                            const leftReps = exerciseSet.leftReps || 0
+                            const rightReps = exerciseSet.rightReps || 0
+                            return setAcc + Math.max(leftReps, rightReps)
+                          }
+                          return setAcc + (exerciseSet.reps || 0)
+                        }, 0),
+                      0
+                    )
+                  )}
+                </Txt>
+              </View>
+              <View style={tw`flex-row justify-between items-center`}>
+                <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                  Exercises
+                </Txt>
+                <Txt twcn="font-semibold text-base">
+                  {formatNumber(
+                    new Set(
+                      workoutData.exercises.map((exercise) => exercise.name)
+                    ).size
+                  )}
+                </Txt>
+              </View>
+              <View style={tw`flex-row justify-between items-center`}>
+                <Txt twcn="text-light-grayText dark:text-dark-grayText">
+                  {workoutData.status === 'completed' ? 'Lifted' : 'Lift'}
+                </Txt>
+                <Txt twcn="font-semibold text-base">
+                  {formatNumber(
+                    Math.floor(
+                      workoutData.exercises.reduce((acc, exercise) => {
+                        return (
+                          acc +
+                          exercise.sets.reduce((setAcc, exerciseSet) => {
+                            const { preferences } = useUserStore.getState()
+                            const weightMetric =
+                              preferences?.weightMetric || 'lbs'
+                            const setWeight =
+                              exerciseSet.weightLbs || exerciseSet.weightKg || 0
+                            const setMetric = exerciseSet.weightLbs
+                              ? 'lbs'
+                              : 'kgs'
 
-        <Modal
-          visible={showStatsModal}
-          transparent
-          animationType="fade"
-          onRequestClose={handleCloseStatsModal}
-        >
-          <TouchableWithoutFeedback onPress={handleCloseStatsModal}>
-            <View
-              style={[
-                tw`flex-1 justify-end`,
-                { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
-              ]}
-            >
-              <TouchableWithoutFeedback onPress={() => {}}>
-                <Animated.View
-                  entering={SlideInDown.duration(300)}
-                  exiting={SlideOutDown.duration(250)}
-                >
-                  <GlassView
-                    style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
-                  >
-                    <Txt twcn="font-semibold text-lg mb-2">Workout Stats</Txt>
-                    <View style={tw`gap-3`}>
-                      <View style={tw`flex-row justify-between items-center`}>
-                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
-                          Sets
-                        </Txt>
-                        <Txt twcn="font-semibold text-base">
-                          {formatNumber(
-                            workoutData.exercises.reduce(
-                              (acc, exercise) => acc + exercise.sets.length,
-                              0
-                            )
-                          )}
-                        </Txt>
-                      </View>
-                      <View style={tw`flex-row justify-between items-center`}>
-                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
-                          Reps
-                        </Txt>
-                        <Txt twcn="font-semibold text-base">
-                          {formatNumber(
-                            workoutData.exercises.reduce(
-                              (acc, exercise) =>
-                                acc +
-                                exercise.sets.reduce((setAcc, exerciseSet) => {
-                                  if (exercise.isUnilateral) {
-                                    const leftReps = exerciseSet.leftReps || 0
-                                    const rightReps = exerciseSet.rightReps || 0
-                                    return (
-                                      setAcc + Math.max(leftReps, rightReps)
-                                    )
-                                  }
-                                  return setAcc + (exerciseSet.reps || 0)
-                                }, 0),
-                              0
-                            )
-                          )}
-                        </Txt>
-                      </View>
-                      <View style={tw`flex-row justify-between items-center`}>
-                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
-                          Exercises
-                        </Txt>
-                        <Txt twcn="font-semibold text-base">
-                          {formatNumber(
-                            new Set(
-                              workoutData.exercises.map(
-                                (exercise) => exercise.name
-                              )
-                            ).size
-                          )}
-                        </Txt>
-                      </View>
-                      <View style={tw`flex-row justify-between items-center`}>
-                        <Txt twcn="text-light-grayText dark:text-dark-grayText">
-                          {workoutData.status === 'completed'
-                            ? 'Lifted'
-                            : 'Lift'}
-                        </Txt>
-                        <Txt twcn="font-semibold text-base">
-                          {formatNumber(
-                            Math.floor(
-                              workoutData.exercises.reduce((acc, exercise) => {
-                                return (
-                                  acc +
-                                  exercise.sets.reduce(
-                                    (setAcc, exerciseSet) => {
-                                      const { preferences } =
-                                        useUserStore.getState()
-                                      const weightMetric =
-                                        preferences?.weightMetric || 'lbs'
-                                      const setWeight =
-                                        exerciseSet.weightLbs ||
-                                        exerciseSet.weightKg ||
-                                        0
-                                      const setMetric = exerciseSet.weightLbs
-                                        ? 'lbs'
-                                        : 'kgs'
+                            const weight =
+                              setMetric === weightMetric
+                                ? setWeight
+                                : weightMetric === 'lbs'
+                                  ? toLbs(setWeight)
+                                  : toKg(setWeight)
 
-                                      const weight =
-                                        setMetric === weightMetric
-                                          ? setWeight
-                                          : weightMetric === 'lbs'
-                                            ? toLbs(setWeight)
-                                            : toKg(setWeight)
+                            let reps = 0
+                            if (exercise.isUnilateral) {
+                              const leftReps = exerciseSet.leftReps || 0
+                              const rightReps = exerciseSet.rightReps || 0
+                              reps = Math.max(leftReps, rightReps)
+                            } else {
+                              reps = exerciseSet.reps || 0
+                            }
 
-                                      let reps = 0
-                                      if (exercise.isUnilateral) {
-                                        const leftReps =
-                                          exerciseSet.leftReps || 0
-                                        const rightReps =
-                                          exerciseSet.rightReps || 0
-                                        reps = Math.max(leftReps, rightReps)
-                                      } else {
-                                        reps = exerciseSet.reps || 0
-                                      }
-
-                                      return setAcc + weight * reps
-                                    },
-                                    0
-                                  )
-                                )
-                              }, 0)
-                            )
-                          )}{' '}
-                          {useUserStore.getState().preferences?.weightMetric ||
-                            'lbs'}
-                        </Txt>
-                      </View>
-                    </View>
-                  </GlassView>
-                </Animated.View>
-              </TouchableWithoutFeedback>
+                            return setAcc + weight * reps
+                          }, 0)
+                        )
+                      }, 0)
+                    )
+                  )}{' '}
+                  {useUserStore.getState().preferences?.weightMetric || 'lbs'}
+                </Txt>
+              </View>
             </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+          </>
+        </MyBottomSheet>
       </SafeView>
       {shouldShowToolbar && (
         <Animated.View
@@ -793,7 +696,8 @@ const WorkoutForm = () => {
                       }}
                       twcn="p-2"
                     >
-                      <Minus
+                      <SFIcon
+                        name="minus"
                         size={24}
                         color={Colors.red}
                       />
@@ -809,7 +713,8 @@ const WorkoutForm = () => {
                       }}
                       twcn="p-2"
                     >
-                      <Plus
+                      <SFIcon
+                        name="plus"
                         size={24}
                         color={Colors.green}
                       />
@@ -821,7 +726,8 @@ const WorkoutForm = () => {
                       handleExerciseNumberSubmitRef.current?.()
                     }}
                   >
-                    <Check
+                    <SFIcon
+                      name="checkmark"
                       size={32}
                       color={Colors.primary}
                     />
@@ -843,7 +749,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(false, 2.5)}
                         twcn="p-2"
                       >
-                        <Minus
+                        <SFIcon
+                          name="minus"
                           size={24}
                           color={Colors.red}
                         />
@@ -853,7 +760,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(true, 2.5)}
                         twcn="p-2"
                       >
-                        <Plus
+                        <SFIcon
+                          name="plus"
                           size={24}
                           color={Colors.green}
                         />
@@ -864,7 +772,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(false, 5)}
                         twcn="p-2"
                       >
-                        <Minus
+                        <SFIcon
+                          name="minus"
                           size={24}
                           color={Colors.red}
                         />
@@ -874,7 +783,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(true, 5)}
                         twcn="p-2"
                       >
-                        <Plus
+                        <SFIcon
+                          name="plus"
                           size={24}
                           color={Colors.green}
                         />
@@ -897,7 +807,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(false)}
                         twcn="p-2"
                       >
-                        <Minus
+                        <SFIcon
+                          name="minus"
                           size={24}
                           color={Colors.red}
                         />
@@ -913,7 +824,8 @@ const WorkoutForm = () => {
                         onPress={() => adjustFocusedInputValue(true)}
                         twcn="p-2"
                       >
-                        <Plus
+                        <SFIcon
+                          name="plus"
                           size={24}
                           color={Colors.green}
                         />

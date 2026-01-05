@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Modal,
-  Platform,
-  Pressable,
-  TouchableWithoutFeedback,
-  View,
-  TextInput,
-} from 'react-native'
+import { Alert, Platform, View } from 'react-native'
 import {
   EnrichedTextInput,
   EnrichedTextInputInstance,
@@ -23,10 +15,8 @@ import Colors from '../../constants/colors'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Tag } from '../../utils/types'
 import { useNotebook } from '../../context/notebook-context'
-import TagView from '../../components/tag'
 import { useNotebookForm } from '../../context/notebook-form-context'
 import Spinner from '../../components/activity-indicator'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import {
   DefaultKeyboardToolbarTheme,
   KeyboardToolbar,
@@ -34,6 +24,7 @@ import {
 import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
+import MyDatePicker from '../../components/date-picker'
 
 const NotebookEntryForm = () => {
   const { addEntry, updateEntry, fetchTags } = useNotebook()
@@ -141,8 +132,29 @@ const NotebookEntryForm = () => {
   }
 
   const handleCancelForm = useCallback(() => {
-    resetNotebookFormContext()
-    router.back()
+    if (hasChanges()) {
+      Alert.alert(
+        'Are you sure you want to exit?',
+        'Your changes will be lost.',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Exit',
+            style: 'destructive',
+            onPress: () => {
+              resetNotebookFormContext()
+              router.back()
+            },
+          },
+        ]
+      )
+    } else {
+      resetNotebookFormContext()
+      router.back()
+    }
   }, [resetNotebookFormContext])
 
   useEffect(() => {
@@ -248,17 +260,6 @@ const NotebookEntryForm = () => {
     }
   }
 
-  const renderedTags = notebookFormData.tags.map(
-    ({ id, name, userId }, index) => {
-      return (
-        <TagView
-          key={id}
-          tag={{ id, name, userId }}
-        />
-      )
-    }
-  )
-
   if (isLoading) return <Spinner />
 
   return (
@@ -321,49 +322,23 @@ const NotebookEntryForm = () => {
             }}
           />
         </View>
-        <Modal
-          visible={isDatePickerOpen}
-          transparent
-          animationType="fade"
-        >
-          <Pressable
-            style={tw`flex-1 justify-center items-center bg-black/50`}
-            onPress={() => setIsDatePickerOpen(false)}
-          >
-            <TouchableWithoutFeedback>
-              <View
-                style={tw`bg-light-background dark:bg-dark-background rounded-2xl p-3 shadow-lg`}
-              >
-                <DateTimePicker
-                  accentColor={Colors.primary}
-                  value={notebookFormData.date}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setNotebookFormData({
-                        ...notebookFormData,
-                        date: selectedDate,
-                      })
-                    }
+        <MyDatePicker
+          isOpen={isDatePickerOpen}
+          closePicker={() => setIsDatePickerOpen(false)}
+          value={notebookFormData.date}
+          onChange={(event, selectedDate) => {
+            if (selectedDate) {
+              setNotebookFormData({
+                ...notebookFormData,
+                date: selectedDate,
+              })
+            }
 
-                    if (Platform.OS === 'android') {
-                      setIsDatePickerOpen(false)
-                    }
-                  }}
-                />
-                {Platform.OS === 'ios' && (
-                  <Button
-                    text="Done"
-                    onPress={() => setIsDatePickerOpen(false)}
-                    twcn="mt-2 bg-primary rounded-full p-3"
-                    twcnText="text-center font-semibold text-dark-text"
-                  />
-                )}
-              </View>
-            </TouchableWithoutFeedback>
-          </Pressable>
-        </Modal>
+            if (Platform.OS === 'android') {
+              setIsDatePickerOpen(false)
+            }
+          }}
+        />
       </SafeView>
       <View
         collapsable={false}

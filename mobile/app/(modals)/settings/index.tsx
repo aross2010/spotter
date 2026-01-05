@@ -3,7 +3,6 @@ import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router } from 'expo-router'
-import { ChevronRight } from 'lucide-react-native'
 import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
@@ -11,6 +10,7 @@ import tw from '../../../tw'
 import * as StoreReview from 'expo-store-review'
 import * as WebBrowser from 'expo-web-browser'
 import { BASE_URL } from '../../../constants/auth'
+import SFIcon from '../../../components/sf-icon'
 
 const settingsData = [
   {
@@ -180,8 +180,9 @@ const Settings = () => {
                   twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'}`}
                 >
                   <Txt>{label}</Txt>
-                  <ChevronRight
-                    strokeWidth={1.5}
+                  <SFIcon
+                    name="chevron.right"
+                    size={16}
                     color={theme.grayText}
                   />
                 </Button>

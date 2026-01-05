@@ -13,19 +13,11 @@ import { useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
-import { capString } from '../../../functions/cap-string'
-import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
 import Button from '../../../components/button'
 import { useUserStore } from '../../../stores/user-store'
 import LineChart from '../../../components/line-chart'
 import { GlassView } from 'expo-glass-effect'
-import {
-  ChevronsLeftRight,
-  ChevronsLeftRightEllipsis,
-  Pencil,
-  Share,
-} from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import { handleShareExercise } from '../../../functions/share'
 import { useExerciseStore } from '../../../stores/exercise-store'
@@ -36,7 +28,6 @@ import SFIcon from '../../../components/sf-icon'
 const ExerciseDetails = () => {
   const { id } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
-  const { theme } = useTheme()
   const { preferences } = useUserStore()
   const [exercise, setExercise] = useState<ExerciseDetailsType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -259,20 +250,12 @@ const ExerciseDetails = () => {
                 <Txt twcn={`text-xs text-secondary dark:text-secondary`}>
                   Unilateral
                 </Txt>
-                <ChevronsLeftRightEllipsis
-                  size={16}
-                  color={Colors.secondary}
-                />
               </>
             ) : (
               <>
                 <Txt twcn={`text-xs text-secondary dark:text-secondary`}>
                   Bilateral
                 </Txt>
-                <ChevronsLeftRight
-                  size={16}
-                  color={Colors.secondary}
-                />
               </>
             )}
           </View>
@@ -477,7 +460,7 @@ const ExerciseDetails = () => {
 
   const history = (
     <View>
-      <Txt twcn="font-medium mb-2 text-lg">History</Txt>
+      <Txt twcn="font-semibold mb-2 text-lg">History</Txt>
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >

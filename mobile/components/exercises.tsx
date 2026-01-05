@@ -1,25 +1,13 @@
-import { StyleSheet, View, Alert } from 'react-native'
-import React, { useState } from 'react'
+import { StyleSheet, View, Alert, Keyboard } from 'react-native'
+import React, { useRef, useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
-import {
-  ChevronsLeftRightEllipsis,
-  Ellipsis,
-  HelpCircle,
-  Info,
-  Plus,
-  SquareSplitHorizontal,
-  SquareStack,
-  Trash,
-} from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import ExerciseInput from './exercise-input'
 import Colors from '../constants/colors'
 import { nanoid } from 'nanoid/non-secure'
-import MyModal from './modal'
-import ExerciseOptions from './exercise-options'
 import {
   ContextMenu,
   Host,
@@ -28,14 +16,16 @@ import {
 } from '@expo/ui/swift-ui'
 import SFIcon from './sf-icon'
 import { router } from 'expo-router'
+import MyBottomSheet from './bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import { SFSymbol } from 'expo-symbols'
 
 const MAX_EXERCISES = 25
 
 const Exercises = () => {
-  const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
     useWorkoutForm()
+  const ref = useRef<BottomSheetModal | null>(null)
   const { theme } = useTheme()
 
   const handleAddEmptyExercise = () => {
@@ -84,30 +74,30 @@ const Exercises = () => {
 
   const guideItems = [
     {
-      icon: ChevronsLeftRightEllipsis,
+      iconName: 'rectangle.portrait.fill',
       title: 'Unilateral',
       description:
         'Toggle between unilateral (left/right) and bilateral modes for custom exercises',
     },
     {
-      icon: SquareSplitHorizontal,
+      iconName: 'rectangle.split.2x1.fill',
       title: 'Sync/Separate',
       description:
         'For unilateral exercises: sync left/right values together or log them separately',
     },
     {
-      icon: Info,
+      iconName: 'info.circle',
       title: 'Exercise Info',
       description: 'View exercise history and notes',
     },
     {
-      icon: Trash,
+      iconName: 'trash',
       title: 'Delete Exercise',
       description: 'Remove this exercise from the workout',
     },
   ]
 
-  const renderedGuide = guideItems.map(({ icon: Icon, title, description }) => (
+  const renderedGuide = guideItems.map(({ iconName, title, description }) => (
     <View
       key={title}
       style={tw`flex-row items-start gap-3`}
@@ -115,7 +105,8 @@ const Exercises = () => {
       <View
         style={tw`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
-        <Icon
+        <SFIcon
+          name={iconName as SFSymbol}
           size={16}
           color={theme.grayText}
         />
@@ -167,8 +158,14 @@ const Exercises = () => {
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
           <Txt twcn="font-semibold text-lg">Exercises</Txt>
-          <Button onPress={() => setIsHelpModalOpen(true)}>
-            <HelpCircle
+          <Button
+            onPress={() => {
+              Keyboard.dismiss()
+              ref.current?.present()
+            }}
+          >
+            <SFIcon
+              name="questionmark.circle"
               size={16}
               color={theme.grayText}
             />
@@ -226,20 +223,17 @@ const Exercises = () => {
           onPress={handleAddEmptyExercise}
           twcn="w-full h-full items-center justify-center"
         >
-          <Plus
-            strokeWidth={2.5}
+          <SFIcon
+            name="plus"
             size={22}
             color={Colors.dark.text}
           />
         </Button>
       </View>
-      <MyModal
-        isOpen={isHelpModalOpen}
-        setIsOpen={setIsHelpModalOpen}
-      >
-        <Txt twcn="font-semibold text-base mb-2">Exercises Guide</Txt>
+      <MyBottomSheet ref={ref}>
+        <Txt twcn="font-semibold text-base mb-4">Exercises Guide</Txt>
         <View style={tw`gap-4`}>{renderedGuide}</View>
-      </MyModal>
+      </MyBottomSheet>
     </View>
   )
 }

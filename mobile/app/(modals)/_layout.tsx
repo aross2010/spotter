@@ -54,6 +54,7 @@ export default function ModalLayout() {
             headerStyle: {
               backgroundColor: theme.background,
             },
+
             headerSearchBarOptions: {
               onChangeText: (event: any) => {
                 router.setParams({

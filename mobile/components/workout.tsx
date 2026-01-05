@@ -1,13 +1,10 @@
 import { StyleSheet, View } from 'react-native'
-import { Fragment, useState } from 'react'
+import { Fragment } from 'react'
 import Txt from './text'
 import { formatDate } from '../functions/formatted-date'
 import tw from '../tw'
-import Button from './button'
-import { Ellipsis, Tag } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import Colors from '../constants/colors'
-import MyModal from './modal'
 import { useWorkout } from '../context/workout-context'
 import { WorkoutMinimal } from '../utils/types'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
@@ -183,9 +180,9 @@ const WorkoutView = ({
         </View>
         {tags.length > 0 && (
           <View style={tw`mt-4 flex-row flex-wrap items-center gap-2`}>
-            <Tag
+            <SFIcon
+              name="tag"
               color={Colors.primary}
-              strokeWidth={1.5}
               size={16}
             />
             {renderedTags}

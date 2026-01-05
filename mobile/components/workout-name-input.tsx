@@ -6,7 +6,6 @@ import Txt from './text'
 import Input from './input'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
-import { BlurView } from 'expo-blur'
 import { GlassView } from 'expo-glass-effect'
 
 const WorkoutNameInput = () => {

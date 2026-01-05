@@ -9,8 +9,6 @@ import { SetGroupingType } from '../../../utils/types'
 import { capString } from '../../../functions/cap-string'
 import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
-import { Ellipsis, Trash } from 'lucide-react-native'
-import MyModal from '../../../components/modal'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
 import SFIcon from '../../../components/sf-icon'
 import Colors from '../../../constants/colors'
@@ -23,64 +21,6 @@ const Dropsets = () => {
     new Set()
   )
   const [selectedSets, setSelectedSets] = useState<Set<string>>(new Set())
-  const [isDropsetOptionsOpen, setIsDropsetOptionsOpen] =
-    useState<boolean>(false)
-  const [selectedDropset, setSelectedDropset] = useState<number | null>(null)
-
-  // delete dropsets for the exercise grouping
-  const deleteDropset = () => {
-    if (selectedDropset !== null) {
-      const selectedGrouping = workoutData.setGroupings[selectedDropset]
-      if (!selectedGrouping || selectedGrouping.groupingType !== 'dropset') {
-        setIsDropsetOptionsOpen(false)
-        setSelectedDropset(null)
-        return
-      }
-
-      const selectedExerciseData = selectedGrouping.groupSets
-        .map((set) => ({
-          name: workoutData.exercises[set.exerciseNumber - 1]?.name,
-          exerciseNumber: set.exerciseNumber,
-        }))
-        .filter((ex) => ex.name)
-
-      const selectedExerciseName = selectedExerciseData[0]?.name
-      const selectedExerciseNumber = selectedExerciseData[0]?.exerciseNumber
-
-      const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
-        if (grouping.groupingType !== 'dropset') return true
-
-        const exerciseData = grouping.groupSets
-          .map((set) => ({
-            name: workoutData.exercises[set.exerciseNumber - 1]?.name,
-            exerciseNumber: set.exerciseNumber,
-          }))
-          .filter((ex) => ex.name)
-
-        const exerciseName = exerciseData[0]?.name
-        const exerciseNumber = exerciseData[0]?.exerciseNumber
-
-        return !(
-          exerciseName === selectedExerciseName &&
-          exerciseNumber === selectedExerciseNumber
-        )
-      })
-
-      setWorkoutData({
-        ...workoutData,
-        setGroupings: updatedGroupings,
-      })
-
-      setIsDropsetOptionsOpen(false)
-      setSelectedDropset(null)
-    }
-  }
-
-  const openDropsetOptions = (dropsetIndex: number) => {
-    setSelectedDropset(dropsetIndex)
-    setIsDropsetOptionsOpen(true)
-  }
-
   const createDropset = () => {
     const validation = validateDropset()
     if (!validation.valid) {
@@ -479,24 +419,6 @@ const Dropsets = () => {
         </View>
       )}
       <View style={tw`w-full flex-1`}>{renderedExercises}</View>
-      <MyModal
-        isOpen={isDropsetOptionsOpen}
-        setIsOpen={setIsDropsetOptionsOpen}
-      >
-        <Button onPress={deleteDropset}>
-          <View style={tw`flex-row gap-6 p-3 items-center`}>
-            <Trash
-              size={22}
-              color={theme.grayText}
-              strokeWidth={1.5}
-            />
-
-            <View style={tw`flex-1`}>
-              <Txt>Remove Dropset</Txt>
-            </View>
-          </View>
-        </Button>
-      </MyModal>
     </SafeView>
   )
 }

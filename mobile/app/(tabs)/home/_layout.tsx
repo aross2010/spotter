@@ -1,14 +1,5 @@
-import { Stack, Link, router } from 'expo-router'
-import { View } from 'react-native'
-import { Settings } from 'lucide-react-native'
-import TextLogo from '../../../assets/spotter-text-logo.svg'
-import Colors from '../../../constants/colors'
+import { Stack } from 'expo-router'
 import useTheme from '../../hooks/theme'
-import tw from '../../../tw'
-import MyButton from '../../../components/button'
-import SFIcon from '../../../components/sf-icon'
-import { size } from '@shopify/react-native-skia'
-import { Button, ContextMenu, Host } from '@expo/ui/swift-ui'
 
 export default function HomeLayout() {
   const { theme } = useTheme()

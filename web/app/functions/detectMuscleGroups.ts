@@ -5,34 +5,44 @@ const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_KEY,
 })
 
-const redis = new Redis(process.env.REDIS_DB_URL as string, {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000)
-    return delay
-  },
-  enableReadyCheck: true,
-  reconnectOnError(err) {
-    const targetError = 'READONLY'
-    if (err.message.includes(targetError)) {
-      return true
-    }
-    return false
-  },
-})
+// Singleton Redis instance
+let redis: Redis | null = null
 
-// Handle Redis errors gracefully
-redis.on('error', (err) => {
-  console.error('Redis connection error:', err.message)
-})
+function getRedisClient(): Redis {
+  if (!redis) {
+    redis = new Redis(process.env.REDIS_DB_URL as string, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000)
+        return delay
+      },
+      enableReadyCheck: true,
+      lazyConnect: true, // Don't connect immediately
+      reconnectOnError(err) {
+        const targetError = 'READONLY'
+        if (err.message.includes(targetError)) {
+          return true
+        }
+        return false
+      },
+    })
 
-redis.on('connect', () => {
-  console.log('Redis connected')
-})
+    // Handle Redis errors gracefully
+    redis.on('error', (err) => {
+      console.error('Redis connection error:', err.message)
+    })
 
-redis.on('ready', () => {
-  console.log('Redis ready')
-})
+    redis.on('connect', () => {
+      console.log('Redis connected')
+    })
+
+    redis.on('ready', () => {
+      console.log('Redis ready')
+    })
+  }
+
+  return redis
+}
 
 type MuscleGroup =
   | 'quadriceps'
@@ -87,11 +97,12 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
 }> {
   const normalizedName = exerciseName.toLowerCase().trim()
   const cacheKey = normalizedName // Simple key: just the exercise name
+  const redisClient = getRedisClient()
 
   try {
     console.log('Detecting muscle groups for exercise:', exerciseName)
     // Check Redis cache first
-    const cached = await redis.get(cacheKey)
+    const cached = await redisClient.get(cacheKey)
     if (cached) {
       console.log('Muscle groups fetched from cache for:', exerciseName, cached)
       return JSON.parse(cached)
@@ -168,7 +179,7 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
     }
 
     // Cache the result permanently (no expiration)
-    await redis.set(cacheKey, JSON.stringify(finalResult))
+    await redisClient.set(cacheKey, JSON.stringify(finalResult))
     console.log('Muscle groups are now cached for exercise:', exerciseName)
     return finalResult
   } catch (error) {

@@ -5,39 +5,26 @@ import {
   Keyboard,
   TextInputProps,
   TextInput,
-  TouchableWithoutFeedback,
-  Modal,
 } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
 import { useWorkoutForm } from '../context/workout-form-context'
-import { BlurView } from 'expo-blur'
 import tw from '../tw'
 import Txt from './text'
 import Input from './input'
-import {
-  ChevronsLeftRightEllipsis,
-  Info,
-  Plus,
-  Redo,
-  SquareSplitHorizontal,
-  Trash,
-} from 'lucide-react-native'
 import Button from './button'
 import Colors from '../constants/colors'
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import React from 'react'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
-import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutDown,
-} from 'react-native-reanimated'
 import ExerciseMiniHistory from './exercise-mini-history'
 import { useUserStore } from '../stores/user-store'
 import { ExerciseName } from '../utils/types'
 import { GlassView } from 'expo-glass-effect'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import MyBottomSheet from './bottom-sheet'
+import SFIcon from './sf-icon'
+import { SFSymbol } from 'expo-symbols'
 
 const MAX_SETS = 20
 
@@ -53,7 +40,6 @@ const ExerciseInput = ({
   onReorderExercises,
   ...rest
 }: ExerciseInputProps) => {
-  const [isExerciseInfoOpen, setIsExerciseInfoOpen] = useState(false)
   const [isExerciseNameSelectorOpen, setIsExerciseNameSelectorOpen] =
     useState(false)
   const [exerciseNameResults, setExerciseNameResults] = useState<
@@ -94,6 +80,7 @@ const ExerciseInput = ({
   const { preferences } = useUserStore()
   const { exercises } = workoutData
   const { theme, colorScheme } = useTheme()
+  const ref = useRef<BottomSheetModal | null>(null)
   const exercise = exercises[exerciseNumber - 1]
   const [isSynced, setIsSynced] = useState(
     exercise?.isSynced ?? preferences?.unilateralLogging === 'sync'
@@ -347,17 +334,8 @@ const ExerciseInput = ({
     if (currentlyFocused) {
       lastFocusedInputRef.current = currentlyFocused as any
     }
-    setIsExerciseInfoOpen(true)
-  }
-
-  const handleCloseExerciseInfo = () => {
-    setIsExerciseInfoOpen(false)
-    // Re-focus the input to keep keyboard open
-    if (lastFocusedInputRef.current) {
-      requestAnimationFrame(() => {
-        lastFocusedInputRef.current?.focus()
-      })
-    }
+    ref.current?.present()
+    Keyboard.dismiss()
   }
 
   const handleAddNewSet = () => {
@@ -497,10 +475,10 @@ const ExerciseInput = ({
             }}
             twcn="p-2 w-full items-center justify-center"
           >
-            <Redo
+            <SFIcon
+              name="arrow.uturn.forward"
               size={16}
               color="white"
-              strokeWidth={2}
             />
           </Button>
         </View>
@@ -520,10 +498,10 @@ const ExerciseInput = ({
             }}
             twcn="p-2 w-full items-center justify-center"
           >
-            <Trash
+            <SFIcon
+              name="trash"
               size={16}
               color="white"
-              strokeWidth={2}
             />
           </Button>
         </View>
@@ -733,22 +711,22 @@ const ExerciseInput = ({
   const buttons = [
     {
       name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
-      icon: ChevronsLeftRightEllipsis,
+      iconName: 'rectangle.portrait.fill',
       onPress: handleMakeUnilateral,
     },
     {
       name: 'toggleSync',
-      icon: SquareSplitHorizontal,
+      iconName: 'rectangle.split.2x1.fill',
       onPress: handleToggleSync,
     },
     {
       name: 'View Information', // history & exercise notes, IF EXISTS BEFORE, else HIDE
-      icon: Info,
+      iconName: 'info.circle',
       onPress: handleDisplayExerciseInfo,
     },
     {
       name: 'Delete Exercise',
-      icon: Trash,
+      iconName: 'trash',
       onPress: handleDeleteExercise,
     },
   ]
@@ -756,7 +734,7 @@ const ExerciseInput = ({
   const setButtons = [
     {
       name: 'Add New Set',
-      icon: Plus,
+      iconName: 'plus',
       onPress: handleAddNewSet,
     },
   ]
@@ -1120,46 +1098,45 @@ const ExerciseInput = ({
     handleExerciseNumberSubmitRef,
   ])
 
-  const renderedExerciseButtons = buttons.map(
-    ({ name, icon: Icon, onPress }) => {
-      const isActive =
-        name === 'isUnilateral' && exerciseNumber
-          ? workoutData.exercises[exerciseNumber - 1]?.isUnilateral
-          : name === 'toggleSync'
-            ? !isSynced
-            : false
-      if (name === 'Delete Exercise' && exercises.length <= 1) {
-        return null
-      }
-
-      if (name === 'isUnilateral' && exercise.existing) {
-        return null
-      }
-
-      if (name === 'toggleSync' && !isUnilateral) {
-        return null
-      }
-
-      if (name === 'View Information' && !exercise.existing) {
-        return null
-      }
-
-      return (
-        <Button
-          key={name}
-          onPress={onPress}
-          twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
-        >
-          <Icon
-            size={16}
-            color={isActive ? Colors.primary : theme.grayText}
-          />
-        </Button>
-      )
+  const renderedExerciseButtons = buttons.map(({ name, iconName, onPress }) => {
+    const isActive =
+      name === 'isUnilateral' && exerciseNumber
+        ? workoutData.exercises[exerciseNumber - 1]?.isUnilateral
+        : name === 'toggleSync'
+          ? !isSynced
+          : false
+    if (name === 'Delete Exercise' && exercises.length <= 1) {
+      return null
     }
-  )
 
-  const renderedSetButtons = setButtons.map(({ name, icon: Icon, onPress }) => {
+    if (name === 'isUnilateral' && exercise.existing) {
+      return null
+    }
+
+    if (name === 'toggleSync' && !isUnilateral) {
+      return null
+    }
+
+    if (name === 'View Information' && !exercise.existing) {
+      return null
+    }
+
+    return (
+      <Button
+        key={name}
+        onPress={onPress}
+        twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+      >
+        <SFIcon
+          name={iconName as SFSymbol}
+          size={16}
+          color={isActive ? Colors.primary : theme.grayText}
+        />
+      </Button>
+    )
+  })
+
+  const renderedSetButtons = setButtons.map(({ name, iconName, onPress }) => {
     return (
       <Button
         key={name}
@@ -1607,12 +1584,9 @@ const ExerciseInput = ({
     <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
-      <Modal
-        visible={isExerciseInfoOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {
-          setIsExerciseInfoOpen(false)
+      <MyBottomSheet
+        ref={ref}
+        onDismiss={() => {
           if (lastFocusedInputRef.current) {
             requestAnimationFrame(() => {
               lastFocusedInputRef.current?.focus()
@@ -1620,41 +1594,12 @@ const ExerciseInput = ({
           }
         }}
       >
-        <TouchableWithoutFeedback
-          onPress={() => {
-            setIsExerciseInfoOpen(false)
-            if (lastFocusedInputRef.current) {
-              requestAnimationFrame(() => {
-                lastFocusedInputRef.current?.focus()
-              })
-            }
-          }}
-        >
-          <View
-            style={[
-              tw`flex-1 justify-end`,
-              { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
-            ]}
-          >
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <Animated.View
-                entering={SlideInDown.duration(300)}
-                exiting={SlideOutDown.duration(250)}
-              >
-                <GlassView
-                  style={tw`rounded-t-3xl px-4 pt-10 pb-12 overflow-hidden`}
-                >
-                  <ExerciseMiniHistory
-                    id={exercise.id as string}
-                    exerciseIndex={exerciseNumber - 1}
-                    workoutDate={workoutData.date.toISOString().slice(0, 10)}
-                  />
-                </GlassView>
-              </Animated.View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        <ExerciseMiniHistory
+          id={exercise.id as string}
+          exerciseIndex={exerciseNumber - 1}
+          workoutDate={workoutData.date.toISOString().slice(0, 10)}
+        />
+      </MyBottomSheet>
     </View>
   )
 }

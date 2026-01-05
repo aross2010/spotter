@@ -4,7 +4,6 @@ import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import Button from '../../../components/button'
-import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import tw from '../../../tw'
 import { MUSCLE_GROUPS } from '../../../constants/data'
@@ -12,12 +11,9 @@ import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
 import useTheme from '../../hooks/theme'
-import Input from '../../../components/input'
-import {
-  useExerciseStore,
-  useExerciseTabStore,
-} from '../../../stores/exercise-store'
+import { useExerciseTabStore } from '../../../stores/exercise-store'
 import { toTitleCase } from '../../../functions/utils'
+import SFIcon from '../../../components/sf-icon'
 
 type ExerciseMinimal = {
   id: string
@@ -33,7 +29,6 @@ const Exercises = () => {
     []
   )
   const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const { fetchWithAuth, authUser } = useAuth()
   const { theme } = useTheme()
   const { shouldRefresh, clearRefresh } = useExerciseTabStore()
@@ -80,8 +75,6 @@ const Exercises = () => {
   }, [q, exercises])
 
   const handleSearchChange = (text: string) => {
-    setSearchQuery(text)
-
     if (!text.trim()) {
       setFilteredExercises(exercises)
       return
@@ -134,7 +127,8 @@ const Exercises = () => {
           } ${index === filteredExercises.length - 1 ? 'mb-4' : ''}`}
         >
           <Txt twcn="text-sm">{exercise.name}</Txt>
-          <ChevronRight
+          <SFIcon
+            name="chevron.right"
             size={20}
             color={theme.grayText}
           />
@@ -149,9 +143,9 @@ const Exercises = () => {
       scroll={false}
     >
       <View style={tw`flex-1 items-center justify-center px-16`}>
-        <Dumbbell
+        <SFIcon
+          name="dumbbell.fill"
           color={Colors.primary}
-          strokeWidth={1}
           size={64}
         />
         <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
@@ -163,13 +157,13 @@ const Exercises = () => {
         <Button
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
-          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary"
+          twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
           twcnText="font-medium text-dark-text"
         >
-          <Plus
+          <SFIcon
+            name="plus"
             color={Colors.dark.text}
             size={16}
-            style={tw`ml-2`}
           />
         </Button>
       </View>

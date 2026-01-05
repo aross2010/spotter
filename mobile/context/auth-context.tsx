@@ -84,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
   const [request, response, promptAsync] = useAuthRequest(config, discovery)
   const refreshInProgressRef = useRef(false)
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null)
   const router = useRouter()
   const { setUser, user, clearUserStore } = useUserStore()
   const { type, isConnected } = useNetInfo()
@@ -158,65 +159,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Function to refresh the access token
   const refreshAccessToken = async (tokenToUse?: string) => {
-    // Prevent multiple simultaneous refresh attempts
-    if (refreshInProgressRef.current) {
-      return null
+    // If refresh is already in progress, wait for it
+    if (refreshInProgressRef.current && refreshPromiseRef.current) {
+      return refreshPromiseRef.current
     }
 
     refreshInProgressRef.current = true
 
-    try {
-      // use the provided token or fall back to the state
-      const currentRefreshToken = tokenToUse || refreshToken
-      if (!currentRefreshToken) {
+    // Create and store the refresh promise
+    const refreshPromise = (async () => {
+      try {
+        // use the provided token or fall back to the state
+        const currentRefreshToken = tokenToUse || refreshToken
+        if (!currentRefreshToken) {
+          signOut()
+          return null
+        }
+        const refreshResponse = await fetch(`${BASE_URL}/api/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            refreshToken: currentRefreshToken,
+          }),
+        })
+
+        if (!refreshResponse.ok) {
+          const errorData = await refreshResponse.json()
+          // refresh fails due to expired token, sign out
+          if (refreshResponse.status === 401) {
+            signOut()
+          }
+          return null
+        }
+        const tokens = await refreshResponse.json()
+        const newAccessToken = tokens.accessToken
+        const newRefreshToken = tokens.refreshToken
+
+        if (newAccessToken) setAccessToken(newAccessToken)
+        if (newRefreshToken) setRefreshToken(newRefreshToken)
+
+        if (newAccessToken)
+          await tokenCache?.saveToken('accessToken', newAccessToken)
+        if (newRefreshToken)
+          await tokenCache?.saveToken('refreshToken', newRefreshToken)
+
+        // Update user data from the new access token
+        if (newAccessToken) {
+          const decoded = jose.decodeJwt(newAccessToken)
+          // Check if we have all required user fields
+          setAuthUser(decoded as AuthUser)
+        }
+
+        return newAccessToken // Return the new access token
+      } catch (error) {
+        // If there's an error refreshing, we should sign out
         signOut()
         return null
+      } finally {
+        refreshInProgressRef.current = false
+        refreshPromiseRef.current = null
       }
-      const refreshResponse = await fetch(`${BASE_URL}/api/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          refreshToken: currentRefreshToken,
-        }),
-      })
+    })()
 
-      if (!refreshResponse.ok) {
-        const errorData = await refreshResponse.json()
-        // refresh fails due to expired token, sign out
-        if (refreshResponse.status === 401) {
-          signOut()
-        }
-        return null
-      }
-      const tokens = await refreshResponse.json()
-      const newAccessToken = tokens.accessToken
-      const newRefreshToken = tokens.refreshToken
-
-      if (newAccessToken) setAccessToken(newAccessToken)
-      if (newRefreshToken) setRefreshToken(newRefreshToken)
-
-      if (newAccessToken)
-        await tokenCache?.saveToken('accessToken', newAccessToken)
-      if (newRefreshToken)
-        await tokenCache?.saveToken('refreshToken', newRefreshToken)
-
-      // Update user data from the new access token
-      if (newAccessToken) {
-        const decoded = jose.decodeJwt(newAccessToken)
-        // Check if we have all required user fields
-        setAuthUser(decoded as AuthUser)
-      }
-
-      return newAccessToken // Return the new access token
-    } catch (error) {
-      // If there's an error refreshing, we should sign out
-      signOut()
-      return null
-    } finally {
-      refreshInProgressRef.current = false
-    }
+    refreshPromiseRef.current = refreshPromise
+    return refreshPromise
   }
 
   const handleResponse = async () => {
