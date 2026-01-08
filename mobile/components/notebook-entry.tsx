@@ -12,6 +12,7 @@ import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
 import { useNotebook } from '../context/notebook-context'
 import { router } from 'expo-router'
 import SFIcon from './sf-icon'
+import { handleShareNotebookEntry } from '../functions/share'
 
 type NotebookEntryProps = {
   entry: NotebookEntry
@@ -65,6 +66,10 @@ const NotebookEntryView = ({
     await deleteEntry(id)
   }
 
+  const handleShareEntry = async () => {
+    await handleShareNotebookEntry(entry)
+  }
+
   return (
     <Fragment>
       <View
@@ -77,6 +82,12 @@ const NotebookEntryView = ({
           <Host style={{ width: 26, height: 26 }}>
             <ContextMenu>
               <ContextMenu.Items>
+                <SwiftButton
+                  systemImage="square.and.arrow.up"
+                  onPress={handleShareEntry}
+                >
+                  Share
+                </SwiftButton>
                 <SwiftButton
                   systemImage="pin"
                   onPress={handlePinToggle}

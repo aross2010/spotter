@@ -439,7 +439,6 @@ const WorkoutDetails = () => {
     workout &&
     workout.tags.map((tag) => {
       const { id, name } = tag
-      console.log('TAG:', tag)
       return (
         <TagView
           key={id}
@@ -471,14 +470,16 @@ const WorkoutDetails = () => {
                   {workout.notes}
                 </Txt>
               )}
-              <View style={tw`flex-row flex-wrap items-center gap-2`}>
-                <SFIcon
-                  name="tag"
-                  size={18}
-                  color={Colors.primary}
-                />
-                {renderedTags}
-              </View>
+              {workout.tags.length > 0 && (
+                <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                  <SFIcon
+                    name="tag"
+                    size={18}
+                    color={Colors.primary}
+                  />
+                  {renderedTags}
+                </View>
+              )}
 
               {workout && <WorkoutRecap {...workout} />}
             </View>
@@ -515,14 +516,16 @@ const WorkoutDetails = () => {
                     {workout.notes}
                   </Txt>
                 )}
-                <View style={tw`flex-row flex-wrap items-center gap-2`}>
-                  <SFIcon
-                    name="tag"
-                    size={18}
-                    color={Colors.primary}
-                  />
-                  {renderedTags}
-                </View>
+                {workout.tags.length > 0 && (
+                  <View style={tw`flex-row flex-wrap items-center gap-2`}>
+                    <SFIcon
+                      name="tag"
+                      size={18}
+                      color={Colors.primary}
+                    />
+                    {renderedTags}
+                  </View>
+                )}
                 {workout && <WorkoutRecap {...workout} />}
               </View>
               <View style={tw`mt-6`}>{renderedExercises}</View>
