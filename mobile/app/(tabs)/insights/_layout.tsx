@@ -15,16 +15,16 @@ const WorkoutFormLayout = () => {
         name="index"
         options={{
           title: 'Insights',
-          // headerLargeTitle: true,
-          // headerTransparent: true,
-          // headerTitleStyle: {
-          //   color: theme.text,
-          //   fontWeight: 600,
-          // },
-          // headerLargeTitleStyle: {
-          //   color: theme.text,
-          //   fontWeight: '600',
-          // },
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerTitleStyle: {
+            color: theme.text,
+            fontWeight: 600,
+          },
+          headerLargeTitleStyle: {
+            color: theme.text,
+            fontWeight: '600',
+          },
         }}
       />
     </Stack>

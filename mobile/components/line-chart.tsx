@@ -1,13 +1,13 @@
 import React, { ReactNode, useEffect, useMemo, useState } from 'react'
 import { View } from 'react-native'
 import {
-  Area,
   CartesianChart,
-  Line,
-  Scatter,
+  useLinePath,
+  useAreaPath,
   useChartPressState,
+  type PointsArray,
 } from 'victory-native'
-import { useFont } from '@shopify/react-native-skia'
+import { useFont, Path, Circle, Group, rect } from '@shopify/react-native-skia'
 import Colors from '../constants/colors'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
@@ -19,6 +19,9 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  withDelay,
+  useDerivedValue,
+  SharedValue,
 } from 'react-native-reanimated'
 
 type DataPoint = Record<string, any>
@@ -35,6 +38,94 @@ type LineChartProps = {
 }
 
 const CHART_HEIGHT = 225
+const ANIMATION_DURATION = 2000
+
+// Animated Line component with draw effect
+function AnimatedLine({
+  points,
+  progress,
+}: {
+  points: PointsArray
+  progress: SharedValue<number>
+}) {
+  const { path } = useLinePath(points, { curveType: 'linear' })
+
+  // Animate the stroke end to create a "drawing" effect
+  const end = useDerivedValue(() => progress.value)
+
+  return (
+    <Path
+      path={path}
+      style="stroke"
+      color={Colors.primary}
+      strokeWidth={1.5}
+      start={0}
+      end={end}
+    />
+  )
+}
+
+// Animated Area component - reveals as line draws using clip rect synced to points
+function AnimatedArea({
+  points,
+  y0,
+  progress,
+}: {
+  points: PointsArray
+  y0: number
+  progress: SharedValue<number>
+}) {
+  const { path } = useAreaPath(points, y0, { curveType: 'linear' })
+
+  // Calculate clip rect based on actual point positions
+  const clip = useDerivedValue(() => {
+    if (points.length === 0) return rect(0, 0, 0, 0)
+
+    const firstX = points[0]?.x ?? 0
+    const lastX = points[points.length - 1]?.x ?? 0
+    const totalWidth = lastX - firstX
+    const currentWidth = totalWidth * progress.value
+
+    // Clip from the start of the first point to the current progress position
+    return rect(firstX, 0, currentWidth, y0 + 100)
+  })
+
+  return (
+    <Group clip={clip}>
+      <Path
+        path={path}
+        style="fill"
+        color={Colors.primary}
+        opacity={0.1}
+      />
+    </Group>
+  )
+}
+
+// Active point indicator
+function ActivePoint({
+  points,
+  currentIndex,
+  radius,
+}: {
+  points: PointsArray
+  currentIndex: number | null
+  radius: number
+}) {
+  if (currentIndex == null || !points[currentIndex]) return null
+
+  const point = points[currentIndex]
+  if (point.x == null || point.y == null) return null
+
+  return (
+    <Circle
+      cx={point.x}
+      cy={point.y}
+      r={radius}
+      color={Colors.primary}
+    />
+  )
+}
 
 const LineChart = ({
   data,
@@ -53,6 +144,18 @@ const LineChart = ({
   const tooltipX = useSharedValue<number | null>(null)
   const tooltipY = useSharedValue<number | null>(null)
   const wasActive = useSharedValue(false)
+
+  // Animation progress for drawing the line (0 to 1)
+  const drawProgress = useSharedValue(0)
+
+  // Trigger draw animation when data changes
+  useEffect(() => {
+    drawProgress.value = 0
+    drawProgress.value = withTiming(1, {
+      duration: ANIMATION_DURATION,
+      easing: Easing.out(Easing.cubic),
+    })
+  }, [data])
 
   useAnimatedReaction(
     () => ({ active: press.isActive.value, dataX: press.x.value }),
@@ -344,51 +447,27 @@ const LineChart = ({
 
         // we only care about horizontal movement
       >
-        {({ points, yScale, chartBounds }) => (
+        {({ points, chartBounds }) => (
           <>
-            <Area
+            <AnimatedArea
               points={points.y}
-              color={Colors.primary}
-              opacity={0.1}
-              curveType="linear"
-              animate={{ type: 'timing', duration: 400 }}
-              y0={CHART_HEIGHT}
+              y0={chartBounds.bottom}
+              progress={drawProgress}
             />
-            <Line
+            <AnimatedLine
               points={points.y}
-              color={Colors.primary}
-              strokeWidth={1.5}
-              curveType="linear"
-              animate={{
-                type: 'timing',
-                duration: 400,
-              }}
+              progress={drawProgress}
             />
-            <Scatter
+            <ActivePoint
               points={points.y}
-              radius={0}
-              color={Colors.primary}
-              animate={{ type: 'timing', duration: 350 }}
+              currentIndex={currentIndex}
+              radius={getRadius(chartData[currentIndex ?? 0]?.reps ?? 1)}
             />
-            {currentIndex != null && points.y[currentIndex] ? (
-              <Scatter
-                points={[points.y[currentIndex]]} // only the active point
-                radius={(point) => {
-                  // Get reps from chartData for the current index
-                  const reps = chartData[currentIndex]?.reps ?? 1
-                  return getRadius(reps)
-                }}
-                color={Colors.primary}
-                animate={{ type: 'timing', duration: 350 }}
-              />
-            ) : null}
           </>
         )}
       </CartesianChart>
       {showTooltip && currentIndex != null && currentIndex < data.length && (
         <Animated.View
-          // NOTE: add these imports:
-          // import { FadeInDown, FadeOutUp, LinearTransition, Easing } from 'react-native-reanimated'
           pointerEvents="none"
           style={[{ zIndex: 10 }, tooltipStyle]}
         >

@@ -229,3 +229,108 @@ export type HomeData = {
   }
   activityCalendar: ActivityCalendar
 }
+
+export type InsightsData = {
+  totalWorkouts: number
+  userExercises: {
+    id: string
+    name: string
+  }[]
+  core?: {
+    // if the user has recorded less than 5 workouts, no core data will be shown
+    summary: {
+      mostPopularWorkoutType: {
+        // break any tie by most recent
+        name: string
+        numWorkouts: number
+      }
+      mostPopularExercise: {
+        // break any tie by most recent
+        name: string
+        numWorkouts: number
+        exerciseId: string
+      }
+      mostPopularLocation: {
+        // break any tie by most recent
+        name: string
+        numWorkouts: number
+      }
+      heaviestExercisePR: {
+        // break any tie by most recent
+        name: string
+        weight: number
+        exerciseId: string
+        date: string
+      }
+      heaviestWorkout: {
+        // break any tie by most recent
+        date: string
+        workoutLocation: string
+        workoutName: string
+        totalWeight: number
+        workoutId: string
+      }
+    }
+    exercises: {
+      muscleGroupsWorked: Map<MuscleGroup, number>
+      // two exercises, overlaying line graph data
+      exerciseComparisonGraph: {
+        name: string
+        exerciseId: string
+        graphData: {
+          date: string
+          weight: number
+        }[]
+      }[]
+    }
+    workouts: {
+      workoutsByDayOfWeek: Map<string, number>
+      repsPerSet: {
+        workoutType: string | null // null = all workouts
+        data: Map<number, number> // key = # reps, value = # sets with that many reps
+      }
+      // only one of the following two will be used at a time, based on user selection. Present setsPerWorkout by default
+      setsPerWorkout?: Map<number, number> // key = # sets, value = # workouts with that many sets
+      repsPerWorkout?: Map<number, number> // key = # reps, value = # workouts with that many reps
+      weeklyVolume: {
+        date: string // start of week date
+        totalVolume: number // sets x reps or total weight lifted
+      }[]
+    }
+  }
+  weight?: {
+    // if the user has no weight entries, no weight data will be shown
+    bodyWeightProgression: {
+      date: string
+      bodyWeight: number
+    }[]
+    lowestBodyWeight: number | null
+    highestBodyWeight: number | null
+    overallDifference: number | null // highest - lowest
+  }
+}
+
+// Insights:
+
+//     Summary (no title):
+//         - most popular workout type
+//         - most popular exercise (# num of workouts in, link to ex)
+//         - most popular location
+//         - heaviest exercise pr (link to ex)
+//         - heaviest workout (link to workout details)
+
+//     Exercises:
+//         - Pie graph of muscles worked
+//         - Overlaying line graph to compare two exercises (no axis labels, only trend line)
+
+//     Workouts:
+//         - Bar graph for workouts each day of the week
+//         - Horizontal bar graph, # reps per set (from 1 to highest ever number of reps)
+//             - Can toggle between all workouts, or type of workout
+//         - Horizontal bar graph, # sets per workout (from lowest number to highest ever number)
+//             - Can toggle between sets and reps options
+//         - Line graph, weekly volume (each point represents a week, volume = sets x reps? or total weight lifted?)
+
+//     Weight:
+//         - Line graph, body weight progression over time (from first entry to last)
+//             - include stats below: lowest, highest, and overal difference from the start

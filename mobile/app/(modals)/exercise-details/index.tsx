@@ -201,7 +201,7 @@ const ExerciseDetails = () => {
     return (
       <View
         key={s.label}
-        style={tw`flex-1 p-2.5 rounded-lg bg-white dark:bg-dark-grayPrimary`}
+        style={tw`flex-1 p-2.5 rounded-xl bg-white dark:bg-dark-grayPrimary`}
       >
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
           {s.label}
