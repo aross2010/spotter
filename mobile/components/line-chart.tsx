@@ -102,7 +102,7 @@ function AnimatedArea({
   )
 }
 
-// Active point indicator
+// Active point indicator with animation
 function ActivePoint({
   points,
   currentIndex,
@@ -112,15 +112,60 @@ function ActivePoint({
   currentIndex: number | null
   radius: number
 }) {
-  if (currentIndex == null || !points[currentIndex]) return null
+  const animatedX = useSharedValue(0)
+  const animatedY = useSharedValue(0)
+  const isFirstTouch = useSharedValue(true)
 
-  const point = points[currentIndex]
-  if (point.x == null || point.y == null) return null
+  // Update animated position when currentIndex changes
+  useAnimatedReaction(
+    () => currentIndex,
+    (index, prevIndex) => {
+      if (index == null || !points[index]) return
+
+      const point = points[index]
+      if (point.x == null || point.y == null) return
+
+      if (isFirstTouch.value || prevIndex == null) {
+        // First touch: jump immediately
+        animatedX.value = point.x
+        animatedY.value = point.y
+        isFirstTouch.value = false
+      } else {
+        // Subsequent moves: animate
+        animatedX.value = withTiming(point.x, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+        animatedY.value = withTiming(point.y, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+      }
+    },
+    [points]
+  )
+
+  // Reset first touch flag when finger lifts
+  useAnimatedReaction(
+    () => currentIndex,
+    (index) => {
+      if (index == null) {
+        isFirstTouch.value = true
+      }
+    },
+    []
+  )
+
+  const cx = useDerivedValue(() => animatedX.value)
+  const cy = useDerivedValue(() => animatedY.value)
+
+  // Return null after all hooks have been called
+  if (currentIndex == null || !points[currentIndex]) return null
 
   return (
     <Circle
-      cx={point.x}
-      cy={point.y}
+      cx={cx}
+      cy={cy}
       r={radius}
       color={Colors.primary}
     />
