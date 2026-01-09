@@ -134,7 +134,9 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
             </Button>
           </View>
 
-          <GlassView style={tw`rounded-full px-2 flex-row items-center h-full`}>
+          <GlassView
+            style={tw`rounded-full px-2 flex-row items-center h-12 w-12`}
+          >
             {isSaving ? (
               <Spinner
                 twcn="w-8"

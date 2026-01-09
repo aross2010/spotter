@@ -17,11 +17,11 @@ import {
 
 // Predefined colors for up to 5 lines
 const LINE_COLORS = [
-  Colors.primary, // purple
-  '#3B82F6', // blue
-  '#10B981', // green
-  '#F59E0B', // orange
-  '#EC4899', // pink
+  Colors.blue,
+  Colors.green,
+  Colors.red,
+  Colors.orange,
+  Colors.secondary,
 ]
 
 type DataPoint = {
@@ -39,8 +39,8 @@ type LineChartMultipleProps = {
   dataSets: LineDataSet[] // 2-5 data sets
 }
 
-const CHART_HEIGHT = 225
-const ANIMATION_DURATION = 4000
+const CHART_HEIGHT = 160
+const ANIMATION_DURATION = 5000
 
 // Animated Line component with draw effect
 function AnimatedLine({
@@ -75,7 +75,15 @@ function normalizeDataSet(data: DataPoint[]): { x: number; y: number }[] {
   const yValues = data.map((d) => d.weight)
   const minY = Math.min(...yValues)
   const maxY = Math.max(...yValues)
-  const yRange = maxY - minY || 1
+  const yRange = maxY - minY
+
+  // If all values are the same (flat line), center it at 50%
+  if (yRange === 0) {
+    return data.map((point, index) => ({
+      x: data.length === 1 ? 0.5 : index / (data.length - 1),
+      y: 50,
+    }))
+  }
 
   return data.map((point, index) => ({
     x: data.length === 1 ? 0.5 : index / (data.length - 1), // normalize x to 0-1
@@ -176,10 +184,14 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
           domain={{ y: [0, 100] }}
           domainPadding={{ left: 10, right: 10, top: 20, bottom: 10 }}
           padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          xAxis={{
+            lineColor: theme.grayText,
+            tickCount: 4,
+          }}
           yAxis={[
             {
-              tickCount: 5,
-              lineColor: theme.grayBorder,
+              lineColor: theme.grayText,
+              tickCount: 4,
             },
           ]}
         >

@@ -272,7 +272,10 @@ export type InsightsData = {
       }
     }
     exercises: {
-      muscleGroupsWorked: Map<MuscleGroup, number>
+      muscleGroupsWorked: Map<
+        MuscleGroup,
+        { primary: number; secondary: number }
+      > // stack horizontal bar graph
       // two exercises, overlaying line graph data
       exerciseComparisonGraph: {
         name: string

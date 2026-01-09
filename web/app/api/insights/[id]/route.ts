@@ -322,11 +322,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
         )
         .orderBy(weightEntries.date),
 
-      // User exercises that appear in at least one workout
+      // User exercises that appear in at least two workouts
       db
-        .selectDistinct({
+        .select({
           id: exercises.id,
           name: exercises.name,
+          workoutCount: sql<number>`count(distinct ${workouts.id})::int`,
         })
         .from(exercises)
         .innerJoin(
@@ -335,6 +336,8 @@ export const GET = withAuth(async (req: Request, user: any) => {
         )
         .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
         .where(eq(workouts.userId, userId))
+        .groupBy(exercises.id, exercises.name)
+        .having(sql`count(distinct ${workouts.id}) >= 2`)
         .orderBy(exercises.name),
 
       // Top 2 most popular exercises for comparison graph

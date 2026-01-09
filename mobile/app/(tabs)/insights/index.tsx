@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { InsightsData } from '../../../utils/types'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
@@ -9,7 +9,6 @@ import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
-import { Link } from 'expo-router'
 import ParallaxCarousel from '../../../components/parallax-carousel'
 import { GlassView } from 'expo-glass-effect'
 import SFIcon from '../../../components/sf-icon'
@@ -17,15 +16,27 @@ import { SFSymbol } from 'expo-symbols'
 import Colors from '../../../constants/colors'
 import { formatDate } from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
-import Button from '../../../components/button'
 import LineChartMultiple from '../../../components/line-chart-multiple'
+import Button from '../../../components/button'
+import MyBottomSheet from '../../../components/bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import useTheme from '../../hooks/theme'
 
 const Insights = () => {
   const [insightsData, setInsightsData] = useState<InsightsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [chartLoading, setChartLoading] = useState(false)
   const { fetchWithAuth, authUser } = useAuth()
   const { preferences } = useUserStore()
   const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
+  const [exercisesToCompare, setExercisesToCompare] = useState<
+    {
+      exerciseId: string
+      name: string
+    }[]
+  >([])
+  const exerciseSelectionRef = useRef<BottomSheetModal>(null)
+  const { theme } = useTheme()
 
   const fetchInsightsData = async () => {
     try {
@@ -35,8 +46,15 @@ const Insights = () => {
           method: 'GET',
         }
       )
-      const data = await res.json()
+      const data = (await res.json()) as InsightsData
       setInsightsData(data)
+      if (data.core?.exercises.exerciseComparisonGraph)
+        setExercisesToCompare(
+          data.core?.exercises.exerciseComparisonGraph?.map((exercise) => ({
+            exerciseId: exercise.exerciseId,
+            name: exercise.name,
+          }))
+        )
     } catch (error: any) {
       Alert.alert(
         'Error',
@@ -155,23 +173,208 @@ const Insights = () => {
     </View>
   )
 
-  const renderedExercises = (
+  const renderedExerciseTrends = (
     <View style={tw`px-4`}>
       <View style={tw`flex-row justify-between items-center mb-2`}>
         <Txt twcn="font-semibold text-lg">Exercise Trends</Txt>
+        <Button
+          onPress={() => exerciseSelectionRef.current?.present()}
+          text={
+            insightsData?.core?.exercises?.exerciseComparisonGraph.length
+              ? `${insightsData.core.exercises.exerciseComparisonGraph.length} Exercises`
+              : 'Select Exercises'
+          }
+          twcnText="font-semibold text-base text-primary dark:text-primary"
+        />
       </View>
-      <LineChartMultiple
-        dataSets={insightsData?.core?.exercises.exerciseComparisonGraph || []}
-      />
+      <View
+        style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary relative`}
+      >
+        <View style={tw`${chartLoading ? 'opacity-50' : 'opacity-100'}`}>
+          <LineChartMultiple
+            dataSets={
+              insightsData?.core?.exercises.exerciseComparisonGraph || []
+            }
+          />
+        </View>
+        {chartLoading && <Spinner overlay />}
+      </View>
+      <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
+        Curves represent the progression of top-sets for each exercise.
+      </Txt>
+    </View>
+  )
+
+  const changesMadeToTrends = () => {
+    // compare exercisesToCompare with insightsData?.core?.exercises.exerciseComparisonGraph
+    const currentExerciseIds =
+      insightsData?.core?.exercises.exerciseComparisonGraph.map(
+        (exercise) => exercise.exerciseId
+      )
+    const selectedExerciseIds = exercisesToCompare.map(
+      (exercise) => exercise.exerciseId
+    )
+
+    if (currentExerciseIds?.length !== selectedExerciseIds.length) {
+      return true
+    }
+
+    for (let id of selectedExerciseIds) {
+      if (!currentExerciseIds?.includes(id)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  const handleSelectExercises = async () => {
+    try {
+      if (!changesMadeToTrends()) return
+      setChartLoading(true)
+      if (exercisesToCompare.length < 2) {
+        Alert.alert(
+          'At Least 2 Exercises Required',
+          'Please select 2-5 exercises to compare.'
+        )
+        // revert to previous state
+        setExercisesToCompare(
+          insightsData?.core?.exercises.exerciseComparisonGraph.map(
+            (exercise) => ({
+              exerciseId: exercise.exerciseId,
+              name: exercise.name,
+            })
+          ) || []
+        )
+        return exercisesToCompare
+      } else if (exercisesToCompare.length > 5) {
+        Alert.alert(
+          'Maximum of 5 Exercises Reached',
+          'Please select 2-5 exercises to compare.'
+        )
+        // revert to previous state
+        setExercisesToCompare(
+          insightsData?.core?.exercises.exerciseComparisonGraph.map(
+            (exercise) => ({
+              exerciseId: exercise.exerciseId,
+              name: exercise.name,
+            })
+          ) || []
+        )
+        return exercisesToCompare
+      }
+
+      // fetch data, then set the insights data state
+      const exerciseIds = exercisesToCompare
+        .map((ex) => ex.exerciseId)
+        .join(',')
+      const res = await fetchWithAuth(
+        `${BASE_URL}/api/insights/exercises/${authUser?.id}?weightUnit=${weightUnit}&exerciseIds=${exerciseIds}`,
+        {
+          method: 'GET',
+        }
+      )
+      const data = (await res.json()) as NonNullable<
+        InsightsData['core']
+      >['exercises']['exerciseComparisonGraph']
+
+      setInsightsData((prev) => {
+        if (!prev?.core) return prev
+        return {
+          ...prev,
+          core: {
+            ...prev.core,
+            exercises: {
+              ...prev.core.exercises,
+              exerciseComparisonGraph: data,
+            },
+          },
+        }
+      })
+    } catch (error: any) {
+      Alert.alert('Error', error.message)
+    } finally {
+      setChartLoading(false)
+    }
+  }
+
+  const exerciseSelection = (
+    <View style={tw`max-h-120`}>
+      <View style={tw`mb-4`}>
+        <Txt twcn="font-semibold text-lg">Select Exercises</Txt>
+        <Txt twcn="text-light-grayText dark:text-dark-grayText">
+          2-5 exercises can be compared at a time.
+        </Txt>
+      </View>
+      <ScrollView contentContainerStyle={tw`gap-2 flex-row flex-wrap`}>
+        {insightsData?.userExercises.map((exercise) => {
+          const isSelected = exercisesToCompare.some(
+            (ex) => ex.exerciseId === exercise.id
+          )
+
+          return (
+            <Button
+              onPress={() => {
+                setExercisesToCompare((prev) => {
+                  if (isSelected) {
+                    return prev.filter((ex) => ex.exerciseId !== exercise.id)
+                  } else {
+                    return [
+                      ...prev,
+                      { exerciseId: exercise.id, name: exercise.name },
+                    ]
+                  }
+                })
+              }}
+              key={exercise.id}
+              twcn={`px-3 py-1 rounded-lg border ${!isSelected ? 'border-light-grayBorder dark:border-dark-grayBorder' : 'border-primary bg-primary/10'} flex-row items-center gap-2`}
+            >
+              <Txt
+                twcn={`text-xs ${!isSelected ? 'text-light-grayText dark:text-dark-grayText' : 'text-primary dark:text-primary'}`}
+              >
+                {exercise.name}
+              </Txt>
+              {!isSelected ? (
+                <SFIcon
+                  name="plus"
+                  size={12}
+                  color={theme.grayText}
+                />
+              ) : (
+                <SFIcon
+                  name="checkmark"
+                  size={12}
+                  color={Colors.primary}
+                />
+              )}
+            </Button>
+          )
+        })}
+      </ScrollView>
+    </View>
+  )
+
+  const renderedMuscleGroupAnalysis = (
+    <View style={tw`px-4`}>
+      <Txt twcn="font-semibold text-lg mb-2">Muscle Group Analysis</Txt>
     </View>
   )
 
   if (loading) return <Spinner text="Gathering data..." />
   return (
-    <SafeView twcnContentView="px-0 gap-6">
-      {renderedSummary}
-      {renderedExercises}
-    </SafeView>
+    <>
+      <SafeView twcnContentView="px-0 gap-6">
+        {renderedSummary}
+        {renderedExerciseTrends}
+        {renderedMuscleGroupAnalysis}
+      </SafeView>
+      <MyBottomSheet
+        onDismiss={handleSelectExercises}
+        ref={exerciseSelectionRef}
+      >
+        {exerciseSelection}
+      </MyBottomSheet>
+    </>
   )
 }
 
