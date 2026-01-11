@@ -1,5 +1,5 @@
 import { ScrollView, View, ViewProps } from 'react-native'
-import { ReactNode } from 'react'
+import { ReactNode, forwardRef } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import tw from '../tw'
 import {
@@ -21,75 +21,81 @@ type SafeViewProps = {
   ignoreInset?: boolean
 } & ViewProps
 
-const SafeView = ({
-  keyboardAvoiding,
-  bottomOffset = 150,
-  extraKeyboardSpace = 0,
-  children,
-  hasTabBar = false,
-  twcnContentView,
-  hasHeader = true,
-  scroll = true,
-  keyboardVerticalOffset = 115,
-  keyboardShouldPersistTaps = 'handled',
-  ignoreInset = false,
-  ...rest
-}: SafeViewProps) => {
-  const insets = useSafeAreaInsets()
+const SafeView = forwardRef<ScrollView, SafeViewProps>(
+  (
+    {
+      keyboardAvoiding,
+      bottomOffset = 150,
+      extraKeyboardSpace = 0,
+      children,
+      hasTabBar = false,
+      twcnContentView,
+      hasHeader = true,
+      scroll = true,
+      keyboardVerticalOffset = 115,
+      keyboardShouldPersistTaps = 'handled',
+      ignoreInset = false,
+      ...rest
+    },
+    ref
+  ) => {
+    const insets = useSafeAreaInsets()
 
-  const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-2'}`
+    const paddingClasses = `px-4 ${!hasTabBar ? 'pb-12' : 'pb-4'} ${!hasHeader ? `pt-[${insets.top}px]` : 'pt-2'}`
 
-  if (keyboardAvoiding && scroll) {
-    return (
-      <KeyboardAwareScrollView
-        contentInsetAdjustmentBehavior={ignoreInset ? 'never' : 'automatic'}
-        keyboardShouldPersistTaps="handled"
-        style={tw`flex-1 bg-light-background dark:bg-dark-background`}
-        contentContainerStyle={tw`${ignoreInset ? 'mt-40' : ''} ${paddingClasses} ${twcnContentView ?? ''}`}
-        bottomOffset={bottomOffset}
-        extraKeyboardSpace={extraKeyboardSpace}
-      >
-        {children}
-      </KeyboardAwareScrollView>
-    )
-  }
-
-  if (keyboardAvoiding && !scroll) {
-    return (
-      <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
-        <KeyboardAvoidingView
-          behavior="padding"
-          style={tw`flex-1 bg-light-background dark:bg-dark-background  ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-16' : 'mb-4'} ${twcnContentView ?? ''}`}
-          keyboardVerticalOffset={keyboardVerticalOffset}
+    if (keyboardAvoiding && scroll) {
+      return (
+        <KeyboardAwareScrollView
+          contentInsetAdjustmentBehavior={ignoreInset ? 'never' : 'automatic'}
+          keyboardShouldPersistTaps="handled"
+          style={tw`flex-1 bg-light-background dark:bg-dark-background`}
+          contentContainerStyle={tw`${ignoreInset ? 'mt-40' : ''} ${paddingClasses} ${twcnContentView ?? ''}`}
+          bottomOffset={bottomOffset}
+          extraKeyboardSpace={extraKeyboardSpace}
         >
           {children}
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
+      )
+    }
+
+    if (keyboardAvoiding && !scroll) {
+      return (
+        <View style={tw`flex-1 bg-light-background dark:bg-dark-background`}>
+          <KeyboardAvoidingView
+            behavior="padding"
+            style={tw`flex-1 bg-light-background dark:bg-dark-background  ${paddingClasses} pb-0 ${!hasTabBar ? 'mb-16' : 'mb-4'} ${twcnContentView ?? ''}`}
+            keyboardVerticalOffset={keyboardVerticalOffset}
+          >
+            {children}
+          </KeyboardAvoidingView>
+        </View>
+      )
+    }
+
+    if (scroll) {
+      return (
+        <ScrollView
+          {...rest}
+          ref={ref}
+          style={tw`bg-light-background dark:bg-dark-background flex-1`}
+          contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
+          contentInsetAdjustmentBehavior="automatic"
+          automaticallyAdjustContentInsets={true}
+        >
+          {children}
+        </ScrollView>
+      )
+    }
+
+    return (
+      <View
+        style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} ${twcnContentView ?? ''}`}
+        {...rest}
+      >
+        {children}
       </View>
     )
   }
-
-  if (scroll) {
-    return (
-      <ScrollView
-        {...rest}
-        style={tw`bg-light-background dark:bg-dark-background flex-1`}
-        contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
-        contentInsetAdjustmentBehavior="automatic"
-        automaticallyAdjustContentInsets={true}
-      >
-        {children}
-      </ScrollView>
-    )
-  }
-
-  return (
-    <View
-      style={tw`flex-1 bg-light-background dark:bg-dark-background ${paddingClasses} ${twcnContentView ?? ''}`}
-      {...rest}
-    >
-      {children}
-    </View>
-  )
-}
+)
 
 export default SafeView

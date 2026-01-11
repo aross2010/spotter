@@ -239,11 +239,22 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .select({
               primaryMuscleGroup: exercises.primaryMuscleGroup,
               secondaryMuscleGroups: exercises.secondaryMuscleGroups,
+              setCount: sql<number>`count(${sets.id})::int`,
             })
             .from(workoutExercises)
             .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-            .where(eq(workouts.userId, userId))
+            .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                isNotNull(exercises.primaryMuscleGroup)
+              )
+            )
+            .groupBy(
+              exercises.primaryMuscleGroup,
+              exercises.secondaryMuscleGroups
+            )
         : Promise.resolve([]),
 
       // Workouts by day of week
@@ -416,19 +427,54 @@ export const GET = withAuth(async (req: Request, user: any) => {
             workoutId: '',
           }
 
-      // Process muscle groups
-      const muscleGroupCounts: { [key: string]: number } = {}
+      // Process muscle groups - initialize all muscle groups with zero values
+      const ALL_MUSCLE_GROUPS = [
+        'quadriceps',
+        'hamstrings',
+        'calves',
+        'hip adductors',
+        'hip abductors',
+        'hip flexors',
+        'glutes',
+        'front delts',
+        'rear delts',
+        'side delts',
+        'chest',
+        'lats',
+        'upper back',
+        'lower back',
+        'traps',
+        'biceps',
+        'triceps',
+        'forearms',
+        'upper abs',
+        'lower abs',
+        'obliques',
+      ]
+
+      const muscleGroupCounts: {
+        [key: string]: { primary: number; secondary: number }
+      } = {}
+
+      // Initialize all muscle groups with zero values
+      ALL_MUSCLE_GROUPS.forEach((group) => {
+        muscleGroupCounts[group] = { primary: 0, secondary: 0 }
+      })
+
       muscleGroupsResult.forEach((row) => {
+        // Count sets for primary muscle group
         if (row.primaryMuscleGroup) {
-          muscleGroupCounts[row.primaryMuscleGroup] =
-            (muscleGroupCounts[row.primaryMuscleGroup] || 0) + 1
+          muscleGroupCounts[row.primaryMuscleGroup].primary += row.setCount
         }
+        // Count sets for secondary muscle groups
         if (
           row.secondaryMuscleGroups &&
           Array.isArray(row.secondaryMuscleGroups)
         ) {
           row.secondaryMuscleGroups.forEach((group) => {
-            muscleGroupCounts[group] = (muscleGroupCounts[group] || 0) + 1
+            if (muscleGroupCounts[group]) {
+              muscleGroupCounts[group].secondary += row.setCount
+            }
           })
         }
       })

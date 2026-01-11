@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { InsightsData } from '../../../utils/types'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
@@ -20,6 +20,7 @@ import LineChartMultiple from '../../../components/line-chart-multiple'
 import Button from '../../../components/button'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import StackedBarChart from '../../../components/stacked-bar-chart'
 import useTheme from '../../hooks/theme'
 
 const Insights = () => {
@@ -36,6 +37,7 @@ const Insights = () => {
     }[]
   >([])
   const exerciseSelectionRef = useRef<BottomSheetModal>(null)
+  const scrollRef = useRef<ScrollView>(null)
   const { theme } = useTheme()
 
   const fetchInsightsData = async () => {
@@ -176,7 +178,7 @@ const Insights = () => {
   const renderedExerciseTrends = (
     <View style={tw`px-4`}>
       <View style={tw`flex-row justify-between items-center mb-2`}>
-        <Txt twcn="font-semibold text-lg">Exercise Trends</Txt>
+        <Txt twcn="font-semibold text-lg">Exercise Comparison</Txt>
         <Button
           onPress={() => exerciseSelectionRef.current?.present()}
           text={
@@ -354,16 +356,57 @@ const Insights = () => {
     </View>
   )
 
+  // Transform muscleGroupsWorked data for StackedBarChart
+  const muscleGroupChartData = useMemo(() => {
+    const muscleGroups = insightsData?.core?.exercises.muscleGroupsWorked
+    if (!muscleGroups) return []
+
+    return Object.entries(muscleGroups).map(([label, data]) => ({
+      label,
+      primary: data.primary,
+      secondary: data.secondary,
+    }))
+  }, [insightsData?.core?.exercises.muscleGroupsWorked])
+
+  const handleMuscleGroupExpand = useCallback((expanded: boolean) => {
+    if (expanded && scrollRef.current) {
+      // Wait for expand animation to complete (400ms), then scroll smoothly
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true })
+      }, 500)
+    }
+  }, [])
+
   const renderedMuscleGroupAnalysis = (
     <View style={tw`px-4`}>
-      <Txt twcn="font-semibold text-lg mb-2">Muscle Group Analysis</Txt>
+      <Txt twcn="font-semibold text-lg mb-2">Muscle Group Usage</Txt>
+      <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
+        {muscleGroupChartData.length > 0 ? (
+          <StackedBarChart
+            data={muscleGroupChartData}
+            primaryLabel="Primary"
+            secondaryLabel="Secondary"
+            onExpand={handleMuscleGroupExpand}
+          />
+        ) : (
+          <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
+            No muscle group data available
+          </Txt>
+        )}
+      </View>
+      <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
+        Bars represent the number of sets targeting each muscle group.
+      </Txt>
     </View>
   )
 
   if (loading) return <Spinner text="Gathering data..." />
   return (
     <>
-      <SafeView twcnContentView="px-0 gap-6">
+      <SafeView
+        ref={scrollRef}
+        twcnContentView="px-0 gap-6"
+      >
         {renderedSummary}
         {renderedExerciseTrends}
         {renderedMuscleGroupAnalysis}

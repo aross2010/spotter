@@ -272,10 +272,9 @@ export type InsightsData = {
       }
     }
     exercises: {
-      muscleGroupsWorked: Map<
-        MuscleGroup,
-        { primary: number; secondary: number }
-      > // stack horizontal bar graph
+      muscleGroupsWorked: {
+        [key: string]: { primary: number; secondary: number }
+      } // stack horizontal bar graph, numbers are sets completed as the primary or secondary muscle group
       // two exercises, overlaying line graph data
       exerciseComparisonGraph: {
         name: string
@@ -287,14 +286,14 @@ export type InsightsData = {
       }[]
     }
     workouts: {
-      workoutsByDayOfWeek: Map<string, number>
+      workoutsByDayOfWeek: { [key: string]: number }
       repsPerSet: {
         workoutType: string | null // null = all workouts
-        data: Map<number, number> // key = # reps, value = # sets with that many reps
+        data: { [key: number]: number } // key = # reps, value = # sets with that many reps
       }
       // only one of the following two will be used at a time, based on user selection. Present setsPerWorkout by default
-      setsPerWorkout?: Map<number, number> // key = # sets, value = # workouts with that many sets
-      repsPerWorkout?: Map<number, number> // key = # reps, value = # workouts with that many reps
+      setsPerWorkout?: { [key: number]: number } // key = # sets, value = # workouts with that many sets
+      repsPerWorkout?: { [key: number]: number } // key = # reps, value = # workouts with that many reps
       weeklyVolume: {
         date: string // start of week date
         totalVolume: number // sets x reps or total weight lifted

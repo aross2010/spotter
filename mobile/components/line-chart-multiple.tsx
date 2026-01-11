@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { View, ScrollView } from 'react-native'
 import { CartesianChart, useLinePath, type PointsArray } from 'victory-native'
 import { Path } from '@shopify/react-native-skia'
 import { Link } from 'expo-router'
+import { useIsFocused } from '@react-navigation/native'
 import Colors from '../constants/colors'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
@@ -17,11 +18,11 @@ import {
 
 // Predefined colors for up to 5 lines
 const LINE_COLORS = [
+  Colors.primary,
+  Colors.secondary,
   Colors.blue,
   Colors.green,
   Colors.red,
-  Colors.orange,
-  Colors.secondary,
 ]
 
 type DataPoint = {
@@ -40,7 +41,7 @@ type LineChartMultipleProps = {
 }
 
 const CHART_HEIGHT = 160
-const ANIMATION_DURATION = 5000
+const ANIMATION_DURATION = 2500
 
 // Animated Line component with draw effect
 function AnimatedLine({
@@ -93,7 +94,9 @@ function normalizeDataSet(data: DataPoint[]): { x: number; y: number }[] {
 
 const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
   const { theme } = useTheme()
+  const isFocused = useIsFocused()
   const drawProgress = useSharedValue(0)
+  const hasAnimated = useRef(false)
 
   // Build yKeys dynamically
   const yKeys = useMemo(
@@ -101,14 +104,22 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
     [dataSets.length]
   )
 
-  // Trigger draw animation when data changes
+  // Reset animation when datasets change
   useEffect(() => {
-    drawProgress.value = 0
-    drawProgress.value = withTiming(1, {
-      duration: ANIMATION_DURATION,
-      easing: Easing.out(Easing.cubic),
-    })
+    hasAnimated.current = false
   }, [dataSets])
+
+  // Trigger draw animation only when tab is focused and hasn't animated yet
+  useEffect(() => {
+    if (isFocused && dataSets.length >= 2 && !hasAnimated.current) {
+      hasAnimated.current = true
+      drawProgress.value = 0
+      drawProgress.value = withTiming(1, {
+        duration: ANIMATION_DURATION,
+        easing: Easing.out(Easing.cubic),
+      })
+    }
+  }, [isFocused, dataSets])
 
   // Normalize all data sets and prepare chart data
   const { chartData, lineInfo } = useMemo(() => {
