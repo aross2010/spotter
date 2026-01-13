@@ -19,6 +19,7 @@ type SafeViewProps = {
   keyboardVerticalOffset?: number
   keyboardShouldPersistTaps?: 'never' | 'always' | 'handled'
   ignoreInset?: boolean
+  scrollEnabled?: boolean
 } & ViewProps
 
 const SafeView = forwardRef<ScrollView, SafeViewProps>(
@@ -35,6 +36,7 @@ const SafeView = forwardRef<ScrollView, SafeViewProps>(
       keyboardVerticalOffset = 115,
       keyboardShouldPersistTaps = 'handled',
       ignoreInset = false,
+      scrollEnabled = true,
       ...rest
     },
     ref
@@ -81,6 +83,7 @@ const SafeView = forwardRef<ScrollView, SafeViewProps>(
           contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
           contentInsetAdjustmentBehavior="automatic"
           automaticallyAdjustContentInsets={true}
+          scrollEnabled={scrollEnabled}
         >
           {children}
         </ScrollView>

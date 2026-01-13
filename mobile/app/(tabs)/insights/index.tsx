@@ -17,16 +17,19 @@ import Colors from '../../../constants/colors'
 import { formatDate } from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
 import LineChartMultiple from '../../../components/line-chart-multiple'
+import LineChart from '../../../components/line-chart'
 import Button from '../../../components/button'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import StackedBarChart from '../../../components/stacked-bar-chart'
 import useTheme from '../../hooks/theme'
+import BarChart from '../../../components/bar-chart'
 
 const Insights = () => {
   const [insightsData, setInsightsData] = useState<InsightsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [chartLoading, setChartLoading] = useState(false)
+  const [scrollEnabled, setScrollEnabled] = useState(true)
   const { fetchWithAuth, authUser } = useAuth()
   const { preferences } = useUserStore()
   const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
@@ -380,7 +383,9 @@ const Insights = () => {
   const renderedMuscleGroupAnalysis = (
     <View style={tw`px-4`}>
       <Txt twcn="font-semibold text-lg mb-2">Muscle Group Usage</Txt>
-      <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
+      <View
+        style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary relative`}
+      >
         {muscleGroupChartData.length > 0 ? (
           <StackedBarChart
             data={muscleGroupChartData}
@@ -400,16 +405,171 @@ const Insights = () => {
     </View>
   )
 
+  // Transform repsPerSet data for BarChart - API returns hardcoded range 1-19, 20+
+  const repsPerSetChartData = useMemo(() => {
+    const repsData = insightsData?.core?.workouts.repsPerSet?.data as
+      | Record<string, number>
+      | undefined
+    if (!repsData) return []
+
+    // Return array in correct order: 1-19, then 20+
+    const ordered: { label: string; value: number }[] = []
+    for (let i = 1; i <= 19; i++) {
+      const key = i.toString()
+      ordered.push({ label: key, value: repsData[key] ?? 0 })
+    }
+    ordered.push({ label: '20+', value: repsData['20+'] ?? 0 })
+    return ordered
+  }, [insightsData?.core?.workouts.repsPerSet])
+
+  // Transform setsPerWorkout data for BarChart - API returns hardcoded range <5, 6-19, 20+
+  const setsPerWorkoutChartData = useMemo(() => {
+    const setsData = insightsData?.core?.workouts.setsPerWorkout as
+      | Record<string, number>
+      | undefined
+    if (!setsData) return []
+
+    // Return array in correct order: <5, then 6-19, then 20+
+    const ordered: { label: string; value: number }[] = []
+    ordered.push({ label: '<5', value: setsData['<5'] ?? 0 })
+    for (let i = 6; i <= 19; i++) {
+      const key = i.toString()
+      ordered.push({ label: key, value: setsData[key] ?? 0 })
+    }
+    ordered.push({ label: '20+', value: setsData['20+'] ?? 0 })
+    return ordered
+  }, [insightsData?.core?.workouts.setsPerWorkout])
+
+  // Transform weeklyVolume data for LineChart
+  const weeklyVolumeChartData = useMemo(() => {
+    const volumeData = insightsData?.core?.workouts.weeklyVolume
+    if (!volumeData || volumeData.length === 0) return []
+
+    return volumeData.map((week, index) => ({
+      x: index,
+      y: week.totalVolume,
+      date: week.date,
+    }))
+  }, [insightsData?.core?.workouts.weeklyVolume])
+
+  // Tooltips for weekly volume chart
+  const weeklyVolumeTooltips = useMemo(() => {
+    return weeklyVolumeChartData.map((point) => {
+      const dateObj = new Date(point.date)
+      const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(dateObj.getUTCDate()).padStart(2, '0')
+      const year = dateObj.getUTCFullYear()
+      const formattedDate = `${month}/${day}/${year}`
+      return (
+        <GlassView
+          key={point.date}
+          style={tw`p-2 w-[140px] overflow-hidden rounded-2xl shadow-md`}
+        >
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
+            Week of {formattedDate}
+          </Txt>
+          <Txt twcn="text-sm font-semibold">{formatNumber(point.y)}</Txt>
+        </GlassView>
+      )
+    })
+  }, [weeklyVolumeChartData])
+
+  const renderedRepsPerSet = (
+    <View style={tw`px-4`}>
+      <Txt twcn="font-semibold text-lg mb-2">Reps Per Set</Txt>
+      <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
+        {Object.keys(repsPerSetChartData).length > 0 ? (
+          <BarChart
+            data={repsPerSetChartData}
+            barColor={Colors.primary}
+            activeBarColor={Colors.secondary}
+            onScrollEnabledChange={setScrollEnabled}
+          />
+        ) : (
+          <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
+            No rep data available
+          </Txt>
+        )}
+      </View>
+      <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
+        Distribution of rep counts across all sets.
+      </Txt>
+    </View>
+  )
+
+  const renderedSetsPerWorkout = (
+    <View style={tw`px-4`}>
+      <Txt twcn="font-semibold text-lg mb-2">Sets Per Workout</Txt>
+      <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
+        {Object.keys(setsPerWorkoutChartData).length > 0 ? (
+          <BarChart
+            data={setsPerWorkoutChartData}
+            barColor={Colors.primary}
+            activeBarColor={Colors.secondary}
+            onScrollEnabledChange={setScrollEnabled}
+          />
+        ) : (
+          <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
+            No sets data available
+          </Txt>
+        )}
+      </View>
+      <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
+        Number of workouts grouped by total sets performed.
+      </Txt>
+    </View>
+  )
+
+  const renderedWeeklyVolume = (
+    <View style={tw`px-4`}>
+      <Txt twcn="font-semibold text-lg mb-2">Weekly Volume</Txt>
+      <View
+        style={tw`rounded-xl px-4 py-4 bg-white dark:bg-dark-grayPrimary relative`}
+      >
+        {weeklyVolumeChartData.length > 0 ? (
+          <LineChart
+            data={weeklyVolumeChartData}
+            xKey="x"
+            yKey="y"
+            formatXLabel={(_, index) => {
+              const item = weeklyVolumeChartData[index]
+              if (!item) return ''
+              const date = new Date(item.date)
+              const month = date.getUTCMonth() + 1
+              const day = date.getUTCDate()
+              const year = String(date.getUTCFullYear()).slice(-2)
+              return `${month}/${day}/${year}`
+            }}
+            formatYLabel={(value) => formatNumber(value)}
+            toolTips={weeklyVolumeTooltips}
+            onScrollEnabledChange={setScrollEnabled}
+          />
+        ) : (
+          <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
+            No volume data available
+          </Txt>
+        )}
+      </View>
+      <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
+        Total volume (reps × weight) lifted each week.
+      </Txt>
+    </View>
+  )
+
   if (loading) return <Spinner text="Gathering data..." />
   return (
     <>
       <SafeView
         ref={scrollRef}
         twcnContentView="px-0 gap-6"
+        scrollEnabled={scrollEnabled}
       >
         {renderedSummary}
         {renderedExerciseTrends}
         {renderedMuscleGroupAnalysis}
+        {renderedRepsPerSet}
+        {renderedSetsPerWorkout}
+        {renderedWeeklyVolume}
       </SafeView>
       <MyBottomSheet
         onDismiss={handleSelectExercises}

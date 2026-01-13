@@ -121,7 +121,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
       heaviestPRResult,
       heaviestWorkoutResult,
       muscleGroupsResult,
-      dayOfWeekResult,
       repsPerSetResult,
       setsPerWorkoutResult,
       weeklyVolumeResult,
@@ -257,18 +256,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
             )
         : Promise.resolve([]),
 
-      // Workouts by day of week
-      totalWorkouts >= 5
-        ? db
-            .select({
-              dayOfWeek: sql<string>`to_char(${workouts.date}, 'Day')`,
-              count: sql<number>`count(*)::int`,
-            })
-            .from(workouts)
-            .where(eq(workouts.userId, userId))
-            .groupBy(sql`to_char(${workouts.date}, 'Day')`)
-        : Promise.resolve([]),
-
       // Reps per set distribution
       totalWorkouts >= 5
         ? db
@@ -303,12 +290,17 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .groupBy(workouts.id)
         : Promise.resolve([]),
 
-      // Weekly volume
+      // Weekly volume: sum of (reps * weight) for each set = total volume
+      // For unilateral exercises, use the greater of leftReps or rightReps
+      // Exclude current incomplete week (only include weeks that have ended)
       totalWorkouts >= 5
         ? db
             .select({
               weekStart: sql<string>`date_trunc('week', ${workouts.date})::date`,
-              totalVolume: sql<number>`sum(COALESCE(${sets.reps}, 0))::int`,
+              totalVolume: sql<number>`sum(
+                COALESCE(${sets.reps}, GREATEST(COALESCE(${sets.leftReps}, 0), COALESCE(${sets.rightReps}, 0)))
+                * COALESCE(${weightField}, 0)
+              )::bigint`,
             })
             .from(workouts)
             .innerJoin(
@@ -316,7 +308,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
               eq(workouts.id, workoutExercises.workoutId)
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-            .where(eq(workouts.userId, userId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                sql`date_trunc('week', ${workouts.date}) < date_trunc('week', CURRENT_DATE)`
+              )
+            )
             .groupBy(sql`date_trunc('week', ${workouts.date})`)
             .orderBy(sql`date_trunc('week', ${workouts.date})`)
         : Promise.resolve([]),
@@ -479,31 +476,77 @@ export const GET = withAuth(async (req: Request, user: any) => {
         }
       })
 
-      // Process day of week
-      const workoutsByDayOfWeek: { [key: string]: number } = {}
-      dayOfWeekResult.forEach((row) => {
-        workoutsByDayOfWeek[row.dayOfWeek.trim()] = row.count
-      })
+      // Process reps per set with hardcoded range 1-19, 20+
+      const repsPerSetData: { [key: string]: number } = {}
+      // Initialize all buckets from 1 to 19, then 20+
+      for (let i = 1; i <= 19; i++) {
+        repsPerSetData[i.toString()] = 0
+      }
+      repsPerSetData['20+'] = 0
 
-      // Process reps per set
-      const repsPerSetData: { [key: number]: number } = {}
       repsPerSetResult.forEach((row) => {
         const repsValue = Number(row.reps)
-        repsPerSetData[repsValue] = row.count
+        if (repsValue >= 20) {
+          repsPerSetData['20+'] = (repsPerSetData['20+'] || 0) + row.count
+        } else if (repsValue >= 1) {
+          repsPerSetData[repsValue.toString()] =
+            (repsPerSetData[repsValue.toString()] || 0) + row.count
+        }
       })
 
-      // Process sets per workout
-      const setsPerWorkoutData: { [key: number]: number } = {}
+      // Process sets per workout with hardcoded range <5, 6-19, 20+
+      const setsPerWorkoutData: { [key: string]: number } = {}
+      // Initialize buckets: <5, then 6-19, then 20+
+      setsPerWorkoutData['<5'] = 0
+      for (let i = 6; i <= 19; i++) {
+        setsPerWorkoutData[i.toString()] = 0
+      }
+      setsPerWorkoutData['20+'] = 0
+
       setsPerWorkoutResult.forEach((row) => {
         const setCount = row.setCount
-        setsPerWorkoutData[setCount] = (setsPerWorkoutData[setCount] || 0) + 1
+        if (setCount <= 5) {
+          setsPerWorkoutData['<5'] = (setsPerWorkoutData['<5'] || 0) + 1
+        } else if (setCount >= 20) {
+          setsPerWorkoutData['20+'] = (setsPerWorkoutData['20+'] || 0) + 1
+        } else {
+          setsPerWorkoutData[setCount.toString()] =
+            (setsPerWorkoutData[setCount.toString()] || 0) + 1
+        }
       })
 
-      // Process weekly volume
-      const weeklyVolume = weeklyVolumeResult.map((row) => ({
-        date: row.weekStart,
-        totalVolume: row.totalVolume,
-      }))
+      // Process weekly volume - fill in all weeks from first workout to last complete week
+      // Exclude current incomplete week
+      const weeklyVolume: { date: string; totalVolume: number }[] = []
+      if (weeklyVolumeResult.length > 0) {
+        // Create a map of existing week data
+        const weekDataMap = new Map<string, number>()
+        weeklyVolumeResult.forEach((row) => {
+          weekDataMap.set(row.weekStart, Number(row.totalVolume) || 0)
+        })
+
+        // Get the first week and current week
+        const firstWeek = new Date(weeklyVolumeResult[0].weekStart)
+        const now = new Date()
+        // Get the start of the current week (Monday)
+        const currentWeek = new Date(now)
+        currentWeek.setUTCHours(0, 0, 0, 0)
+        const dayOfWeek = currentWeek.getUTCDay()
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Adjust to Monday
+        currentWeek.setUTCDate(currentWeek.getUTCDate() - diff)
+
+        // Iterate through all weeks from first to BEFORE current week (exclude incomplete week)
+        const iterWeek = new Date(firstWeek)
+        while (iterWeek < currentWeek) {
+          const weekKey = iterWeek.toISOString().split('T')[0]
+          weeklyVolume.push({
+            date: weekKey,
+            totalVolume: weekDataMap.get(weekKey) || 0,
+          })
+          // Move to next week
+          iterWeek.setUTCDate(iterWeek.getUTCDate() + 7)
+        }
+      }
 
       // Get exercise comparison graph data for top 2 exercises
       const topExerciseIds = topTwoExercisesResult.map((ex) => ex.exerciseId)
@@ -525,7 +568,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
           exerciseComparisonGraph,
         },
         workouts: {
-          workoutsByDayOfWeek,
           repsPerSet: {
             workoutType: null,
             data: repsPerSetData,

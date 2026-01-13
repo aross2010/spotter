@@ -286,7 +286,6 @@ export type InsightsData = {
       }[]
     }
     workouts: {
-      workoutsByDayOfWeek: { [key: string]: number }
       repsPerSet: {
         workoutType: string | null // null = all workouts
         data: { [key: number]: number } // key = # reps, value = # sets with that many reps

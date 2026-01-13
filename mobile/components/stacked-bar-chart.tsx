@@ -459,7 +459,7 @@ const StackedBarChart = ({
         >
           <SFIcon
             name={expanded ? 'chevron.up' : 'chevron.down'}
-            size={20}
+            size={18}
             color={theme.grayText}
           />
         </Button>
