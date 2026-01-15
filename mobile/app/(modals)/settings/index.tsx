@@ -206,8 +206,8 @@ const Settings = () => {
         />
         <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs font-semibold px-2">
           Made by{' '}
-          <Link href="https://adross.app">
-            <Txt twcn="font-bold text-primary dark:text-dark-primary ">me</Txt>
+          <Link href="https://aross.app">
+            <Txt twcn="font-bold text-primary dark:text-primary ">me</Txt>
           </Link>
           .
         </Txt>
