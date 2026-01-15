@@ -196,12 +196,12 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
           domainPadding={{ left: 10, right: 10, top: 20, bottom: 10 }}
           padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
           xAxis={{
-            lineColor: theme.grayText,
+            lineColor: theme.grayBorder,
             tickCount: 4,
           }}
           yAxis={[
             {
-              lineColor: theme.grayText,
+              lineColor: theme.grayBorder,
               tickCount: 4,
             },
           ]}

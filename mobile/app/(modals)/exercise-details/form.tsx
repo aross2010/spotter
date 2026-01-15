@@ -21,6 +21,7 @@ import SFIcon from '../../../components/sf-icon'
 import Spinner from '../../../components/activity-indicator'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import MyBottomSheet from '../../../components/bottom-sheet'
+import { useInsightsStore } from '../../../stores/insights-store'
 
 type ExerciseInfo = {
   id: string
@@ -42,6 +43,7 @@ const ExerciseForm = () => {
   } = useLocalSearchParams()
   const { triggerRefresh } = useExerciseStore()
   const { triggerRefresh: triggerExerciseTabRefresh } = useExerciseTabStore()
+  const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
   const { fetchWithAuth } = useAuth()
   const [exercise, setExercise] = useState<ExerciseInfo | null>(null)
   const [initialExercise, setInitialExercise] = useState<ExerciseInfo | null>(
@@ -149,6 +151,7 @@ const ExerciseForm = () => {
       await res.json()
       triggerRefresh()
       triggerExerciseTabRefresh()
+      triggerInsightsRefresh()
       router.back()
     } catch (error: any) {
       Alert.alert('Error', error.message)

@@ -137,14 +137,6 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     const isSynced =
       currentExercise.isSynced ?? preferences?.unilateralLogging === 'sync'
 
-    console.log('adjustFocusedInputValue:', {
-      exerciseIndex,
-      isUnilateral,
-      isSynced,
-      exerciseIsSynced: currentExercise.isSynced,
-      preferencesSync: preferences?.unilateralLogging,
-    })
-
     let currentValue: number | undefined
     let fieldToUpdate: string = field
     let leftFieldToUpdate: string | undefined

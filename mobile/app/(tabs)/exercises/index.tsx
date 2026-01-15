@@ -148,7 +148,7 @@ const Exercises = () => {
           color={Colors.primary}
           size={64}
         />
-        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-semibold text-center mt-6 mb-3">
           Your Exercises
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
@@ -158,12 +158,12 @@ const Exercises = () => {
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
           twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
-          twcnText="font-medium text-dark-text"
+          twcnText="font-semibold text-dark-text"
         >
           <SFIcon
-            name="plus"
+            name="arrow.right"
             color={Colors.dark.text}
-            size={16}
+            size={20}
           />
         </Button>
       </View>

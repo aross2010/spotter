@@ -8,8 +8,10 @@ import {
   sets,
   workoutTagLinks,
   workoutTags,
+  weightEntries,
 } from '@/src/db/schema'
 import { desc, asc, eq, and, sql, min, max, count, gte } from 'drizzle-orm'
+import { toKg, toLbs } from '@/app/functions/conversions'
 
 export type WorkoutMinimal = {
   id: string
@@ -25,6 +27,16 @@ export type WorkoutMinimal = {
     highRepRange: number // 6 - 8 reps the lowest and highest rep count for the ex., not including partials
   }[]
   status: 'completed' | 'planned' | 'active'
+}
+
+export type BodyWeightData = {
+  bodyWeightProgression: {
+    date: string
+    bodyWeight: number
+  }[]
+  lowestBodyWeight: number | null // null if one or less entries
+  highestBodyWeight: number | null // null if one or less entries
+  overallDifference: number | null // highest - lowest, null if one or less entries
 }
 
 type HomeData = {
@@ -44,11 +56,13 @@ type HomeData = {
       }[]
     }
   }
+  bodyWeightData: BodyWeightData
 }
 
 export const GET = withAuth(async (req: Request, user: any) => {
   const url = new URL(req.url)
   const userId = url.pathname.split('/').pop()
+  const weightUnit = (url.searchParams.get('unit') || 'lbs') as 'lbs' | 'kg'
 
   if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -75,6 +89,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
       currentWorkout,
       upcomingWorkout,
       recentWorkout,
+      bodyWeightData,
     ] = await Promise.all([
       // Get all workout stats (total workouts, sets, reps, exercises) - only completed workouts
       db
@@ -140,6 +155,17 @@ export const GET = withAuth(async (req: Request, user: any) => {
         )
         .orderBy(desc(workouts.date), desc(workouts.updatedAt))
         .limit(1),
+
+      // Get body weight data
+      db
+        .select({
+          date: weightEntries.date,
+          weightLbs: weightEntries.weightLbs,
+          weightKg: weightEntries.weightKg,
+        })
+        .from(weightEntries)
+        .where(eq(weightEntries.userId, userId))
+        .orderBy(asc(weightEntries.date)),
     ])
 
     const stats = statsResult[0] || {
@@ -160,6 +186,42 @@ export const GET = withAuth(async (req: Request, user: any) => {
         workoutId,
       })
     })
+
+    // Process body weight data
+    const bodyWeightProgression = bodyWeightData.map((entry) => {
+      let weight: number
+      if (weightUnit === 'kg') {
+        weight = entry.weightKg
+          ? parseFloat(entry.weightKg)
+          : toKg(parseFloat(entry.weightLbs!))
+      } else {
+        weight = entry.weightLbs
+          ? parseFloat(entry.weightLbs)
+          : toLbs(parseFloat(entry.weightKg!))
+      }
+      return {
+        date: entry.date,
+        bodyWeight: weight,
+      }
+    })
+
+    let lowestBodyWeight: number | null = null
+    let highestBodyWeight: number | null = null
+    let overallDifference: number | null = null
+
+    if (bodyWeightProgression.length > 1) {
+      const weights = bodyWeightProgression.map((entry) => entry.bodyWeight)
+      lowestBodyWeight = Math.min(...weights)
+      highestBodyWeight = Math.max(...weights)
+      overallDifference = highestBodyWeight - lowestBodyWeight
+    }
+
+    const processedBodyWeightData: BodyWeightData = {
+      bodyWeightProgression,
+      lowestBodyWeight,
+      highestBodyWeight,
+      overallDifference,
+    }
 
     // Helper function to get full workout data
     const getFullWorkout = async (
@@ -263,6 +325,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         status: featuredStatus,
       },
       activityCalendar,
+      bodyWeightData: processedBodyWeightData,
     }
 
     return NextResponse.json(homeData, { status: 200 })

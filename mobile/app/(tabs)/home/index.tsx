@@ -8,7 +8,7 @@ import { Alert, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
-import { HomeData, WorkoutMinimal } from '../../../utils/types'
+import { BodyWeightData, HomeData, WorkoutMinimal } from '../../../utils/types'
 import WorkoutView from '../../../components/workout'
 import Button from '../../../components/button'
 import {
@@ -32,6 +32,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { useRef } from 'react'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { SFSymbol } from 'expo-symbols'
+import BodyWeight from '../../../components/body-weight'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -66,7 +67,7 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
 }
 
 const Home = () => {
-  const { user } = useUserStore()
+  const { user, preferences } = useUserStore()
   const { fetchWithAuth, isLoading } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -74,17 +75,21 @@ const Home = () => {
   const { theme, colorScheme } = useTheme()
   const navigation = useNavigation()
   const ref = useRef<BottomSheetModal>(null)
+  const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
   const getHomeData = async () => {
     try {
-      const res = await fetchWithAuth(`${BASE_URL}/api/home/${user?.id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      const res = await fetchWithAuth(
+        `${BASE_URL}/api/home/${user?.id}?unit=${weightUnit}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
       const data = await res.json()
       setData(data)
     } catch (error: any) {
@@ -182,9 +187,12 @@ const Home = () => {
     },
   ]
 
-  const activityMap = Object.keys(data?.activityCalendar || {}).length > 0 && (
+  const activityMap = (
     <View>
-      <Txt twcn="mb-2 text-lg font-semibold">Workout Activity</Txt>
+      <View style={tw`flex-row justify-between items-center mb-2`}>
+        <Txt twcn="text-lg font-semibold">Workout Activity</Txt>
+      </View>
+
       <View style={tw`p-4 rounded-2xl bg-white dark:bg-dark-grayPrimary`}>
         <ActivityMap data={data?.activityCalendar || {}} />
       </View>
@@ -209,95 +217,111 @@ const Home = () => {
     </View>
   )
 
-  const workoutPrompt = data?.totalWorkouts == 0 && (
-    <Button
-      onPress={() => router.push('/workout-form?from=home')}
-      twcn="p-3 rounded-2xl -mb-4 bg-primary relative overflow-hidden"
-    >
-      <View style={tw`flex-row items-center gap-4`}>
-        <View style={tw`rounded-full bg-white/25 p-2 h-12 w-12 items-center`}>
-          <Txt twcn="text-2xl">🎯</Txt>
-        </View>
-        <View style={tw`flex-1`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <Txt twcn="text-lg font-semibold text-white mb-1">
-              Ready to Start?
-            </Txt>
-            <SFIcon
-              name="arrow.right"
-              size={22}
-              color={'#FFFFFF'}
-            />
-          </View>
-          <Txt twcn="text-sm mb-3 text-dark-text">
-            Log your first workout and let the progress begin!
-          </Txt>
-        </View>
-      </View>
-      <View
-        style={tw`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-white/10`}
-      />
-      <View
-        style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-white/10`}
-      />
-    </Button>
-  )
-
   const features = [
     {
-      iconName: 'calendar',
+      iconName: 'figure.strengthtraining.traditional',
       title: 'Track Workouts',
       href: '/workouts',
       description:
-        'Log your training sessions with ease. Add exercises, sets, reps, and weight. Schedule future workouts and track your consistency over time.',
+        'Log training sessions with ease. Plan workouts, track sets, reps, weights, and monitor progress over time.',
     },
     {
       iconName: 'dumbbell.fill',
       title: 'Exercise Library',
       href: '/exercises',
       description:
-        'Build your personal exercise database. View detailed progression charts, track personal records, and analyze performance trends.',
+        'Build your personal exercise database organized by muscle group. Track individual exercise performance and progress.',
     },
     {
       iconName: 'book.pages.fill',
       title: 'Training Notebook',
       href: '/notebook',
       description:
-        'Document your fitness journey. Use it to track injuries, progress, warm-up routines, stretching, diet notes, weight, and anything else.',
+        'Document your fitness journey. Use enchanced markup note taking to track your thoughts, goals, warmups, stretches, injuries, and more.',
+    },
+    {
+      iconName: 'scalemass.fill',
+      title: 'Body Weight Tracking',
+      onPress: () => ref.current?.present(),
+      description:
+        'Monitor your body weight over time. Track progress and analyze trends to optimize your fitness journey.',
+    },
+    {
+      iconName: 'chart.bar.fill',
+      title: 'Training Insights',
+      href: '/insights',
+      description:
+        'Gain valuable insights into your training progress. Analyze trends, muscle group usage, training habits, and more to optimize your workouts.',
+    },
+    {
+      iconName: 'sharedwithyou',
+      title: 'Share Everything',
+      href: null,
+      description:
+        'One-click sharing of workouts and notebook entries to friends. Collaborate and stay motivated together.',
     },
   ]
 
   const appFeatures = data?.totalWorkouts == 0 && (
-    <View>
-      <Txt twcn="text-base font-semibold mb-2">✨ Featured in Spotter</Txt>
+    <View style={tw`mt-4`}>
+      <Txt twcn="text-xl font-semibold mb-2">Explore Spotter</Txt>
       <View style={tw`gap-3`}>
-        {features.map((feature) => (
-          <Link
-            href={feature.href}
-            key={feature.title}
-          >
+        {features.map((feature) => {
+          const hasLink = Boolean(feature.href)
+          const hasButton = Boolean(feature.onPress)
+
+          const content = (
             <View
               key={feature.title}
               style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}
             >
-              <View style={tw`flex-row items-center gap-3 mb-4`}>
-                <View
-                  style={tw`rounded-full bg-primary/10 p-2 items-center justify-center`}
-                >
-                  <SFIcon
-                    name={feature.iconName as SFSymbol}
-                    size={20}
-                    color={Colors.primary}
-                  />
+              <View style={tw`flex-row items-center justify-between mb-4`}>
+                <View style={tw`flex-row items-center gap-3`}>
+                  <View
+                    style={tw`rounded-full bg-primary/10 p-2 items-center justify-center`}
+                  >
+                    <SFIcon
+                      name={feature.iconName as SFSymbol}
+                      size={24}
+                      color={Colors.primary}
+                    />
+                  </View>
+                  <Txt twcn="text-base font-semibold">{feature.title}</Txt>
                 </View>
-                <Txt twcn="text-base font-semibold">{feature.title}</Txt>
+                <SFIcon
+                  name="arrow.right"
+                  size={20}
+                  color={Colors.primary}
+                />
               </View>
               <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
                 {feature.description}
               </Txt>
             </View>
-          </Link>
-        ))}
+          )
+
+          if (hasLink)
+            return (
+              <Link
+                key={feature.title}
+                href={feature.href!}
+              >
+                {content}
+              </Link>
+            )
+
+          if (hasButton)
+            return (
+              <Button
+                key={feature.title}
+                onPress={feature.onPress!}
+              >
+                {content}
+              </Button>
+            )
+
+          return content
+        })}
       </View>
     </View>
   )
@@ -306,21 +330,20 @@ const Home = () => {
     data?.activityCalendar && Object.keys(data.activityCalendar).sort()[0]
   const timeSinceFirst = firstWorkoutDate
     ? getTimeSinceFirstWorkout(firstWorkoutDate)
-    : ''
+    : null
 
-  const statsTogether = data && data.totalWorkouts > 0 && (
-    <GlassView
-      style={tw`rounded-2xl p-3 relative overflow-hidden`}
-      tintColor={colorScheme == 'dark' ? theme.grayPrimary : theme.background}
-    >
+  const statsTogether = (
+    <GlassView style={tw`rounded-2xl p-3 relative overflow-hidden`}>
       <View style={tw`items-center flex-row gap-4`}>
         <View
           style={tw`rounded-full bg-primary/50 h-10 w-10 items-center justify-center`}
         >
           <Txt twcn="text-2xl">🚀</Txt>
         </View>
-        <Txt twcn="text-white text-lg font-semibold">
-          {timeSinceFirst} on Spotter
+        <Txt twcn="text-lg font-semibold">
+          {timeSinceFirst
+            ? `${timeSinceFirst} on Spotter`
+            : '1st Day on Spotter!'}
         </Txt>
       </View>
       <View style={tw`mt-4 flex-row justify-between`}>
@@ -348,12 +371,32 @@ const Home = () => {
     </GlassView>
   )
 
+  const handleChangeBodyWeightData = (data: BodyWeightData) => {
+    setData((prevData) => ({
+      ...prevData!,
+      bodyWeightData: data,
+    }))
+  }
+
+  const weight = data &&
+    data.bodyWeightData &&
+    data.bodyWeightData.bodyWeightProgression.length > 0 && (
+      <View>
+        <Txt twcn="mb-2 text-lg font-semibold">Body Weight</Txt>
+        <BodyWeight
+          data={data?.bodyWeightData || null}
+          setData={handleChangeBodyWeightData}
+          openForm={() => ref.current?.present()}
+        />
+      </View>
+    )
+
   const userPage = (
     <View style={tw`mt-2 gap-6`}>
-      {workoutPrompt}
-      {appFeatures}
       {statsTogether}
       {activityMap}
+      {appFeatures}
+      {weight}
       {featuredWorkout}
     </View>
   )

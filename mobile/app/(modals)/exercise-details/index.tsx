@@ -148,19 +148,15 @@ const ExerciseDetails = () => {
     {
       label: 'Sets/Workout',
       value: Number(
-        Math.round(
-          (exercise?.stats.totalSets as number) /
-            (exercise?.stats.totalWorkouts as number)
-        )
+        (exercise?.stats.totalSets as number) /
+          (exercise?.stats.totalWorkouts as number)
       ).toFixed(1),
     },
     {
       label: 'Reps/Set',
       value: Number(
-        Math.round(
-          (exercise?.stats.totalReps as number) /
-            (exercise?.stats.totalSets as number)
-        )
+        (exercise?.stats.totalReps as number) /
+          (exercise?.stats.totalSets as number)
       ).toFixed(1),
     },
     {
@@ -315,8 +311,8 @@ const ExerciseDetails = () => {
                 try {
                   // Parse as UTC to avoid timezone shifting
                   const date = new Date(dateStr)
-                  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-                  const day = String(date.getUTCDate()).padStart(2, '0')
+                  const month = date.getUTCMonth() + 1
+                  const day = date.getUTCDate()
                   const year = String(date.getUTCFullYear()).slice(-2)
                   return `${month}/${day}/${year}`
                 } catch {

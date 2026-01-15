@@ -31,7 +31,7 @@ const NotebookEntryView = ({
   const { date, title, body, tags, pinned, id } = entry
   const { pinEntry, unpinEntry, deleteEntry } = useNotebook()
 
-  const CHARACTER_LIMIT = 400
+  const CHARACTER_LIMIT = 1000
   const shouldTruncate = body.length > CHARACTER_LIMIT
   const displayText =
     shouldTruncate && !isExpanded
@@ -79,7 +79,7 @@ const NotebookEntryView = ({
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium ">
             {formatDate(date)}
           </Txt>
-          <Host style={{ width: 26, height: 26 }}>
+          <Host style={{ width: 22, height: 22 }}>
             <ContextMenu>
               <ContextMenu.Items>
                 <SwiftButton
@@ -111,14 +111,14 @@ const NotebookEntryView = ({
                 <SFIcon
                   name="ellipsis"
                   color={theme.text}
-                  size={26}
+                  size={22}
                 />
               </ContextMenu.Trigger>
             </ContextMenu>
           </Host>
         </View>
 
-        {title && <Txt twcn="font-semibold text-xl">{title}</Txt>}
+        {title && <Txt twcn="font-semibold text-lg">{title}</Txt>}
 
         <View style={tw`mt-2`}>
           <RenderHtml

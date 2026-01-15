@@ -63,7 +63,9 @@ const Workouts = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <View style={tw`flex-row items-center gap-6 px-2`}>
+          <View
+            style={tw`flex-row items-center ${workouts.length > 0 ? 'gap-6 px-2' : ''}`}
+          >
             {workouts.length > 0 && (
               <View style={tw`relative`}>
                 <Button
@@ -100,6 +102,7 @@ const Workouts = () => {
               }}
               hitSlop={8}
               accessibilityLabel="add workout"
+              twcn={`${workouts.length == 0 ? 'w-9 flex-row items-center justify-center h-full' : ''}`}
             >
               <SFIcon
                 name="plus"
@@ -130,26 +133,26 @@ const Workouts = () => {
     >
       <View style={tw`flex-1 items-center justify-center px-16`}>
         <SFIcon
-          name="calendar"
+          name="figure.strengthtraining.traditional"
           color={Colors.primary}
           size={64}
         />
-        <Txt twcn="text-xl font-medium text-center mt-6 mb-3">
+        <Txt twcn="text-xl font-semibold text-center mt-6 mb-3">
           Your Workouts
         </Txt>
-        <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-center text-light-grayText dark:text-dark-grayText">
           Stay in control of your progress
         </Txt>
         <Button
           onPress={() => router.push('/workout-form')}
           text="Log your first workout"
           twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
-          twcnText="font-medium text-dark-text"
+          twcnText="font-semibold text-dark-text"
         >
           <SFIcon
-            name="plus"
+            name="arrow.right"
             color={Colors.dark.text}
-            size={16}
+            size={20}
           />
         </Button>
       </View>

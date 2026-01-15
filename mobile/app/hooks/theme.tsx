@@ -3,7 +3,7 @@ import { useAppColorScheme, useDeviceContext } from 'twrnc'
 import Colors from '../../constants/colors'
 import { useUserStore } from '../../stores/user-store'
 import tw from '../../tw'
-import { useColorScheme } from 'react-native'
+import { Appearance, useColorScheme } from 'react-native'
 
 type Scheme = 'light' | 'dark'
 type PreferenceScheme = 'light' | 'dark' | 'system'
@@ -13,6 +13,10 @@ export default function useTheme() {
   const { preferences, setPreferences } = useUserStore()
   const [colorScheme, toggleColorScheme, setColorScheme] = useAppColorScheme(tw)
   const deviceColorScheme = useColorScheme()
+
+  useEffect(() => {
+    Appearance.setColorScheme(colorScheme === 'dark' ? 'dark' : 'light')
+  }, [colorScheme])
 
   useEffect(() => {
     const savedScheme = preferences?.colorScheme

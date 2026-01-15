@@ -5,6 +5,9 @@ import tw from '../tw'
 import Colors from '../constants/colors'
 import Txt from './text'
 import useTheme from '../app/hooks/theme'
+import Button from './button'
+import { router } from 'expo-router'
+import SFIcon from './sf-icon'
 
 type ActivityMapProps = {
   data: ActivityCalendar
@@ -254,10 +257,22 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
   if (weeks.length === 0) {
     return (
-      <View style={tw`items-center py-8`}>
-        <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-          No activity yet
+      <View style={tw`p-4 gap-4`}>
+        <Txt twcn="text-sm text-center text-light-grayText dark:text-dark-grayText">
+          Start logging workouts to view your activity map here.
         </Txt>
+        <Button
+          onPress={() => router.push('/workout-form')}
+          text="Log your first workout"
+          twcn="p-3 items-center flex-row gap-2 justify-center rounded-full bg-primary"
+          twcnText="font-semibold text-dark-text"
+        >
+          <SFIcon
+            name="arrow.right"
+            color={Colors.dark.text}
+            size={20}
+          />
+        </Button>
       </View>
     )
   }

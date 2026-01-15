@@ -9,6 +9,7 @@ type PreviousWeightEntry = {
   weight: number
   date: string
   difference: number | null
+  id: string
 }
 
 export const GET = withAuth(async (req: Request, user: any) => {
@@ -76,6 +77,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
       weight: Math.round(weight * 10) / 10,
       date: latestEntry.date,
       difference,
+      id: latestEntry.id,
     }
 
     return NextResponse.json(result, { status: 200 })

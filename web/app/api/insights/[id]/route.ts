@@ -124,7 +124,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
       repsPerSetResult,
       setsPerWorkoutResult,
       weeklyVolumeResult,
-      weightProgressionResult,
       userExercisesResult,
       topTwoExercisesResult,
     ] = await Promise.all([
@@ -317,18 +316,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .groupBy(sql`date_trunc('week', ${workouts.date})`)
             .orderBy(sql`date_trunc('week', ${workouts.date})`)
         : Promise.resolve([]),
-
-      // Weight progression
-      db
-        .select({
-          date: weightEntries.date,
-          bodyWeight: weightEntryField,
-        })
-        .from(weightEntries)
-        .where(
-          and(eq(weightEntries.userId, userId), isNotNull(weightEntryField))
-        )
-        .orderBy(weightEntries.date),
 
       // User exercises that appear in at least two workouts
       db
@@ -575,26 +562,6 @@ export const GET = withAuth(async (req: Request, user: any) => {
           setsPerWorkout: setsPerWorkoutData,
           weeklyVolume,
         },
-      }
-    }
-
-    // WEIGHT PROGRESSION
-    if (weightProgressionResult.length > 0) {
-      const bodyWeightProgression = weightProgressionResult.map((entry) => ({
-        date: entry.date,
-        bodyWeight: Number(entry.bodyWeight) || 0,
-      }))
-
-      const weights = bodyWeightProgression.map((entry) => entry.bodyWeight)
-      const lowestBodyWeight = Math.min(...weights)
-      const highestBodyWeight = Math.max(...weights)
-      const overallDifference = highestBodyWeight - lowestBodyWeight
-
-      insightsData.weight = {
-        bodyWeightProgression,
-        lowestBodyWeight,
-        highestBodyWeight,
-        overallDifference,
       }
     }
 

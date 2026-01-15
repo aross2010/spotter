@@ -12,13 +12,10 @@ import { useCallback } from 'react'
 import Txt from './text'
 import { BASE_URL } from '../constants/auth'
 import Spinner from './activity-indicator'
+import FeatureCarousel from './feature-carousel'
 
 const Auth = () => {
   const { signIn, authUser, isLoading } = useAuth()
-  const { width } = useWindowDimensions()
-  const scrollViewRef = useRef<ScrollView>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const scrollingRef = useRef(false)
 
   useFocusEffect(
     useCallback(() => {
@@ -36,9 +33,10 @@ const Auth = () => {
     >
       {isLoading && <Spinner overlay />}
       <View
-        style={tw`flex-1 justify-between gap-4 mb-6 dark:bg-dark-background bg-light-background ${isLoading ? 'opacity-50' : ''}`}
+        style={tw`flex-1 dark:bg-dark-background bg-light-background ${isLoading ? 'opacity-50' : ''}`}
       >
-        <View style={tw`items-center pt-6`}>
+        {/* Logo section - fixed at top */}
+        <View style={tw`items-center pt-6 pb-4`}>
           <View
             style={{
               height: 60,
@@ -53,7 +51,13 @@ const Auth = () => {
           </View>
         </View>
 
-        <View style={tw`mt-6`}>
+        {/* Carousel in the middle - takes available space */}
+        <View style={tw`flex-1`}>
+          <FeatureCarousel />
+        </View>
+
+        {/* Auth buttons section - fixed at bottom */}
+        <View style={tw`pb-8`}>
           <View style={tw`items-center flex-col gap-2 px-4`}>
             <SignInWithGoogle
               onPress={signIn}
@@ -71,7 +75,7 @@ const Auth = () => {
               >
                 Terms of Service
               </Link>{' '}
-              and{' '}
+              and our{' '}
               <Link
                 href={`${BASE_URL}/privacy`}
                 style={tw`underline`}

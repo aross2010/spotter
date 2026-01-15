@@ -244,7 +244,7 @@ const Notebook = () => {
     >
       <View style={tw`flex-1 items-center justify-center px-12`}>
         <SFIcon
-          name="book.badge.plus"
+          name="book.pages.fill"
           color={Colors.primary}
           size={72}
         />
@@ -252,19 +252,19 @@ const Notebook = () => {
           Your Notebook
         </Txt>
         <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
-          Capture everything beyond your workouts — thoughts, goals, warm-up
-          routines, injuries, and more.
+          Capture everything beyond your workouts — thoughts, goals, warm-ups,
+          stretches, injuries, and more.
         </Txt>
         <Button
           onPress={() => router.push('/notebook-entry-form')}
           text="Start Writing"
-          twcn="mt-6 py-4 w-full items-center flex-row justify-center rounded-full bg-primary gap-2"
-          twcnText="font-semibold text-base text-dark-text"
+          twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
+          twcnText="font-semibold text-dark-text"
         >
           <SFIcon
-            name="pencil.and.scribble"
+            name="arrow.right"
             color={Colors.dark.text}
-            size={24}
+            size={20}
           />
         </Button>
       </View>

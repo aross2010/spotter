@@ -24,6 +24,8 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import StackedBarChart from '../../../components/stacked-bar-chart'
 import useTheme from '../../hooks/theme'
 import BarChart from '../../../components/bar-chart'
+import { router } from 'expo-router'
+import { useInsightsStore } from '../../../stores/insights-store'
 
 const Insights = () => {
   const [insightsData, setInsightsData] = useState<InsightsData | null>(null)
@@ -41,7 +43,9 @@ const Insights = () => {
   >([])
   const exerciseSelectionRef = useRef<BottomSheetModal>(null)
   const scrollRef = useRef<ScrollView>(null)
+  const muscleGroupViewRef = useRef<View>(null)
   const { theme } = useTheme()
+  const { shouldRefresh, clearRefresh } = useInsightsStore()
 
   const fetchInsightsData = async () => {
     try {
@@ -69,6 +73,12 @@ const Insights = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!shouldRefresh) return
+    fetchInsightsData()
+    clearRefresh()
+  }, [shouldRefresh])
 
   useEffect(() => {
     fetchInsightsData()
@@ -371,17 +381,11 @@ const Insights = () => {
     }))
   }, [insightsData?.core?.exercises.muscleGroupsWorked])
 
-  const handleMuscleGroupExpand = useCallback((expanded: boolean) => {
-    if (expanded && scrollRef.current) {
-      // Wait for expand animation to complete (400ms), then scroll smoothly
-      setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true })
-      }, 500)
-    }
-  }, [])
-
   const renderedMuscleGroupAnalysis = (
-    <View style={tw`px-4`}>
+    <View
+      ref={muscleGroupViewRef}
+      style={tw`px-4`}
+    >
       <Txt twcn="font-semibold text-lg mb-2">Muscle Group Usage</Txt>
       <View
         style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary relative`}
@@ -391,7 +395,6 @@ const Insights = () => {
             data={muscleGroupChartData}
             primaryLabel="Primary"
             secondaryLabel="Secondary"
-            onExpand={handleMuscleGroupExpand}
           />
         ) : (
           <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
@@ -468,22 +471,32 @@ const Insights = () => {
           <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
             Week of {formattedDate}
           </Txt>
-          <Txt twcn="text-sm font-semibold">{formatNumber(point.y)}</Txt>
+          <Txt twcn="text-sm font-semibold">
+            {formatNumber(point.y)} {weightUnit}
+          </Txt>
         </GlassView>
       )
     })
-  }, [weeklyVolumeChartData])
+  }, [weeklyVolumeChartData, weightUnit])
 
   const renderedRepsPerSet = (
     <View style={tw`px-4`}>
       <Txt twcn="font-semibold text-lg mb-2">Reps Per Set</Txt>
       <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
-        {Object.keys(repsPerSetChartData).length > 0 ? (
+        {repsPerSetChartData.length > 0 ? (
           <BarChart
             data={repsPerSetChartData}
             barColor={Colors.primary}
             activeBarColor={Colors.secondary}
             onScrollEnabledChange={setScrollEnabled}
+            renderTooltip={(item) => (
+              <GlassView style={tw`p-2 rounded-2xl shadow-md`}>
+                <Txt twcn="text-xs text-center text-light-grayText dark:text-dark-grayText">
+                  {item.value} {item.value === 1 ? 'set' : 'sets'} at{' '}
+                  {item.label} {item.label === '1' ? 'rep' : 'reps'}
+                </Txt>
+              </GlassView>
+            )}
           />
         ) : (
           <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
@@ -501,12 +514,20 @@ const Insights = () => {
     <View style={tw`px-4`}>
       <Txt twcn="font-semibold text-lg mb-2">Sets Per Workout</Txt>
       <View style={tw`rounded-xl p-4 bg-white dark:bg-dark-grayPrimary`}>
-        {Object.keys(setsPerWorkoutChartData).length > 0 ? (
+        {setsPerWorkoutChartData.length > 0 ? (
           <BarChart
             data={setsPerWorkoutChartData}
             barColor={Colors.primary}
             activeBarColor={Colors.secondary}
             onScrollEnabledChange={setScrollEnabled}
+            renderTooltip={(item) => (
+              <GlassView style={tw`p-2 rounded-2xl shadow-md`}>
+                <Txt twcn="text-xs text-center text-light-grayText dark:text-dark-grayText">
+                  {item.value} {item.value === 1 ? 'workout' : 'workouts'} at{' '}
+                  {item.label} {item.label === '1' ? 'set' : 'sets'}
+                </Txt>
+              </GlassView>
+            )}
           />
         ) : (
           <Txt twcn="text-center text-light-grayText dark:text-dark-grayText py-8">
@@ -556,7 +577,44 @@ const Insights = () => {
     </View>
   )
 
+  const insightsPrompt = (
+    <SafeView
+      hasTabBar
+      scroll={false}
+    >
+      <View style={tw`flex-1 items-center justify-center px-16`}>
+        <SFIcon
+          name="chart.bar.fill"
+          color={Colors.primary}
+          size={64}
+        />
+        <Txt twcn="text-xl font-semibold text-center mt-6 mb-3">
+          Training Insights
+        </Txt>
+        <Txt twcn="text-center text-sm text-light-grayText dark:text-dark-grayText">
+          Log at least 5 workouts to gain insights into your training.
+        </Txt>
+        <Button
+          onPress={() => router.push('/workout-form')}
+          text="Log your first workout"
+          twcn="mt-6 py-4 w-full items-center flex-row gap-2 justify-center rounded-full bg-primary"
+          twcnText="font-semibold text-dark-text"
+        >
+          <SFIcon
+            name="arrow.right"
+            color={Colors.dark.text}
+            size={20}
+          />
+        </Button>
+      </View>
+    </SafeView>
+  )
+
   if (loading) return <Spinner text="Gathering data..." />
+
+  if (!insightsData?.totalWorkouts || insightsData.totalWorkouts < 5)
+    return insightsPrompt
+
   return (
     <>
       <SafeView

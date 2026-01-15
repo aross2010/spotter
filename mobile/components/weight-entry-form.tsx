@@ -29,10 +29,12 @@ import Spinner from './activity-indicator'
 import { useAuth } from '../context/auth-context'
 import { BASE_URL } from '../constants/auth'
 import MyDatePicker from './date-picker'
+import { useBodyWeightStore } from '../stores/body-weight-store'
 
 type PreviousWeightEntry = {
   weight: number
   date: string
+  id: string
   difference?: number
 }
 
@@ -47,7 +49,9 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
   const [loading, setLoading] = useState(true)
   const { fetchWithAuth } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { preferences, user } = useUserStore()
+  const { triggerRefresh } = useBodyWeightStore()
   const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
   const [data, setData] = useState({
     weight: 200,
@@ -101,6 +105,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
           metric: data.metric,
         }),
       })
+      triggerRefresh()
       setTimeout(() => {
         closeModal?.()
       }, 100)
@@ -109,6 +114,43 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleDeleteEntry = async () => {
+    Alert.alert(
+      `Delete Weight Entry for ${formatDate(data.date)}`,
+      'Are you sure you want to delete this weight entry?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsDeleting(true)
+              await fetchWithAuth(
+                `${BASE_URL}/api/weightEntries/${previousEntry?.id}`,
+                {
+                  method: 'DELETE',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }
+              )
+              triggerRefresh()
+              setPreviousEntry(null)
+            } catch (error: any) {
+              Alert.alert('Error', error.message)
+            } finally {
+              setIsDeleting(false)
+            }
+          },
+        },
+      ]
+    )
   }
 
   useEffect(() => {
@@ -126,32 +168,65 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
       <View>
         <View style={tw`flex-row justify-between items-center`}>
           <View>
-            <Txt twcn="text-xl font-semibold mb-1">Log Weight</Txt>
+            <Txt twcn="text-xl font-semibold mb-1">
+              Log Weight{' '}
+              <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                ({weightUnit === 'lbs' ? 'lbs' : 'kg'})
+              </Txt>
+            </Txt>
             <Button onPress={() => setIsDatePickerOpen(true)}>
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide">
                 {formatDate(data.date)}
               </Txt>
             </Button>
           </View>
-
-          <GlassView
-            style={tw`rounded-full px-2 flex-row items-center h-12 w-12`}
-          >
-            {isSaving ? (
-              <Spinner
-                twcn="w-8"
-                fullScreen={false}
-              />
-            ) : (
-              <Button onPress={handleSubmitEntry}>
-                <SFIcon
-                  name="checkmark"
-                  size={32}
-                  color={Colors.primary}
-                />
-              </Button>
+          <View style={tw`flex-row items-center gap-4`}>
+            {identicalDate && (
+              <GlassView
+                style={tw`rounded-full px-2 flex-row items-center justify-center h-12 w-12`}
+              >
+                {isDeleting ? (
+                  <Spinner
+                    twcn="w-8"
+                    fullScreen={false}
+                  />
+                ) : (
+                  <Button
+                    onPress={handleDeleteEntry}
+                    disabled={isSaving}
+                  >
+                    <SFIcon
+                      name="trash"
+                      size={28}
+                      color={Colors.primary}
+                    />
+                  </Button>
+                )}
+              </GlassView>
             )}
-          </GlassView>
+
+            <GlassView
+              style={tw`rounded-full px-2 flex-row items-center justify-center h-12 w-12`}
+            >
+              {isSaving ? (
+                <Spinner
+                  twcn="w-8"
+                  fullScreen={false}
+                />
+              ) : (
+                <Button
+                  onPress={handleSubmitEntry}
+                  disabled={isDeleting}
+                >
+                  <SFIcon
+                    name="checkmark"
+                    size={28}
+                    color={Colors.primary}
+                  />
+                </Button>
+              )}
+            </GlassView>
+          </View>
         </View>
         <View style={tw`mt-12 flex-row gap-8 self-center items-center`}>
           <Button
@@ -231,28 +306,30 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
         </View>
         <View style={tw`mt-6`}>
           {previousEntry && (
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-              Previous: {previousEntry.weight} {weightUnit},{' '}
-              {formatDate(previousEntry.date)}
-              {previousEntry.difference !== undefined &&
-                previousEntry.difference !== null && (
-                  <Txt
-                    twcn={`text-xs ${
-                      previousEntry.difference < 0
-                        ? 'text-red'
-                        : previousEntry.difference > 0
-                          ? 'text-green'
-                          : 'text-light-grayText dark:text-dark-grayText'
-                    }`}
-                  >
-                    {' '}
-                    ({previousEntry.difference >= 0 ? '+' : ''}
-                    {previousEntry.difference} {weightUnit})
-                  </Txt>
-                )}
-              {identicalDate &&
-                '. This entry will overwrite your existing entry for this date.'}
-            </Txt>
+            <>
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                Previous: {previousEntry.weight} {weightUnit},{' '}
+                {formatDate(previousEntry.date)}
+                {previousEntry.difference !== undefined &&
+                  previousEntry.difference !== null && (
+                    <Txt
+                      twcn={`text-xs ${
+                        previousEntry.difference < 0
+                          ? 'text-red'
+                          : previousEntry.difference > 0
+                            ? 'text-green'
+                            : 'text-light-grayText dark:text-dark-grayText'
+                      }`}
+                    >
+                      {' '}
+                      ({previousEntry.difference >= 0 ? '+' : ''}
+                      {previousEntry.difference} {weightUnit})
+                    </Txt>
+                  )}
+                {identicalDate &&
+                  '. This entry will overwrite your existing entry for this date. Or, '}
+              </Txt>
+            </>
           )}
         </View>
       </View>

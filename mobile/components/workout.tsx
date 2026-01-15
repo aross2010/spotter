@@ -97,7 +97,7 @@ const WorkoutView = ({
               )}
             </Txt>
           </View>
-          <Host style={{ width: 26, height: 26 }}>
+          <Host style={{ width: 22, height: 22 }}>
             <ContextMenu>
               <ContextMenu.Items>
                 <SwiftButton
@@ -151,7 +151,7 @@ const WorkoutView = ({
                 <SFIcon
                   name="ellipsis"
                   color={theme.text}
-                  size={26}
+                  size={22}
                 />
               </ContextMenu.Trigger>
             </ContextMenu>
@@ -162,7 +162,7 @@ const WorkoutView = ({
           <View style={tw`flex-row items-center gap-1`}>
             <Txt
               numberOfLines={1}
-              twcn={`font-semibold text-base -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+              twcn={`font-semibold text-lg -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
             >
               {name}
             </Txt>

@@ -20,13 +20,13 @@ const TabsLayout = () => {
         <Label>Exercises</Label>
         <Icon sf="dumbbell.fill" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="notebook">
-        <Label>Notebook</Label>
-        <Icon sf="book.pages.fill" />
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="insights">
         <Label>Insights</Label>
         <Icon sf="chart.bar.fill" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="notebook">
+        <Label>Notebook</Label>
+        <Icon sf="book.pages.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   )

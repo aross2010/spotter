@@ -39,6 +39,7 @@ type LineChartProps = {
   data: DataPoint[] // if data greater than 100, make it scrollable
   xKey: string
   yKey: string
+  chartHeight?: number
   formatXLabel?: (value: any, index: number) => string
   formatYLabel?: (value: number) => string
   maxXLabels?: number // kept for compatibility; we'll force 5 regardless
@@ -47,7 +48,6 @@ type LineChartProps = {
   onScrollEnabledChange?: (enabled: boolean) => void
 }
 
-const CHART_HEIGHT = 225
 const ANIMATION_DURATION = 2000
 
 // Animated Line component with draw effect
@@ -111,76 +111,6 @@ function AnimatedArea({
     </Group>
   )
 }
-
-// Active point indicator with animation
-// function ActivePoint({
-//   points,
-//   currentIndex,
-//   radius,
-// }: {
-//   points: PointsArray
-//   currentIndex: number | null
-//   radius: number
-// }) {
-//   const animatedX = useSharedValue(0)
-//   const animatedY = useSharedValue(0)
-//   const isFirstTouch = useSharedValue(true)
-
-//   // Update animated position when currentIndex changes
-//   useAnimatedReaction(
-//     () => currentIndex,
-//     (index, prevIndex) => {
-//       if (index == null || !points[index]) return
-
-//       const point = points[index]
-//       if (point.x == null || point.y == null) return
-
-//       if (isFirstTouch.value || prevIndex == null) {
-//         // First touch: jump immediately
-//         animatedX.value = point.x
-//         animatedY.value = point.y
-//         isFirstTouch.value = false
-//       } else {
-//         // Subsequent moves: animate
-//         animatedX.value = withTiming(point.x, {
-//           duration: 350,
-//           easing: Easing.out(Easing.cubic),
-//         })
-//         animatedY.value = withTiming(point.y, {
-//           duration: 350,
-//           easing: Easing.out(Easing.cubic),
-//         })
-//       }
-//     },
-//     [points]
-//   )
-
-//   // Reset first touch flag when finger lifts
-//   useAnimatedReaction(
-//     () => currentIndex,
-//     (index) => {
-//       if (index == null) {
-//         isFirstTouch.value = true
-//       }
-//     },
-//     []
-//   )
-
-//   const cx = useDerivedValue(() => animatedX.value)
-//   const cy = useDerivedValue(() => animatedY.value)
-
-//   // Return null after all hooks have been called
-//   if (currentIndex == null || !points[currentIndex]) return null
-
-//   return (
-//     <Circle
-//       cx={cx}
-//       cy={cy}
-//       r={radius}
-//       color={Colors.primary}
-//     />
-//   )
-// }
 
 function ActivePoint({
   points,
@@ -266,6 +196,7 @@ const LineChart = ({
   data,
   xKey,
   yKey,
+  chartHeight = 225,
   formatXLabel,
   formatYLabel,
   toolTips,
@@ -317,8 +248,8 @@ const LineChart = ({
     chartViewRef.current.measureInWindow((x, y, width, height) => {
       // Store the chart's screen X position for touch coordinate adjustment
       chartViewLeft.value = x
-      // Trigger animation when chart is at least 30% up from the bottom of the screen
-      const visibilityThreshold = screenHeight * 0.7
+      // Trigger animation when chart is at least 15% up from the bottom of the screen
+      const visibilityThreshold = screenHeight * 0.85
       const isVisible = y < visibilityThreshold && y + height > 0
       if (isVisible) {
         setHasBeenViewed(true)
@@ -696,7 +627,7 @@ const LineChart = ({
     <GestureDetector gesture={composedGesture}>
       <View
         ref={chartViewRef}
-        style={tw`w-full h-[${CHART_HEIGHT}px]`}
+        style={tw`w-full h-[${chartHeight}px]`}
       >
         <CartesianChart
           data={chartData}

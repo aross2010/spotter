@@ -260,11 +260,9 @@ export const PUT = withAuth(async (req: Request, user: any) => {
         try {
           await Promise.all(
             newExercises.map(async (exercise) => {
-              console.log('Updating muscle groups for exercise:', exercise.name)
               await updateMuscleGroupsInBackground(exercise.id, exercise.name)
             })
           )
-          console.log('All muscle group updates completed')
         } catch (error) {
           console.error('Background muscle group update failed:', error)
         }

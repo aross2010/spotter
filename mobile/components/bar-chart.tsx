@@ -22,6 +22,7 @@ type BarChartProps = {
   activeBarColor?: string
   showValues?: boolean
   onScrollEnabledChange?: (enabled: boolean) => void
+  renderTooltip?: (item: BarChartDataItem) => React.ReactNode
 }
 
 const CHART_HEIGHT = 180
@@ -97,6 +98,7 @@ const BarChart = ({
   activeBarColor = Colors.secondary,
   showValues = true,
   onScrollEnabledChange,
+  renderTooltip,
 }: BarChartProps) => {
   const { colorScheme, theme } = useTheme()
   const isFocused = useIsFocused()
@@ -136,9 +138,9 @@ const BarChart = ({
     if (hasBeenViewed || !chartViewRef.current) return
 
     chartViewRef.current.measureInWindow((x, y, width, height) => {
-      // Trigger animation when chart is at least 30% up from the bottom of the screen
+      // Trigger animation when chart is at least 15% up from the bottom of the screen
       // This ensures users see the animation as they naturally scroll
-      const visibilityThreshold = screenHeight * 0.7
+      const visibilityThreshold = screenHeight * 0.85
       const isVisible = y < visibilityThreshold && y + height > 0
       if (isVisible) {
         setHasBeenViewed(true)
@@ -314,8 +316,20 @@ const BarChart = ({
         HORIZONTAL_PADDING + index * (barWidth + BAR_GAP) + barWidth / 2
 
       // Position tooltip centered above bar, but keep within bounds
-      const tooltipWidth = 80
-      let left = barCenterX - tooltipWidth / 2
+      const tooltipWidth = 100
+      let left: number
+
+      // If this is within the last few bars on the right, prefer growing left
+      const RIGHT_GROW_COUNT = 5
+      const isNearRightEdge = index >= dataArray.length - RIGHT_GROW_COUNT
+
+      if (isNearRightEdge) {
+        // Align tooltip so its right edge is at the bar center (grows to the left)
+        left = barCenterX - tooltipWidth
+      } else {
+        // Default: center tooltip over bar
+        left = barCenterX - tooltipWidth / 2
+      }
 
       // Keep tooltip within chart bounds
       if (left < 0) left = 0
@@ -323,7 +337,7 @@ const BarChart = ({
 
       return left
     },
-    [chartWidth, barWidth]
+    [chartWidth, barWidth, dataArray.length]
   )
 
   // Animate tooltip position when selectedIndex changes
@@ -353,6 +367,7 @@ const BarChart = ({
   const tooltipAnimatedStyle = useAnimatedStyle(() => ({
     left: tooltipLeft.value,
     opacity: tooltipOpacity.value,
+    top: 0,
   }))
 
   return (
@@ -464,37 +479,41 @@ const BarChart = ({
               style={[
                 tw`absolute`,
                 {
-                  top: 8,
+                  top: 0,
                   zIndex: 10,
                 },
                 tooltipAnimatedStyle,
               ]}
             >
-              <GlassView
-                style={[
-                  tw`p-2 rounded-2xl shadow-md`,
-                  {
-                    minWidth: 80,
-                  },
-                ]}
-              >
-                <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs text-center">
-                  {selectedItem.label}
-                </Txt>
-                <View
-                  style={tw`flex-row items-center justify-center gap-1 mt-1`}
+              {renderTooltip ? (
+                renderTooltip(selectedItem)
+              ) : (
+                <GlassView
+                  style={[
+                    tw`p-2 rounded-2xl shadow-md`,
+                    {
+                      minWidth: 100,
+                    },
+                  ]}
                 >
-                  <View
-                    style={[
-                      tw`w-2 h-2 rounded-full`,
-                      { backgroundColor: activeBarColor },
-                    ]}
-                  />
-                  <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                    {selectedItem.value}
+                  <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs text-center">
+                    {selectedItem.label}
                   </Txt>
-                </View>
-              </GlassView>
+                  <View
+                    style={tw`flex-row items-center justify-center gap-1 mt-1`}
+                  >
+                    <View
+                      style={[
+                        tw`w-2 h-2 rounded-full`,
+                        { backgroundColor: activeBarColor },
+                      ]}
+                    />
+                    <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+                      {selectedItem.value}
+                    </Txt>
+                  </View>
+                </GlassView>
+              )}
             </Animated.View>
           )}
         </View>

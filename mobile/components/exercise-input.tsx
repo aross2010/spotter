@@ -15,6 +15,9 @@ import Button from './button'
 import Colors from '../constants/colors'
 import { useState, useEffect, useRef } from 'react'
 import React from 'react'
+import { useAuth } from '../context/auth-context'
+import { BASE_URL } from '../constants/auth'
+import { ExerciseDetailsMini } from '../utils/types'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
 import ExerciseMiniHistory from './exercise-mini-history'
@@ -76,8 +79,10 @@ const ExerciseInput = ({
     exerciseNumberInputValue,
     setExerciseNumberInputValue,
     handleExerciseNumberSubmitRef,
+    updateExerciseDetails,
   } = useWorkoutForm()
   const { preferences } = useUserStore()
+  const { fetchWithAuth } = useAuth()
   const { exercises } = workoutData
   const { theme, colorScheme } = useTheme()
   const ref = useRef<BottomSheetModal | null>(null)
@@ -336,6 +341,32 @@ const ExerciseInput = ({
     }
     ref.current?.present()
     Keyboard.dismiss()
+  }
+
+  const prefetchExerciseHistory = async (exerciseId: string) => {
+    const weightMetric = preferences?.weightMetric || 'lbs'
+    const intensityMetric = preferences?.intensityMetric || 'rpe'
+    const workoutDate = workoutData.date.toISOString().slice(0, 10)
+
+    // Mark as loading
+    updateExerciseDetails(exerciseNumber - 1, null, true)
+
+    try {
+      const res = await fetchWithAuth(
+        `${BASE_URL}/api/exercises/mini/${exerciseId}?weight=${weightMetric}&intensity=${intensityMetric}&date=${workoutDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = (await res.json()) as ExerciseDetailsMini
+      updateExerciseDetails(exerciseNumber - 1, data, false)
+    } catch (error) {
+      console.error('Error pre-fetching exercise history:', error)
+      updateExerciseDetails(exerciseNumber - 1, null, false)
+    }
   }
 
   const handleAddNewSet = () => {
@@ -711,12 +742,12 @@ const ExerciseInput = ({
   const buttons = [
     {
       name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
-      iconName: 'rectangle.portrait.fill',
+      iconName: 'square.on.square',
       onPress: handleMakeUnilateral,
     },
     {
       name: 'toggleSync',
-      iconName: 'rectangle.split.2x1.fill',
+      iconName: 'rectangle.split.2x1',
       onPress: handleToggleSync,
     },
     {
@@ -856,6 +887,9 @@ const ExerciseInput = ({
       }
     })
     setIsExerciseNameSelectorOpen(false)
+
+    // Pre-fetch exercise history
+    prefetchExerciseHistory(id)
 
     // Trigger autofocus on the first set's weight input
     setShouldFocusFirstSetWeight(true)
@@ -1004,6 +1038,9 @@ const ExerciseInput = ({
         ...workoutData,
         exercises: updatedExercises,
       })
+
+      // Pre-fetch exercise history
+      prefetchExerciseHistory(matchingExercise.id)
 
       setIsExerciseNameSelectorOpen(false)
       // Don't dismiss keyboard - allow user to continue typing if they want

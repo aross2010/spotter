@@ -46,6 +46,7 @@ import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated'
 import MyDatePicker from '../../../components/date-picker'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import { useInsightsStore } from '../../../stores/insights-store'
 
 const WorkoutForm = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
@@ -82,6 +83,7 @@ const WorkoutForm = () => {
   const { triggerRefresh: triggerHomeDataRefresh } = useHomeDataStore()
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
+  const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
 
   const handleCancelForm = useCallback(() => {
     if (hasChanges()) {
@@ -426,6 +428,7 @@ const WorkoutForm = () => {
         const res = await addWorkout()
         triggerHomeDataRefresh()
         triggerWorkoutTabRefresh()
+        triggerInsightsRefresh()
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
           if (res?.id) {
@@ -440,6 +443,7 @@ const WorkoutForm = () => {
         await updateWorkout(workoutId, workoutData)
         triggerWorkoutTabRefresh()
         triggerHomeDataRefresh()
+        triggerInsightsRefresh()
         if (workoutData.status === 'active') {
           setInitialState({ ...workoutData })
         } else {
@@ -477,7 +481,7 @@ const WorkoutForm = () => {
     <Button onPress={onPress}>
       <SFIcon
         name="chevron.left"
-        size={32}
+        size={24}
         color={Colors.primary}
       />
     </Button>
@@ -490,7 +494,7 @@ const WorkoutForm = () => {
     <Button onPress={onPress}>
       <SFIcon
         name="chevron.right"
-        size={32}
+        size={24}
         color={Colors.primary}
       />
     </Button>
@@ -503,7 +507,7 @@ const WorkoutForm = () => {
     <Button onPress={onPress}>
       <SFIcon
         name="checkmark"
-        size={32}
+        size={24}
         color={Colors.primary}
       />
     </Button>
@@ -684,7 +688,7 @@ const WorkoutForm = () => {
             <KeyboardToolbar.Content>
               {focusedInput && focusedInput.field === 'exerciseNumber' ? (
                 <GlassView
-                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
+                  style={tw`flex-row items-center justify-between gap-3 px-4 rounded-full`}
                 >
                   <View style={tw`flex-row items-center gap-1`}>
                     <Button
@@ -728,7 +732,7 @@ const WorkoutForm = () => {
                   >
                     <SFIcon
                       name="checkmark"
-                      size={32}
+                      size={24}
                       color={Colors.primary}
                     />
                   </Button>

@@ -11,6 +11,7 @@ import tw from '../../../tw'
 import { router, useNavigation } from 'expo-router'
 import Colors from '../../../constants/colors'
 import { useState, useEffect, useRef } from 'react'
+import { HeaderBackButton } from '@react-navigation/elements'
 import {
   DefaultKeyboardToolbarTheme,
   KeyboardToolbar,
@@ -45,20 +46,30 @@ const WorkoutNotes = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      //   headerRight: () => (
-      //     <Button
-      //       onPress={handleSave}
-      //       hitSlop={12}
-      //       accessibilityLabel="Save Notes"
-      //       twcn="w-9 flex-row items-center justify-center h-full px-2"
-      //     >
-      //       <SFIcon
-      //         name="checkmark"
-      //         size={26}
-      //         color={Colors.primary}
-      //       />
-      //     </Button>
-      //   ),
+      // headerRight: () => (
+      //   <Button
+      //     onPress={handleSave}
+      //     hitSlop={12}
+      //     accessibilityLabel="Save Notes"
+      //     twcn="w-9 flex-row items-center justify-center h-full px-2"
+      //   >
+      //     <SFIcon
+      //       name="checkmark"
+      //       size={26}
+      //       color={Colors.primary}
+      //     />
+      //   </Button>
+      // ),
+      headerLeft: () => (
+        <View style={tw`flex-row items-center w-9`}>
+          <HeaderBackButton
+            displayMode="minimal"
+            tintColor={theme.text}
+            onPress={handleSave}
+            style={tw`w-9 h-full`}
+          />
+        </View>
+      ),
     })
   }, [navigation])
 

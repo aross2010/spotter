@@ -218,6 +218,16 @@ export type ActivityCalendar = {
   }
 }
 
+export type BodyWeightData = {
+  bodyWeightProgression: {
+    date: string
+    bodyWeight: number
+  }[]
+  lowestBodyWeight: number | null // null if one or less entries
+  highestBodyWeight: number | null // null if one or less entries
+  overallDifference: number | null // highest - lowest, null if one or less entries
+}
+
 export type HomeData = {
   totalWorkouts: number
   totalReps: number
@@ -228,6 +238,7 @@ export type HomeData = {
     status: 'none' | 'most recent' | 'upcoming' | 'current' // try to get current workout first (active and same day), then upcoming (any workout marked as planned in the future or today), then most recent (last completed wotkout), else none (prompt to create)
   }
   activityCalendar: ActivityCalendar
+  bodyWeightData?: BodyWeightData
 }
 
 export type InsightsData = {
@@ -298,16 +309,6 @@ export type InsightsData = {
         totalVolume: number // sets x reps or total weight lifted
       }[]
     }
-  }
-  weight?: {
-    // if the user has no weight entries, no weight data will be shown
-    bodyWeightProgression: {
-      date: string
-      bodyWeight: number
-    }[]
-    lowestBodyWeight: number | null
-    highestBodyWeight: number | null
-    overallDifference: number | null // highest - lowest
   }
 }
 

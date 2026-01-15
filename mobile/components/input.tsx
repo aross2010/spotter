@@ -52,7 +52,7 @@ const Input = forwardRef<TextInput, InputProps>(
               }
             : undefined,
         ]}
-        placeholderTextColor={`${theme.grayText}/75`}
+        placeholderTextColor={`${theme.grayText}`}
         allowFontScaling={false}
         keyboardAppearance={colorScheme}
         multiline={props.numberOfLines ? true : props.multiline}

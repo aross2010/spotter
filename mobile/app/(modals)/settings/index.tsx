@@ -2,7 +2,7 @@ import { View, Alert, Linking } from 'react-native'
 import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { router } from 'expo-router'
+import { Link, router } from 'expo-router'
 import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
@@ -200,10 +200,17 @@ const Settings = () => {
       <View style={tw`flex-row justify-between mt-4`}>
         <Button
           onPress={promptDeleteAccount}
-          style={tw`px-2 py-4`}
+          style={tw`px-2`}
           text="Delete Account"
           twcnText="font-semibold text-light-grayText dark:text-dark-grayText"
         />
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs font-semibold px-2">
+          Made by{' '}
+          <Link href="https://adross.app">
+            <Txt twcn="font-bold text-primary dark:text-dark-primary ">me</Txt>
+          </Link>
+          .
+        </Txt>
       </View>
     </SafeView>
   )

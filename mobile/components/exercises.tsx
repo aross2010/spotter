@@ -74,13 +74,13 @@ const Exercises = () => {
 
   const guideItems = [
     {
-      iconName: 'rectangle.portrait.fill',
+      iconName: 'square.on.square',
       title: 'Unilateral',
       description:
         'Toggle between unilateral (left/right) and bilateral modes for custom exercises',
     },
     {
-      iconName: 'rectangle.split.2x1.fill',
+      iconName: 'rectangle.split.2x1',
       title: 'Sync/Separate',
       description:
         'For unilateral exercises: sync left/right values together or log them separately',

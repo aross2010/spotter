@@ -4,6 +4,7 @@ import {
   StyleSheet,
   View,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -34,6 +35,7 @@ import * as MediaLibrary from 'expo-media-library'
 import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
 import TagView from '../../components/tag'
+import RenderHTML from 'react-native-render-html'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -302,19 +304,42 @@ const WorkoutDetails = () => {
                   const showRepsSlash = set.leftReps !== set.rightReps
                   const showPartialsSlash =
                     set.leftPartialReps !== set.rightPartialReps
-                  const showRpeSlash = set.leftRpe !== set.rightRpe
 
-                  // Convert RPE to RIR if needed
-                  const leftIntensity = set.leftRpe
-                    ? intensityMetric === 'rir'
-                      ? 10 - set.leftRpe
-                      : set.leftRpe
-                    : null
-                  const rightIntensity = set.rightRpe
-                    ? intensityMetric === 'rir'
-                      ? 10 - set.rightRpe
-                      : set.rightRpe
-                    : null
+                  // Get intensity values based on metric preference
+                  let leftIntensity: number | null = null
+                  let rightIntensity: number | null = null
+
+                  if (intensityMetric === 'rir') {
+                    // Use RIR if available, otherwise convert from RPE
+                    leftIntensity =
+                      set.leftRir !== null && set.leftRir !== undefined
+                        ? set.leftRir
+                        : set.leftRpe !== null && set.leftRpe !== undefined
+                          ? 10 - set.leftRpe
+                          : null
+                    rightIntensity =
+                      set.rightRir !== null && set.rightRir !== undefined
+                        ? set.rightRir
+                        : set.rightRpe !== null && set.rightRpe !== undefined
+                          ? 10 - set.rightRpe
+                          : null
+                  } else {
+                    // Use RPE if available, otherwise convert from RIR
+                    leftIntensity =
+                      set.leftRpe !== null && set.leftRpe !== undefined
+                        ? set.leftRpe
+                        : set.leftRir !== null && set.leftRir !== undefined
+                          ? 10 - set.leftRir
+                          : null
+                    rightIntensity =
+                      set.rightRpe !== null && set.rightRpe !== undefined
+                        ? set.rightRpe
+                        : set.rightRir !== null && set.rightRir !== undefined
+                          ? 10 - set.rightRir
+                          : null
+                  }
+
+                  const showRpeSlash = leftIntensity !== rightIntensity
 
                   return (
                     <View
@@ -364,20 +389,34 @@ const WorkoutDetails = () => {
                           rightIntensity !== null) && (
                           <Txt twcn="text-center text-light-text dark:text-dark-text">
                             {showRpeSlash
-                              ? `${leftIntensity || 0}/${rightIntensity || 0}`
-                              : leftIntensity || rightIntensity}
+                              ? `${leftIntensity ?? 0}/${rightIntensity ?? 0}`
+                              : (leftIntensity ?? rightIntensity)}
                           </Txt>
                         )}
                       </View>
                     </View>
                   )
                 } else {
-                  // Convert RPE to RIR if needed
-                  const intensity = set.rpe
-                    ? intensityMetric === 'rir'
-                      ? 10 - set.rpe
-                      : set.rpe
-                    : null
+                  // Get intensity value based on metric preference
+                  let intensity: number | null = null
+
+                  if (intensityMetric === 'rir') {
+                    // Use RIR if available, otherwise convert from RPE
+                    intensity =
+                      set.rir !== null && set.rir !== undefined
+                        ? set.rir
+                        : set.rpe !== null && set.rpe !== undefined
+                          ? 10 - set.rpe
+                          : null
+                  } else {
+                    // Use RPE if available, otherwise convert from RIR
+                    intensity =
+                      set.rpe !== null && set.rpe !== undefined
+                        ? set.rpe
+                        : set.rir !== null && set.rir !== undefined
+                          ? 10 - set.rir
+                          : null
+                  }
 
                   return (
                     <View
@@ -447,6 +486,12 @@ const WorkoutDetails = () => {
       )
     })
 
+  const displayText =
+    workout?.notes && workout.notes.length > 500
+      ? workout?.notes.substring(0, 500).trim() + '...'
+      : workout?.notes || ''
+  const { width } = useWindowDimensions()
+
   return isLoading ? (
     <Spinner />
   ) : (
@@ -466,9 +511,35 @@ const WorkoutDetails = () => {
                 )}
               </Txt>
               {workout.notes && (
-                <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-                  {workout.notes}
-                </Txt>
+                // <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
+                //   {workout.notes}
+                // </Txt>
+                <RenderHTML
+                  contentWidth={width - 32}
+                  source={{ html: displayText }}
+                  baseStyle={{
+                    color: theme.grayText,
+                    fontSize: 13,
+                    lineHeight: 18,
+                  }}
+                  enableExperimentalBRCollapsing
+                  tagsStyles={{
+                    p: { marginTop: 0, marginBottom: 0 },
+                    ul: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+                    ol: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+                    li: {
+                      paddingLeft: 6,
+                      paddingBottom: 0,
+                      paddingTop: 0,
+                    },
+                    strong: { fontWeight: 'bold' },
+                    b: { fontWeight: 'bold' },
+                    em: { fontStyle: 'italic' },
+                    i: { fontStyle: 'italic' },
+                    u: { textDecorationLine: 'underline' },
+                    a: { color: Colors.primary, fontWeight: 'bold' },
+                  }}
+                />
               )}
               {workout.tags.length > 0 && (
                 <View style={tw`flex-row flex-wrap items-center gap-2`}>

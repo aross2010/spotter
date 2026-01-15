@@ -7,7 +7,6 @@ import React, {
 } from 'react'
 import { Tag, TagWithCount } from '../utils/types'
 import { registerContextResetter } from '../utils/context-manager'
-import { useNotebook } from './notebook-context'
 import { Alert } from 'react-native'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
@@ -76,13 +75,6 @@ export const NotebookFormProvider = ({
         }
       )
       const { title, id, body, tags, date } = await res.json()
-      console.log('Fetched notebook entryyyyy:', {
-        title,
-        id,
-        body,
-        tags,
-        date,
-      })
       setNotebookFormData({
         date: new Date(date),
         title,
