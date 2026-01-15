@@ -69,22 +69,6 @@ const preferenceOptions = [
     category: 'Workouts',
   },
   {
-    title: 'Distance Unit',
-    subtitle: 'How distance is displayed in cardio activities',
-    options: [
-      {
-        value: 'miles',
-        label: 'Mi',
-      },
-      {
-        value: 'km',
-        label: 'Km',
-      },
-    ],
-    type: 'distanceMetric',
-    category: 'Workouts',
-  },
-  {
     title: 'Intensity Unit',
     subtitle: 'RIR: Reps in Reserves, RPE: Rate of Perceived Exertion',
     options: [

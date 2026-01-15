@@ -583,9 +583,32 @@ const WorkoutDetails = () => {
                   )}
                 </Txt>
                 {workout.notes && (
-                  <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-                    {workout.notes}
-                  </Txt>
+                  <RenderHTML
+                    contentWidth={width - 32}
+                    source={{ html: displayText }}
+                    baseStyle={{
+                      color: theme.grayText,
+                      fontSize: 13,
+                      lineHeight: 18,
+                    }}
+                    enableExperimentalBRCollapsing
+                    tagsStyles={{
+                      p: { marginTop: 0, marginBottom: 0 },
+                      ul: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+                      ol: { marginTop: 0, marginBottom: 0, paddingLeft: 20 },
+                      li: {
+                        paddingLeft: 6,
+                        paddingBottom: 0,
+                        paddingTop: 0,
+                      },
+                      strong: { fontWeight: 'bold' },
+                      b: { fontWeight: 'bold' },
+                      em: { fontStyle: 'italic' },
+                      i: { fontStyle: 'italic' },
+                      u: { textDecorationLine: 'underline' },
+                      a: { color: Colors.primary, fontWeight: 'bold' },
+                    }}
+                  />
                 )}
                 {workout.tags.length > 0 && (
                   <View style={tw`flex-row flex-wrap items-center gap-2`}>
