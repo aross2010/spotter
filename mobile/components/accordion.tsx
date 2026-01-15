@@ -14,8 +14,8 @@ import Animated, {
 } from 'react-native-reanimated'
 import Button from './button'
 import Txt from './text'
-import { ChevronDown } from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
+import SFIcon from './sf-icon'
 
 if (
   Platform.OS === 'android' &&
@@ -75,7 +75,8 @@ const Accordion = ({
           {title}
         </Txt>
         <Animated.View style={animatedChevron}>
-          <ChevronDown
+          <SFIcon
+            name="chevron.down"
             size={16}
             color={theme.grayText}
           />

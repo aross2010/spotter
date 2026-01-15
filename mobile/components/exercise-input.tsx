@@ -8,28 +8,26 @@ import {
 } from 'react-native'
 import { nanoid } from 'nanoid/non-secure'
 import { useWorkoutForm } from '../context/workout-form-context'
-import { BlurView } from 'expo-blur'
 import tw from '../tw'
 import Txt from './text'
 import Input from './input'
-import {
-  ChevronsLeftRightEllipsis,
-  Info,
-  Plus,
-  Redo,
-  SquareSplitHorizontal,
-  Trash,
-} from 'lucide-react-native'
 import Button from './button'
 import Colors from '../constants/colors'
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import React from 'react'
+import { useAuth } from '../context/auth-context'
+import { BASE_URL } from '../constants/auth'
+import { ExerciseDetailsMini } from '../utils/types'
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import useTheme from '../app/hooks/theme'
-import MyModal from './modal'
 import ExerciseMiniHistory from './exercise-mini-history'
 import { useUserStore } from '../stores/user-store'
 import { ExerciseName } from '../utils/types'
+import { GlassView } from 'expo-glass-effect'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import MyBottomSheet from './bottom-sheet'
+import SFIcon from './sf-icon'
+import { SFSymbol } from 'expo-symbols'
 
 const MAX_SETS = 20
 
@@ -45,13 +43,13 @@ const ExerciseInput = ({
   onReorderExercises,
   ...rest
 }: ExerciseInputProps) => {
-  const [isExerciseInfoOpen, setIsExerciseInfoOpen] = useState(false)
   const [isExerciseNameSelectorOpen, setIsExerciseNameSelectorOpen] =
     useState(false)
   const [exerciseNameResults, setExerciseNameResults] = useState<
     ExerciseName[]
   >([])
   const exerciseNameInputRef = useRef<TextInput>(null)
+  const lastFocusedInputRef = useRef<TextInput | null>(null)
   const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
   const [shouldFocusFirstSetWeight, setShouldFocusFirstSetWeight] =
     useState(false)
@@ -81,14 +79,25 @@ const ExerciseInput = ({
     exerciseNumberInputValue,
     setExerciseNumberInputValue,
     handleExerciseNumberSubmitRef,
+    updateExerciseDetails,
   } = useWorkoutForm()
   const { preferences } = useUserStore()
-  const [isSynced, setIsSynced] = useState(
-    preferences?.unilateralLogging === 'sync'
-  )
+  const { fetchWithAuth } = useAuth()
   const { exercises } = workoutData
-  const { theme } = useTheme()
+  const { theme, colorScheme } = useTheme()
+  const ref = useRef<BottomSheetModal | null>(null)
   const exercise = exercises[exerciseNumber - 1]
+  const [isSynced, setIsSynced] = useState(
+    exercise?.isSynced ?? preferences?.unilateralLogging === 'sync'
+  )
+
+  // Sync local isSynced state with exercise data when exercise changes
+  useEffect(() => {
+    if (exercise?.isSynced !== undefined) {
+      setIsSynced(exercise.isSynced)
+    }
+  }, [exercise?.isSynced])
+
   const sets = exercise?.sets
   const weightUnit = workoutData.weightUnit || 'lbs'
   const intensityMetric = preferences?.intensityMetric || 'rir'
@@ -108,7 +117,7 @@ const ExerciseInput = ({
       const timeoutId = setTimeout(() => {
         exerciseNameInputRef.current?.focus()
         setNewlyAddedExerciseNumber(null) // Clear the flag after focusing
-      }, 10)
+      }, 50)
       return () => clearTimeout(timeoutId)
     }
   }, [newlyAddedExerciseNumber, exerciseNumber, setNewlyAddedExerciseNumber])
@@ -325,7 +334,39 @@ const ExerciseInput = ({
   }
 
   const handleDisplayExerciseInfo = () => {
-    setIsExerciseInfoOpen(true)
+    // Store currently focused input
+    const currentlyFocused = TextInput.State.currentlyFocusedInput()
+    if (currentlyFocused) {
+      lastFocusedInputRef.current = currentlyFocused as any
+    }
+    ref.current?.present()
+    Keyboard.dismiss()
+  }
+
+  const prefetchExerciseHistory = async (exerciseId: string) => {
+    const weightMetric = preferences?.weightMetric || 'lbs'
+    const intensityMetric = preferences?.intensityMetric || 'rpe'
+    const workoutDate = workoutData.date.toISOString().slice(0, 10)
+
+    // Mark as loading
+    updateExerciseDetails(exerciseNumber - 1, null, true)
+
+    try {
+      const res = await fetchWithAuth(
+        `${BASE_URL}/api/exercises/mini/${exerciseId}?weight=${weightMetric}&intensity=${intensityMetric}&date=${workoutDate}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+      const data = (await res.json()) as ExerciseDetailsMini
+      updateExerciseDetails(exerciseNumber - 1, data, false)
+    } catch (error) {
+      console.error('Error pre-fetching exercise history:', error)
+      updateExerciseDetails(exerciseNumber - 1, null, false)
+    }
   }
 
   const handleAddNewSet = () => {
@@ -465,10 +506,10 @@ const ExerciseInput = ({
             }}
             twcn="p-2 w-full items-center justify-center"
           >
-            <Redo
+            <SFIcon
+              name="arrow.uturn.forward"
               size={16}
               color="white"
-              strokeWidth={2}
             />
           </Button>
         </View>
@@ -488,10 +529,10 @@ const ExerciseInput = ({
             }}
             twcn="p-2 w-full items-center justify-center"
           >
-            <Trash
+            <SFIcon
+              name="trash"
               size={16}
               color="white"
-              strokeWidth={2}
             />
           </Button>
         </View>
@@ -533,8 +574,11 @@ const ExerciseInput = ({
       // Cap RPE/RIR at 10
       if ((fieldValue === 'rpe' || fieldValue === 'rir') && numValue > 10) {
         finalValue = 10
+      } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+        // For RPE/RIR, 0 is a valid value (max effort)
+        finalValue = numValue
       } else {
-        // Treat 0 as undefined (empty state)
+        // Treat 0 as undefined (empty state) for other fields
         finalValue = numValue === 0 ? undefined : numValue
       }
     }
@@ -543,20 +587,25 @@ const ExerciseInput = ({
     const updatedSets = [...(updatedExercises[exerciseNumber - 1]?.sets || [])]
 
     let fieldToUpdate: string = fieldValue
+    let leftFieldToUpdate: string | undefined
     let rightFieldToUpdate: string | undefined
 
     if (isUnilateral && isLeftSide !== undefined) {
       if (fieldValue === 'reps') {
         fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
+        leftFieldToUpdate = 'leftReps'
         rightFieldToUpdate = 'rightReps'
       } else if (fieldValue === 'partials') {
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
+        leftFieldToUpdate = 'leftPartialReps'
         rightFieldToUpdate = 'rightPartialReps'
       } else if (fieldValue === 'rpe') {
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+        leftFieldToUpdate = 'leftRpe'
         rightFieldToUpdate = 'rightRpe'
       } else if (fieldValue === 'rir') {
         fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+        leftFieldToUpdate = 'leftRir'
         rightFieldToUpdate = 'rightRir'
       }
     } else {
@@ -567,29 +616,43 @@ const ExerciseInput = ({
     const finalValueToSet = isNaN(finalValue as number) ? undefined : finalValue
 
     // Update both left and right at the same time for sync mode
-    if (isUnilateral && isSynced && isLeftSide === true && rightFieldToUpdate) {
+    if (isUnilateral && isSynced && leftFieldToUpdate && rightFieldToUpdate) {
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        [fieldToUpdate]: finalValueToSet,
+        [leftFieldToUpdate]: finalValueToSet,
         [rightFieldToUpdate]: finalValueToSet,
       } as any
 
-      // Immediately update the right side input's displayed text using ref
+      // Immediately update the opposite side input's displayed text using ref
       const currentSet = updatedSets[setIndex]
       const setId = currentSet.id
       const displayText =
         finalValueToSet === undefined ? '' : finalValueToSet.toString()
 
-      // Update the appropriate right-side input ref
-      if (fieldValue === 'reps') {
-        const rightRef = rightRepsInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
-      } else if (fieldValue === 'partials') {
-        const rightRef = rightPartialsInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
-      } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
-        const rightRef = rightRpeInputRefs.current.get(setId)
-        if (rightRef) rightRef.setNativeProps({ text: displayText })
+      if (isLeftSide === true) {
+        // Left side changed, update right side input
+        if (fieldValue === 'reps') {
+          const rightRef = rightRepsInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'partials') {
+          const rightRef = rightPartialsInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+          const rightRef = rightRpeInputRefs.current.get(setId)
+          if (rightRef) rightRef.setNativeProps({ text: displayText })
+        }
+      } else if (isLeftSide === false) {
+        // Right side changed, update left side input
+        if (fieldValue === 'reps') {
+          const leftRef = leftRepsInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'partials') {
+          const leftRef = leftPartialsInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        } else if (fieldValue === 'rpe' || fieldValue === 'rir') {
+          const leftRef = leftRpeInputRefs.current.get(setId)
+          if (leftRef) leftRef.setNativeProps({ text: displayText })
+        }
       }
     } else {
       updatedSets[setIndex] = {
@@ -657,28 +720,44 @@ const ExerciseInput = ({
   }
 
   const handleToggleSync = () => {
-    setIsSynced(!isSynced)
+    const newSyncState = !isSynced
+    setIsSynced(newSyncState)
+
+    // Update the exercise's isSynced property in workout data
+    setWorkoutData((prev) => {
+      const updatedExercises = [...prev.exercises]
+      if (exerciseNumber && updatedExercises[exerciseNumber - 1]) {
+        updatedExercises[exerciseNumber - 1] = {
+          ...updatedExercises[exerciseNumber - 1],
+          isSynced: newSyncState,
+        }
+      }
+      return {
+        ...prev,
+        exercises: updatedExercises,
+      }
+    })
   }
 
   const buttons = [
     {
       name: 'isUnilateral', // IF NOT EXISTS BEFORE, else HIDE
-      icon: ChevronsLeftRightEllipsis,
+      iconName: 'square.on.square',
       onPress: handleMakeUnilateral,
     },
     {
       name: 'toggleSync',
-      icon: SquareSplitHorizontal,
+      iconName: 'rectangle.split.2x1',
       onPress: handleToggleSync,
     },
     {
       name: 'View Information', // history & exercise notes, IF EXISTS BEFORE, else HIDE
-      icon: Info,
+      iconName: 'info.circle',
       onPress: handleDisplayExerciseInfo,
     },
     {
       name: 'Delete Exercise',
-      icon: Trash,
+      iconName: 'trash',
       onPress: handleDeleteExercise,
     },
   ]
@@ -686,7 +765,7 @@ const ExerciseInput = ({
   const setButtons = [
     {
       name: 'Add New Set',
-      icon: Plus,
+      iconName: 'plus',
       onPress: handleAddNewSet,
     },
   ]
@@ -809,6 +888,9 @@ const ExerciseInput = ({
     })
     setIsExerciseNameSelectorOpen(false)
 
+    // Pre-fetch exercise history
+    prefetchExerciseHistory(id)
+
     // Trigger autofocus on the first set's weight input
     setShouldFocusFirstSetWeight(true)
   }
@@ -819,7 +901,7 @@ const ExerciseInput = ({
         <Button
           key={name}
           onPress={() => handleSelectExistingExercise(id, name, used)}
-          style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+          style={tw`flex-row items-center justify-between p-4 w-full ${
             index === exerciseNameResults.length - 1
               ? ''
               : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
@@ -957,6 +1039,9 @@ const ExerciseInput = ({
         exercises: updatedExercises,
       })
 
+      // Pre-fetch exercise history
+      prefetchExerciseHistory(matchingExercise.id)
+
       setIsExerciseNameSelectorOpen(false)
       // Don't dismiss keyboard - allow user to continue typing if they want
       return
@@ -1050,53 +1135,52 @@ const ExerciseInput = ({
     handleExerciseNumberSubmitRef,
   ])
 
-  const renderedExerciseButtons = buttons.map(
-    ({ name, icon: Icon, onPress }) => {
-      const isActive =
-        name === 'isUnilateral' && exerciseNumber
-          ? workoutData.exercises[exerciseNumber - 1]?.isUnilateral
-          : name === 'toggleSync'
-            ? !isSynced
-            : false
-      if (name === 'Delete Exercise' && exercises.length <= 1) {
-        return null
-      }
-
-      if (name === 'isUnilateral' && exercise.existing) {
-        return null
-      }
-
-      if (name === 'toggleSync' && !isUnilateral) {
-        return null
-      }
-
-      if (name === 'View Information' && !exercise.existing) {
-        return null
-      }
-
-      return (
-        <Button
-          key={name}
-          onPress={onPress}
-          twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
-        >
-          <Icon
-            size={16}
-            color={isActive ? Colors.primary : theme.grayText}
-          />
-        </Button>
-      )
+  const renderedExerciseButtons = buttons.map(({ name, iconName, onPress }) => {
+    const isActive =
+      name === 'isUnilateral' && exerciseNumber
+        ? workoutData.exercises[exerciseNumber - 1]?.isUnilateral
+        : name === 'toggleSync'
+          ? !isSynced
+          : false
+    if (name === 'Delete Exercise' && exercises.length <= 1) {
+      return null
     }
-  )
 
-  const renderedSetButtons = setButtons.map(({ name, icon: Icon, onPress }) => {
+    if (name === 'isUnilateral' && exercise.existing) {
+      return null
+    }
+
+    if (name === 'toggleSync' && !isUnilateral) {
+      return null
+    }
+
+    if (name === 'View Information' && !exercise.existing) {
+      return null
+    }
+
+    return (
+      <Button
+        key={name}
+        onPress={onPress}
+        twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+      >
+        <SFIcon
+          name={iconName as SFSymbol}
+          size={16}
+          color={isActive ? Colors.primary : theme.grayText}
+        />
+      </Button>
+    )
+  })
+
+  const renderedSetButtons = setButtons.map(({ name, iconName, onPress }) => {
     return (
       <Button
         key={name}
         onPress={onPress}
         text="Add Set"
         hitSlop={12}
-        twcnText="text-primary dark:text-primary font-poppinsSemiBold"
+        twcnText="text-primary dark:text-primary font-semibold"
         twcn="px-2"
       />
     )
@@ -1108,7 +1192,7 @@ const ExerciseInput = ({
         key={value}
         style={tw`flex-1 items-center`}
       >
-        <Txt twcn="text-xs font-poppinsMedium text-light-grayText dark:text-dark-grayText">
+        <Txt twcn="text-xs font-medium text-light-grayText dark:text-dark-grayText">
           {label}
         </Txt>
       </View>
@@ -1145,14 +1229,14 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.leftRpe === 'string'
                     ? set.leftRpe
-                    : set.leftRpe && set.leftRpe !== 0
+                    : set.leftRpe !== undefined && set.leftRpe !== null
                       ? set.leftRpe.toString()
                       : ''
               } else if (value === 'rir') {
                 displayValue =
                   typeof set.leftRir === 'string'
                     ? set.leftRir
-                    : set.leftRir && set.leftRir !== 0
+                    : set.leftRir !== undefined && set.leftRir !== null
                       ? set.leftRir.toString()
                       : ''
               } else {
@@ -1241,14 +1325,14 @@ const ExerciseInput = ({
                 displayValue =
                   typeof set.rightRpe === 'string'
                     ? set.rightRpe
-                    : set.rightRpe && set.rightRpe !== 0
+                    : set.rightRpe !== undefined && set.rightRpe !== null
                       ? set.rightRpe.toString()
                       : ''
               } else if (value === 'rir') {
                 displayValue =
                   typeof set.rightRir === 'string'
                     ? set.rightRir
-                    : set.rightRir && set.rightRir !== 0
+                    : set.rightRir !== undefined && set.rightRir !== null
                       ? set.rightRir.toString()
                       : ''
               } else {
@@ -1342,12 +1426,24 @@ const ExerciseInput = ({
             // Map 'partials' to 'partialReps' for display
             const displayField = value === 'partials' ? 'partialReps' : value
             const rawValue = set[displayField as keyof typeof set]
-            const displayValue =
-              typeof rawValue === 'string'
-                ? rawValue
-                : rawValue && rawValue !== 0
-                  ? rawValue.toString()
-                  : ''
+
+            // Special handling for RPE/RIR to allow 0 values
+            let displayValue = ''
+            if (value === 'rpe' || value === 'rir') {
+              displayValue =
+                typeof rawValue === 'string'
+                  ? rawValue
+                  : rawValue !== undefined && rawValue !== null
+                    ? rawValue.toString()
+                    : ''
+            } else {
+              displayValue =
+                typeof rawValue === 'string'
+                  ? rawValue
+                  : rawValue && rawValue !== 0
+                    ? rawValue.toString()
+                    : ''
+            }
 
             return (
               <Input
@@ -1426,7 +1522,7 @@ const ExerciseInput = ({
         {isEditingExerciseNumber ? (
           <TextInput
             ref={exerciseNumberInputRef}
-            style={tw`text-base text-dark-text font-poppinsSemiBold w-full h-full`}
+            style={tw`text-base text-dark-text font-semibold w-full h-full`}
             textAlign="center"
             textAlignVertical="center"
             value={exerciseNumberInput}
@@ -1439,7 +1535,7 @@ const ExerciseInput = ({
           />
         ) : (
           <Button onPress={handleExerciseNumberEdit}>
-            <Txt twcn="text-base text-dark-text font-poppinsSemiBold">
+            <Txt twcn="text-base text-dark-text font-semibold">
               {exerciseNumber ?? '+'}
             </Txt>
           </Button>
@@ -1487,26 +1583,23 @@ const ExerciseInput = ({
               autoComplete="off"
               autoCorrect={false}
               autoCapitalize="words"
+              twcnInput="pb-1"
               {...rest}
             />
             {isExerciseNameSelectorOpen &&
               exerciseNameResults.length > 0 &&
               exercise.name.trim().length > 0 && (
-                <BlurView
-                  intensity={25}
-                  tint="default"
-                  style={[
-                    tw`absolute top-full bg-white dark:bg-dark-grayPrimary left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
-                  ]}
+                <GlassView
+                  style={tw`absolute top-full left-0 right-0 mt-1 rounded-xl overflow-hidden z-10`}
                 >
                   <ScrollView
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
-                    style={tw`max-h-44`}
+                    style={tw`max-h-37 bg-transparent`}
                   >
                     {renderedExerciseNames}
                   </ScrollView>
-                </BlurView>
+                </GlassView>
               )}
           </View>
           <View style={tw`flex-row gap-1 items-center`}>
@@ -1525,15 +1618,25 @@ const ExerciseInput = ({
   )
 
   return (
-    <View style={tw`flex-row gap-2 items-start`}>
+    <View style={tw`flex-row gap-4 items-start`}>
       {timelineComponent}
       {formComponent}
-      <MyModal
-        isOpen={isExerciseInfoOpen}
-        setIsOpen={setIsExerciseInfoOpen}
+      <MyBottomSheet
+        ref={ref}
+        onDismiss={() => {
+          if (lastFocusedInputRef.current) {
+            requestAnimationFrame(() => {
+              lastFocusedInputRef.current?.focus()
+            })
+          }
+        }}
       >
-        <ExerciseMiniHistory id={exercise.id as string} />
-      </MyModal>
+        <ExerciseMiniHistory
+          id={exercise.id as string}
+          exerciseIndex={exerciseNumber - 1}
+          workoutDate={workoutData.date.toISOString().slice(0, 10)}
+        />
+      </MyBottomSheet>
     </View>
   )
 }

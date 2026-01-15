@@ -1,5 +1,5 @@
 import { Alert, StyleSheet, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import SafeView from '../../../components/safe-view'
 import {
@@ -11,21 +11,17 @@ import { MUSCLE_GROUPS } from '../../../constants/data'
 import Button from '../../../components/button'
 import { MuscleGroup } from '../../../utils/types'
 import Txt from '../../../components/text'
-import {
-  ArrowLeftRight,
-  Check,
-  ChevronsLeftRight,
-  ChevronsLeftRightEllipsis,
-  Plus,
-  X,
-} from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import tw from '../../../tw'
 import useTheme from '../../hooks/theme'
-import MyModal from '../../../components/modal'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import { toTitleCase } from '../../../functions/utils'
+import SFIcon from '../../../components/sf-icon'
+import Spinner from '../../../components/activity-indicator'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import MyBottomSheet from '../../../components/bottom-sheet'
+import { useInsightsStore } from '../../../stores/insights-store'
 
 type ExerciseInfo = {
   id: string
@@ -47,15 +43,16 @@ const ExerciseForm = () => {
   } = useLocalSearchParams()
   const { triggerRefresh } = useExerciseStore()
   const { triggerRefresh: triggerExerciseTabRefresh } = useExerciseTabStore()
+  const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
   const { fetchWithAuth } = useAuth()
   const [exercise, setExercise] = useState<ExerciseInfo | null>(null)
   const [initialExercise, setInitialExercise] = useState<ExerciseInfo | null>(
     null
   )
-  const [isMuscleGroupModalOpen, setIsMuscleGroupModalOpen] = useState(false)
   const [isSwapMode, setIsSwapMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const ref = useRef<BottomSheetModal | null>(null)
   const navigation = useNavigation()
   const { theme } = useTheme()
 
@@ -64,14 +61,28 @@ const ExerciseForm = () => {
       headerRight: () => {
         const canUpdate = hasChanges && !loading
         return (
-          <Button
-            onPress={handleSaveExercise}
-            hitSlop={12}
-            accessibilityLabel="Save Workout"
-            twcnText={`font-poppinsSemiBold ${canUpdate ? 'text-primary dark:text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
-            text={loading ? 'Updating...' : 'Update'}
-            disabled={!canUpdate}
-          />
+          <View style={tw`flex-row items-center`}>
+            {loading ? (
+              <Spinner
+                fullScreen={false}
+                twcn="w-9"
+              />
+            ) : (
+              <Button
+                onPress={handleSaveExercise}
+                hitSlop={12}
+                accessibilityLabel="Save Exercise Details"
+                disabled={!canUpdate}
+                twcn="w-9 flex-row items-center justify-center h-full"
+              >
+                <SFIcon
+                  name="checkmark"
+                  size={26}
+                  color={canUpdate ? Colors.primary : theme.grayText}
+                />
+              </Button>
+            )}
+          </View>
         )
       },
     })
@@ -140,6 +151,7 @@ const ExerciseForm = () => {
       await res.json()
       triggerRefresh()
       triggerExerciseTabRefresh()
+      triggerInsightsRefresh()
       router.back()
     } catch (error: any) {
       Alert.alert('Error', error.message)
@@ -207,7 +219,7 @@ const ExerciseForm = () => {
         }
       }
     })
-    setIsMuscleGroupModalOpen(false)
+    ref.current?.present()
     setIsSwapMode(false)
   }
 
@@ -233,7 +245,8 @@ const ExerciseForm = () => {
             >
               {toTitleCase(group)}
             </Txt>
-            <ArrowLeftRight
+            <SFIcon
+              name="arrow.left.arrow.right"
               size={12}
               color={exists ? Colors.primary : theme.grayText}
             />
@@ -258,12 +271,14 @@ const ExerciseForm = () => {
             {toTitleCase(group)}
           </Txt>
           {!exists ? (
-            <Plus
+            <SFIcon
+              name="plus"
               size={12}
               color={theme.grayText}
             />
           ) : (
-            <Check
+            <SFIcon
+              name="checkmark"
               size={12}
               color={Colors.primary}
             />
@@ -284,7 +299,8 @@ const ExerciseForm = () => {
           <Txt twcn="text-xs text-primary dark:text-primary">
             {toTitleCase(m)}
           </Txt>
-          <X
+          <SFIcon
+            name="xmark"
             size={12}
             color={Colors.primary}
           />
@@ -317,21 +333,23 @@ const ExerciseForm = () => {
           value={exercise?.description}
           onChangeText={(text) => handleChange('description', text)}
           placeholder="Form cues, equipment information, etc."
+          twcnInput="rounded-2xl"
         />
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold">Primary Muscle Group</Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Primary Muscle Group</Txt>
           {exercise.primaryMuscleGroup ? (
             <Button
               onPress={() => {
                 setIsSwapMode(true)
-                setIsMuscleGroupModalOpen(true)
+                ref.current?.present()
               }}
               twcn="px-3 py-1 rounded-lg border border-primary bg-primary/10 flex-row items-center gap-2 self-start"
             >
               <Txt twcn="text-xs text-primary dark:text-primary">
                 {toTitleCase(exercise.primaryMuscleGroup as string)}
               </Txt>
-              <ArrowLeftRight
+              <SFIcon
+                name="arrow.left.arrow.right"
                 size={12}
                 color={Colors.primary}
               />
@@ -341,14 +359,15 @@ const ExerciseForm = () => {
               <Button
                 onPress={() => {
                   setIsSwapMode(false)
-                  setIsMuscleGroupModalOpen(true)
+                  ref.current?.present()
                 }}
                 twcn="px-3 py-1 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder flex-row items-center gap-2"
               >
                 <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                   Add
                 </Txt>
-                <Plus
+                <SFIcon
+                  name="plus"
                   size={12}
                   color={theme.grayText}
                 />
@@ -357,22 +376,21 @@ const ExerciseForm = () => {
           )}
         </View>
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold text-sm">
-            Secondary Muscle Groups
-          </Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Secondary Muscle Groups</Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedSecondaryMuscleGroups}
             <Button
               onPress={() => {
                 setIsSwapMode(false)
-                setIsMuscleGroupModalOpen(true)
+                ref.current?.present()
               }}
               twcn="px-3 py-1 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder flex-row items-center gap-2"
             >
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                 Add
               </Txt>
-              <Plus
+              <SFIcon
+                name="plus"
                 size={12}
                 color={theme.grayText}
               />
@@ -381,7 +399,7 @@ const ExerciseForm = () => {
         </View>
 
         <View>
-          <Txt twcn="mb-3 font-poppinsSemiBold">Workout Type</Txt>
+          <Txt twcn="mb-2 text-base font-semibold">Workout Type</Txt>
           <View style={tw`flex-row gap-2`}>
             <Button
               onPress={() =>
@@ -398,20 +416,12 @@ const ExerciseForm = () => {
               <Txt
                 twcn={`text-xs ${
                   exercise.isUnilateral === false
-                    ? 'text-secondary'
+                    ? 'text-secondary dark:text-secondary'
                     : 'text-light-grayText dark:text-dark-grayText'
                 }`}
               >
                 Bilateral
               </Txt>
-              <ChevronsLeftRight
-                size={16}
-                color={
-                  exercise.isUnilateral === false
-                    ? Colors.secondary
-                    : theme.grayText
-                }
-              />
             </Button>
             <Button
               onPress={() =>
@@ -428,45 +438,31 @@ const ExerciseForm = () => {
               <Txt
                 twcn={`text-xs ${
                   exercise.isUnilateral === true
-                    ? 'text-secondary'
+                    ? 'text-secondary dark:text-secondary'
                     : 'text-light-grayText dark:text-dark-grayText'
                 }`}
               >
                 Unilateral
               </Txt>
-              <ChevronsLeftRightEllipsis
-                size={16}
-                color={
-                  exercise.isUnilateral === true
-                    ? Colors.secondary
-                    : theme.grayText
-                }
-              />
             </Button>
           </View>
           <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-4">
             Bilateral: Exercises that work both sides of the body simultaneously
-            (e.g., Squats, Bench Press, etc.).{'\n\n'}
+            (e.g., Squats, Bench Press, DB Press, etc.).{'\n\n'}
             Unilateral: Exercises that target one side of the body at a time,
             track sets for each side separately (e.g., Single Arm Lateral
             Raises).
           </Txt>
         </View>
 
-        <MyModal
-          isOpen={isMuscleGroupModalOpen}
-          setIsOpen={(open) => {
-            setIsMuscleGroupModalOpen(open)
-            if (!open) setIsSwapMode(false)
-          }}
-        >
-          <Txt twcn="mb-2 font-poppinsMedium text-sm">
+        <MyBottomSheet ref={ref}>
+          <Txt twcn="mb-2 font-semibold text-base">
             {isSwapMode ? 'Swap Primary Muscle Group' : 'Muscle Groups'}
           </Txt>
           <View style={tw`flex-row flex-wrap gap-2`}>
             {renderedMuscleGroups}
           </View>
-        </MyModal>
+        </MyBottomSheet>
       </SafeView>
     )
   )

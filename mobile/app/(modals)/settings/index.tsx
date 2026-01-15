@@ -2,8 +2,7 @@ import { View, Alert, Linking } from 'react-native'
 import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { router } from 'expo-router'
-import { ChevronRight } from 'lucide-react-native'
+import { Link, router } from 'expo-router'
 import useTheme from '../../hooks/theme'
 import Button from '../../../components/button'
 import { useAuth } from '../../../context/auth-context'
@@ -11,6 +10,7 @@ import tw from '../../../tw'
 import * as StoreReview from 'expo-store-review'
 import * as WebBrowser from 'expo-web-browser'
 import { BASE_URL } from '../../../constants/auth'
+import SFIcon from '../../../components/sf-icon'
 
 const settingsData = [
   {
@@ -65,7 +65,7 @@ const settingsData = [
       {
         label: 'Contact',
         onPress: async () => {
-          const url = 'mailto:spotterapphelp@gmail.com'
+          const url = 'mailto:adross1027@gmail.com'
           const ok = await Linking.canOpenURL(url)
           if (ok) Linking.openURL(url)
           else Alert.alert('Error', 'Unable to open email client.')
@@ -167,7 +167,7 @@ const Settings = () => {
           key={index}
         >
           {sectionTitle && (
-            <Txt twcn="font-poppinsSemiBold text-base">{sectionTitle}</Txt>
+            <Txt twcn="font-semibold text-lg">{sectionTitle}</Txt>
           )}
           <View
             style={tw`bg-white ${needsBorderBottom && sectionTitle != null ? 'border-b' : ''} border-light-grayBorder dark:border-dark-grayBorder dark:bg-dark-grayPrimary rounded-2xl flex-col`}
@@ -180,8 +180,9 @@ const Settings = () => {
                   twcn={`flex-row items-center justify-between p-4 ${index === options.length - 1 ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'}`}
                 >
                   <Txt>{label}</Txt>
-                  <ChevronRight
-                    strokeWidth={1.5}
+                  <SFIcon
+                    name="chevron.right"
+                    size={16}
                     color={theme.grayText}
                   />
                 </Button>
@@ -199,10 +200,17 @@ const Settings = () => {
       <View style={tw`flex-row justify-between mt-4`}>
         <Button
           onPress={promptDeleteAccount}
-          style={tw`px-2 py-4`}
+          style={tw`px-2`}
           text="Delete Account"
-          twcnText="font-poppinsSemiBold text-light-grayText dark:text-dark-grayText"
+          twcnText="font-semibold text-light-grayText dark:text-dark-grayText"
         />
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs font-semibold px-2">
+          Made by{' '}
+          <Link href="https://adross.app">
+            <Txt twcn="font-bold text-primary dark:text-dark-primary ">me</Txt>
+          </Link>
+          .
+        </Txt>
       </View>
     </SafeView>
   )

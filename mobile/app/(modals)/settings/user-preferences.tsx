@@ -248,9 +248,9 @@ const UserPreferences = () => {
       return (
         <View
           key={category}
-          style={tw`gap-4`}
+          style={tw`gap-2`}
         >
-          <Txt twcn="text-base font-poppinsSemiBold text-light-text dark:text-dark-text">
+          <Txt twcn="text-lg font-semibold text-light-text dark:text-dark-text">
             {category}
           </Txt>
           <View style={tw`gap-6`}>
@@ -273,7 +273,7 @@ const UserPreferences = () => {
                       placeholder="24 Hour Fitness, LA Fitness, Home, etc."
                       maxLength={100}
                       fullBorder
-                      twcnInput="text-light-text dark:text-dark-text"
+                      twcnInput="text-light-text dark:text-dark-text flex-row"
                     />
                   </View>
                 ) : (

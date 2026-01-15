@@ -7,7 +7,6 @@ import React, {
 } from 'react'
 import { Tag, TagWithCount } from '../utils/types'
 import { registerContextResetter } from '../utils/context-manager'
-import { useNotebook } from './notebook-context'
 import { Alert } from 'react-native'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'

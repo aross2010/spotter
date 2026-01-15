@@ -1,15 +1,15 @@
 import { View } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import Txt from '../../../components/text'
-import Input from '../../../components/input'
 import Button from '../../../components/button'
 import tw from '../../../tw'
-import { useNavigation, useRouter } from 'expo-router'
+import { useNavigation, useRouter, useLocalSearchParams } from 'expo-router'
 import SafeView from '../../../components/safe-view'
 import { capString } from '../../../functions/cap-string'
 import { useWorkoutForm } from '../../../context/workout-form-context'
-import { Search, X } from 'lucide-react-native'
 import useTheme from '../../hooks/theme'
+import SFIcon from '../../../components/sf-icon'
+import Colors from '../../../constants/colors'
 
 type UsedLocations = {
   location: string
@@ -18,28 +18,37 @@ type UsedLocations = {
 
 const LocationSelector = () => {
   const [locationResults, setLocationResults] = useState<UsedLocations[]>([])
-  const [query, setQuery] = useState<string>('')
+  const searchBarRef = useRef(null)
+  const { q } = useLocalSearchParams()
+  const query = (q as string) || ''
   const router = useRouter()
   const navigation = useNavigation()
   const { workoutData, updateWorkoutData, locations } = useWorkoutForm()
   const { theme } = useTheme()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <Button
-          onPress={() => handleSaveLocation(query)}
-          hitSlop={12}
-          accessibilityLabel="save selected location"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-          text="Save"
-        />
-      ),
-      headerBackTitle: workoutData.name
-        ? capString(workoutData.name, 15)
-        : 'Workout',
+      headerSearchBarOptions: {
+        onChangeText: (event: any) => {
+          router.setParams({ q: event.nativeEvent.text })
+        },
+        placeholder: 'Search or add locations...',
+        shouldShowHintSearchIcon: true,
+        placement: 'stacked',
+        hideWhenScrolling: false,
+        autoCapitalize: 'none',
+        autoFocus: true,
+      },
     })
-  }, [navigation, workoutData.name, query])
+  }, [q])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // @ts-ignore
+      searchBarRef?.current?.focus()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     setLocationResults(locations)
@@ -54,19 +63,40 @@ const LocationSelector = () => {
       )
       setLocationResults(filtered)
     }
-  }, [query])
+  }, [query, locations])
 
   const handleSaveLocation = (location: string) => {
     updateWorkoutData({ location })
+    router.setParams({ q: '' })
+    // @ts-ignore
+    searchBarRef?.current?.setText('')
     if (router.canGoBack()) {
       router.back()
     }
   }
 
+  const handleCreateNewLocation = () => {
+    if (
+      query.trim() === '' ||
+      locations.find((loc) => loc.location === query.trim())
+    ) {
+      router.setParams({ q: '' })
+      // @ts-ignore
+      searchBarRef?.current?.setText('')
+      return
+    }
+
+    handleSaveLocation(query.trim())
+  }
+
+  const showCreateOption =
+    query.trim() !== '' &&
+    !locations.find((loc) => loc.location === query.trim())
+
   const renderedResults = locationResults.map(({ location, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder justify-between flex-row px-4 py-3 items-center`}
+        style={tw`border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 justify-between flex-row px-4 py-3 items-center`}
         key={location}
         onPress={() => {
           handleSaveLocation(location)
@@ -79,40 +109,20 @@ const LocationSelector = () => {
   })
 
   return (
-    <SafeView
-      twcnContentView="px-0"
-      keyboardAvoiding
-    >
-      <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-      >
-        <Search
-          size={16}
-          color={theme.grayText}
-        />
-        <Input
-          autoCorrect={false}
-          twcnInput="flex-1"
-          autoCapitalize="none"
-          placeholder={'Search locations...'}
-          value={query}
-          onChange={(e) => setQuery(e.nativeEvent.text)}
-          returnKeyType="done"
-          onSubmitEditing={(e) => {
-            const newLocation = e.nativeEvent.text
-            handleSaveLocation(newLocation)
-          }}
-          maxLength={50}
-          autoFocus
-        />
-        <Button onPress={() => setQuery('')}>
-          <X
-            size={16}
-            color={theme.grayText}
+    <SafeView twcnContentView="px-0">
+      {showCreateOption && (
+        <Button
+          style={tw`border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 flex-row gap-2 px-4 py-3 items-center`}
+          onPress={handleCreateNewLocation}
+        >
+          <SFIcon
+            name="plus.circle"
+            size={18}
+            color={Colors.green}
           />
+          <Txt twcn="font-poppinsSemiBold">Create "{query.trim()}"</Txt>
         </Button>
-      </View>
-
+      )}
       <View>{renderedResults}</View>
     </SafeView>
   )

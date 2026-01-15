@@ -1,7 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import Txt from '../../components/text'
 import SafeView from '../../components/safe-view'
-import Input from '../../components/input'
 import { useAuth } from '../../context/auth-context'
 import { Tag, TagWithCount } from '../../utils/types'
 import Button from '../../components/button'
@@ -15,9 +20,10 @@ import {
   useNavigation,
 } from 'expo-router'
 import TagView from '../../components/tag'
-import { Search, X } from 'lucide-react-native'
 import { useWorkoutForm } from '../../context/workout-form-context'
 import { useNotebookForm } from '../../context/notebook-form-context'
+import SFIcon from '../../components/sf-icon'
+import Colors from '../../constants/colors'
 
 const TagSelector = () => {
   const {
@@ -35,8 +41,9 @@ const TagSelector = () => {
     setUserNotebookTags,
   } = useNotebookForm()
   const notebookTags = notebookFormData.tags
-
-  const { type } = useLocalSearchParams()
+  const searchBarRef = useRef(null)
+  const { type, q } = useLocalSearchParams()
+  const query = (q as string) || ''
   const isWorkoutTags = type === 'workout'
   const isNotebookTags = type === 'notebook'
 
@@ -70,7 +77,6 @@ const TagSelector = () => {
   const [tagResults, setTagResults] = useState<TagWithCount[]>([])
   const [removedTags, setRemovedTags] = useState<TagWithCount[]>([])
   const [initiallySelectedTags, setInitiallySelectedTags] = useState<Tag[]>([])
-  const [query, setQuery] = useState('')
   const { authUser } = useAuth()
   const navigation = useNavigation()
   const { theme } = useTheme()
@@ -125,7 +131,9 @@ const TagSelector = () => {
     ])
     const tag = userTags.find((tag) => tag.name === tagName)!
     if (tag) setFormTags(tag)
-    setQuery('')
+    router.setParams({ q: '' })
+    // @ts-ignore
+    searchBarRef?.current?.setText('')
   }
 
   const handleCreateNewTag = () => {
@@ -135,7 +143,9 @@ const TagSelector = () => {
       userTags.find((tag) => tag.name === query.trim()) ||
       removedTags.find((tag) => tag.name === query.trim())
     ) {
-      setQuery('')
+      router.setParams({ q: '' })
+      // @ts-ignore
+      searchBarRef?.current?.setText('')
       return
     }
 
@@ -147,7 +157,9 @@ const TagSelector = () => {
     } // dummy id to match type
     setFormTags(newTag)
     // do not add to tags (those are tags from database)
-    setQuery('')
+    router.setParams({ q: '' })
+    // @ts-ignore
+    searchBarRef?.current?.setText('')
   }
 
   const handleDeselectTag = (tagName: string) => {
@@ -167,7 +179,7 @@ const TagSelector = () => {
   const renderedResults = tagResults.map(({ id, name, used }) => {
     return (
       <Button
-        style={tw`border-b border-light-grayBorder dark:border-dark-grayBorder justify-between flex-row px-4 py-3 items-center`}
+        style={tw`border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 justify-between flex-row px-4 py-3 items-center`}
         key={id}
         onPress={() => handleSelectTag(name)}
       >
@@ -177,6 +189,12 @@ const TagSelector = () => {
     )
   })
 
+  const showCreateOption =
+    query.trim() !== '' &&
+    !formTags.find((tag) => tag.name === query.trim()) &&
+    !userTags.find((tag) => tag.name === query.trim()) &&
+    !removedTags.find((tag) => tag.name === query.trim())
+
   const renderedSelectedTags = formTags.map(({ id, name, userId }) => {
     return (
       <Button
@@ -184,45 +202,32 @@ const TagSelector = () => {
         onPress={() => handleDeselectTag(name)}
         hitSlop={12}
       >
-        <TagView tag={{ id, name, userId }} />
+        <TagView
+          canDelete
+          tag={{ id, name, userId }}
+        />
       </Button>
     )
   })
 
   return (
     <SafeView twcnContentView="px-0">
-      <View
-        style={tw`px-3 mx-4 mb-2 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-      >
-        <Search
-          size={16}
-          color={theme.grayText}
-        />
-        <Input
-          autoCorrect={false}
-          twcnInput="flex-1"
-          autoCapitalize="none"
-          placeholder={
-            userTags.length === 0 ? 'Add tags...' : 'Search or add tags...'
-          }
-          value={query}
-          onChange={(e) => setQuery(e.nativeEvent.text)}
-          returnKeyType="done"
-          onSubmitEditing={handleCreateNewTag}
-          maxLength={50}
-          autoFocus
-        />
-        <Button onPress={() => setQuery('')}>
-          <X
-            size={16}
-            color={theme.grayText}
+      {showCreateOption && (
+        <Button
+          style={tw`border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 flex-row gap-2 px-4 py-3 items-center`}
+          onPress={handleCreateNewTag}
+        >
+          <SFIcon
+            name="plus.circle"
+            size={18}
+            color={Colors.green}
           />
+          <Txt twcn="font-poppinsSemiBold">Create "{query.trim()}"</Txt>
         </Button>
-      </View>
-
+      )}
       {formTags.length > 0 && (
         <View
-          style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2 px-4`}
+          style={tw`flex-row flex-wrap border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 py-3 items-center gap-1 px-4`}
         >
           {renderedSelectedTags}
         </View>

@@ -13,6 +13,7 @@ type SpinnerProps = {
   text?: string
   loadingTab?: boolean
   overlay?: boolean
+  transparent?: boolean
 }
 
 const Spinner = ({
@@ -29,7 +30,8 @@ const Spinner = ({
     <ActivityIndicator
       size={size}
       color={color || theme.grayText}
-      style={tw`${twcn ?? ''}`}
+      style={tw`bg-transparent ${twcn ?? ''}`}
+      pointerEvents="none"
     />
   )
 

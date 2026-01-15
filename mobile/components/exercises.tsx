@@ -1,33 +1,31 @@
-import { StyleSheet, View, Alert } from 'react-native'
-import React, { useState } from 'react'
+import { StyleSheet, View, Alert, Keyboard } from 'react-native'
+import React, { useRef, useState } from 'react'
 import { useWorkoutForm } from '../context/workout-form-context'
 import tw from '../tw'
 import Txt from './text'
 import Button from './button'
-import {
-  ChevronsLeftRightEllipsis,
-  Ellipsis,
-  HelpCircle,
-  Info,
-  Plus,
-  SquareSplitHorizontal,
-  SquareStack,
-  Trash,
-} from 'lucide-react-native'
 import useTheme from '../app/hooks/theme'
 import ExerciseInput from './exercise-input'
 import Colors from '../constants/colors'
 import { nanoid } from 'nanoid/non-secure'
-import MyModal from './modal'
-import ExerciseOptions from './exercise-options'
+import {
+  ContextMenu,
+  Host,
+  Picker,
+  Button as SwiftButton,
+} from '@expo/ui/swift-ui'
+import SFIcon from './sf-icon'
+import { router } from 'expo-router'
+import MyBottomSheet from './bottom-sheet'
+import { BottomSheetModal } from '@gorhom/bottom-sheet'
+import { SFSymbol } from 'expo-symbols'
 
 const MAX_EXERCISES = 25
 
 const Exercises = () => {
-  const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false)
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
   const { workoutData, setWorkoutData, setNewlyAddedExerciseNumber } =
     useWorkoutForm()
+  const ref = useRef<BottomSheetModal | null>(null)
   const { theme } = useTheme()
 
   const handleAddEmptyExercise = () => {
@@ -48,6 +46,10 @@ const Exercises = () => {
         },
       ],
       setGroupings: [],
+      details: {
+        loading: true,
+        data: null,
+      },
     }
     const newExerciseNumber = workoutData.exercises.length + 1
     setWorkoutData({
@@ -72,30 +74,30 @@ const Exercises = () => {
 
   const guideItems = [
     {
-      icon: ChevronsLeftRightEllipsis,
+      iconName: 'square.on.square',
       title: 'Unilateral',
       description:
         'Toggle between unilateral (left/right) and bilateral modes for custom exercises',
     },
     {
-      icon: SquareSplitHorizontal,
+      iconName: 'rectangle.split.2x1',
       title: 'Sync/Separate',
       description:
         'For unilateral exercises: sync left/right values together or log them separately',
     },
     {
-      icon: Info,
+      iconName: 'info.circle',
       title: 'Exercise Info',
       description: 'View exercise history and notes',
     },
     {
-      icon: Trash,
+      iconName: 'trash',
       title: 'Delete Exercise',
       description: 'Remove this exercise from the workout',
     },
   ]
 
-  const renderedGuide = guideItems.map(({ icon: Icon, title, description }) => (
+  const renderedGuide = guideItems.map(({ iconName, title, description }) => (
     <View
       key={title}
       style={tw`flex-row items-start gap-3`}
@@ -103,13 +105,14 @@ const Exercises = () => {
       <View
         style={tw`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder bg-light-grayPrimary dark:bg-dark-grayPrimary`}
       >
-        <Icon
+        <SFIcon
+          name={iconName as SFSymbol}
           size={16}
           color={theme.grayText}
         />
       </View>
       <View style={tw`flex-1`}>
-        <Txt twcn="font-poppinsMedium text-sm">{title}</Txt>
+        <Txt twcn="font-medium text-sm">{title}</Txt>
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText mt-0.5">
           {description}
         </Txt>
@@ -128,29 +131,91 @@ const Exercises = () => {
     )
   })
 
+  const canCreateSuperset =
+    workoutData.exercises.length >= 2 &&
+    workoutData.exercises.filter(
+      (ex) => ex.name.trim() !== '' && ex.sets.length >= 1
+    ).length >= 2
+
+  const canCreateDropset =
+    workoutData.exercises.length >= 1 &&
+    workoutData.exercises.some((ex) => {
+      const setsWithData = ex.sets.filter((set) => {
+        const hasWeight =
+          (set.weightLbs !== null && set.weightLbs !== undefined) ||
+          (set.weightKg !== null && set.weightKg !== undefined)
+        const hasReps =
+          (set.reps !== null && set.reps !== undefined) ||
+          (set.leftReps !== null && set.leftReps !== undefined) ||
+          (set.rightReps !== null && set.rightReps !== undefined)
+        return hasWeight || hasReps
+      })
+      return setsWithData.length >= 2
+    })
+
   return (
     <View>
       <View style={tw`flex-row justify-between items-center`}>
         <View style={tw`flex-row items-center gap-2`}>
-          <Txt twcn="font-poppinsSemiBold">Exercises</Txt>
-          <Button onPress={() => setIsHelpModalOpen(true)}>
-            <HelpCircle
+          <Txt twcn="font-semibold text-lg">Exercises</Txt>
+          <Button
+            onPress={() => {
+              Keyboard.dismiss()
+              ref.current?.present()
+            }}
+          >
+            <SFIcon
+              name="questionmark.circle"
               size={16}
               color={theme.grayText}
             />
           </Button>
         </View>
 
-        <Button onPress={() => setIsOptionsModalOpen(true)}>
-          <Ellipsis
-            size={20}
-            color={theme.grayText}
-            hitSlop={12}
-            strokeWidth={1.5}
-          />
-        </Button>
+        <Host style={{ width: 26, height: 26 }}>
+          <ContextMenu>
+            <ContextMenu.Items>
+              <SwiftButton
+                disabled={!canCreateSuperset}
+                onPress={() => {
+                  router.push('/workout-form/supersets')
+                }}
+              >
+                Supersets
+              </SwiftButton>
+              <SwiftButton
+                disabled={!canCreateDropset}
+                onPress={() => {
+                  router.push('/workout-form/dropsets')
+                }}
+              >
+                Dropsets
+              </SwiftButton>
+
+              <Picker
+                label="Weight Unit"
+                options={['Lbs.', 'Kg.']}
+                variant="menu"
+                selectedIndex={workoutData.weightUnit === 'lbs' ? 0 : 1}
+                onOptionSelected={({ nativeEvent: { index } }) =>
+                  setWorkoutData({
+                    ...workoutData,
+                    weightUnit: index === 0 ? 'lbs' : 'kgs',
+                  })
+                }
+              />
+            </ContextMenu.Items>
+            <ContextMenu.Trigger>
+              <SFIcon
+                name="ellipsis"
+                color={theme.text}
+                size={26}
+              />
+            </ContextMenu.Trigger>
+          </ContextMenu>
+        </Host>
       </View>
-      <View style={tw`mt-4`}>{renderedExercises}</View>
+      <View style={tw`mt-6`}>{renderedExercises}</View>
       <View
         style={tw`w-8 h-8 mt-1 rounded-full bg-primary items-center justify-center`}
       >
@@ -158,26 +223,17 @@ const Exercises = () => {
           onPress={handleAddEmptyExercise}
           twcn="w-full h-full items-center justify-center"
         >
-          <Plus
-            strokeWidth={2.5}
+          <SFIcon
+            name="plus"
             size={22}
             color={Colors.dark.text}
           />
         </Button>
       </View>
-      <MyModal
-        isOpen={isOptionsModalOpen}
-        setIsOpen={setIsOptionsModalOpen}
-      >
-        <ExerciseOptions closeModal={() => setIsOptionsModalOpen(false)} />
-      </MyModal>
-      <MyModal
-        isOpen={isHelpModalOpen}
-        setIsOpen={setIsHelpModalOpen}
-      >
-        <Txt twcn="font-poppinsMedium mb-4">Exercises Guide</Txt>
+      <MyBottomSheet ref={ref}>
+        <Txt twcn="font-semibold text-base mb-4">Exercises Guide</Txt>
         <View style={tw`gap-4`}>{renderedGuide}</View>
-      </MyModal>
+      </MyBottomSheet>
     </View>
   )
 }

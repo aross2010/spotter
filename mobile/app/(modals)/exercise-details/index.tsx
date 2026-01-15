@@ -13,29 +13,21 @@ import { useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
 import Spinner from '../../../components/activity-indicator'
-import { capString } from '../../../functions/cap-string'
-import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
 import Button from '../../../components/button'
 import { useUserStore } from '../../../stores/user-store'
 import LineChart from '../../../components/line-chart'
-import { BlurView } from 'expo-blur'
-import {
-  ChevronsLeftRight,
-  ChevronsLeftRightEllipsis,
-  Pencil,
-  Share,
-} from 'lucide-react-native'
+import { GlassView } from 'expo-glass-effect'
 import Colors from '../../../constants/colors'
 import { handleShareExercise } from '../../../functions/share'
 import { useExerciseStore } from '../../../stores/exercise-store'
 import { ExerciseDetails as ExerciseDetailsType } from '../../../utils/types'
 import { estimate1RM } from '../../../functions/one-rm'
+import SFIcon from '../../../components/sf-icon'
 
 const ExerciseDetails = () => {
   const { id } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
-  const { theme } = useTheme()
   const { preferences } = useUserStore()
   const [exercise, setExercise] = useState<ExerciseDetailsType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -82,23 +74,17 @@ const ExerciseDetails = () => {
   useEffect(() => {
     if (!exercise) return
     navigation.setOptions({
-      headerTitle: exercise ? capString(exercise.name, 35) : 'Exercise Details',
-      headerTitleStyle: {
-        fontSize:
-          exercise.name.length > 30 ? 16 : exercise.name.length > 20 ? 18 : 20,
-        fontFamily: 'Poppins_600SemiBold',
-        color: theme.text,
-      },
+      title: exercise.name ?? 'Exercise Details',
       headerRight: () => (
-        <View style={tw`flex-row items-center gap-2 pb-1`}>
+        <View style={tw`flex-row items-center gap-6 px-2`}>
           <Button
-            twcn="bg-primary/10 rounded-2xl p-2"
             onPress={() => {
               navigateToEdit()
             }}
           >
-            <Pencil
-              size={20}
+            <SFIcon
+              name="pencil"
+              size={26}
               color={Colors.primary}
             />
           </Button>
@@ -107,10 +93,10 @@ const ExerciseDetails = () => {
             onPress={() =>
               handleShareExercise(exercise, weightMetric, intensityMetric)
             }
-            twcn="bg-primary/10 rounded-2xl p-2"
           >
-            <Share
-              size={20}
+            <SFIcon
+              name="square.and.arrow.up"
+              size={26}
               color={Colors.primary}
             />
           </Button>
@@ -162,19 +148,15 @@ const ExerciseDetails = () => {
     {
       label: 'Sets/Workout',
       value: Number(
-        Math.round(
-          (exercise?.stats.totalSets as number) /
-            (exercise?.stats.totalWorkouts as number)
-        )
+        (exercise?.stats.totalSets as number) /
+          (exercise?.stats.totalWorkouts as number)
       ).toFixed(1),
     },
     {
       label: 'Reps/Set',
       value: Number(
-        Math.round(
-          (exercise?.stats.totalReps as number) /
-            (exercise?.stats.totalSets as number)
-        )
+        (exercise?.stats.totalReps as number) /
+          (exercise?.stats.totalSets as number)
       ).toFixed(1),
     },
     {
@@ -215,12 +197,12 @@ const ExerciseDetails = () => {
     return (
       <View
         key={s.label}
-        style={tw`flex-1 p-2.5 rounded-lg bg-white dark:bg-dark-grayPrimary`}
+        style={tw`flex-1 p-2.5 rounded-xl bg-white dark:bg-dark-grayPrimary`}
       >
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
           {s.label}
         </Txt>
-        <Txt twcn="font-poppinsSemiBold text-base">{s.value}</Txt>
+        <Txt twcn="font-semibold text-base">{s.value}</Txt>
       </View>
     )
   })
@@ -233,7 +215,7 @@ const ExerciseDetails = () => {
 
   const keyStats = (
     <View>
-      <Txt twcn="font-poppinsSemiBold mb-4">Key Stats</Txt>
+      <Txt twcn="font-semibold text-lg mb-2">Key Stats</Txt>
       <View style={tw`gap-1`}>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(0, 2)}</View>
         <View style={tw`flex-row gap-1`}>{renderedStats.slice(2, 5)}</View>
@@ -246,14 +228,12 @@ const ExerciseDetails = () => {
     (exercise.primaryMuscleGroup ||
       exercise?.secondaryMuscleGroups.length > 0) && (
       <View>
-        <View style={tw`flex-row justify-between items-center mb-4`}>
-          <Txt twcn="font-poppinsSemiBold">
+        <View style={tw`flex-row justify-between items-center mb-2`}>
+          <Txt twcn="font-semibold text-lg">
             Muscle{muscleGroups && muscleGroups.length > 1 ? 's' : ''} Worked
           </Txt>
           <Button onPress={() => navigateToEdit()}>
-            <Txt twcn="font-poppinsSemiBold text-primary dark:text-primary">
-              Edit
-            </Txt>
+            <Txt twcn="font-semibold text-primary dark:text-primary">Edit</Txt>
           </Button>
         </View>
         <View style={tw`flex-row flex-wrap gap-2 items-center`}>
@@ -266,20 +246,12 @@ const ExerciseDetails = () => {
                 <Txt twcn={`text-xs text-secondary dark:text-secondary`}>
                   Unilateral
                 </Txt>
-                <ChevronsLeftRightEllipsis
-                  size={16}
-                  color={Colors.secondary}
-                />
               </>
             ) : (
               <>
                 <Txt twcn={`text-xs text-secondary dark:text-secondary`}>
                   Bilateral
                 </Txt>
-                <ChevronsLeftRight
-                  size={16}
-                  color={Colors.secondary}
-                />
               </>
             )}
           </View>
@@ -297,10 +269,9 @@ const ExerciseDetails = () => {
     const year = String(dateObj.getUTCFullYear()).slice(-2)
     const formattedDate = `${month}/${day}/${year}`
     return (
-      <BlurView
+      <GlassView
         key={date}
-        intensity={50}
-        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl border border-light-grayBorder dark:border-dark-grayBorder shadow-md`}
+        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl shadow-md`}
       >
         <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
           {formattedDate}
@@ -311,7 +282,7 @@ const ExerciseDetails = () => {
           {hasIntensity &&
             ` @ ${data.rir ? `RIR ${data.rir}` : `RPE ${data.rpe}`}`}
         </Txt>
-      </BlurView>
+      </GlassView>
     )
   })
 
@@ -329,36 +300,43 @@ const ExerciseDetails = () => {
 
       return (
         <View style={tw`overflow-visible`}>
-          <Txt twcn="font-poppinsSemiBold mb-4">Progression </Txt>
-          <LineChart
-            data={allData}
-            xKey="date"
-            yKey="weight"
-            maxXLabels={5}
-            formatXLabel={(dateStr) => {
-              try {
-                // Parse as UTC to avoid timezone shifting
-                const date = new Date(dateStr)
-                const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-                const day = String(date.getUTCDate()).padStart(2, '0')
-                const year = String(date.getUTCFullYear()).slice(-2)
-                return `${month}/${day}/${year}`
-              } catch {
-                return ''
-              }
-            }}
-            formatYLabel={(val) => {
-              if (weightMetric === 'kgs') {
-                return `${val.toFixed(1)} ${weightMetric}`
-              } else {
-                // For lbs, show decimal if it's a half value, otherwise whole number
-                return val % 1 === 0
-                  ? `${val} ${weightMetric}`
-                  : `${val.toFixed(1)} ${weightMetric}`
-              }
-            }}
-            toolTips={renderedToolTips}
-          />
+          <Txt twcn="font-semibold mb-2 text-lg">Progression </Txt>
+          {allData.length > 1 ? (
+            <LineChart
+              data={allData}
+              xKey="date"
+              yKey="weight"
+              maxXLabels={5}
+              formatXLabel={(dateStr) => {
+                try {
+                  // Parse as UTC to avoid timezone shifting
+                  const date = new Date(dateStr)
+                  const month = date.getUTCMonth() + 1
+                  const day = date.getUTCDate()
+                  const year = String(date.getUTCFullYear()).slice(-2)
+                  return `${month}/${day}/${year}`
+                } catch {
+                  return ''
+                }
+              }}
+              formatYLabel={(val) => {
+                if (weightMetric === 'kgs') {
+                  return `${val.toFixed(1)} ${weightMetric}`
+                } else {
+                  // For lbs, show decimal if it's a half value, otherwise whole number
+                  return val % 1 === 0
+                    ? `${val} ${weightMetric}`
+                    : `${val.toFixed(1)} ${weightMetric}`
+                }
+              }}
+              toolTips={renderedToolTips}
+            />
+          ) : (
+            <Txt twcn="text-light-grayText dark:text-dark-grayText">
+              Perform {exercise.name} in multiple workouts to see progression
+              over time.
+            </Txt>
+          )}
         </View>
       )
     })()
@@ -383,11 +361,74 @@ const ExerciseDetails = () => {
           if (entry.date === previousDate) needsDate = false
           previousDate = entry.date
 
-          // For unilateral exercises, determine if this is L or R
           const isUnilateral = exercise.isUnilateral
-          const setLabel = isUnilateral
-            ? `${set.setNumber}${index % 2 === 0 ? 'L' : 'R'}`
-            : set.setNumber.toString()
+
+          // For unilateral exercises, check if we should skip this set (if it's a right set that matches left)
+          if (isUnilateral && index % 2 === 1) {
+            const leftSet = entry.sets[index - 1]
+            const rightSet = set
+
+            // Check if left and right sets have matching values
+            const sameWeight = leftSet.weight === rightSet.weight
+            const sameReps = leftSet.reps === rightSet.reps
+            const samePartials =
+              (leftSet.partials || 0) === (rightSet.partials || 0)
+            const sameIntensity =
+              (leftSet.intensity || 0) === (rightSet.intensity || 0)
+
+            if (sameWeight && sameReps && samePartials && sameIntensity) {
+              return null // Skip right set when it matches left
+            }
+          }
+
+          // Determine set label and values
+          let setLabel: string
+          let repsValue: string | number
+          let partialsValue: string | number
+          let intensityValue: string | number
+
+          if (isUnilateral) {
+            if (index % 2 === 0 && index + 1 < entry.sets.length) {
+              const leftSet = set
+              const rightSet = entry.sets[index + 1]
+
+              const sameWeight = leftSet.weight === rightSet.weight
+              const sameReps = leftSet.reps === rightSet.reps
+              const samePartials =
+                (leftSet.partials || 0) === (rightSet.partials || 0)
+              const sameIntensity =
+                (leftSet.intensity || 0) === (rightSet.intensity || 0)
+
+              if (sameWeight && sameReps && samePartials && sameIntensity) {
+                // Show combined L/R
+                setLabel = `${set.setNumber} L/R`
+                repsValue = set.reps
+                partialsValue = set.partials || ' '
+                intensityValue =
+                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+              } else {
+                // Show L
+                setLabel = `${set.setNumber}L`
+                repsValue = set.reps
+                partialsValue = set.partials || ' '
+                intensityValue =
+                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+              }
+            } else {
+              // This is a right set that doesn't match left
+              setLabel = `${set.setNumber}R`
+              repsValue = set.reps
+              partialsValue = set.partials || ' '
+              intensityValue =
+                set.intensity || set.intensity === 0 ? set.intensity : ' '
+            }
+          } else {
+            setLabel = set.setNumber.toString()
+            repsValue = set.reps
+            partialsValue = set.partials || ' '
+            intensityValue =
+              set.intensity || set.intensity === 0 ? set.intensity : ' '
+          }
 
           return (
             <View
@@ -403,13 +444,9 @@ const ExerciseDetails = () => {
               <Txt twcn="text-xs flex-1 text-center">
                 {weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight}
               </Txt>
-              <Txt twcn="text-xs flex-1 text-center">{set.reps}</Txt>
-              <Txt twcn="text-xs flex-1 text-center">
-                {set.partials ? set.partials : ' '}
-              </Txt>
-              <Txt twcn="text-xs flex-1 text-center">
-                {set.intensity || set.intensity === 0 ? set.intensity : ' '}
-              </Txt>
+              <Txt twcn="text-xs flex-1 text-center">{repsValue}</Txt>
+              <Txt twcn="text-xs flex-1 text-center">{partialsValue}</Txt>
+              <Txt twcn="text-xs flex-1 text-center">{intensityValue}</Txt>
             </View>
           )
         })}
@@ -419,7 +456,7 @@ const ExerciseDetails = () => {
 
   const history = (
     <View>
-      <Txt twcn="font-poppinsMedium mb-4">History</Txt>
+      <Txt twcn="font-semibold mb-2 text-lg">History</Txt>
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >

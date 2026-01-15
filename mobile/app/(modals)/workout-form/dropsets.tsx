@@ -9,8 +9,9 @@ import { SetGroupingType } from '../../../utils/types'
 import { capString } from '../../../functions/cap-string'
 import useTheme from '../../hooks/theme'
 import tw from '../../../tw'
-import { Ellipsis, Trash } from 'lucide-react-native'
-import MyModal from '../../../components/modal'
+import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
+import SFIcon from '../../../components/sf-icon'
+import Colors from '../../../constants/colors'
 
 const Dropsets = () => {
   const navigation = useNavigation()
@@ -20,64 +21,6 @@ const Dropsets = () => {
     new Set()
   )
   const [selectedSets, setSelectedSets] = useState<Set<string>>(new Set())
-  const [isDropsetOptionsOpen, setIsDropsetOptionsOpen] =
-    useState<boolean>(false)
-  const [selectedDropset, setSelectedDropset] = useState<number | null>(null)
-
-  // delete dropsets for the exercise grouping
-  const deleteDropset = () => {
-    if (selectedDropset !== null) {
-      const selectedGrouping = workoutData.setGroupings[selectedDropset]
-      if (!selectedGrouping || selectedGrouping.groupingType !== 'dropset') {
-        setIsDropsetOptionsOpen(false)
-        setSelectedDropset(null)
-        return
-      }
-
-      const selectedExerciseData = selectedGrouping.groupSets
-        .map((set) => ({
-          name: workoutData.exercises[set.exerciseNumber - 1]?.name,
-          exerciseNumber: set.exerciseNumber,
-        }))
-        .filter((ex) => ex.name)
-
-      const selectedExerciseName = selectedExerciseData[0]?.name
-      const selectedExerciseNumber = selectedExerciseData[0]?.exerciseNumber
-
-      const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
-        if (grouping.groupingType !== 'dropset') return true
-
-        const exerciseData = grouping.groupSets
-          .map((set) => ({
-            name: workoutData.exercises[set.exerciseNumber - 1]?.name,
-            exerciseNumber: set.exerciseNumber,
-          }))
-          .filter((ex) => ex.name)
-
-        const exerciseName = exerciseData[0]?.name
-        const exerciseNumber = exerciseData[0]?.exerciseNumber
-
-        return !(
-          exerciseName === selectedExerciseName &&
-          exerciseNumber === selectedExerciseNumber
-        )
-      })
-
-      setWorkoutData({
-        ...workoutData,
-        setGroupings: updatedGroupings,
-      })
-
-      setIsDropsetOptionsOpen(false)
-      setSelectedDropset(null)
-    }
-  }
-
-  const openDropsetOptions = (dropsetIndex: number) => {
-    setSelectedDropset(dropsetIndex)
-    setIsDropsetOptionsOpen(true)
-  }
-
   const createDropset = () => {
     const validation = validateDropset()
     if (!validation.valid) {
@@ -109,15 +52,17 @@ const Dropsets = () => {
         <Button
           onPress={createDropset}
           hitSlop={12}
-          accessibilityLabel="create dropset"
-          twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-          text="Create"
+          accessibilityLabel="Create Dropset"
           disabled={selectedSets.size < 2}
-        />
+          twcn="w-9 flex-row items-center justify-center h-full"
+        >
+          <SFIcon
+            name="checkmark"
+            size={26}
+            color={selectedSets.size >= 2 ? Colors.primary : theme.grayText}
+          />
+        </Button>
       ),
-      headerBackTitle: workoutData.name
-        ? capString(workoutData.name, 15)
-        : 'Workout',
     })
   }, [navigation, workoutData.name, selectedSets])
 
@@ -282,12 +227,12 @@ const Dropsets = () => {
     return (
       <View
         key={exerciseIndex}
-        style={tw`flex-row flex-wrap gap-4 p-4 border-b border-light-grayBorder dark:border-dark-grayBorder`}
+        style={tw`flex-row flex-wrap gap-4 px-4 py-2`}
       >
-        <Txt twcn="w-full text-sm">
-          {exerciseIndex + 1}. {capString(ex.name, 30)}
+        <Txt twcn="w-full text-sm text-base font-semibold">
+          {exerciseIndex + 1} — {capString(ex.name, 30)}
         </Txt>
-        <View style={tw`w-full flex-row items-center mb-2 gap-3`}>
+        <View style={tw`w-full flex-row flex-wrap items-center mb-4 gap-2`}>
           {ex.sets.map((set: any, setIndex: number) => {
             const hasRepsOrWeight =
               set.reps ||
@@ -329,7 +274,7 @@ const Dropsets = () => {
                 onPress={() =>
                   !isSetDisabled && toggleSet(exerciseIndex, setIndex)
                 }
-                twcn={`relative px-3 py-1 rounded-lg border rounded-lg border ${isSelected ? 'bg-primary/10 dark:bg-primary/10 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder  dark:bg-dark-grayPrimary'}`}
+                twcn={`relative px-3 py-1.5 rounded-full border ${isSelected ? 'bg-primary/25 dark:bg-primary/25 border-primary' : 'border-light-grayBorder dark:border-dark-grayBorder  dark:bg-dark-grayPrimary'}`}
                 disabled={isSetDisabled}
               >
                 <Txt
@@ -381,24 +326,57 @@ const Dropsets = () => {
   const exerciseGroupings = getExerciseGroupings()
 
   const renderedDropsets = Array.from(exerciseGroupings.entries()).map(
-    ([exerciseName, dropsets]) => {
+    ([exerciseName, dropsets], groupIndex) => {
+      const handleDeleteDropset = () => {
+        const updatedGroupings = workoutData.setGroupings.filter((grouping) => {
+          if (grouping.groupingType !== 'dropset') return true
+
+          const exerciseData = grouping.groupSets
+            .map((set) => ({
+              name: workoutData.exercises[set.exerciseNumber - 1]?.name,
+              exerciseNumber: set.exerciseNumber,
+            }))
+            .filter((ex) => ex.name)
+
+          const name = exerciseData[0]?.name
+
+          return name !== exerciseName
+        })
+
+        setWorkoutData({
+          ...workoutData,
+          setGroupings: updatedGroupings,
+        })
+      }
+
       return (
         <View
           key={exerciseName}
-          style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl border border-light-grayBorder dark:border-dark-grayBorder p-4`}
+          style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl p-4`}
         >
           <View style={tw`flex-row items-start justify-between gap-4 mb-4`}>
-            <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text">
+            <Txt twcn="text-sm flex-1 text-light-text dark:text-dark-text font-semibold">
               {exerciseName}
             </Txt>
-            <Button
-              onPress={() => openDropsetOptions(dropsets[0].dropsetIndex - 1)}
-            >
-              <Ellipsis
-                size={20}
-                color={theme.grayText}
-              />
-            </Button>
+            <Host style={{ width: 26, height: 26 }}>
+              <ContextMenu>
+                <ContextMenu.Items>
+                  <SwiftButton
+                    systemImage="trash"
+                    onPress={handleDeleteDropset}
+                  >
+                    Delete Dropset
+                  </SwiftButton>
+                </ContextMenu.Items>
+                <ContextMenu.Trigger>
+                  <SFIcon
+                    name="ellipsis"
+                    color={theme.text}
+                    size={26}
+                  />
+                </ContextMenu.Trigger>
+              </ContextMenu>
+            </Host>
           </View>
 
           {dropsets.map((dropset, index) => (
@@ -436,34 +414,11 @@ const Dropsets = () => {
   return (
     <SafeView twcnContentView="px-0">
       {workoutData.setGroupings.some((g) => g.groupingType === 'dropset') && (
-        <View style={tw`mb-4 w-full px-4`}>
-          <Txt twcn="font-poppinsMedium mb-4">Dropsets</Txt>
+        <View style={tw`mb-6 w-full px-4`}>
           <View style={tw`gap-2`}>{renderedDropsets}</View>
         </View>
       )}
-      <View style={tw`w-full flex-1`}>
-        <Txt twcn="font-poppinsMedium px-4">Exercises</Txt>
-
-        {renderedExercises}
-      </View>
-      <MyModal
-        isOpen={isDropsetOptionsOpen}
-        setIsOpen={setIsDropsetOptionsOpen}
-      >
-        <Button onPress={deleteDropset}>
-          <View style={tw`flex-row gap-6 p-3 items-center`}>
-            <Trash
-              size={22}
-              color={theme.grayText}
-              strokeWidth={1.5}
-            />
-
-            <View style={tw`flex-1`}>
-              <Txt>Remove Dropset</Txt>
-            </View>
-          </View>
-        </Button>
-      </MyModal>
+      <View style={tw`w-full flex-1`}>{renderedExercises}</View>
     </SafeView>
   )
 }

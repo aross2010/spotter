@@ -6,7 +6,7 @@ import Txt from './text'
 import Input from './input'
 import Button from './button'
 import { useWorkoutForm } from '../context/workout-form-context'
-import { BlurView } from 'expo-blur'
+import { GlassView } from 'expo-glass-effect'
 
 const WorkoutNameInput = () => {
   const [isWorkoutNameSelectorOpen, setIsWorkoutNameSelectorOpen] =
@@ -14,9 +14,9 @@ const WorkoutNameInput = () => {
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
     []
   )
-  const [localValue, setLocalValue] = useState('')
   const { workoutNames, setWorkoutData, workoutData, setFocusedInput } =
     useWorkoutForm()
+  const [localValue, setLocalValue] = useState(workoutData.name)
 
   useEffect(() => {
     setWorkoutNamesResults(workoutNames)
@@ -38,7 +38,7 @@ const WorkoutNameInput = () => {
       <Button
         key={name}
         onPress={() => handleSelectWorkoutName(name)}
-        style={tw`flex-row items-center justify-between p-3 w-full bg-transparent ${
+        style={tw`flex-row items-center justify-between p-4 w-full bg-transparent ${
           index === workoutNamesResults.length - 1
             ? ''
             : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
@@ -75,23 +75,25 @@ const WorkoutNameInput = () => {
   )
 
   return (
-    <View style={tw`relative`}>
+    <View
+      style={tw`flex-1 shrink border-b border-light-grayBorder dark:border-dark-grayBorder`}
+    >
       <Input
         editable
         value={localValue}
         onPress={() => {
           setIsWorkoutNameSelectorOpen(!isWorkoutNameSelectorOpen)
         }}
-        onChange={handleTextChange}
+        onChange={(e) => handleTextChange(e)}
         onBlur={(e) => {
           setWorkoutData((prev) => ({ ...prev, name: localValue }))
           setIsWorkoutNameSelectorOpen(false)
           setFocusedInput(null)
         }}
-        placeholder="Workout Name [e.g., Legs, Push, Pull]"
+        placeholder="Workout Name (e.g. Legs, Push, Pull)"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="text-light-text border-b border-light-grayBorder/50 dark:border-dark-grayBorder/50 dark:text-dark-text font-poppinsMedium text-base w-full h-10"
+        twcnInput="font-semibold text-lg h-12 leading-6 pb-1"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types
@@ -109,15 +111,13 @@ const WorkoutNameInput = () => {
       />
 
       {isWorkoutNameSelectorOpen && workoutNamesResults.length > 0 && (
-        <BlurView
-          intensity={25}
-          tint="default"
+        <GlassView
           style={[
-            tw`absolute top-full bg-white dark:bg-dark-grayPrimary left-0 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
+            tw`absolute top-full left-0 max-h-37 right-0 mt-1 rounded-xl overflow-hidden z-10 border border-light-grayBorder dark:border-dark-grayBorder`,
           ]}
         >
           {renderedWorkoutNames}
-        </BlurView>
+        </GlassView>
       )}
     </View>
   )

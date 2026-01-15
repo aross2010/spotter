@@ -47,6 +47,11 @@ type WorkoutFormContextType = {
   getNames: () => Promise<void>
   userTags: TagWithCount[]
   setUserTags: React.Dispatch<React.SetStateAction<TagWithCount[]>>
+  updateExerciseDetails: (
+    exerciseIndex: number,
+    details: any,
+    loading: boolean
+  ) => void
   resetWorkoutFormContext: () => void
 }
 
@@ -64,6 +69,10 @@ const starterExercise = {
       id: nanoid(),
     },
   ],
+  details: {
+    loading: false,
+    data: null,
+  },
 }
 
 const WorkoutFormContext = createContext<WorkoutFormContextType | undefined>(
@@ -125,25 +134,31 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     if (!currentSet) return
 
     const isUnilateral = currentExercise.isUnilateral
-    const isSynced = preferences?.unilateralLogging === 'sync'
+    const isSynced =
+      currentExercise.isSynced ?? preferences?.unilateralLogging === 'sync'
 
     let currentValue: number | undefined
     let fieldToUpdate: string = field
+    let leftFieldToUpdate: string | undefined
     let rightFieldToUpdate: string | undefined
 
     // Determine the current value and field to update
     if (isUnilateral && isLeftSide !== undefined) {
       if (field === 'reps') {
         fieldToUpdate = isLeftSide ? 'leftReps' : 'rightReps'
+        leftFieldToUpdate = 'leftReps'
         rightFieldToUpdate = 'rightReps'
       } else if (field === 'partials') {
         fieldToUpdate = isLeftSide ? 'leftPartialReps' : 'rightPartialReps'
+        leftFieldToUpdate = 'leftPartialReps'
         rightFieldToUpdate = 'rightPartialReps'
       } else if (field === 'rpe') {
         fieldToUpdate = isLeftSide ? 'leftRpe' : 'rightRpe'
+        leftFieldToUpdate = 'leftRpe'
         rightFieldToUpdate = 'rightRpe'
       } else if (field === 'rir') {
         fieldToUpdate = isLeftSide ? 'leftRir' : 'rightRir'
+        leftFieldToUpdate = 'leftRir'
         rightFieldToUpdate = 'rightRir'
       }
     } else {
@@ -200,10 +215,10 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     const updatedSets = [...updatedExercises[exerciseIndex].sets]
 
     // Update both left and right at the same time for sync mode
-    if (isUnilateral && isSynced && isLeftSide === true && rightFieldToUpdate) {
+    if (isUnilateral && isSynced && leftFieldToUpdate && rightFieldToUpdate) {
       updatedSets[setIndex] = {
         ...updatedSets[setIndex],
-        [fieldToUpdate]: newValue,
+        [leftFieldToUpdate]: newValue,
         [rightFieldToUpdate]: newValue,
       } as any
     } else {
@@ -296,6 +311,29 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     setFocusedInput(null)
   }
 
+  const updateExerciseDetails = (
+    exerciseIndex: number,
+    details: any,
+    loading: boolean
+  ) => {
+    setWorkoutData((prev) => {
+      const updatedExercises = [...prev.exercises]
+      if (updatedExercises[exerciseIndex]) {
+        updatedExercises[exerciseIndex] = {
+          ...updatedExercises[exerciseIndex],
+          details: {
+            loading,
+            data: details,
+          },
+        }
+      }
+      return {
+        ...prev,
+        exercises: updatedExercises,
+      }
+    })
+  }
+
   // Register reset function on mount
   useEffect(() => {
     registerContextResetter('resetWorkoutFormContext', resetWorkoutFormContext)
@@ -321,6 +359,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     userTags,
     resetWorkoutFormContext,
     setUserTags,
+    updateExerciseDetails,
   }
 
   return (

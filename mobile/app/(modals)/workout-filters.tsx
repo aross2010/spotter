@@ -4,48 +4,18 @@ import SafeView from '../../components/safe-view'
 import Txt from '../../components/text'
 import tw from '../../tw'
 import Button from '../../components/button'
-import {
-  CalendarArrowDown,
-  CalendarArrowUp,
-  Circle,
-  CircleCheck,
-  CircleDot,
-  Layers,
-  ListCheck,
-  RotateCcw,
-  Search,
-  X,
-} from 'lucide-react-native'
 import Colors from '../../constants/colors'
 import useTheme from '../hooks/theme'
 import { useWorkout, FilterOptions } from '../../context/workout-context'
-import Input from '../../components/input'
 import Spinner from '../../components/activity-indicator'
-import { router, useNavigation } from 'expo-router'
-import MyModal from '../../components/modal'
-
-const statusOptions = [
-  {
-    value: 'all' as const,
-    label: 'All',
-    icon: ListCheck,
-  },
-  {
-    value: 'completed' as const,
-    label: 'Completed',
-    icon: CircleCheck,
-  },
-  {
-    value: 'planned' as const,
-    label: 'Planned',
-    icon: Circle,
-  },
-  {
-    value: 'active' as const,
-    label: 'Active',
-    icon: CircleDot,
-  },
-]
+import { router, useNavigation, useLocalSearchParams } from 'expo-router'
+import SFIcon from '../../components/sf-icon'
+import {
+  ContextMenu,
+  Host,
+  Picker,
+  Button as SwiftButton,
+} from '@expo/ui/swift-ui'
 
 const WorkoutFilters = () => {
   const { theme } = useTheme()
@@ -63,11 +33,11 @@ const WorkoutFilters = () => {
     setStatusFilter,
   } = useWorkout()
 
-  const [query, setQuery] = useState('')
+  const { q } = useLocalSearchParams()
+  const query = (q as string) || ''
   const [loading, setLoading] = useState(true)
   const [resultOptions, setResultOptions] = useState<FilterOptions>([])
   const [selectedOptions, setSelectedOptions] = useState<FilterOptions>([])
-  const [showStatusMenu, setShowStatusMenu] = useState(false)
   const [initialState, setInitialState] = useState<{
     selectedOptions: FilterOptions
     sortOrder: 'asc' | 'desc'
@@ -124,34 +94,92 @@ const WorkoutFilters = () => {
     navigation.setOptions({
       headerRight: () => {
         return (
-          <View style={tw`flex-row items-center gap-3`}>
-            {!isLoading && (
+          <View style={tw`flex-row items-center gap-6 px-2`}>
+            <Host style={{ width: 26, height: 26 }}>
+              <ContextMenu>
+                <ContextMenu.Items>
+                  <Picker
+                    label={`Sort: ${sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}`}
+                    options={['Newest First', 'Oldest First']}
+                    variant="menu"
+                    selectedIndex={sortOrder === 'desc' ? 0 : 1}
+                    onOptionSelected={({ nativeEvent: { index } }) =>
+                      index === 0 ? setSortOrder('desc') : setSortOrder('asc')
+                    }
+                  />
+                  <Picker
+                    label={`Status: ${
+                      statusFilter === 'all'
+                        ? 'All'
+                        : statusFilter === 'completed'
+                          ? 'Completed'
+                          : statusFilter === 'planned'
+                            ? 'Planned'
+                            : 'Active'
+                    }`}
+                    options={['All', 'Completed', 'Planned', 'Active']}
+                    variant="menu"
+                    selectedIndex={
+                      statusFilter === 'all'
+                        ? 0
+                        : statusFilter === 'completed'
+                          ? 1
+                          : statusFilter === 'planned'
+                            ? 2
+                            : 3
+                    }
+                    onOptionSelected={({ nativeEvent: { index } }) =>
+                      index === 0
+                        ? setStatusFilter('all')
+                        : index === 1
+                          ? setStatusFilter('completed')
+                          : index === 2
+                            ? setStatusFilter('planned')
+                            : setStatusFilter('active')
+                    }
+                  />
+                </ContextMenu.Items>
+                <ContextMenu.Trigger>
+                  <SFIcon
+                    name="ellipsis.circle"
+                    color={Colors.primary}
+                    size={26}
+                  />
+                </ContextMenu.Trigger>
+              </ContextMenu>
+            </Host>
+            <Button
+              onPress={handleResetAll}
+              hitSlop={8}
+              accessibilityLabel="reset all filters"
+            >
+              <SFIcon
+                name="arrow.counterclockwise"
+                size={26}
+                color={Colors.primary}
+              />
+            </Button>
+            {isLoading && changesExist ? (
+              <Spinner
+                twcn="w-9"
+                fullScreen={false}
+              />
+            ) : (
               <Button
-                onPress={() => setShowStatusMenu(true)}
-                hitSlop={12}
-                twcn="p-1.5 rounded-xl bg-primary/10"
+                onPress={changesExist ? handleApplyFilters : undefined}
+                hitSlop={8}
+                accessibilityLabel="apply filters and sort method"
+                disabled={!changesExist || isLoading}
               >
-                {(() => {
-                  const StatusIcon = statusOptions.find(
-                    (opt) => opt.value === (statusFilter || 'all')
-                  )?.icon
-                  return StatusIcon ? (
-                    <StatusIcon
-                      size={16}
-                      color={Colors.primary}
-                    />
-                  ) : null
-                })()}
+                <SFIcon
+                  name="checkmark"
+                  size={26}
+                  color={
+                    changesExist && !isLoading ? Colors.primary : theme.grayText
+                  }
+                />
               </Button>
             )}
-            <Button
-              onPress={changesExist ? handleApplyFilters : undefined}
-              hitSlop={12}
-              accessibilityLabel="apply filters and sort method"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-              text={isLoading ? 'Applying...' : 'Apply'}
-              disabled={!changesExist || isLoading}
-            />
           </View>
         )
       },
@@ -161,11 +189,15 @@ const WorkoutFilters = () => {
             resetState()
             router.back()
           }}
-          hitSlop={12}
+          hitSlop={8}
           accessibilityLabel="close workout filters"
-          twcnText={`font-poppinsSemiBold text-light-grayText dark:text-dark-grayText`}
-          text="Cancel"
-        />
+        >
+          <SFIcon
+            name="xmark"
+            size={26}
+            color={theme.text}
+          />
+        </Button>
       ),
       presentation: 'modal',
     })
@@ -236,13 +268,12 @@ const WorkoutFilters = () => {
     }
   }, [filterOptions])
 
-  const handleChange = (text: string) => {
-    setQuery(text)
+  useEffect(() => {
     const filteredResults = filterOptions.filter((option) =>
-      option.label.toLowerCase().includes(text.toLowerCase())
+      option.label.toLowerCase().includes(query.toLowerCase())
     )
     setResultOptions(filteredResults)
-  }
+  }, [query, filterOptions])
 
   const handleSelectOption = (option: FilterOptions[number]) => {
     setSelectedOptions((prev) => [...prev, option])
@@ -269,13 +300,6 @@ const WorkoutFilters = () => {
     setStatusFilter('all')
     setResultOptions(filterOptions)
     clearFilters()
-  }
-
-  const handleStatusChange = (
-    status: 'all' | 'completed' | 'planned' | 'active'
-  ) => {
-    setStatusFilter(status)
-    setShowStatusMenu(false)
   }
 
   const getTypeLabel = (type: string) => {
@@ -352,7 +376,7 @@ const WorkoutFilters = () => {
               {option.label}
             </Txt>
             <View
-              style={tw`px-2 py-0.5 rounded-lg ${getTypeBgColor(option.type)}`}
+              style={tw`px-2 py-0.5 rounded-full ${getTypeBgColor(option.type)}`}
             >
               <Txt
                 twcn={`text-xs text-[${getTypeTextColor(option.type)}] dark:text-[${getTypeTextColor(option.type)}]`}
@@ -374,14 +398,15 @@ const WorkoutFilters = () => {
       key={`${option.type}-${option.label}`}
       onPress={() => handleDeselectOption(option)}
       hitSlop={12}
-      style={tw`flex-row items-center gap-2 px-3 py-1 ${getTypeBgColor(option.type)} rounded-lg`}
+      style={tw`flex-row items-center gap-2 px-3 py-1 ${getTypeBgColor(option.type)} rounded-full`}
     >
       <Txt
         twcn={`text-xs text-[${getTypeTextColor(option.type)}] dark:text-[${getTypeTextColor(option.type)}]`}
       >
         {option.label}
       </Txt>
-      <X
+      <SFIcon
+        name="xmark"
         size={12}
         color={getTypeTextColor(option.type)}
       />
@@ -398,71 +423,9 @@ const WorkoutFilters = () => {
     >
       {/* Sticky Header */}
       <View style={tw`pb-2 bg-light-background dark:bg-dark-background`}>
-        <View style={tw`flex-row justify-between items-center gap-2 mb-2`}>
-          <View
-            style={tw`px-3 flex-1 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-          >
-            <Search
-              size={16}
-              color={theme.grayText}
-            />
-            <Input
-              autoCorrect={false}
-              twcnInput="flex-1"
-              autoCapitalize="none"
-              placeholder={'Search anything...'}
-              value={query}
-              onChange={(e) => handleChange(e.nativeEvent.text)}
-              maxLength={50}
-              autoFocus
-            />
-            <Button
-              onPress={() => {
-                if (query === '') Keyboard.dismiss()
-                setQuery('')
-              }}
-            >
-              <X
-                size={16}
-                color={theme.grayText}
-              />
-            </Button>
-          </View>
-          <View style={tw`flex-row items-center gap-1.5`}>
-            <Button
-              hitSlop={12}
-              twcn={`${sortOrder != 'asc' ? 'bg-primary/10' : 'bg-primary'} rounded-xl p-2`}
-              onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            >
-              {sortOrder === 'desc' ? (
-                <CalendarArrowDown
-                  size={16}
-                  color={Colors.primary}
-                />
-              ) : (
-                <CalendarArrowUp
-                  size={16}
-                  color={'#FFFFFF'}
-                />
-              )}
-            </Button>
-
-            <Button
-              hitSlop={12}
-              onPress={handleResetAll}
-              twcn="bg-primary/10 rounded-xl p-2"
-            >
-              <RotateCcw
-                size={16}
-                color={Colors.primary}
-              />
-            </Button>
-          </View>
-        </View>
-
         {selectedOptions.length > 0 && (
           <View
-            style={tw`flex-row flex-wrap border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 items-center gap-1 pt-2`}
+            style={tw`flex-row flex-wrap -mx-4 border-b border-light-grayBorder dark:border-dark-grayBorder pb-2 px-4 items-center gap-1`}
           >
             {renderedSelectedOptions}
           </View>
@@ -470,42 +433,11 @@ const WorkoutFilters = () => {
       </View>
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
         style={tw`flex-1 -mx-4`}
         contentContainerStyle={tw`flex-grow pb-12`}
       >
         {renderedResultOptions}
       </ScrollView>
-
-      <MyModal
-        isOpen={showStatusMenu}
-        setIsOpen={setShowStatusMenu}
-      >
-        <Txt twcn="font-poppinsMedium mb-2">Workout Status</Txt>
-        <View>
-          {statusOptions.map((option) => {
-            const isSelected = (statusFilter || 'all') === option.value
-            const StatusIcon = option.icon
-            const isAll = option.value === 'all'
-
-            return (
-              <Button
-                key={option.value}
-                onPress={() => handleStatusChange(option.value)}
-                twcn={`flex-row items-center gap-2 p-3 rounded-xl ${
-                  isSelected ? 'bg-primary/10' : ''
-                }`}
-              >
-                <StatusIcon
-                  size={20}
-                  color={isSelected ? Colors.primary : theme.text}
-                />
-                <Txt twcn="text-sm">{option.label}</Txt>
-              </Button>
-            )
-          })}
-        </View>
-      </MyModal>
     </SafeView>
   )
 }

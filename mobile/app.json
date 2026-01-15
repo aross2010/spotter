@@ -1,9 +1,9 @@
 {
   "expo": {
     "scheme": "spotter-weightlifting",
-    "name": "Spotter – Weightlifting Log",
+    "name": "Spotter: Workout Tracker",
     "slug": "Spotter",
-    "version": "1.1.2",
+    "version": "2.0",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "userInterfaceStyle": "automatic",
@@ -17,7 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.aross.spotter",
       "usesAppleSignIn": true,
-      "deploymentTarget": "16.0",
+      "deploymentTarget": "26.0",
       "icon": {
         "dark": "./assets/icons/ios-dark.png",
         "light": "./assets/icons/ios-light.png",
@@ -25,7 +25,6 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIDesignRequiresCompatibility": true,
         "UIDeviceFamily": [1],
         "UIRequiresFullScreen": true,
         "CFBundleDisplayName": "Spotter",
@@ -48,7 +47,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font",
       "expo-build-properties",
       [
         "@react-native-google-signin/google-signin",

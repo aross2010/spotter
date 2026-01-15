@@ -3,27 +3,30 @@ import Txt from '../../../components/text'
 import { Alert, Image, View } from 'react-native'
 import { useUserStore } from '../../../stores/user-store'
 import Button from '../../../components/button'
-import { CircleCheck } from 'lucide-react-native'
 import Colors from '../../../constants/colors'
 import { useAuth } from '../../../context/auth-context'
 import { Provider, Providers } from '../../../utils/types'
 import { useEffect, useState } from 'react'
 import tw from '../../../tw'
-import googleLogo from '../../../assets/google.png'
-import appleLogo from '../../../assets/apple.png'
 import Spinner from '../../../components/activity-indicator'
 import { BASE_URL } from '../../../constants/auth'
+import SFIcon from '../../../components/sf-icon'
+import useTheme from '../../hooks/theme'
+import googleLogo from '../../../assets/google.png'
+import appleLogo from '../../../assets/apple.png'
 
 const providerOptions = [
   {
-    title: 'Apple',
-    provider: 'apple',
-    logo: appleLogo,
-  },
-  {
     title: 'Google',
     provider: 'google',
+    color: '#FFFFFF',
     logo: googleLogo,
+  },
+  {
+    title: 'Apple',
+    provider: 'apple',
+    color: '#000000',
+    logo: appleLogo,
   },
 ] as const
 
@@ -32,6 +35,7 @@ const LinkedAccounts = () => {
     useAuth()
   const [loading, setIsLoading] = useState(false)
   const [providersLinked, setProvidersLinked] = useState<Provider[]>([])
+  const { theme, colorScheme } = useTheme()
 
   const getProvidersLinked = async () => {
     try {
@@ -67,7 +71,8 @@ const LinkedAccounts = () => {
     }
   }
 
-  const renderedProviders = providerOptions.map(({ title, provider, logo }) => {
+  const renderedProviders = providerOptions.map((option) => {
+    const { title, provider, color, logo } = option
     const isLinked = providersLinked.some((p) => p.name === provider)
     const providerEmail = providersLinked.find(
       (p) => p.name === provider
@@ -75,27 +80,37 @@ const LinkedAccounts = () => {
 
     return (
       <View key={provider}>
-        <View style={tw`flex-row items-center gap-2 mb-4`}>
+        <Button
+          onPress={() => !isLinked && handleLinking(provider)}
+          style={[
+            tw`h-14 rounded-full flex-row items-center justify-center gap-3`,
+            { backgroundColor: color },
+          ]}
+          disabled={isLinked}
+        >
           <Image
             source={logo}
-            style={{ width: 24, height: 24 }}
+            style={{
+              width: 20,
+              height: 20,
+            }}
             resizeMode="contain"
           />
-          <Txt twcn="font-poppinsMedium">{title}</Txt>
-        </View>
-        {isLinked ? (
-          <View style={tw`flex-row items-center gap-2`}>
-            <CircleCheck color={Colors.green} />
-            <Txt twcn="text-light-grayText dark:text-dark-grayText">
-              {providerEmail}
-            </Txt>
-          </View>
-        ) : (
-          <Button
-            text="Link Account"
-            twcnText="font-poppinsSemiBold text-primary dark:text-primary"
-            onPress={() => handleLinking(provider)}
+          <Txt
+            twcn={`font-semibold text-sm ${provider === 'apple' ? 'text-white' : 'dark:text-light-text text-light-text'}`}
+          >
+            {isLinked ? `${title} Connected` : `Connect ${title}`}
+          </Txt>
+          <SFIcon
+            name={isLinked ? 'checkmark.circle.fill' : 'plus.circle.fill'}
+            size={20}
+            color={provider === 'apple' ? '#FFFFFF' : '#000000'}
           />
+        </Button>
+        {isLinked && providerEmail && (
+          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mt-1 text-center">
+            {providerEmail}
+          </Txt>
         )}
       </View>
     )
@@ -105,11 +120,11 @@ const LinkedAccounts = () => {
     <Spinner />
   ) : (
     <SafeView scroll={false}>
-      <Txt twcn="text-light-grayText dark:text-dark-grayText mb-4">
+      <Txt twcn="text-light-grayText dark:text-dark-grayText mb-6">
         Securely link multiple sign-in providers (e.g., Apple and Google) to a
         single account, so you can log in with any of them across devices.
       </Txt>
-      <View style={tw`gap-8 mb-8`}>{renderedProviders}</View>
+      <View style={tw`gap-4`}>{renderedProviders}</View>
     </SafeView>
   )
 }

@@ -1,13 +1,11 @@
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
-import { useState } from 'react'
-import { View, ScrollView } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text } from 'react-native'
 import tw from '../../../tw'
-import Input from '../../../components/input'
-import { Search, X } from 'lucide-react-native'
 import useTheme from '../../hooks/theme'
-import Button from '../../../components/button'
 import Accordion from '../../../components/accordion'
+import { useLocalSearchParams } from 'expo-router'
 
 type FAQItem = {
   id: number
@@ -257,7 +255,8 @@ const faqData: FAQItem[] = [
 
 const FAQ = () => {
   const { theme } = useTheme()
-  const [searchQuery, setSearchQuery] = useState('')
+  const { q } = useLocalSearchParams()
+  const searchQuery = (q as string) || ''
   const [expandedIds, setExpandedIds] = useState<number[]>([])
 
   const toggleExpanded = (id: number) => {
@@ -265,6 +264,15 @@ const FAQ = () => {
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     )
   }
+
+  // Auto-expand all FAQs when searching
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setExpandedIds(filteredFAQs.map((faq) => faq.id))
+    } else {
+      setExpandedIds([])
+    }
+  }, [searchQuery])
 
   const filteredFAQs = faqData.filter((faq) => {
     if (!searchQuery.trim()) return true
@@ -290,55 +298,51 @@ const FAQ = () => {
 
   const categories = Object.keys(groupedFAQs)
 
-  return (
-    <SafeView
-      scroll={false}
-      keyboardAvoiding
-      twcnContentView="mb-0"
-    >
-      {/* Sticky Search Header */}
-      <View style={tw`pb-4 bg-light-background dark:bg-dark-background`}>
-        <View
-          style={tw`px-3 h-10 border border-light-grayBorder dark:border-dark-grayBorder rounded-xl flex-row items-center justify-between gap-2 bg-white dark:bg-dark-grayPrimary`}
-        >
-          <Search
-            size={16}
-            color={theme.grayText}
-          />
-          <Input
-            twcnInput="flex-1"
-            placeholder="Search FAQs..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <Button onPress={() => setSearchQuery('')}>
-            <X
-              size={16}
-              color={theme.grayText}
-            />
-          </Button>
-        </View>
-      </View>
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) {
+      return (
+        <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+          {text}
+        </Txt>
+      )
+    }
 
-      <ScrollView
-        style={tw`flex-1 -mx-4`}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={tw`px-4`}
-      >
-        <View style={tw``}>
-          {filteredFAQs.length === 0 ? (
-            <View style={tw`py-8 items-center`}>
-              <Txt twcn="text-light-grayText dark:text-dark-grayText">
-                No results found
-              </Txt>
-            </View>
+    const parts = text.split(new RegExp(`(${query})`, 'gi'))
+    return (
+      <Text style={tw`text-xs text-light-grayText dark:text-dark-grayText`}>
+        {parts.map((part, index) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <Text
+              key={index}
+              style={tw`bg-primary/50`}
+            >
+              {part}
+            </Text>
           ) : (
-            categories.map((category) => (
+            part
+          )
+        )}
+      </Text>
+    )
+  }
+
+  return (
+    <SafeView twcnContentView="px-0">
+      <View style={tw`px-4`}>
+        {filteredFAQs.length === 0 ? (
+          <View style={tw`py-8 items-center`}>
+            <Txt twcn="text-light-grayText dark:text-dark-grayText">
+              No results found
+            </Txt>
+          </View>
+        ) : (
+          <View style={tw`flex-col gap-6`}>
+            {categories.map((category) => (
               <View
                 key={category}
-                style={tw`mb-4`}
+                style={tw``}
               >
-                <Txt twcn="mb-4 font-poppinsMedium">{category}</Txt>
+                <Txt twcn="mb-2 font-semibold text-lg">{category}</Txt>
                 <View
                   style={tw`bg-white dark:bg-dark-grayPrimary rounded-xl overflow-hidden`}
                 >
@@ -355,9 +359,7 @@ const FAQ = () => {
                           onToggle={() => toggleExpanded(faq.id)}
                         >
                           <View style={tw`px-4 pb-4`}>
-                            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-                              {faq.answer}
-                            </Txt>
+                            {highlightText(faq.answer, searchQuery)}
                           </View>
                         </Accordion>
                       </View>
@@ -365,10 +367,10 @@ const FAQ = () => {
                   })}
                 </View>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            ))}
+          </View>
+        )}
+      </View>
     </SafeView>
   )
 }

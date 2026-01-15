@@ -43,7 +43,7 @@ const Input = forwardRef<TextInput, InputProps>(
       <TextInput
         ref={ref}
         style={[
-          tw`font-poppins text-light-text dark:text-dark-text py-2 ${fullBorder ? 'bg-white dark:bg-dark-grayPrimary border border-light-grayBorder dark:border-dark-grayBorder rounded-xl p-2.5' : ''} ${twcnInput ?? ''}`,
+          tw` text-light-text dark:text-dark-text py-2 ${fullBorder ? 'bg-white dark:bg-dark-grayPrimary border border-light-grayBorder/25 dark:border-dark-grayBorder/25 rounded-full p-3' : ''} ${twcnInput ?? ''}`,
           props.numberOfLines
             ? {
                 height: getMultilineHeight(),
@@ -52,7 +52,7 @@ const Input = forwardRef<TextInput, InputProps>(
               }
             : undefined,
         ]}
-        placeholderTextColor={theme.grayText}
+        placeholderTextColor={`${theme.grayText}`}
         allowFontScaling={false}
         keyboardAppearance={colorScheme}
         multiline={props.numberOfLines ? true : props.multiline}
@@ -62,8 +62,8 @@ const Input = forwardRef<TextInput, InputProps>(
 
     if (label) {
       return (
-        <View style={tw`gap-3 ${twcnContainer ?? ''}`}>
-          <Txt twcn={`font-poppinsSemiBold ${twcnLabel}`}>{label}</Txt>
+        <View style={tw`gap-2 ${twcnContainer ?? ''}`}>
+          <Txt twcn={`font-semibold text-base ${twcnLabel}`}>{label}</Txt>
           {standardInput}
         </View>
       )

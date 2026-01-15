@@ -1,25 +1,37 @@
-import React, { ReactNode, useEffect, useMemo, useState } from 'react'
-import { View } from 'react-native'
+import React, {
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from 'react'
+import { View, Dimensions } from 'react-native'
 import {
-  Area,
   CartesianChart,
-  Line,
-  Scatter,
+  useLinePath,
+  useAreaPath,
   useChartPressState,
+  type PointsArray,
 } from 'victory-native'
-import { useFont } from '@shopify/react-native-skia'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { useFont, Path, Circle, Group, rect } from '@shopify/react-native-skia'
 import Colors from '../constants/colors'
 import useTheme from '../app/hooks/theme'
 import tw from '../tw'
 import { Poppins_400Regular } from '@expo-google-fonts/poppins'
+import { useIsFocused } from '@react-navigation/native'
 import Animated, {
-  runOnJS,
   Easing,
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  withDelay,
+  useDerivedValue,
+  SharedValue,
 } from 'react-native-reanimated'
+import { runOnJS } from 'react-native-worklets'
 
 type DataPoint = Record<string, any>
 
@@ -27,105 +39,409 @@ type LineChartProps = {
   data: DataPoint[] // if data greater than 100, make it scrollable
   xKey: string
   yKey: string
+  chartHeight?: number
   formatXLabel?: (value: any, index: number) => string
   formatYLabel?: (value: number) => string
-  maxXLabels?: number // kept for compatibility; we’ll force 5 regardless
+  maxXLabels?: number // kept for compatibility; we'll force 5 regardless
   toolTips?: ReactNode[] // match len of data
   longPressMs?: number // how long to hold before activating tooltip (default 150ms)
+  onScrollEnabledChange?: (enabled: boolean) => void
 }
 
-const CHART_HEIGHT = 225
+const ANIMATION_DURATION = 2000
+
+// Animated Line component with draw effect
+function AnimatedLine({
+  points,
+  progress,
+}: {
+  points: PointsArray
+  progress: SharedValue<number>
+}) {
+  const { path } = useLinePath(points, { curveType: 'linear' })
+
+  // Animate the stroke end to create a "drawing" effect
+  const end = useDerivedValue(() => progress.value)
+
+  return (
+    <Path
+      path={path}
+      style="stroke"
+      color={Colors.primary}
+      strokeWidth={1.5}
+      start={0}
+      end={end}
+    />
+  )
+}
+
+// Animated Area component - reveals as line draws using clip rect synced to points
+function AnimatedArea({
+  points,
+  y0,
+  progress,
+}: {
+  points: PointsArray
+  y0: number
+  progress: SharedValue<number>
+}) {
+  const { path } = useAreaPath(points, y0, { curveType: 'linear' })
+
+  // Calculate clip rect based on actual point positions
+  const clip = useDerivedValue(() => {
+    if (points.length === 0) return rect(0, 0, 0, 0)
+
+    const firstX = points[0]?.x ?? 0
+    const lastX = points[points.length - 1]?.x ?? 0
+    const totalWidth = lastX - firstX
+    const currentWidth = totalWidth * progress.value
+
+    // Clip from the start of the first point to the current progress position
+    return rect(firstX, 0, currentWidth, y0 + 100)
+  })
+
+  return (
+    <Group clip={clip}>
+      <Path
+        path={path}
+        style="fill"
+        color={Colors.primary}
+        opacity={0.1}
+      />
+    </Group>
+  )
+}
+
+function ActivePoint({
+  points,
+  currentIndex,
+  radius,
+}: {
+  points: PointsArray
+  currentIndex: number | null
+  radius: number
+}) {
+  const animatedX = useSharedValue(0)
+  const animatedY = useSharedValue(0)
+  const isFirstTouch = useSharedValue(true)
+  const isReady = useSharedValue(false)
+
+  // When index changes, update position
+  useAnimatedReaction(
+    () => currentIndex,
+    (index, prevIndex) => {
+      if (index == null || !points[index]) {
+        isReady.value = false
+        return
+      }
+
+      const p = points[index]
+      if (p.x == null || p.y == null) {
+        isReady.value = false
+        return
+      }
+
+      // First update of a gesture: jump instantly AND only then mark ready
+      if (isFirstTouch.value || prevIndex == null) {
+        animatedX.value = p.x
+        animatedY.value = p.y
+        isFirstTouch.value = false
+        isReady.value = true
+      } else {
+        // Subsequent moves: keep it visible and animate
+        isReady.value = true
+        animatedX.value = withTiming(p.x, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+        animatedY.value = withTiming(p.y, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+      }
+    },
+    [points]
+  )
+
+  // Reset on finger lift
+  useAnimatedReaction(
+    () => currentIndex,
+    (index) => {
+      if (index == null) {
+        isFirstTouch.value = true
+        isReady.value = false
+      }
+    },
+    []
+  )
+
+  const cx = useDerivedValue(() => animatedX.value)
+  const cy = useDerivedValue(() => animatedY.value)
+
+  // IMPORTANT: gate render on isReady so it can't flash old coords
+  if (currentIndex == null || !points[currentIndex]) return null
+  if (!isReady.value) return null // <- prevents the 1-frame flash
+
+  return (
+    <Circle
+      cx={cx}
+      cy={cy}
+      r={radius}
+      color={Colors.primary}
+    />
+  )
+}
 
 const LineChart = ({
   data,
   xKey,
   yKey,
+  chartHeight = 225,
   formatXLabel,
   formatYLabel,
   toolTips,
   longPressMs = 150,
+  onScrollEnabledChange,
 }: LineChartProps) => {
   const { theme } = useTheme()
+  const isFocused = useIsFocused()
   const font = useFont(Poppins_400Regular, 10)
   const { state: press, isActive } = useChartPressState({ x: 0, y: { y: 0 } })
   const chartWidth = useSharedValue(0)
+
   const [currentIndex, setCurrentIndex] = useState<number | null>(null)
+  const [showTooltip, setShowTooltip] = useState(false)
   const tooltipX = useSharedValue<number | null>(null)
   const tooltipY = useSharedValue<number | null>(null)
-  const wasActive = useSharedValue(false)
+  const xPositions = useSharedValue<number[]>([])
+  const yPositions = useSharedValue<number[]>([])
+  const nPoints = useSharedValue(0)
+  const xRangeMin = useSharedValue(0)
+  const activeIdx = useSharedValue(-1)
 
+  const dotX = useSharedValue(0)
+  const dotY = useSharedValue(0)
+  const dotVisible = useSharedValue(0) // 0/1
+  const dotWasActive = useSharedValue(false)
+  const wasActive = useSharedValue(false)
+  const chartViewRef = useRef<View>(null)
+  const chartViewLeft = useSharedValue(0) // Screen X position of the chart view
+  const screenHeight = Dimensions.get('window').height
+  const [hasBeenViewed, setHasBeenViewed] = useState(false)
+  const [chartReady, setChartReady] = useState(false)
+  const pointsRef = useRef<PointsArray>([])
+  const boundsLeft = useSharedValue(0)
+  const boundsTop = useSharedValue(0)
+  const rawTouchX = useSharedValue(0) // Raw touch X from our gesture handler
+  const isGestureActive = useSharedValue(false)
+  const dotCx = useDerivedValue(() => dotX.value)
+  const dotCy = useDerivedValue(() => dotY.value)
+  const dotR = useDerivedValue(() => (dotVisible.value ? 8 : 0))
+
+  // Animation progress for drawing the line (0 to 1)
+  const drawProgress = useSharedValue(0)
+
+  // Check if chart is visible on screen and trigger animation
+  const checkVisibilityAndAnimate = useCallback(() => {
+    if (hasBeenViewed || !chartViewRef.current) return
+
+    chartViewRef.current.measureInWindow((x, y, width, height) => {
+      // Store the chart's screen X position for touch coordinate adjustment
+      chartViewLeft.value = x
+      // Trigger animation when chart is at least 15% up from the bottom of the screen
+      const visibilityThreshold = screenHeight * 0.85
+      const isVisible = y < visibilityThreshold && y + height > 0
+      if (isVisible) {
+        setHasBeenViewed(true)
+      }
+    })
+  }, [hasBeenViewed, screenHeight])
+
+  // Check visibility periodically while focused
+  useEffect(() => {
+    if (!isFocused || hasBeenViewed || !chartReady) return
+
+    // Check immediately
+    checkVisibilityAndAnimate()
+
+    // Also set up an interval to check periodically (handles scroll into view)
+    const interval = setInterval(checkVisibilityAndAnimate, 100)
+
+    return () => clearInterval(interval)
+  }, [isFocused, hasBeenViewed, chartReady, checkVisibilityAndAnimate])
+
+  // Trigger draw animation when visibility is confirmed
+  useEffect(() => {
+    if (hasBeenViewed && data.length > 0) {
+      drawProgress.value = 0
+      drawProgress.value = withTiming(1, {
+        duration: ANIMATION_DURATION,
+        easing: Easing.out(Easing.cubic),
+      })
+    }
+  }, [hasBeenViewed, data])
+
+  // Measure chart view position when chart is ready (for touch coordinate adjustment)
+  useEffect(() => {
+    if (!chartReady || !chartViewRef.current) return
+
+    // Small delay to ensure layout is complete
+    const timer = setTimeout(() => {
+      chartViewRef.current?.measureInWindow((x) => {
+        chartViewLeft.value = x
+      })
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [chartReady])
+
+  // Find nearest point index based on touch pixel position (JS thread)
+  const handleFindNearestIndex = useCallback((touchX: number) => {
+    const points = pointsRef.current
+    if (points.length === 0) {
+      setCurrentIndex(null)
+      return
+    }
+
+    let nearestIndex = 0
+    let minDistance = Infinity
+
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i]
+      if (point.x == null) continue
+      const distance = Math.abs(point.x - touchX)
+      if (distance < minDistance) {
+        minDistance = distance
+        nearestIndex = i
+      }
+    }
+
+    setCurrentIndex(nearestIndex)
+  }, [])
+
+  // Create our own long press gesture to capture raw touch coordinates
+  // This bypasses Victory Native's broken coordinate calculation when container has padding
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(longPressMs)
+    .onStart((e) => {
+      'worklet'
+      rawTouchX.value = e.x
+      isGestureActive.value = true
+    })
+
+  const panGesture = Gesture.Pan()
+    .manualActivation(true)
+    .onTouchesMove((e, state) => {
+      // Only activate pan if long press is already active
+      if (isGestureActive.value) {
+        state.activate()
+      }
+    })
+    .onUpdate((e) => {
+      'worklet'
+      if (isGestureActive.value) {
+        rawTouchX.value = e.x
+      }
+    })
+    .onEnd(() => {
+      'worklet'
+      isGestureActive.value = false
+    })
+    .onFinalize(() => {
+      'worklet'
+      isGestureActive.value = false
+    })
+
+  const composedGesture = Gesture.Simultaneous(longPressGesture, panGesture)
+
+  // Use our raw touch position to find the nearest point
   useAnimatedReaction(
-    () => ({ active: press.isActive.value, dataX: press.x.value }),
-    ({ active, dataX }) => {
-      if (!active || data.length === 0) {
+    () => ({
+      active: isGestureActive.value,
+      touchX: rawTouchX.value,
+    }),
+    ({ active, touchX }) => {
+      if (!active || nPoints.value === 0) {
+        dotVisible.value = 0
+        dotWasActive.value = false
+        activeIdx.value = -1
+        runOnJS(setShowTooltip)(false)
         runOnJS(setCurrentIndex)(null)
         return
       }
-      const clamped = Math.max(
-        0,
-        Math.min(data.length - 1, Math.round(dataX.value))
-      )
-      runOnJS(setCurrentIndex)(clamped)
+
+      dotVisible.value = 1
+      runOnJS(setShowTooltip)(true)
+
+      const xs = xPositions.value
+      const ys = yPositions.value
+
+      // Find nearest point by comparing raw touch X to rendered point positions
+      // Both are in the same coordinate space (relative to chart view)
+      let idx = 0
+      let minDist = Infinity
+      for (let i = 0; i < xs.length; i++) {
+        const dist = Math.abs(xs[i] - touchX)
+        if (dist < minDist) {
+          minDist = dist
+          idx = i
+        }
+      }
+
+      activeIdx.value = idx
+      runOnJS(setCurrentIndex)(idx)
+
+      const targetX = xs[idx]
+      const targetY = ys[idx]
+
+      if (!dotWasActive.value) {
+        dotX.value = targetX
+        dotY.value = targetY
+        dotWasActive.value = true
+      } else {
+        dotX.value = withTiming(targetX, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+        dotY.value = withTiming(targetY, {
+          duration: 350,
+          easing: Easing.out(Easing.cubic),
+        })
+      }
     },
-    [data.length]
+    []
   )
 
   useAnimatedReaction(
     () => ({
-      active: press.isActive.value,
-      tx: press.x.position.value,
-      ty: press.y.y.position.value,
+      visible: dotVisible.value,
+      x: dotX.value,
+      y: dotY.value,
     }),
-    ({ active, tx, ty }) => {
-      if (active) {
-        if (
-          !wasActive.value ||
-          tooltipX.value == null ||
-          tooltipY.value == null
-        ) {
-          // First touch this gesture: JUMP to correct position (no animation)
-          tooltipX.value = tx
-          tooltipY.value = ty
-        } else {
-          // Gesture is already active: ANIMATE between points
-          tooltipX.value = withTiming(tx, {
-            duration: 350,
-            easing: Easing.out(Easing.cubic),
-          })
-          tooltipY.value = withTiming(ty, {
-            duration: 350,
-            easing: Easing.out(Easing.cubic),
-          })
-        }
-      } else {
-        // Gesture ended — clear so next first touch jumps again
+    ({ visible, x, y }) => {
+      if (!visible) {
         tooltipX.value = null
         tooltipY.value = null
+        return
       }
-      wasActive.value = active
-    }
+
+      // Tooltip follows the snapped dot exactly
+      tooltipX.value = x
+      tooltipY.value = y
+    },
+    []
   )
 
   const currentIndexSV = useSharedValue(-1)
-  const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
     currentIndexSV.value = currentIndex ?? -1
   }, [currentIndex])
 
-  useAnimatedReaction(
-    () => {
-      const hasPos =
-        press.x.position.value !== 0 || press.y.y.position.value !== 0
-      const isIdxZero = currentIndexSV.value === 0
-      const hasWidth = chartWidth.value > 0
-      return press.isActive.value && (hasPos || isIdxZero) && hasWidth
-    },
-    (ready) => {
-      runOnJS(setShowTooltip)(ready)
-    },
-    [data.length]
-  )
+  // Control parent scroll when tooltip is showing
+  useEffect(() => {
+    onScrollEnabledChange?.(!showTooltip)
+  }, [showTooltip, onScrollEnabledChange])
 
   const tooltipStyle = useAnimatedStyle(() => {
     const width = chartWidth.value
@@ -145,7 +461,7 @@ const LineChart = ({
       left: 0,
       zIndex: 10,
       opacity: 1,
-      transform: [{ translateX: tx + offsetX }, { translateY: ty - 60 }],
+      transform: [{ translateX: tx + offsetX }, { translateY: ty - 80 }],
     }
   }, [])
 
@@ -307,95 +623,86 @@ const LineChart = ({
     }
   }
 
-  const boundsLeft = useSharedValue(0)
-  const boundsTop = useSharedValue(0)
-
   return (
-    <View style={tw`w-full h-[${CHART_HEIGHT}px]`}>
-      <CartesianChart
-        data={chartData}
-        xKey="x"
-        yKeys={['y']}
-        domain={{ x: [0, Math.max(0, data.length - 1)], y: yDomain }}
-        domainPadding={{ left: 5, right: 25, top: 20, bottom: 10 }}
-        padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        xAxis={{
-          font,
-          tickValues: xTickValues(),
-          formatXLabel: (v: number) => xFormatter(v),
-          labelColor: theme.grayText,
-          lineColor: theme.grayBorder,
-        }}
-        yAxis={[
-          {
+    <GestureDetector gesture={composedGesture}>
+      <View
+        ref={chartViewRef}
+        style={tw`w-full h-[${chartHeight}px]`}
+      >
+        <CartesianChart
+          data={chartData}
+          xKey="x"
+          yKeys={['y']}
+          domain={{ x: [0, Math.max(0, data.length - 1)], y: yDomain }}
+          domainPadding={{ left: 5, right: 25, top: 20, bottom: 10 }}
+          padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          xAxis={{
             font,
-            tickValues: yTickValues(),
-            formatYLabel: (v: number) => yFormatter(v),
+            tickValues: xTickValues(),
+            formatXLabel: (v: number) => xFormatter(v),
             labelColor: theme.grayText,
             lineColor: theme.grayBorder,
-          },
-        ]}
-        chartPressState={press}
-        onChartBoundsChange={(b) => {
-          boundsLeft.value = b.left
-          boundsTop.value = b.top
-          chartWidth.value = b.right - b.left
-        }}
-
-        // we only care about horizontal movement
-      >
-        {({ points, yScale, chartBounds }) => (
-          <>
-            <Area
-              points={points.y}
-              color={Colors.primary}
-              opacity={0.1}
-              curveType="linear"
-              animate={{ type: 'timing', duration: 400 }}
-              y0={CHART_HEIGHT}
-            />
-            <Line
-              points={points.y}
-              color={Colors.primary}
-              strokeWidth={1.5}
-              curveType="linear"
-              animate={{
-                type: 'timing',
-                duration: 400,
-              }}
-            />
-            <Scatter
-              points={points.y}
-              radius={0}
-              color={Colors.primary}
-              animate={{ type: 'timing', duration: 350 }}
-            />
-            {currentIndex != null && points.y[currentIndex] ? (
-              <Scatter
-                points={[points.y[currentIndex]]} // only the active point
-                radius={(point) => {
-                  // Get reps from chartData for the current index
-                  const reps = chartData[currentIndex]?.reps ?? 1
-                  return getRadius(reps)
-                }}
-                color={Colors.primary}
-                animate={{ type: 'timing', duration: 350 }}
-              />
-            ) : null}
-          </>
-        )}
-      </CartesianChart>
-      {showTooltip && currentIndex != null && currentIndex < data.length && (
-        <Animated.View
-          // NOTE: add these imports:
-          // import { FadeInDown, FadeOutUp, LinearTransition, Easing } from 'react-native-reanimated'
-          pointerEvents="none"
-          style={[{ zIndex: 10 }, tooltipStyle]}
+          }}
+          yAxis={[
+            {
+              font,
+              tickValues: yTickValues(),
+              formatYLabel: (v: number) => yFormatter(v),
+              labelColor: theme.grayText,
+              lineColor: theme.grayBorder,
+            },
+          ]}
+          onScaleChange={(xScale) => {
+            // if this is negative, you get the padded-container offset bug
+            xRangeMin.value = xScale.range()[0] ?? 0
+          }}
+          onChartBoundsChange={(b) => {
+            boundsLeft.value = b.left
+            boundsTop.value = b.top
+            chartWidth.value = b.right - b.left
+            if (!chartReady) setChartReady(true)
+          }}
         >
-          {toolTips?.[currentIndex] ?? null}
-        </Animated.View>
-      )}
-    </View>
+          {({ points, chartBounds }) => {
+            // Store points for tooltip positioning
+            const xs = points.y.map((p) => p.x ?? 0)
+            const ys = points.y.map((p) => p.y ?? 0)
+
+            xPositions.value = xs
+            yPositions.value = ys
+            nPoints.value = xs.length
+            pointsRef.current = points.y
+            return (
+              <>
+                <AnimatedArea
+                  points={points.y}
+                  y0={chartBounds.bottom}
+                  progress={drawProgress}
+                />
+                <AnimatedLine
+                  points={points.y}
+                  progress={drawProgress}
+                />
+                <Circle
+                  cx={dotCx}
+                  cy={dotCy}
+                  r={dotR}
+                  color={Colors.primary}
+                />
+              </>
+            )
+          }}
+        </CartesianChart>
+        {showTooltip && currentIndex != null && currentIndex < data.length && (
+          <Animated.View
+            pointerEvents="none"
+            style={[{ zIndex: 10 }, tooltipStyle]}
+          >
+            {toolTips?.[currentIndex] ?? null}
+          </Animated.View>
+        )}
+      </View>
+    </GestureDetector>
   )
 }
 

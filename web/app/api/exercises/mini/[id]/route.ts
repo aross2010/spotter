@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { withAuth } from '../../../middleware'
 import db from '@/src'
 import { exercises, workouts, workoutExercises, sets } from '@/src/db/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, lt } from 'drizzle-orm'
 import { RirToRpe, rpeToRir, toKg, toLbs } from '@/app/functions/conversions'
 
 type ExerciseDetailsMini = {
@@ -35,6 +35,7 @@ export const GET = withAuth(async (req, user) => {
     (url.searchParams.get('weight') as 'lbs' | 'kgs') || 'lbs'
   const intensityMetric =
     (url.searchParams.get('intensity') as 'rpe' | 'rir') || 'rpe'
+  const beforeDate = url.searchParams.get('date') // Date to filter history before
 
   if (!exerciseId) {
     return NextResponse.json(
@@ -54,6 +55,17 @@ export const GET = withAuth(async (req, user) => {
         { error: 'Exercise not found or access denied' },
         { status: 404 }
       )
+    }
+
+    // Build where conditions
+    const whereConditions = [
+      eq(exercises.id, exerciseId),
+      eq(workouts.status, 'completed'),
+    ]
+
+    // Only include history before the specified date
+    if (beforeDate) {
+      whereConditions.push(lt(workouts.date, beforeDate))
     }
 
     // Get limited workout history (last 10 workouts)
@@ -85,9 +97,7 @@ export const GET = withAuth(async (req, user) => {
       )
       .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
       .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-      .where(
-        and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed'))
-      )
+      .where(and(...whereConditions))
       .orderBy(desc(workouts.date), sets.setNumber)
       .limit(10 * 20) // Assume max ~20 sets per workout to get roughly 10 workouts
 

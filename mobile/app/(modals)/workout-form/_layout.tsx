@@ -5,63 +5,93 @@ import Button from '../../../components/button'
 import Colors from '../../../constants/colors'
 import useTheme from '../../hooks/theme'
 import { WorkoutFormProvider } from '../../../context/workout-form-context'
+import tw from '../../../tw'
 
 const WorkoutFormLayout = () => {
   const { theme } = useTheme()
 
   return (
-    <Stack
-      screenOptions={{
-        headerTitleStyle: {
-          fontSize: 18,
-          fontFamily: 'Poppins_600SemiBold',
-          color: theme.text,
-        },
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: theme.background,
-        },
-        headerBackTitleStyle: {
-          fontSize: 16,
-          fontFamily: 'Poppins_500Medium',
-        },
-        headerTintColor: Colors.primary,
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          headerTitle: 'New Workout',
-          headerRight: () => (
-            <Button
-              onPress={() => router.back()}
-              hitSlop={12}
-              accessibilityLabel="close modal"
-              twcnText={`font-poppinsSemiBold text-primary dark:text-primary`}
-              text="Close"
-            />
-          ),
-        }}
-      />
-      <Stack.Screen
-        name="location"
-        options={{
-          headerTitle: 'Location',
-        }}
-      />
-      <Stack.Screen
-        name="supersets"
-        options={{
-          headerTitle: 'Super Sets',
-        }}
-      />
-      <Stack.Screen
-        name="dropsets"
-        options={{
-          headerTitle: 'Create Drop Set',
-        }}
-      />
-    </Stack>
+    <View style={tw`flex-1 bg-background dark:bg-dark-background`}>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: 'Workout',
+            headerLargeTitle: true,
+            headerTransparent: true,
+            headerShadowVisible: false,
+            headerTitleStyle: {
+              color: theme.text,
+              fontWeight: 600,
+            },
+            headerLargeTitleStyle: {
+              color: theme.text,
+              fontWeight: '600',
+            },
+            headerBackButtonDisplayMode: 'minimal',
+            // headerStyle: {
+            //   backgroundColor: theme.background,
+            // },
+          }}
+        />
+        <Stack.Screen
+          name="location"
+          options={{
+            headerTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="supersets"
+          options={{
+            title: 'Supersets',
+            headerLargeTitle: true,
+            headerTransparent: true,
+            headerTitleStyle: {
+              color: theme.text,
+              fontWeight: 600,
+            },
+            headerLargeTitleStyle: {
+              color: theme.text,
+              fontWeight: '600',
+            },
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
+        <Stack.Screen
+          name="dropsets"
+          options={{
+            title: 'Dropsets',
+            headerLargeTitle: true,
+            headerTransparent: true,
+            headerTitleStyle: {
+              color: theme.text,
+              fontWeight: 600,
+            },
+            headerLargeTitleStyle: {
+              color: theme.text,
+              fontWeight: '600',
+            },
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
+        <Stack.Screen
+          name="notes"
+          options={{
+            headerTitle: '',
+            headerBackButtonDisplayMode: 'minimal',
+            headerStyle: {
+              backgroundColor: theme.background,
+            },
+            headerShadowVisible: false,
+          }}
+        />
+      </Stack>
+    </View>
   )
 }
 

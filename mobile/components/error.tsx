@@ -31,9 +31,7 @@ const Error = () => {
         />
       </View>
 
-      <Txt twcn="text-center font-poppinsSemiBold text-2xl mb-3">
-        Network Error
-      </Txt>
+      <Txt twcn="text-center font-semibold text-2xl mb-3">Network Error</Txt>
 
       <Txt twcn="text-center text-light-grayText dark:text-dark-grayText mb-6 px-12 text-base">
         Could not load the requested content.
@@ -43,7 +41,7 @@ const Error = () => {
         text="Reload App"
         onPress={handleReload}
         twcn="px-12 py-3 bg-primary rounded-full"
-        twcnText="font-poppinsSemiBold text-dark-text text-lg"
+        twcnText="font-semibold text-dark-text text-lg"
       />
     </SafeView>
   )
