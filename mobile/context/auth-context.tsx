@@ -78,7 +78,7 @@ const discovery: DiscoveryDocument = {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<AuthError | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const storedAccessToken = await tokenCache?.getToken(TOKEN_KEY_NAME)
         const storedRefreshToken = await tokenCache?.getToken(
-          REFRESH_TOKEN_KEY_NAME
+          REFRESH_TOKEN_KEY_NAME,
         )
         if (storedAccessToken) {
           try {
@@ -233,7 +233,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (tokenResponse.status == 409) {
           Alert.alert(
             'Unsuccessful Sign In',
-            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.'
+            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.',
           )
 
           return
@@ -280,7 +280,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     firstName: string,
     lastName: string | null,
     provider: string,
-    providerId: string
+    providerId: string,
   ) => {
     try {
       const res = await fetch(`${BASE_URL}/api/users`, {
@@ -305,13 +305,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // user is trying to sign up with apple but they already have a google account
           Alert.alert(
             'Unsuccessful Sign Up',
-            'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.'
+            'Email linked to Google account, proceed with Google. You may connect your Apple account in the app.',
           )
         } else if (resData.error.includes('Apple account already exists')) {
           // user is trying to sign up with google but they already have an apple account
           Alert.alert(
             'Unsuccessful Sign Up',
-            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.'
+            'Email linked to Apple account, proceed with Apple. You may connect your Google account in the app.',
           )
         }
 
@@ -326,7 +326,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Error during sign up:', error)
       Alert.alert(
         'Unsuccessful Sign Up',
-        'An error occurred during sign up. Please try again.'
+        'An error occurred during sign up. Please try again.',
       )
     }
   }
@@ -354,7 +354,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             credential.fullName.givenName,
             credential.fullName.familyName ?? null,
             'apple',
-            credential.user
+            credential.user,
           )
 
           if (response?.status === 409) {
@@ -392,7 +392,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!appleUserDetails) {
           Alert.alert(
             'Apple Sign Up Failed',
-            'You previously deleted an account with Apple credentials. To recover your account, continue with Google and link your Apple account.'
+            'You previously deleted an account with Apple credentials. To recover your account, continue with Google and link your Apple account.',
           )
           return
         }
@@ -401,7 +401,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           appleUserDetails?.givenName ?? '',
           appleUserDetails?.familyName ?? null,
           'apple',
-          credential.user
+          credential.user,
         )
 
         if (res.status === 409) {
@@ -540,7 +540,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             providerId,
             providerEmail,
           }),
-        }
+        },
       )
 
       if (response.status === 200) {
@@ -552,7 +552,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         })
         Alert.alert(
           'Success',
-          'Apple account successfully linked. You can now sign in with Apple.'
+          'Apple account successfully linked. You can now sign in with Apple.',
         )
       }
     } catch (error) {
@@ -582,14 +582,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({ code }),
-          }
+          },
         )
 
         if (response.status === 200) {
           const { updatedLinkedAccount } = await response.json()
           Alert.alert(
             'Success',
-            'Google account successfully linked. You can now sign in with Google.'
+            'Google account successfully linked. You can now sign in with Google.',
           )
         }
       } catch (error) {
@@ -616,7 +616,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             },
           },
         ],
-        { cancelable: true }
+        { cancelable: true },
       )
     })
   }
@@ -652,7 +652,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!tokens.refreshToken) {
           Alert.alert(
             'Error',
-            'Failed to sign in with Apple. Please try again.'
+            'Failed to sign in with Apple. Please try again.',
           )
           return
         }
@@ -672,13 +672,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signOut()
         Alert.alert(
           'Account Deleted',
-          'Your account has been successfully deleted.'
+          'Your account has been successfully deleted.',
         )
       }
     } catch (error) {
       Alert.alert(
         'Error',
-        'An unexpected error occurred while deleting your account.'
+        'An unexpected error occurred while deleting your account.',
       )
     } finally {
       setIsLoading(false)

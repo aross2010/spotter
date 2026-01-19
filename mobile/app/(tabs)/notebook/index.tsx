@@ -56,7 +56,7 @@ const Notebook = () => {
                   <View
                     style={tw.style(
                       'absolute -top-0 -right-1 min-w-4 h-4 rounded-full items-center justify-center bg-primary',
-                      { pointerEvents: 'none' }
+                      { pointerEvents: 'none' },
                     )}
                   >
                     <Txt twcn="text-xs font-medium text-white">
@@ -92,7 +92,7 @@ const Notebook = () => {
   }, [])
 
   const pinnedTitle = (
-    <View style={tw`flex-row items-center gap-1 mb-4`}>
+    <View style={tw`flex-row items-center gap-1 mb-2`}>
       <Txt twcn="font-semibold text-lg">📌 Pinned</Txt>
     </View>
   )

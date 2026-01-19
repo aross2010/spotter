@@ -48,7 +48,7 @@ const NotebookEntryForm = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [stylesState, setStylesState] = useState<OnChangeStateEvent | null>(
-    null
+    null,
   )
   const bodyInputRef = useRef<EnrichedTextInputInstance>(null)
   const isInitialLoadRef = useRef(false)
@@ -119,7 +119,7 @@ const NotebookEntryForm = () => {
       notebookFormData.tags.length !== initialState.tags.length ||
       notebookFormData.tags.some(
         (tag) =>
-          !initialState.tags.some((initial: Tag) => initial.id === tag.id)
+          !initialState.tags.some((initial: Tag) => initial.id === tag.id),
       )
 
     return dateChanged || titleChanged || bodyChanged || tagsChanged
@@ -132,7 +132,7 @@ const NotebookEntryForm = () => {
   }
 
   const handleCancelForm = useCallback(() => {
-    if (hasChanges()) {
+    if (notebookFormData.body.trim().length > 0 && hasChanges()) {
       Alert.alert(
         'Are you sure you want to exit?',
         'Your changes will be lost.',
@@ -149,7 +149,7 @@ const NotebookEntryForm = () => {
               router.back()
             },
           },
-        ]
+        ],
       )
     } else {
       resetNotebookFormContext()

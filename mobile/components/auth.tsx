@@ -17,15 +17,11 @@ import FeatureCarousel from './feature-carousel'
 const Auth = () => {
   const { signIn, authUser, isLoading } = useAuth()
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!authUser && !isLoading) {
-        setTimeout(() => {
-          SplashScreen.hideAsync()
-        }, 500)
-      }
-    }, [authUser, isLoading])
-  )
+  useEffect(() => {
+    if (!authUser && !isLoading) {
+      SplashScreen.hideAsync()
+    }
+  }, [authUser, isLoading])
 
   return (
     <SafeView
