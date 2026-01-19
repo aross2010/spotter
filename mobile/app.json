@@ -3,7 +3,7 @@
     "scheme": "spotter-weightlifting",
     "name": "Spotter: Workout Tracker",
     "slug": "Spotter",
-    "version": "2.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/icons/ios-light.png",
     "userInterfaceStyle": "automatic",
@@ -47,7 +47,14 @@
     },
     "plugins": [
       "expo-router",
-      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "26.0"
+          }
+        }
+      ],
       [
         "@react-native-google-signin/google-signin",
         {
