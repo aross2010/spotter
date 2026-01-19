@@ -3,6 +3,7 @@ import Auth from '../components/auth'
 import { useAuth } from '../context/auth-context'
 import { SplashScreen } from 'expo-router'
 import { useEffect } from 'react'
+import Spinner from '../components/activity-indicator'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -15,5 +16,9 @@ export default function Index() {
     }
   }, [authUser, isLoading])
 
-  return <Auth />
+  if (!isLoading && !authUser) {
+    return <Auth />
+  }
+
+  return <Spinner fullScreen />
 }
