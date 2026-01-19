@@ -4,7 +4,7 @@ import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 import { formattedDate } from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
-import { Alert, View } from 'react-native'
+import { Alert, Appearance, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
@@ -76,6 +76,9 @@ const Home = () => {
   const navigation = useNavigation()
   const ref = useRef<BottomSheetModal>(null)
   const weightUnit = preferences?.weightMetric ?? 'lbs' // 'lbs' or 'kgs'
+  useEffect(() => {
+    Appearance.setColorScheme(colorScheme === 'dark' ? 'dark' : 'light')
+  }, [colorScheme])
 
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 

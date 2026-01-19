@@ -15,10 +15,6 @@ export default function useTheme() {
   const deviceColorScheme = useColorScheme()
 
   useEffect(() => {
-    Appearance.setColorScheme(colorScheme === 'dark' ? 'dark' : 'light')
-  }, [colorScheme])
-
-  useEffect(() => {
     const savedScheme = preferences?.colorScheme
 
     // If no saved preference (pre-login), default to system theme

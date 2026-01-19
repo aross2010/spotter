@@ -110,7 +110,7 @@ const WorkoutNotes = () => {
                 ? 'rgba(186, 186, 186, 0.75)'
                 : 'rgba(116, 116, 116, 0.75)'
             }
-            style={tw`dark:text-dark-text text-base flex-1 leading-[18]`}
+            style={tw`dark:text-dark-text text-base flex-1 leading-[18] pt-2`}
             htmlStyle={{
               ul: {
                 bulletColor: theme.text,

@@ -20,7 +20,9 @@ const Auth = () => {
   useFocusEffect(
     useCallback(() => {
       if (!authUser && !isLoading) {
-        SplashScreen.hideAsync()
+        setTimeout(() => {
+          SplashScreen.hideAsync()
+        }, 500)
       }
     }, [authUser, isLoading])
   )

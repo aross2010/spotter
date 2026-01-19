@@ -149,10 +149,15 @@ const WorkoutForm = () => {
       setMode('edit')
     }
     getWorkoutData(cloneId ? (cloneId as string) : id ? (id as string) : null)
+    if (!id && !cloneId) {
+      setInitialState(workoutData)
+    }
   }, [])
 
   const hasChanges = () => {
-    if (!initialState) return true // Brand new workout, no changes to compare against
+    if (!initialState) {
+      return true // Brand new workout AND there is user input
+    }
 
     const dateChanged =
       workoutData.date.getTime() !== initialState.date.getTime()

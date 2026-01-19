@@ -1097,13 +1097,66 @@ const ExerciseInput = ({
     const maxNumber = totalExercises || workoutData.exercises.length
     const clampedNumber = Math.min(newNumber, maxNumber)
 
-    if (clampedNumber !== exerciseNumber && onReorderExercises) {
+    if (clampedNumber !== exerciseNumber) {
       // Calculate the target index (0-based)
       const currentIndex = exerciseNumber - 1
       const targetIndex = clampedNumber - 1
 
       // Reorder the exercises
-      onReorderExercises(currentIndex, targetIndex)
+      if (onReorderExercises) {
+        onReorderExercises(currentIndex, targetIndex)
+      }
+
+      // Update set groupings to reflect the new exercise numbers
+      const updatedSetGroupings = workoutData.setGroupings
+        .map((grouping) => ({
+          ...grouping,
+          groupSets: grouping.groupSets.map((gs) => {
+            // If this is the exercise being moved
+            if (gs.exerciseNumber === exerciseNumber) {
+              return { ...gs, exerciseNumber: clampedNumber }
+            }
+            // If moving down (currentIndex < targetIndex), shift exercises between down by 1
+            else if (
+              currentIndex < targetIndex &&
+              gs.exerciseNumber > currentIndex + 1 &&
+              gs.exerciseNumber <= targetIndex + 1
+            ) {
+              return { ...gs, exerciseNumber: gs.exerciseNumber - 1 }
+            }
+            // If moving up (currentIndex > targetIndex), shift exercises between up by 1
+            else if (
+              currentIndex > targetIndex &&
+              gs.exerciseNumber >= targetIndex + 1 &&
+              gs.exerciseNumber < currentIndex + 1
+            ) {
+              return { ...gs, exerciseNumber: gs.exerciseNumber + 1 }
+            }
+            return gs
+          }),
+        }))
+        .filter((grouping) => {
+          // Remove supersets where exercises are no longer sequential
+          if (grouping.groupingType === 'superset') {
+            const exerciseNumbers = grouping.groupSets.map(
+              (gs) => gs.exerciseNumber
+            )
+            const sortedNumbers = [...exerciseNumbers].sort((a, b) => a - b)
+            // Check if exercises are sequential
+            for (let i = 0; i < sortedNumbers.length - 1; i++) {
+              if (sortedNumbers[i + 1] - sortedNumbers[i] !== 1) {
+                return false // Not sequential, remove this superset
+              }
+            }
+          }
+          // Keep dropsets and valid supersets
+          return grouping.groupSets.length > 1
+        })
+
+      setWorkoutData((prev) => ({
+        ...prev,
+        setGroupings: updatedSetGroupings,
+      }))
     }
 
     setIsEditingExerciseNumber(false)
@@ -1522,9 +1575,17 @@ const ExerciseInput = ({
         {isEditingExerciseNumber ? (
           <TextInput
             ref={exerciseNumberInputRef}
-            style={tw`text-base text-dark-text font-semibold w-full h-full`}
-            textAlign="center"
-            textAlignVertical="center"
+            style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: tw.color('dark-text'),
+              textAlign: 'center',
+              width: '100%',
+              height: '100%',
+              padding: 0,
+              margin: 0,
+              includeFontPadding: false,
+            }}
             value={exerciseNumberInput}
             onChangeText={setExerciseNumberInput}
             onSubmitEditing={handleExerciseNumberSubmit}

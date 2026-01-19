@@ -24,7 +24,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import StackedBarChart from '../../../components/stacked-bar-chart'
 import useTheme from '../../hooks/theme'
 import BarChart from '../../../components/bar-chart'
-import { router } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { useInsightsStore } from '../../../stores/insights-store'
 
 const Insights = () => {
@@ -176,7 +176,17 @@ const Insights = () => {
       </GlassView>
     )
 
-    return content
+    if (item.link) {
+      return (
+        <Button
+          key={index}
+          twcn="flex-1"
+          onPress={() => router.push(item.link!)}
+        >
+          {content}
+        </Button>
+      )
+    } else return content
   })
 
   const renderedSummary = (
