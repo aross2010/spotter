@@ -19,7 +19,9 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authUser && !isLoading) {
-      SplashScreen.hideAsync()
+      setTimeout(() => {
+        SplashScreen.hideAsync()
+      }, 400)
     }
   }, [authUser, isLoading])
 
