@@ -42,7 +42,11 @@ import {
 } from '@expo/ui/swift-ui'
 import { toTitleCase } from '../../../functions/utils'
 import { GlassView } from 'expo-glass-effect'
-import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated'
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeOutDown,
+} from 'react-native-reanimated'
 import MyDatePicker from '../../../components/date-picker'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
@@ -671,8 +675,8 @@ const WorkoutForm = () => {
       </SafeView>
       {shouldShowToolbar && (
         <Animated.View
-          entering={SlideInDown.duration(150).damping(20)}
-          exiting={SlideOutDown.duration(100)}
+          entering={FadeInDown.duration(240).easing(Easing.out(Easing.cubic))}
+          exiting={FadeOutDown.duration(200).easing(Easing.in(Easing.cubic))}
           collapsable={false}
         >
           <KeyboardToolbar

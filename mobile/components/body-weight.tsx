@@ -50,7 +50,7 @@ const BodyWeight = ({
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const bodyWeightData: BodyWeightData = await res.json()
       setData(bodyWeightData)
@@ -63,6 +63,10 @@ const BodyWeight = ({
   }
 
   useEffect(() => {
+    console.log(
+      'BodyWeight component mounted or shouldRefresh changed',
+      shouldRefresh,
+    )
     if (!shouldRefresh) return
     getBodyWeightData()
   }, [shouldRefresh])
@@ -128,7 +132,7 @@ const BodyWeight = ({
         twcn="bg-primary py-3 px-6 rounded-full mt-2 gap-2 flex-row items-center"
         onPress={openForm}
       >
-        <Txt twcn="text-white font-medium">Add Body Weight</Txt>
+        <Txt twcn="text-white font-semibold">Add Body Weight</Txt>
         <SFIcon
           name="arrow.right"
           size={16}
@@ -139,16 +143,17 @@ const BodyWeight = ({
   )
 
   const entry = data!.bodyWeightProgression[0]
-  const sameDayAsToday = formatDate(entry.date) == formatDate(new Date())
+  const sameDayAsToday =
+    entry && formatDate(entry.date) == formatDate(new Date())
 
-  const singleEntry = (
+  const singleEntry = entry && (
     <View style={tw`items-center py-4 gap-3`}>
-      <Txt twcn="text-3xl font-semibold">
+      <Txt twcn="text-3xl font-bold">
         {entry.bodyWeight} {weightUnit}
       </Txt>
-      <Txt twcn="text-light-grayText dark:text-dark-grayText text-center">
+      <Txt twcn="text-light-grayText dark:text-dark-grayText text-center px-4">
         {sameDayAsToday
-          ? 'Come back tomorrow to log another entry and view your progress graph!'
+          ? 'Come back tomorrow to log another entry and view your progress.'
           : `Logged on ${formatDate(entry.date)}. Log another entry to unlock your progress graph.`}
       </Txt>
       {!sameDayAsToday && (
@@ -156,7 +161,7 @@ const BodyWeight = ({
           twcn="bg-primary py-3 px-6 rounded-full mt-2 gap-2 flex-row items-center"
           onPress={openForm}
         >
-          <Txt twcn="text-white font-medium">Log Weight</Txt>
+          <Txt twcn="text-white font-semibold">Log Weight</Txt>
           <SFIcon
             name="arrow.right"
             size={16}

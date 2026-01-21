@@ -270,7 +270,7 @@ const NotebookEntryForm = () => {
         keyboardVerticalOffset={75}
       >
         <View style={tw`flex-1`}>
-          <View style={tw`mb-4`}>
+          <View style={tw`mb-2`}>
             <Input
               editable={!isSaving}
               value={notebookFormData.title}
@@ -281,7 +281,7 @@ const NotebookEntryForm = () => {
                 })
               }
               placeholder="Notebook Entry Title"
-              twcnInput="text-base h-14 font-semibold text-2xl"
+              twcnInput="text-base h-14 font-bold text-3xl"
               autoFocus={!isEditing}
             />
           </View>

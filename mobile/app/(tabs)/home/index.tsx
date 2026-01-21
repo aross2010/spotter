@@ -91,7 +91,7 @@ const Home = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const data = await res.json()
       setData(data)
@@ -110,7 +110,7 @@ const Home = () => {
         clearRefresh()
       }
       return () => {}
-    }, [shouldRefresh])
+    }, [shouldRefresh]),
   )
 
   useEffect(() => {
@@ -381,18 +381,16 @@ const Home = () => {
     }))
   }
 
-  const weight = data &&
-    data.bodyWeightData &&
-    data.bodyWeightData.bodyWeightProgression.length > 0 && (
-      <View>
-        <Txt twcn="mb-2 text-lg font-semibold">Body Weight</Txt>
-        <BodyWeight
-          data={data?.bodyWeightData || null}
-          setData={handleChangeBodyWeightData}
-          openForm={() => ref.current?.present()}
-        />
-      </View>
-    )
+  const weight = data && data.bodyWeightData && (
+    <View>
+      <Txt twcn="mb-2 text-lg font-semibold">Body Weight</Txt>
+      <BodyWeight
+        data={data?.bodyWeightData || null}
+        setData={handleChangeBodyWeightData}
+        openForm={() => ref.current?.present()}
+      />
+    </View>
+  )
 
   const userPage = (
     <View style={tw`mt-2 gap-6`}>

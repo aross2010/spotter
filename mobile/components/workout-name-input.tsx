@@ -12,7 +12,7 @@ const WorkoutNameInput = () => {
   const [isWorkoutNameSelectorOpen, setIsWorkoutNameSelectorOpen] =
     useState(false)
   const [workoutNamesResults, setWorkoutNamesResults] = useState<WorkoutName[]>(
-    []
+    [],
   )
   const { workoutNames, setWorkoutData, workoutData, setFocusedInput } =
     useWorkoutForm()
@@ -55,7 +55,7 @@ const WorkoutNameInput = () => {
       const filtered = workoutNames.filter(
         (workout) =>
           workout.name.toLowerCase().includes(text.toLowerCase()) &&
-          workout.name.toLowerCase().trim() !== text.toLowerCase().trim()
+          workout.name.toLowerCase().trim() !== text.toLowerCase().trim(),
       )
       setWorkoutNamesResults(filtered)
       if (filtered.length === 0) {
@@ -64,14 +64,14 @@ const WorkoutNameInput = () => {
         setIsWorkoutNameSelectorOpen(true)
       }
     },
-    [workoutNames, isWorkoutNameSelectorOpen]
+    [workoutNames, isWorkoutNameSelectorOpen],
   )
 
   const handleTextChange = useCallback(
     (e: { nativeEvent: { text: string } }) => {
       handleChange(e.nativeEvent.text)
     },
-    [handleChange]
+    [handleChange],
   )
 
   return (
@@ -90,10 +90,10 @@ const WorkoutNameInput = () => {
           setIsWorkoutNameSelectorOpen(false)
           setFocusedInput(null)
         }}
-        placeholder="Workout Name (e.g. Legs, Push, Pull)"
+        placeholder="Workout Name"
         maxLength={50}
         returnKeyType="done"
-        twcnInput="font-semibold text-lg h-12 leading-6 pb-1"
+        twcnInput="font-semibold text-xl h-12 leading-6 pb-0"
         onSubmitEditing={(e) => handleSelectWorkoutName(e.nativeEvent.text)}
         onFocus={() => {
           // Clear results on focus - they'll populate when user types

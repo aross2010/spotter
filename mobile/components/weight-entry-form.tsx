@@ -42,6 +42,14 @@ type WeightEntryFormProps = {
   closeModal?: () => void
 }
 
+// helper to format data.date to compare
+const formatYYYYMMDD = (date: Date) => {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
   const [previousEntry, setPreviousEntry] =
     useState<PreviousWeightEntry | null>(null)
@@ -59,9 +67,12 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
     metric: weightUnit,
   })
   const [weightText, setWeightText] = useState(data.weight.toFixed(1))
+  const formattedDataDate = formatYYYYMMDD(data.date)
 
-  const identicalDate =
-    previousEntry?.date === data.date.toISOString().split('T')[0]
+  const identicalDate = previousEntry?.date === formattedDataDate
+
+  console.log('previousEntry', previousEntry?.date)
+  console.log('data.date', formattedDataDate)
 
   const getWeightData = async () => {
     try {
@@ -72,7 +83,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const previousEntry = (await response.json()) as PreviousWeightEntry
       setPreviousEntry(previousEntry)
@@ -138,10 +149,10 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                }
+                },
               )
               triggerRefresh()
-              setPreviousEntry(null)
+              getWeightData()
             } catch (error: any) {
               Alert.alert('Error', error.message)
             } finally {
@@ -149,7 +160,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
             }
           },
         },
-      ]
+      ],
     )
   }
 
@@ -165,7 +176,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
 
   return (
     <>
-      <View>
+      <View style={tw`pb-4`}>
         <View style={tw`flex-row justify-between items-center`}>
           <View>
             <Txt twcn="text-xl font-semibold mb-1">
@@ -233,7 +244,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
             onPress={() => {
               const newWeight = Math.max(
                 1,
-                Math.round((data.weight - 0.1) * 10) / 10
+                Math.round((data.weight - 0.1) * 10) / 10,
               )
               setData((prevData) => ({
                 ...prevData,
@@ -288,7 +299,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
             onPress={() => {
               const newWeight = Math.min(
                 400,
-                Math.round((data.weight + 0.1) * 10) / 10
+                Math.round((data.weight + 0.1) * 10) / 10,
               )
               setData((prevData) => ({
                 ...prevData,
@@ -327,7 +338,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
                     </Txt>
                   )}
                 {identicalDate &&
-                  '. This entry will overwrite your existing entry for this date. Or, '}
+                  '. This entry will overwrite your existing entry for this date.'}
               </Txt>
             </>
           )}
@@ -356,6 +367,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
             setIsDatePickerOpen(false)
           }
         }}
+        disableFutureDates
       />
     </>
   )

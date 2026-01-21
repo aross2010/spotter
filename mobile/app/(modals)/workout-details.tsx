@@ -41,8 +41,9 @@ const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isCapturing, setIsCapturing] = useState(false)
+  const [isScreenshotReady, setIsScreenshotReady] = useState(false)
   const contentRef = useRef<View>(null)
-  const screenshotRef = useRef<View>(null)
+  const screenshotContentRef = useRef<View>(null)
   const navigation = useNavigation()
   const { id, from, workoutName } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
@@ -61,7 +62,7 @@ const WorkoutDetails = () => {
         `${BASE_URL}/api/workouts/info/${id}`,
         {
           method: 'GET',
-        }
+        },
       )
       const workoutDetails = (await response.json()) as Workout
       setWorkout(workoutDetails)
@@ -88,7 +89,7 @@ const WorkoutDetails = () => {
         clearRefresh()
       }
       return () => {}
-    }, [shouldRefresh])
+    }, [shouldRefresh]),
   )
 
   useEffect(() => {
@@ -101,7 +102,7 @@ const WorkoutDetails = () => {
               <Button
                 onPress={() =>
                   router.push(
-                    `/workout-form?id=${workout?.id}&from=workout-details`
+                    `/workout-form?id=${workout?.id}&from=workout-details`,
                   )
                 }
               >
@@ -157,48 +158,65 @@ const WorkoutDetails = () => {
     })
   }, [navigation, workout?.name])
 
-  const handleScreenshotWorkout = async () => {
-    try {
-      setIsCapturing(true)
-      // Small delay to ensure the off-screen view renders
-      await new Promise((resolve) => setTimeout(resolve, 150))
-
-      if (!screenshotRef.current) {
-        setIsCapturing(false)
-        Alert.alert('Error', 'Failed to capture workout screenshot.')
-        return
-      }
-
-      const uri = await captureRef(screenshotRef, {
-        format: 'png',
-        quality: 1,
-      })
-
-      setIsCapturing(false)
-
-      let perm = await MediaLibrary.getPermissionsAsync()
-
-      if (perm.status !== 'granted') {
-        perm = await MediaLibrary.requestPermissionsAsync()
-      }
-
-      if (perm.status === 'granted') {
-        await MediaLibrary.saveToLibraryAsync(uri)
-        Alert.alert(
-          'Workout saved',
-          'Your workout screenshot is now available in Photos.'
-        )
-      } else {
-        Alert.alert(
-          'Permission needed',
-          'Enable Photos access in Settings to save screenshots.'
-        )
-      }
-    } catch (error) {
-      console.error(error)
-      Alert.alert('Error', 'Failed to capture workout screenshot.')
-    }
+  const handleScreenshotWorkout = () => {
+    if (isCapturing) return
+    setIsScreenshotReady(false)
+    setIsCapturing(true)
   }
+
+  useEffect(() => {
+    if (!isCapturing || !isScreenshotReady) return
+
+    let isActive = true
+
+    const capture = async () => {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        if (!screenshotContentRef.current) {
+          Alert.alert('Error', 'Failed to capture workout screenshot.')
+          return
+        }
+
+        const uri = await captureRef(screenshotContentRef, {
+          format: 'png',
+          quality: 1,
+        })
+
+        let perm = await MediaLibrary.getPermissionsAsync()
+
+        if (perm.status !== 'granted') {
+          perm = await MediaLibrary.requestPermissionsAsync()
+        }
+
+        if (perm.status === 'granted') {
+          await MediaLibrary.saveToLibraryAsync(uri)
+          Alert.alert(
+            'Workout saved',
+            'Your workout screenshot is now available in Photos.',
+          )
+        } else {
+          Alert.alert(
+            'Permission needed',
+            'Enable Photos access in Settings to save screenshots.',
+          )
+        }
+      } catch (error) {
+        console.error(error)
+        Alert.alert('Error', 'Failed to capture workout screenshot.')
+      } finally {
+        if (isActive) {
+          setIsCapturing(false)
+        }
+      }
+    }
+
+    capture()
+
+    return () => {
+      isActive = false
+    }
+  }, [isCapturing, isScreenshotReady])
 
   const renderedExercises =
     workout &&
@@ -207,8 +225,8 @@ const WorkoutDetails = () => {
         (grouping) =>
           grouping.groupingType === 'superset' &&
           grouping.groupSets.some(
-            (set) => set.exerciseNumber === exerciseIndex + 1
-          )
+            (set) => set.exerciseNumber === exerciseIndex + 1,
+          ),
       )
 
       // Check if the next exercise is in the same superset group
@@ -216,11 +234,11 @@ const WorkoutDetails = () => {
         (grouping) =>
           grouping.groupingType === 'superset' &&
           grouping.groupSets.some(
-            (set) => set.exerciseNumber === exerciseIndex + 1
+            (set) => set.exerciseNumber === exerciseIndex + 1,
           ) &&
           grouping.groupSets.some(
-            (set) => set.exerciseNumber === exerciseIndex + 2
-          )
+            (set) => set.exerciseNumber === exerciseIndex + 2,
+          ),
       )
 
       return (
@@ -296,8 +314,8 @@ const WorkoutDetails = () => {
                     grouping.groupSets.some(
                       (gs) =>
                         gs.exerciseNumber === exerciseIndex + 1 &&
-                        gs.setNumber === set.setNumber
-                    )
+                        gs.setNumber === set.setNumber,
+                    ),
                 )
 
                 if (exercise.isUnilateral) {
@@ -507,7 +525,7 @@ const WorkoutDetails = () => {
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium  text-left">
                 {capString(
                   `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
-                  40
+                  40,
                 )}
               </Txt>
               {workout.notes && (
@@ -563,8 +581,9 @@ const WorkoutDetails = () => {
         {isCapturing && (
           <View style={{ position: 'absolute', left: -10000, top: 0 }}>
             <View
-              ref={screenshotRef}
+              ref={screenshotContentRef}
               collapsable={false}
+              onLayout={() => setIsScreenshotReady(true)}
               style={{
                 width: Dimensions.get('window').width,
                 backgroundColor: theme.background,
@@ -579,7 +598,7 @@ const WorkoutDetails = () => {
                 <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium text-left">
                   {capString(
                     `${formatDate(workout.date)}${workout.location ? ` @ ${workout.location}` : ''}`,
-                    40
+                    40,
                   )}
                 </Txt>
                 {workout.notes && (

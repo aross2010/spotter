@@ -20,6 +20,7 @@ type DatePickerProps = {
   closePicker: () => void
   value: Date
   onChange: (event: DateTimePickerEvent, date: Date | undefined) => void
+  disableFutureDates?: boolean
 }
 
 const MyDatePicker = ({
@@ -27,6 +28,7 @@ const MyDatePicker = ({
   closePicker,
   value,
   onChange,
+  disableFutureDates = false,
 }: DatePickerProps) => {
   return (
     <Modal
@@ -48,6 +50,7 @@ const MyDatePicker = ({
               mode="date"
               display={Platform.OS === 'ios' ? 'inline' : 'default'}
               onChange={onChange}
+              maximumDate={disableFutureDates ? new Date() : undefined}
             />
             {Platform.OS === 'ios' && (
               <Button

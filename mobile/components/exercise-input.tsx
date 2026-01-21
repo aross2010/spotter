@@ -66,7 +66,7 @@ const ExerciseInput = ({
   const rightRpeInputRefs = useRef<Map<string, TextInput>>(new Map())
   const [isEditingExerciseNumber, setIsEditingExerciseNumber] = useState(false)
   const [exerciseNumberInput, setExerciseNumberInput] = useState(
-    exerciseNumber.toString()
+    exerciseNumber.toString(),
   )
   const exerciseNumberInputRef = useRef<TextInput>(null)
   const {
@@ -88,7 +88,7 @@ const ExerciseInput = ({
   const ref = useRef<BottomSheetModal | null>(null)
   const exercise = exercises[exerciseNumber - 1]
   const [isSynced, setIsSynced] = useState(
-    exercise?.isSynced ?? preferences?.unilateralLogging === 'sync'
+    exercise?.isSynced ?? preferences?.unilateralLogging === 'sync',
   )
 
   // Sync local isSynced state with exercise data when exercise changes
@@ -182,7 +182,7 @@ const ExerciseInput = ({
   const isInSuperset = workoutData.setGroupings.some(
     (grouping) =>
       grouping.groupingType === 'superset' &&
-      grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber)
+      grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber),
   )
 
   // Check if the next exercise is in the same superset group
@@ -191,8 +191,8 @@ const ExerciseInput = ({
       grouping.groupingType === 'superset' &&
       grouping.groupSets.some((set) => set.exerciseNumber === exerciseNumber) &&
       grouping.groupSets.some(
-        (set) => set.exerciseNumber === exerciseNumber + 1
-      )
+        (set) => set.exerciseNumber === exerciseNumber + 1,
+      ),
   )
 
   const isSetInDropset = (setNumber: number) => {
@@ -201,8 +201,9 @@ const ExerciseInput = ({
         grouping.groupingType === 'dropset' &&
         grouping.groupSets.some(
           (set) =>
-            set.exerciseNumber === exerciseNumber && set.setNumber === setNumber
-        )
+            set.exerciseNumber === exerciseNumber &&
+            set.setNumber === setNumber,
+        ),
     )
   }
 
@@ -359,7 +360,7 @@ const ExerciseInput = ({
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const data = (await res.json()) as ExerciseDetailsMini
       updateExerciseDetails(exerciseNumber - 1, data, false)
@@ -376,7 +377,7 @@ const ExerciseInput = ({
     if (currentExercise.sets.length >= MAX_SETS) {
       Alert.alert(
         'Limit Reached',
-        'You can only add up to 20 sets per exercise.'
+        'You can only add up to 20 sets per exercise.',
       )
       return
     }
@@ -412,7 +413,7 @@ const ExerciseInput = ({
     const deletedSetNumber = setToDelete.setNumber
 
     const updatedSets = currentExercise.sets.filter(
-      (_, index) => index !== setIndex
+      (_, index) => index !== setIndex,
     )
 
     const renumberedSets = updatedSets.map((set, index) => ({
@@ -434,7 +435,7 @@ const ExerciseInput = ({
             !(
               gs.exerciseNumber === exerciseNumber &&
               gs.setNumber === deletedSetNumber
-            )
+            ),
         ),
       }))
       .filter((grouping) => grouping.groupSets.length > 1) // Remove groupings with less than 2 sets
@@ -467,7 +468,7 @@ const ExerciseInput = ({
     if (currentExercise.sets.length >= 20) {
       Alert.alert(
         'Limit Reached',
-        'You can only add up to 20 sets per exercise.'
+        'You can only add up to 20 sets per exercise.',
       )
       return
     }
@@ -544,7 +545,7 @@ const ExerciseInput = ({
     fieldValue: string,
     text: string,
     inputMode: 'numeric' | 'decimal',
-    isLeftSide?: boolean
+    isLeftSide?: boolean,
   ) => {
     if (fieldValue === 'setNumber') return
 
@@ -692,7 +693,7 @@ const ExerciseInput = ({
               .map((grouping) => ({
                 ...grouping,
                 groupSets: grouping.groupSets.filter(
-                  (gs) => gs.exerciseNumber !== exerciseNumber
+                  (gs) => gs.exerciseNumber !== exerciseNumber,
                 ),
               }))
               .filter((grouping) => grouping.groupSets.length > 1) // Remove groupings with less than 2 sets
@@ -715,7 +716,7 @@ const ExerciseInput = ({
             })
           },
         },
-      ]
+      ],
     )
   }
 
@@ -773,7 +774,7 @@ const ExerciseInput = ({
   const handleSelectExistingExercise = (
     id: string,
     name: string,
-    used: number
+    used: number,
   ) => {
     setWorkoutData((prev) => {
       const updatedExercises = [...prev.exercises]
@@ -911,7 +912,7 @@ const ExerciseInput = ({
           {used > 0 && <Txt style={tw`text-xs`}>{used}</Txt>}
         </Button>
       )
-    }
+    },
   )
 
   const handleChange = (text: string) => {
@@ -921,7 +922,7 @@ const ExerciseInput = ({
 
     // Check if there's a matching exercise (trimmed comparison)
     const matchingExercise = exerciseNames.find(
-      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim()
+      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim(),
     )
 
     // Only mark as non-existing if trimmed text doesn't match an existing exercise
@@ -1055,7 +1056,7 @@ const ExerciseInput = ({
     const filtered = exerciseNames.filter(
       (ex) =>
         ex.name.toLowerCase().includes(text.toLowerCase()) &&
-        ex.name.toLowerCase().trim() !== text.toLowerCase().trim()
+        ex.name.toLowerCase().trim() !== text.toLowerCase().trim(),
     )
     setExerciseNameResults(filtered)
 
@@ -1139,7 +1140,7 @@ const ExerciseInput = ({
           // Remove supersets where exercises are no longer sequential
           if (grouping.groupingType === 'superset') {
             const exerciseNumbers = grouping.groupSets.map(
-              (gs) => gs.exerciseNumber
+              (gs) => gs.exerciseNumber,
             )
             const sortedNumbers = [...exerciseNumbers].sort((a, b) => a - b)
             // Check if exercises are sequential
@@ -1215,13 +1216,16 @@ const ExerciseInput = ({
       <Button
         key={name}
         onPress={onPress}
-        twcn={`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
       >
-        <SFIcon
-          name={iconName as SFSymbol}
-          size={16}
-          color={isActive ? Colors.primary : theme.grayText}
-        />
+        <GlassView
+          style={tw`p-1.5 rounded-lg border border-light-grayBorder dark:border-dark-grayBorder ${isActive ? 'bg-primary/10 border-primary' : 'bg-light-grayPrimary dark:bg-dark-grayPrimary '}`}
+        >
+          <SFIcon
+            name={iconName as SFSymbol}
+            size={18}
+            color={isActive ? Colors.primary : theme.grayText}
+          />
+        </GlassView>
       </Button>
     )
   })
@@ -1231,11 +1235,20 @@ const ExerciseInput = ({
       <Button
         key={name}
         onPress={onPress}
-        text="Add Set"
-        hitSlop={12}
-        twcnText="text-primary dark:text-primary font-semibold"
-        twcn="px-2"
-      />
+      >
+        <GlassView
+          style={tw`py-1.5 px-6 rounded-lg  flex-row items-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary`}
+        >
+          <Txt twcn="text-xs font-semibold dark:text-white text-white">
+            Add Set
+          </Txt>
+          <SFIcon
+            name={iconName as SFSymbol}
+            size={16}
+            color={theme.text}
+          />
+        </GlassView>
+      </Button>
     )
   })
 
