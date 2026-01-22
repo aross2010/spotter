@@ -336,7 +336,9 @@ const Home = () => {
     : null
 
   const statsTogether = (
-    <GlassView style={tw`rounded-2xl p-3 relative overflow-hidden`}>
+    <GlassView
+      style={tw`rounded-2xl p-3 relative overflow-hidden bg-white dark:bg-dark-grayPrimary`}
+    >
       <View style={tw`items-center flex-row gap-4`}>
         <View
           style={tw`rounded-full bg-primary/50 h-10 w-10 items-center justify-center`}

@@ -5,7 +5,9 @@ import {
   View,
   Dimensions,
   useWindowDimensions,
+  ScrollView,
 } from 'react-native'
+import { DimensionValue } from 'react-native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   router,
@@ -30,12 +32,13 @@ import { useUserStore } from '../../stores/user-store'
 import { useWorkoutStore, useWorkoutTabStore } from '../../stores/workout-store'
 import { useExerciseStore } from '../../stores/exercise-store'
 import WorkoutRecap from '../../components/workout-recap'
-import { captureRef } from 'react-native-view-shot'
+import ViewShot, { captureRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
 import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
 import TagView from '../../components/tag'
 import RenderHTML from 'react-native-render-html'
+import { PixelRatio } from 'react-native'
 
 const WorkoutDetails = () => {
   const [workout, setWorkout] = useState<Workout | null>(null)
@@ -43,7 +46,7 @@ const WorkoutDetails = () => {
   const [isCapturing, setIsCapturing] = useState(false)
   const [isScreenshotReady, setIsScreenshotReady] = useState(false)
   const contentRef = useRef<View>(null)
-  const screenshotContentRef = useRef<View>(null)
+  const screenshotContentRef = useRef<ViewShot>(null)
   const navigation = useNavigation()
   const { id, from, workoutName } = useLocalSearchParams()
   const { fetchWithAuth } = useAuth()
@@ -54,6 +57,11 @@ const WorkoutDetails = () => {
   const { triggerRefresh: triggerWorkoutTabsRefresh } = useWorkoutTabStore()
   const [hasLoaded, setHasLoaded] = useState(false)
   const { theme } = useTheme()
+  const { width } = useWindowDimensions()
+  const displayText =
+    workout?.notes && workout.notes.length > 500
+      ? workout?.notes.substring(0, 500).trim() + '...'
+      : workout?.notes || ''
 
   const getWorkoutDetails = async () => {
     setIsLoading(true)
@@ -171,7 +179,7 @@ const WorkoutDetails = () => {
 
     const capture = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 150))
 
         if (!screenshotContentRef.current) {
           Alert.alert('Error', 'Failed to capture workout screenshot.')
@@ -180,7 +188,7 @@ const WorkoutDetails = () => {
 
         const uri = await captureRef(screenshotContentRef, {
           format: 'png',
-          quality: 1,
+          quality: 0.9,
         })
 
         let perm = await MediaLibrary.getPermissionsAsync()
@@ -504,12 +512,6 @@ const WorkoutDetails = () => {
       )
     })
 
-  const displayText =
-    workout?.notes && workout.notes.length > 500
-      ? workout?.notes.substring(0, 500).trim() + '...'
-      : workout?.notes || ''
-  const { width } = useWindowDimensions()
-
   return isLoading ? (
     <Spinner />
   ) : (
@@ -529,9 +531,6 @@ const WorkoutDetails = () => {
                 )}
               </Txt>
               {workout.notes && (
-                // <Txt twcn="text-sm text-light-grayText dark:text-dark-grayText">
-                //   {workout.notes}
-                // </Txt>
                 <RenderHTML
                   contentWidth={width - 32}
                   source={{ html: displayText }}
@@ -579,16 +578,19 @@ const WorkoutDetails = () => {
 
         {/* Off-screen view for screenshots */}
         {isCapturing && (
-          <View style={{ position: 'absolute', left: -10000, top: 0 }}>
-            <View
+          <>
+            <ViewShot
               ref={screenshotContentRef}
-              collapsable={false}
               onLayout={() => setIsScreenshotReady(true)}
               style={{
-                width: Dimensions.get('window').width,
+                position: 'absolute',
+                right: -width - 100,
+                width: width,
                 backgroundColor: theme.background,
-                paddingVertical: 32,
                 paddingHorizontal: 16,
+                paddingTop: 90,
+                paddingBottom: 48,
+                minHeight: 1100,
               }}
             >
               <Txt twcn="text-4xl font-semibold mb-4 text-light-text dark:text-dark-text">
@@ -642,8 +644,8 @@ const WorkoutDetails = () => {
                 {workout && <WorkoutRecap {...workout} />}
               </View>
               <View style={tw`mt-6`}>{renderedExercises}</View>
-            </View>
-          </View>
+            </ViewShot>
+          </>
         )}
       </>
     )

@@ -20,6 +20,7 @@ type SafeViewProps = {
   keyboardShouldPersistTaps?: 'never' | 'always' | 'handled'
   ignoreInset?: boolean
   scrollEnabled?: boolean
+  onContentSizeChange?: (width: number, height: number) => void
 } & ViewProps
 
 const SafeView = forwardRef<ScrollView, SafeViewProps>(
@@ -37,9 +38,10 @@ const SafeView = forwardRef<ScrollView, SafeViewProps>(
       keyboardShouldPersistTaps = 'handled',
       ignoreInset = false,
       scrollEnabled = true,
+      onContentSizeChange,
       ...rest
     },
-    ref
+    ref,
   ) => {
     const insets = useSafeAreaInsets()
 
@@ -79,6 +81,7 @@ const SafeView = forwardRef<ScrollView, SafeViewProps>(
         <ScrollView
           {...rest}
           ref={ref}
+          onContentSizeChange={onContentSizeChange}
           style={tw`bg-light-background dark:bg-dark-background flex-1`}
           contentContainerStyle={tw`${paddingClasses} ${twcnContentView ?? ''}`}
           contentInsetAdjustmentBehavior="automatic"
@@ -98,7 +101,7 @@ const SafeView = forwardRef<ScrollView, SafeViewProps>(
         {children}
       </View>
     )
-  }
+  },
 )
 
 export default SafeView
