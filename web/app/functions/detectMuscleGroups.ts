@@ -1,9 +1,17 @@
 import OpenAI from 'openai'
 import Redis from 'ioredis'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPEN_AI_KEY,
-})
+let openai: OpenAI | null = null
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPEN_AI_KEY,
+    })
+  }
+
+  return openai
+}
 
 // Singleton Redis instance
 let redis: Redis | null = null
@@ -98,6 +106,7 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
   const normalizedName = exerciseName.toLowerCase().trim()
   const cacheKey = normalizedName // Simple key: just the exercise name
   const redisClient = getRedisClient()
+  const openaiClient = getOpenAIClient()
 
   try {
     console.log('Detecting muscle groups for exercise:', exerciseName)
@@ -110,7 +119,7 @@ export async function detectMuscleGroups(exerciseName: string): Promise<{
 
     console.log('No cache found, querying OpenAI for exercise:', exerciseName)
 
-    const response = await openai.chat.completions.create({
+    const response = await openaiClient.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,
       max_tokens: 80,
