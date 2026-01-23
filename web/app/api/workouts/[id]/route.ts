@@ -1,5 +1,5 @@
 import { Params } from 'next/dist/server/request/params'
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { isISO8601 } from 'validator'
 import db from '@/src'
 import {
@@ -253,10 +253,9 @@ export const PUT = withAuth(async (req: Request, user: any) => {
       { status: 200 }
     )
 
-    // Trigger background muscle group updates for new exercises after response
+    // Trigger background muscle group updates after response
     if (newExercises.length > 0) {
-      // Use setImmediate or process.nextTick to ensure this runs after response is sent
-      process.nextTick(async () => {
+      after(async () => {
         try {
           await Promise.all(
             newExercises.map(async (exercise) => {
