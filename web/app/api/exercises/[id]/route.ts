@@ -27,7 +27,6 @@ type Set = {
   id: string
 }
 
-// ALL WEIGHT DETAILS IN LBS, CONVERT ON CLIENT
 type ExerciseDetails = {
   id: string
   name: string
@@ -62,6 +61,7 @@ type ExerciseDetails = {
         reps: number
         rpe?: number
         rir?: number
+        location?: string
       }
     }[]
   }
@@ -80,7 +80,7 @@ export const GET = withAuth(async (req, user) => {
   if (!exerciseId) {
     return NextResponse.json(
       { error: 'Exercise ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -93,7 +93,7 @@ export const GET = withAuth(async (req, user) => {
     if (!exercise) {
       return NextResponse.json(
         { error: 'Exercise not found or access denied' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
@@ -104,7 +104,7 @@ export const GET = withAuth(async (req, user) => {
         .select({ count: sql<number>`count(*)` })
         .from(workouts)
         .where(
-          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
         ),
 
       // Get all workout data with sets for this exercise
@@ -113,6 +113,7 @@ export const GET = withAuth(async (req, user) => {
           workoutId: workouts.id,
           workoutName: workouts.name,
           workoutDate: workouts.date,
+          location: workouts.location,
           exerciseNumber: workoutExercises.exerciseNumber,
           setId: sets.id,
           setNumber: sets.setNumber,
@@ -135,17 +136,17 @@ export const GET = withAuth(async (req, user) => {
         .from(exercises)
         .innerJoin(
           workoutExercises,
-          eq(exercises.id, workoutExercises.exerciseId)
+          eq(exercises.id, workoutExercises.exerciseId),
         )
         .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
         .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
         .where(
-          and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed'))
+          and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed')),
         )
         .orderBy(
           desc(workouts.date),
           workoutExercises.exerciseNumber,
-          sets.setNumber
+          sets.setNumber,
         ),
     ])
 
@@ -154,7 +155,7 @@ export const GET = withAuth(async (req, user) => {
     if (exerciseHistory.length === 0) {
       return NextResponse.json(
         { error: 'Exercise has no associated sets' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -165,6 +166,7 @@ export const GET = withAuth(async (req, user) => {
         workoutId: string
         workoutName: string
         date: string
+        location?: string
         exerciseNumber: number
         sets: Set[]
       }
@@ -184,6 +186,7 @@ export const GET = withAuth(async (req, user) => {
           date: row.workoutDate,
           exerciseNumber: Number(row.exerciseNumber),
           sets: [],
+          ...(row.location && { location: row.location }),
         })
       }
 
@@ -245,6 +248,7 @@ export const GET = withAuth(async (req, user) => {
         bestReps: number
         rpe?: number
         rir?: number
+        location?: string
       }
     >()
 
@@ -295,6 +299,7 @@ export const GET = withAuth(async (req, user) => {
           bestReps: bestSet.reps,
           rpe: bestSet.rpe,
           rir: bestSet.rir,
+          location: workout.location,
         })
       }
     })
@@ -313,15 +318,15 @@ export const GET = withAuth(async (req, user) => {
             p.rpe !== undefined
               ? p.rpe
               : p.rir !== undefined
-              ? RirToRpe.get(p.rir)
-              : undefined
+                ? RirToRpe.get(p.rir)
+                : undefined
         } else {
           intensity =
             p.rir !== undefined
               ? p.rir
               : p.rpe !== undefined
-              ? rpeToRir.get(p.rpe)
-              : undefined
+                ? rpeToRir.get(p.rpe)
+                : undefined
         }
 
         return {
@@ -337,6 +342,7 @@ export const GET = withAuth(async (req, user) => {
               intensity !== undefined && { rpe: intensity }),
             ...(intensityMetric === 'rir' &&
               intensity !== undefined && { rir: intensity }),
+            ...(typeof p.location === 'string' && { location: p.location }),
           },
         }
       })
@@ -466,7 +472,7 @@ export const GET = withAuth(async (req, user) => {
           date: workout.date,
           sets: transformedSets,
         }
-      }
+      },
     )
 
     // Convert PR to user preference
@@ -498,7 +504,7 @@ export const GET = withAuth(async (req, user) => {
     console.error('Error fetching exercise details:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })
@@ -511,7 +517,7 @@ export const PUT = withAuth(async (req, user) => {
   if (!exerciseId) {
     return NextResponse.json(
       { error: 'Exercise ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -529,7 +535,7 @@ export const PUT = withAuth(async (req, user) => {
     if (!name || !primaryMuscleGroup) {
       return NextResponse.json(
         { error: 'Name and primary muscle group are required' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -541,7 +547,7 @@ export const PUT = withAuth(async (req, user) => {
     if (!existingExercise) {
       return NextResponse.json(
         { error: 'Exercise not found or access denied' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
@@ -641,16 +647,16 @@ export const PUT = withAuth(async (req, user) => {
         conversionType: changingToUnilateral
           ? 'bilateral-to-unilateral'
           : changingToBilateral
-          ? 'unilateral-to-bilateral'
-          : null,
+            ? 'unilateral-to-bilateral'
+            : null,
       },
-      { status: 200 }
+      { status: 200 },
     )
   } catch (error) {
     console.error('Error updating exercise:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })
