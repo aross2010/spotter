@@ -119,7 +119,7 @@ const NotebookEntryView = ({
           </Host>
         </View>
 
-        {title && <Txt twcn="font-bold text-xl">{title}</Txt>}
+        {title && <Txt twcn="font-semibold text-xl">{title}</Txt>}
 
         <View style={tw`mt-2`}>
           <RenderHtml

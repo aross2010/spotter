@@ -29,7 +29,7 @@ const ExerciseMiniHistory = ({
   const cachedDetails = workoutData.exercises[exerciseIndex]?.details
   const [isLoading, setIsLoading] = useState(cachedDetails?.loading ?? true)
   const [exercise, setExercise] = useState<ExerciseDetailsMini | null>(
-    cachedDetails?.data ?? null
+    cachedDetails?.data ?? null,
   )
 
   const weightMetric = preferences?.weightMetric || 'lbs'
@@ -55,7 +55,7 @@ const ExerciseMiniHistory = ({
             headers: {
               'Content-Type': 'application/json',
             },
-          }
+          },
         )
         const data = (await res.json()) as ExerciseDetailsMini
         setExercise(data)
@@ -120,10 +120,10 @@ const ExerciseMiniHistory = ({
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">{set.reps}</Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.partials ? set.partials : '-'}
+                  {set.partials ? set.partials : ''}
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.intensity || set.intensity === 0 ? set.intensity : '-'}
+                  {set.intensity || set.intensity === 0 ? set.intensity : ''}
                 </Txt>
               </View>
             )

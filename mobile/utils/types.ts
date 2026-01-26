@@ -204,6 +204,7 @@ export type ExerciseDetails = {
         reps: number
         rpe?: number
         rir?: number
+        location?: string
       }
     }[]
   }

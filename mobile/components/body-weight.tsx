@@ -63,10 +63,6 @@ const BodyWeight = ({
   }
 
   useEffect(() => {
-    console.log(
-      'BodyWeight component mounted or shouldRefresh changed',
-      shouldRefresh,
-    )
     if (!shouldRefresh) return
     getBodyWeightData()
   }, [shouldRefresh])

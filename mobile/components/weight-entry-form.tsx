@@ -71,9 +71,6 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
 
   const identicalDate = previousEntry?.date === formattedDataDate
 
-  console.log('previousEntry', previousEntry?.date)
-  console.log('data.date', formattedDataDate)
-
   const getWeightData = async () => {
     try {
       const response = await fetchWithAuth(

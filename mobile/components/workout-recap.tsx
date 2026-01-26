@@ -16,7 +16,7 @@ const WorkoutRecap = (workout: Workout) => {
       label: 'Sets',
       value: workout.exercises.reduce(
         (acc, exercise) => acc + exercise.sets.length,
-        0
+        0,
       ),
     },
     {
@@ -33,7 +33,7 @@ const WorkoutRecap = (workout: Workout) => {
             }
             return setAcc + (exerciseSet.reps || 0)
           }, 0),
-        0
+        0,
       ),
     },
     {
@@ -43,9 +43,9 @@ const WorkoutRecap = (workout: Workout) => {
     {
       label:
         workout.status === 'planned'
-          ? 'Lift'
+          ? 'To Lift'
           : workout.status === 'active'
-            ? 'Lift'
+            ? 'Lifting'
             : 'Lifted',
       value: Math.floor(
         workout.exercises.reduce((acc, exercise) => {
@@ -78,7 +78,7 @@ const WorkoutRecap = (workout: Workout) => {
               return setAcc + weight * reps
             }, 0)
           )
-        }, 0)
+        }, 0),
       ),
     },
   ]
@@ -108,9 +108,11 @@ const WorkoutRecap = (workout: Workout) => {
           >
             <Txt twcn="text-base font-medium text-light-text dark:text-dark-text">
               {formatNumber(stat.value)}
-              {weightMetric === 'lbs' && stat.label === 'Lifted'
+              {weightMetric === 'lbs' &&
+              stat.label.toLocaleLowerCase().includes('lift')
                 ? ' lbs'
-                : weightMetric === 'kgs' && stat.label === 'Lifted'
+                : weightMetric === 'kgs' &&
+                    stat.label.toLocaleLowerCase().includes('lift')
                   ? ' kgs'
                   : ''}
             </Txt>

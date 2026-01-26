@@ -46,7 +46,7 @@ const ExerciseDetails = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const data = (await res.json()) as ExerciseDetailsType
       setExercise(data)
@@ -116,7 +116,7 @@ const ExerciseDetails = () => {
         clearRefresh()
       }
       return () => {}
-    }, [shouldRefresh])
+    }, [shouldRefresh]),
   )
 
   const stats = [
@@ -149,14 +149,14 @@ const ExerciseDetails = () => {
       label: 'Sets/Workout',
       value: Number(
         (exercise?.stats.totalSets as number) /
-          (exercise?.stats.totalWorkouts as number)
+          (exercise?.stats.totalWorkouts as number),
       ).toFixed(1),
     },
     {
       label: 'Reps/Set',
       value: Number(
         (exercise?.stats.totalReps as number) /
-          (exercise?.stats.totalSets as number)
+          (exercise?.stats.totalSets as number),
       ).toFixed(1),
     },
     {
@@ -268,13 +268,14 @@ const ExerciseDetails = () => {
     const day = String(dateObj.getUTCDate()).padStart(2, '0')
     const year = String(dateObj.getUTCFullYear()).slice(-2)
     const formattedDate = `${month}/${day}/${year}`
+
     return (
       <GlassView
         key={date}
-        style={tw`p-2 w-[150px] overflow-hidden rounded-2xl shadow-md`}
+        style={tw`p-2 pr-4 max-w-[250px] overflow-hidden rounded-2xl shadow-md`}
       >
         <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
-          {formattedDate}
+          {formattedDate} {point.data.location ? `- ${data.location}` : ''}
         </Txt>
         <Txt twcn="text-xs">
           {weightMetric === 'kgs' ? data.weight.toFixed(1) : data.weight}{' '}
@@ -295,6 +296,7 @@ const ExerciseDetails = () => {
           weight: point.data.weight,
           reps: point.data.reps,
           date: point.date,
+          ...(point.data.location ? { location: point.data.location } : {}),
         })),
       ]
 

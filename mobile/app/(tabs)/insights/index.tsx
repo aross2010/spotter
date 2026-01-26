@@ -476,7 +476,7 @@ const Insights = () => {
       return (
         <GlassView
           key={point.date}
-          style={tw`p-2 w-[140px] overflow-hidden rounded-2xl shadow-md`}
+          style={tw`p-2 pr-4 max-w-[250px] overflow-hidden rounded-2xl shadow-md`}
         >
           <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mb-1">
             Week of {formattedDate}
