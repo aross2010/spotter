@@ -10,9 +10,10 @@ import TagView from './tag'
 import RenderHtml from 'react-native-render-html'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
 import { useNotebook } from '../context/notebook-context'
-import { router } from 'expo-router'
+import { Link, router } from 'expo-router'
 import SFIcon from './sf-icon'
 import { handleShareNotebookEntry } from '../functions/share'
+import Button from './button'
 
 type NotebookEntryProps = {
   entry: NotebookEntry
@@ -118,7 +119,7 @@ const NotebookEntryView = ({
           </Host>
         </View>
 
-        {title && <Txt twcn="font-bold text-lg">{title}</Txt>}
+        {title && <Txt twcn="font-bold text-xl">{title}</Txt>}
 
         <View style={tw`mt-2`}>
           <RenderHtml
@@ -145,6 +146,7 @@ const NotebookEntryView = ({
               i: { fontStyle: 'italic' },
               u: { textDecorationLine: 'underline' },
               a: { color: Colors.primary, fontWeight: 'bold' },
+              h2: { fontSize: 15, fontWeight: 'bold' },
             }}
           />
 

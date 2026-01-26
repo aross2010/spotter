@@ -337,17 +337,17 @@ const Home = () => {
 
   const statsTogether = (
     <GlassView
-      style={tw`rounded-2xl p-3 relative overflow-hidden bg-white dark:bg-dark-grayPrimary`}
+      style={tw`rounded-2xl bg-primary p-3 relative overflow-hidden bg-white dark:bg-dark-grayPrimary`}
     >
       <View style={tw`items-center flex-row gap-4`}>
         <View
-          style={tw`rounded-full bg-primary/50 h-10 w-10 items-center justify-center`}
+          style={tw`rounded-full bg-primary/75 h-10 w-10 items-center justify-center`}
         >
           <Txt twcn="text-2xl">🚀</Txt>
         </View>
         <Txt twcn="text-lg font-semibold">
           {timeSinceFirst
-            ? `${timeSinceFirst} on Spotter`
+            ? `${timeSinceFirst} of Workouts`
             : '1st Day on Spotter!'}
         </Txt>
       </View>
@@ -368,10 +368,10 @@ const Home = () => {
           })}
       </View>
       <View
-        style={tw`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-primary/50`}
+        style={tw`absolute -top-12 -right-12 w-28 h-28 rounded-full bg-primary/75`}
       />
       <View
-        style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-primary/50`}
+        style={tw`absolute -bottom-10 -left-8 w-16 h-16 rounded-full bg-primary/75`}
       />
     </GlassView>
   )

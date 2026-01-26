@@ -53,7 +53,7 @@ const Insights = () => {
         `${BASE_URL}/api/insights/${authUser?.id}?weightUnit=${weightUnit}`,
         {
           method: 'GET',
-        }
+        },
       )
       const data = (await res.json()) as InsightsData
       setInsightsData(data)
@@ -62,12 +62,12 @@ const Insights = () => {
           data.core?.exercises.exerciseComparisonGraph?.map((exercise) => ({
             exerciseId: exercise.exerciseId,
             name: exercise.name,
-          }))
+          })),
         )
     } catch (error: any) {
       Alert.alert(
         'Error',
-        error.message || 'An error occurred while fetching insights data.'
+        error.message || 'An error occurred while fetching insights data.',
       )
     } finally {
       setLoading(false)
@@ -234,10 +234,10 @@ const Insights = () => {
     // compare exercisesToCompare with insightsData?.core?.exercises.exerciseComparisonGraph
     const currentExerciseIds =
       insightsData?.core?.exercises.exerciseComparisonGraph.map(
-        (exercise) => exercise.exerciseId
+        (exercise) => exercise.exerciseId,
       )
     const selectedExerciseIds = exercisesToCompare.map(
-      (exercise) => exercise.exerciseId
+      (exercise) => exercise.exerciseId,
     )
 
     if (currentExerciseIds?.length !== selectedExerciseIds.length) {
@@ -260,7 +260,7 @@ const Insights = () => {
       if (exercisesToCompare.length < 2) {
         Alert.alert(
           'At Least 2 Exercises Required',
-          'Please select 2-5 exercises to compare.'
+          'Please select 2-5 exercises to compare.',
         )
         // revert to previous state
         setExercisesToCompare(
@@ -268,14 +268,14 @@ const Insights = () => {
             (exercise) => ({
               exerciseId: exercise.exerciseId,
               name: exercise.name,
-            })
-          ) || []
+            }),
+          ) || [],
         )
         return exercisesToCompare
       } else if (exercisesToCompare.length > 5) {
         Alert.alert(
           'Maximum of 5 Exercises Reached',
-          'Please select 2-5 exercises to compare.'
+          'Please select 2-5 exercises to compare.',
         )
         // revert to previous state
         setExercisesToCompare(
@@ -283,8 +283,8 @@ const Insights = () => {
             (exercise) => ({
               exerciseId: exercise.exerciseId,
               name: exercise.name,
-            })
-          ) || []
+            }),
+          ) || [],
         )
         return exercisesToCompare
       }
@@ -297,7 +297,7 @@ const Insights = () => {
         `${BASE_URL}/api/insights/exercises/${authUser?.id}?weightUnit=${weightUnit}&exerciseIds=${exerciseIds}`,
         {
           method: 'GET',
-        }
+        },
       )
       const data = (await res.json()) as NonNullable<
         InsightsData['core']
@@ -334,7 +334,7 @@ const Insights = () => {
       <ScrollView contentContainerStyle={tw`gap-2 flex-row flex-wrap`}>
         {insightsData?.userExercises.map((exercise) => {
           const isSelected = exercisesToCompare.some(
-            (ex) => ex.exerciseId === exercise.id
+            (ex) => ex.exerciseId === exercise.id,
           )
 
           return (
@@ -634,10 +634,10 @@ const Insights = () => {
       >
         {renderedSummary}
         {renderedExerciseTrends}
+        {renderedWeeklyVolume}
         {renderedMuscleGroupAnalysis}
         {renderedRepsPerSet}
         {renderedSetsPerWorkout}
-        {renderedWeeklyVolume}
       </SafeView>
       <MyBottomSheet
         onDismiss={handleSelectExercises}

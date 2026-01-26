@@ -7,6 +7,81 @@ import { APP_ID } from '../constants/data'
 
 const APP_LINK = `https://apps.apple.com/app/id${APP_ID}`
 
+export const convertHTMLToPlainText = (html: string): string => {
+  if (!html) return ''
+
+  // Convert HTML to plain text while preserving list formatting
+  let bodyText = html
+
+  // First, mark ordered lists
+  let listCounter = 0
+  const listCounters: { [key: number]: number } = {}
+
+  bodyText = bodyText
+    // Replace <br> tags with newlines
+    .replace(/<br\s*\/?>/gi, '\n')
+    // Mark start of ordered lists with a placeholder
+    .replace(/<ol[^>]*>/gi, () => {
+      listCounter++
+      listCounters[listCounter] = 0
+      return `__OL_START_${listCounter}__`
+    })
+    .replace(/<\/ol>/gi, () => {
+      const current = listCounter
+      listCounter--
+      return `__OL_END_${current}__\n`
+    })
+    // Replace ul tags
+    .replace(/<ul[^>]*>/gi, '__UL_START__')
+    .replace(/<\/ul>/gi, '__UL_END__\n')
+
+  // Now process li tags
+  bodyText = bodyText.replace(/<li[^>]*>(.*?)<\/li>/gi, (match, content) => {
+    // Check if we're in an ordered list
+    const beforeLi = bodyText.substring(0, bodyText.indexOf(match))
+    const olMatches = beforeLi.match(/__OL_START_(\d+)__/g) || []
+    const olEndMatches = beforeLi.match(/__OL_END_(\d+)__/g) || []
+
+    if (olMatches.length > olEndMatches.length) {
+      // We're inside an OL
+      const currentOlNum = parseInt(
+        olMatches[olMatches.length - 1].match(/\d+/)![0],
+      )
+      listCounters[currentOlNum] = (listCounters[currentOlNum] || 0) + 1
+      return `${listCounters[currentOlNum]}. ${content}\n`
+    } else {
+      // We're inside a UL
+      return `• ${content}\n`
+    }
+  })
+
+  // Clean up placeholders
+  bodyText = bodyText
+    .replace(/__OL_START_\d+__/g, '')
+    .replace(/__OL_END_\d+__/g, '')
+    .replace(/__UL_START__/g, '')
+    .replace(/__UL_END__/g, '')
+    // Handle paragraphs
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    // Handle links - preserve URL
+    .replace(/<a[^>]*href=["']([^"']*)["'][^>]*>([^<]*)<\/a>/gi, '$2 ($1)')
+    // Remove all remaining HTML tags
+    .replace(/<[^>]+>/g, '')
+    // Decode HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Clean up excessive newlines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+  return bodyText
+}
+
 export const getWorkoutMessage = (workout: Workout) => {
   if (!workout) return ''
 
@@ -19,7 +94,7 @@ export const getWorkoutMessage = (workout: Workout) => {
   message += '\n\n'
 
   if (workout.notes) {
-    message += `📝 ${workout.notes}\n\n`
+    message += `📝 ${convertHTMLToPlainText(workout.notes)}\n\n`
   }
 
   // Add exercises
@@ -106,7 +181,7 @@ export const handleShareWorkout = async (workout: Workout) => {
       },
       {
         subject: workout?.name || 'My Workout',
-      }
+      },
     )
   } catch (error: any) {
     Alert.alert('Error', error.message || 'Failed to share workout')
@@ -116,7 +191,7 @@ export const handleShareWorkout = async (workout: Workout) => {
 const getExerciseMessage = (
   exercise: ExerciseDetails,
   weightMetric: 'lbs' | 'kgs',
-  intensityMetric?: 'rpe' | 'rir'
+  intensityMetric?: 'rpe' | 'rir',
 ): string => {
   if (!exercise) return ''
 
@@ -139,7 +214,7 @@ const getExerciseMessage = (
   const lastDate = progressionChart[progressionChart.length - 1].date
   const daysBetween = Math.floor(
     (new Date(lastDate).getTime() - new Date(firstDate).getTime()) /
-      (1000 * 60 * 60 * 24)
+      (1000 * 60 * 60 * 24),
   )
 
   // Get the most recent workout sets
@@ -186,7 +261,7 @@ const getExerciseMessage = (
 export const handleShareExercise = async (
   exercise: ExerciseDetails,
   weightMetric: 'lbs' | 'kgs',
-  intensityMetric?: 'rpe' | 'rir'
+  intensityMetric?: 'rpe' | 'rir',
 ) => {
   try {
     const message = getExerciseMessage(exercise, weightMetric, intensityMetric)
@@ -203,7 +278,7 @@ export const handleShareExercise = async (
       },
       {
         subject: exercise?.name || 'My Exercise',
-      }
+      },
     )
   } catch (error: any) {
     Alert.alert('Error', error.message || 'Failed to share exercise')
@@ -216,73 +291,7 @@ export const handleShareNotebookEntry = async (entry: NotebookEntry) => {
     message += `📅 ${formatDate(entry.date)}\n\n`
 
     // Convert HTML to plain text while preserving list formatting
-    let bodyText = entry.body
-
-    // First, mark ordered lists
-    let listCounter = 0
-    const listCounters: { [key: number]: number } = {}
-
-    bodyText = bodyText
-      // Replace <br> tags with newlines
-      .replace(/<br\s*\/?>/gi, '\n')
-      // Mark start of ordered lists with a placeholder
-      .replace(/<ol[^>]*>/gi, () => {
-        listCounter++
-        listCounters[listCounter] = 0
-        return `__OL_START_${listCounter}__`
-      })
-      .replace(/<\/ol>/gi, () => {
-        const current = listCounter
-        listCounter--
-        return `__OL_END_${current}__\n`
-      })
-      // Replace ul tags
-      .replace(/<ul[^>]*>/gi, '__UL_START__')
-      .replace(/<\/ul>/gi, '__UL_END__\n')
-
-    // Now process li tags
-    bodyText = bodyText.replace(/<li[^>]*>(.*?)<\/li>/gi, (match, content) => {
-      // Check if we're in an ordered list
-      const beforeLi = bodyText.substring(0, bodyText.indexOf(match))
-      const olMatches = beforeLi.match(/__OL_START_(\d+)__/g) || []
-      const olEndMatches = beforeLi.match(/__OL_END_(\d+)__/g) || []
-
-      if (olMatches.length > olEndMatches.length) {
-        // We're inside an OL
-        const currentOlNum = parseInt(
-          olMatches[olMatches.length - 1].match(/\d+/)![0]
-        )
-        listCounters[currentOlNum] = (listCounters[currentOlNum] || 0) + 1
-        return `${listCounters[currentOlNum]}. ${content}\n`
-      } else {
-        // We're inside a UL
-        return `• ${content}\n`
-      }
-    })
-
-    // Clean up placeholders
-    bodyText = bodyText
-      .replace(/__OL_START_\d+__/g, '')
-      .replace(/__OL_END_\d+__/g, '')
-      .replace(/__UL_START__/g, '')
-      .replace(/__UL_END__/g, '')
-      // Handle paragraphs
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<p[^>]*>/gi, '')
-      // Handle links - preserve URL
-      .replace(/<a[^>]*href=["']([^"']*)["'][^>]*>([^<]*)<\/a>/gi, '$2 ($1)')
-      // Remove all remaining HTML tags
-      .replace(/<[^>]+>/g, '')
-      // Decode HTML entities
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      // Clean up excessive newlines
-      .replace(/\n{3,}/g, '\n\n')
-      .trim()
+    let bodyText = convertHTMLToPlainText(entry.body)
 
     message += bodyText
     message += `\n\nShared via Spotter: ${APP_LINK}`
@@ -294,7 +303,7 @@ export const handleShareNotebookEntry = async (entry: NotebookEntry) => {
       },
       {
         subject: entry.title || 'My Notebook Entry',
-      }
+      },
     )
   } catch (error: any) {
     Alert.alert('Error', error.message || 'Failed to share notebook entry')

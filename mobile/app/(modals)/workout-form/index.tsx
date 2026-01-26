@@ -74,13 +74,13 @@ const WorkoutForm = () => {
   const { fetchWithAuth } = useAuth()
   const { id, cloneId, from } = useLocalSearchParams()
   const [mode, setMode] = useState<'create' | 'edit' | 'clone'>(
-    id ? 'edit' : cloneId ? 'clone' : 'create'
+    id ? 'edit' : cloneId ? 'clone' : 'create',
   )
   const [workoutId, setWorkoutId] = useState<string | null>(
-    (id as string) || null
+    (id as string) || null,
   )
   const [initialState, setInitialState] = useState<typeof workoutData | null>(
-    null
+    null,
   )
   const ref = useRef<BottomSheetModal | null>(null)
   const { triggerRefresh } = useWorkoutStore()
@@ -88,6 +88,7 @@ const WorkoutForm = () => {
   const { triggerRefresh: triggerExerciseDetailsRefresh } = useExerciseStore()
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
   const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleCancelForm = useCallback(() => {
     if (hasChanges()) {
@@ -107,7 +108,7 @@ const WorkoutForm = () => {
               router.back()
             },
           },
-        ]
+        ],
       )
     } else {
       resetWorkoutFormContext()
@@ -127,7 +128,7 @@ const WorkoutForm = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const workout = await response.json()
       const workoutData = {
@@ -143,6 +144,32 @@ const WorkoutForm = () => {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (workoutData.status === 'active') {
+      // auto submit after 1.5 seconds of no changes to the form
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current)
+      }
+
+      if (workoutData.status !== 'active') return
+      if (isSaving || isLoading) return
+
+      const isValid = isValidWorkout()
+      const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
+      if (!saveEnabled) return
+
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        void handleSubmitWorkout()
+      }, 1500)
+
+      return () => {
+        if (autoSaveTimeoutRef.current) {
+          clearTimeout(autoSaveTimeoutRef.current)
+        }
+      }
+    }
+  }, [workoutData])
 
   useEffect(() => {
     if (cloneId) {
@@ -175,7 +202,8 @@ const WorkoutForm = () => {
     const tagsChanged =
       workoutData.tags.length !== initialState.tags.length ||
       workoutData.tags.some(
-        (tag) => !initialState.tags.some((initial) => initial.name === tag.name)
+        (tag) =>
+          !initialState.tags.some((initial) => initial.name === tag.name),
       )
 
     // Check if exercises changed
@@ -433,7 +461,7 @@ const WorkoutForm = () => {
   const handleSubmitWorkout = async () => {
     setIsSaving(true)
     try {
-      if (mode === 'create') {
+      if (mode === 'create' || mode === 'clone') {
         const res = await addWorkout()
         triggerHomeDataRefresh()
         triggerWorkoutTabRefresh()
@@ -585,8 +613,8 @@ const WorkoutForm = () => {
                   {formatNumber(
                     workoutData.exercises.reduce(
                       (acc, exercise) => acc + exercise.sets.length,
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </Txt>
               </View>
@@ -607,8 +635,8 @@ const WorkoutForm = () => {
                           }
                           return setAcc + (exerciseSet.reps || 0)
                         }, 0),
-                      0
-                    )
+                      0,
+                    ),
                   )}
                 </Txt>
               </View>
@@ -619,8 +647,8 @@ const WorkoutForm = () => {
                 <Txt twcn="font-semibold text-base">
                   {formatNumber(
                     new Set(
-                      workoutData.exercises.map((exercise) => exercise.name)
-                    ).size
+                      workoutData.exercises.map((exercise) => exercise.name),
+                    ).size,
                   )}
                 </Txt>
               </View>
@@ -663,8 +691,8 @@ const WorkoutForm = () => {
                             return setAcc + weight * reps
                           }, 0)
                         )
-                      }, 0)
-                    )
+                      }, 0),
+                    ),
                   )}{' '}
                   {useUserStore.getState().preferences?.weightMetric || 'lbs'}
                 </Txt>

@@ -75,7 +75,7 @@ const WorkoutView = ({
           </Txt>
         </View>
       )
-    }
+    },
   )
 
   return (
@@ -162,18 +162,11 @@ const WorkoutView = ({
           <View style={tw`flex-row items-center gap-1`}>
             <Txt
               numberOfLines={1}
-              twcn={`font-semibold text-lg -mt-1 ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
+              twcn={`font-semibold text-lg -mt-1 ${workout.status === 'planned' || workout.status === 'active' ? 'italic' : ''} ${isWorkoutNameFiltered ? 'text-primary' : ''}`}
             >
-              {name}
+              {name} {workout.status === 'planned' ? '(Planned)' : ''}{' '}
+              {workout.status === 'active' ? '(Active)' : ''}
             </Txt>
-            {(workout.status === 'planned' || workout.status === 'active') && (
-              <Txt
-                numberOfLines={1}
-                twcn={`text-xs ${workout.status === 'planned' || workout.status === 'active' ? 'text-secondary dark:text-secondary' : 'text-light-grayText dark:text-dark-grayText '}`}
-              >
-                – {workout.status}
-              </Txt>
-            )}
           </View>
 
           <View style={tw`mt-4 gap-1.5`}>{renderedExercises}</View>

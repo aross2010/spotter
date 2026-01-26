@@ -24,7 +24,7 @@ const WorkoutNotes = () => {
   const { workoutData, setWorkoutData } = useWorkoutForm()
   const [isFocused, setIsFocused] = useState(false)
   const [stylesState, setStylesState] = useState<OnChangeStateEvent | null>(
-    null
+    null,
   )
   const bodyInputRef = useRef<EnrichedTextInputInstance>(null)
   const isInitialLoadRef = useRef(false)
@@ -48,7 +48,7 @@ const WorkoutNotes = () => {
     navigation.setOptions({
       // headerRight: () => (
       //   <Button
-      //     onPress={handleSave}
+      //     onPress={() => bodyInputRef.current?.blur()}
       //     hitSlop={12}
       //     accessibilityLabel="Save Notes"
       //     twcn="w-9 flex-row items-center justify-center h-full px-2"

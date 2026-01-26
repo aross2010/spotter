@@ -56,6 +56,15 @@ const NotebookEntryForm = () => {
   const navigation = useNavigation()
   const { theme, colorScheme } = useTheme()
 
+  const getBodyHTML = useCallback(async () => {
+    try {
+      return (await bodyInputRef.current?.getHTML()) || ''
+    } catch (error: any) {
+      if (error?.message === 'Component unmounted') return ''
+      throw error
+    }
+  }, [])
+
   useEffect(() => {
     const getTags = async () => {
       try {
@@ -89,32 +98,21 @@ const NotebookEntryForm = () => {
       isInitialLoadRef.current = true
       // Pass HTML to the editor, which will trigger onChangeText with plain text
       bodyInputRef.current?.setValue(notebookFormData.body)
-    }
-  }, [notebookFormData.body])
-
-  // Set initial state after the body has been converted to plain text by onChangeText
-  useEffect(() => {
-    if (
-      isEditing &&
-      !notebookFormData.body.includes('<') &&
-      notebookFormData.body.trim() &&
-      !hasSetInitialStateRef.current
-    ) {
-      // Body is now plain text (no HTML tags), safe to set as initial state
-      hasSetInitialStateRef.current = true
       setInitialState({ ...notebookFormData })
     }
-  }, [notebookFormData.body])
+  }, [notebookFormData])
 
-  const hasChanges = () => {
+  const hasChanges = async () => {
     if (!isEditing || !initialState) return true // For new entries or before initial state is set, always allow saving if body is not empty
+
+    const currentBodyHTML = await getBodyHTML()
+    const initialBodyHTML = initialState.body || ''
 
     const dateChanged =
       notebookFormData.date.getTime() !== initialState.date.getTime()
     const titleChanged =
       notebookFormData.title.trim() !== initialState.title.trim()
-    const bodyChanged =
-      notebookFormData.body.trim() !== initialState.body.trim()
+    const bodyChanged = currentBodyHTML !== initialBodyHTML.trim()
     const tagsChanged =
       notebookFormData.tags.length !== initialState.tags.length ||
       notebookFormData.tags.some(
@@ -125,14 +123,14 @@ const NotebookEntryForm = () => {
     return dateChanged || titleChanged || bodyChanged || tagsChanged
   }
 
-  const canSave = () => {
+  const canSave = async () => {
     const hasContent = notebookFormData.body.trim().length > 0
-    const hasValidChanges = hasChanges()
+    const hasValidChanges = await hasChanges()
     return hasContent && hasValidChanges && !isSaving
   }
 
-  const handleCancelForm = useCallback(() => {
-    if (notebookFormData.body.trim().length > 0 && hasChanges()) {
+  const handleCancelForm = useCallback(async () => {
+    if (notebookFormData.body.trim().length > 0 && (await hasChanges())) {
       Alert.alert(
         'Are you sure you want to exit?',
         'Your changes will be lost.',
@@ -157,8 +155,8 @@ const NotebookEntryForm = () => {
     }
   }, [resetNotebookFormContext])
 
-  useEffect(() => {
-    const saveEnabled = canSave()
+  const updateHeader = async () => {
+    const saveEnabled = await canSave()
     navigation.setOptions({
       headerRight: () => (
         <View style={tw`flex-row items-center gap-6 px-2`}>
@@ -231,12 +229,23 @@ const NotebookEntryForm = () => {
         </Button>
       ),
     })
-  }, [navigation, isSaving, notebookFormData, initialState, handleCancelForm])
+  }
+
+  useEffect(() => {
+    updateHeader()
+  }, [
+    navigation,
+    isSaving,
+    notebookFormData,
+    initialState,
+    handleCancelForm,
+    getBodyHTML(),
+  ])
 
   const handleSubmitEntry = async () => {
     setIsSaving(true)
     try {
-      const htmlBody = await bodyInputRef.current?.getHTML()
+      const htmlBody = await getBodyHTML()
       if (isEditing) {
         await updateEntry(entryId as string, {
           ...notebookFormData,
@@ -283,6 +292,7 @@ const NotebookEntryForm = () => {
               placeholder="Notebook Entry Title"
               twcnInput="text-base h-14 font-bold text-3xl"
               autoFocus={!isEditing}
+              autoCapitalize="words"
             />
           </View>
 
@@ -318,6 +328,10 @@ const NotebookEntryForm = () => {
               },
               a: {
                 color: Colors.primary,
+              },
+              h2: {
+                fontSize: 20,
+                bold: true,
               },
             }}
           />
@@ -364,7 +378,17 @@ const NotebookEntryForm = () => {
             <View
               style={tw`flex-row items-center justify-center gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
             >
-              <View style={tw`flex-row items-center gap-4`}>
+              <View style={tw`flex-row items-center gap-1.5`}>
+                <Button
+                  onPress={() => bodyInputRef.current?.toggleH2()}
+                  twcn={`p-2`}
+                >
+                  <SFIcon
+                    name="textformat.size"
+                    size={24}
+                    color={stylesState?.isH2 ? Colors.primary : theme.text}
+                  />
+                </Button>
                 <Button
                   onPress={() => bodyInputRef.current?.toggleBold()}
                   twcn={`p-2`}
