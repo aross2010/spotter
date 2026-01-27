@@ -91,7 +91,33 @@ const WorkoutForm = () => {
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleCancelForm = useCallback(() => {
-    if (hasChanges()) {
+    if (workoutData.status === 'active') {
+      // if changes have been saved, just exit
+      if (!hasChanges()) {
+        resetWorkoutFormContext()
+        router.back()
+        return
+      } else {
+        Alert.alert(
+          'Are you sure you want to exit?',
+          'Your changes will be lost.',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Exit',
+              style: 'destructive',
+              onPress: () => {
+                resetWorkoutFormContext()
+                router.back()
+              },
+            },
+          ],
+        )
+      }
+    } else if (hasChanges()) {
       Alert.alert(
         'Are you sure you want to exit?',
         'Your changes will be lost.',
@@ -114,7 +140,7 @@ const WorkoutForm = () => {
       resetWorkoutFormContext()
       router.back()
     }
-  }, [resetWorkoutFormContext])
+  }, [resetWorkoutFormContext, initialState])
 
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
@@ -147,7 +173,7 @@ const WorkoutForm = () => {
 
   useEffect(() => {
     if (workoutData.status === 'active') {
-      // auto submit after 1.5 seconds of no changes to the form
+      // auto submit after 1 second of no changes to the form
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
@@ -161,7 +187,7 @@ const WorkoutForm = () => {
 
       autoSaveTimeoutRef.current = setTimeout(() => {
         void handleSubmitWorkout()
-      }, 1500)
+      }, 1000)
 
       return () => {
         if (autoSaveTimeoutRef.current) {
@@ -778,7 +804,7 @@ const WorkoutForm = () => {
                 (focusedInput.field === 'weightLbs' ||
                   focusedInput.field === 'weightKg') ? (
                 <GlassView
-                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
+                  style={tw`flex-row items-center justify-between gap-3 px-4 rounded-full`}
                 >
                   <View style={tw`flex-row items-center gap-2`}>
                     <KeyboardToolbar.Prev button={CustomLeftButton} />
@@ -836,7 +862,7 @@ const WorkoutForm = () => {
                 </GlassView>
               ) : (
                 <GlassView
-                  style={tw`flex-row items-center justify-between gap-3 px-2 rounded-full`}
+                  style={tw`flex-row items-center justify-between gap-3 px-4 rounded-full`}
                 >
                   <View style={tw`flex-row items-center gap-4`}>
                     <View style={tw`flex-row items-center gap-2`}>

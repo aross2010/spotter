@@ -47,7 +47,7 @@ const NotebookFilters = () => {
       selectedTags.length !== initialState.selectedTags.length ||
       selectedTags.some(
         (tag) =>
-          !initialState.selectedTags.some((initial) => initial.id === tag.id)
+          !initialState.selectedTags.some((initial) => initial.id === tag.id),
       )
     const sortOrderChanged = sortOrder !== initialState.sortOrder
     return tagsChanged || sortOrderChanged
@@ -99,6 +99,7 @@ const NotebookFilters = () => {
                   hitSlop={8}
                   accessibilityLabel="apply filters and sort method"
                   disabled={!changesExist || isLoading}
+                  twcn="w-9 flex-row items-center justify-center h-full"
                 >
                   <SFIcon
                     name="checkmark"
@@ -136,12 +137,12 @@ const NotebookFilters = () => {
       const filtered = tags.filter(
         (tag) =>
           tag.name.toLowerCase().includes(query.toLowerCase()) &&
-          !selectedTags.some((t) => t.id === tag.id)
+          !selectedTags.some((t) => t.id === tag.id),
       )
       setResultTags(filtered)
     } else {
       const filtered = tags.filter((tag) =>
-        selectedTags.every((t) => t.id !== tag.id)
+        selectedTags.every((t) => t.id !== tag.id),
       )
       setResultTags(filtered)
     }
@@ -155,7 +156,7 @@ const NotebookFilters = () => {
 
         if (tagFilters) {
           const tagFiltersWithUsed = tags.filter((tag) =>
-            tagFilters.some((t) => t.id === tag.id)
+            tagFilters.some((t) => t.id === tag.id),
           )
           setSelectedTags(tagFiltersWithUsed)
           setInitialState({
@@ -170,7 +171,7 @@ const NotebookFilters = () => {
         }
         // remove tags that are in tagFilters and set to results
         const filteredResultTags = tags.filter((tag) =>
-          tagFilters.every((t) => t.id !== tag.id)
+          tagFilters.every((t) => t.id !== tag.id),
         )
         setResultTags(filteredResultTags)
       } catch (error: any) {
@@ -184,7 +185,7 @@ const NotebookFilters = () => {
     if (tagFilters.length > 0) {
       // get the active filter tags from tags, and set them as selectedTags
       const activeTags = tags.filter((tag) =>
-        tagFilters.some((t) => t.id === tag.id)
+        tagFilters.some((t) => t.id === tag.id),
       )
       setSelectedTags(activeTags)
     }
@@ -204,7 +205,7 @@ const NotebookFilters = () => {
       return newResults.sort(
         (a, b) =>
           tags.findIndex((t) => t.id === a.id) -
-          tags.findIndex((t) => t.id === b.id)
+          tags.findIndex((t) => t.id === b.id),
       )
     })
   }
@@ -247,7 +248,7 @@ const NotebookFilters = () => {
           />
         </Pressable>
       )
-    }
+    },
   )
 
   return loading ? (

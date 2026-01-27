@@ -58,8 +58,8 @@ const WorkoutFilters = () => {
         (option) =>
           !initialState.selectedOptions.some(
             (initial) =>
-              initial.label === option.label && initial.type === option.type
-          )
+              initial.label === option.label && initial.type === option.type,
+          ),
       )
     const sortOrderChanged = sortOrder !== initialState.sortOrder
     const statusFilterChanged = statusFilter !== initialState.statusFilter
@@ -70,7 +70,7 @@ const WorkoutFilters = () => {
     initialState.selectedOptions.forEach((option) => {
       if (
         !selectedOptions.some(
-          (sel) => sel.label === option.label && sel.type === option.type
+          (sel) => sel.label === option.label && sel.type === option.type,
         )
       ) {
         updateFilters(option, 'add')
@@ -79,7 +79,7 @@ const WorkoutFilters = () => {
     selectedOptions.forEach((option) => {
       if (
         !initialState.selectedOptions.some(
-          (init) => init.label === option.label && init.type === option.type
+          (init) => init.label === option.label && init.type === option.type,
         )
       ) {
         updateFilters(option, 'remove')
@@ -170,6 +170,7 @@ const WorkoutFilters = () => {
                 hitSlop={8}
                 accessibilityLabel="apply filters and sort method"
                 disabled={!changesExist || isLoading}
+                twcn="w-9 flex-row items-center justify-center h-full"
               >
                 <SFIcon
                   name="checkmark"
@@ -230,28 +231,28 @@ const WorkoutFilters = () => {
 
       filters.tags.forEach((tag) => {
         const option = filterOptions.find(
-          (opt) => opt.type === 'tags' && opt.label === tag
+          (opt) => opt.type === 'tags' && opt.label === tag,
         )
         if (option) selected.push(option)
       })
 
       filters.workoutNames.forEach((name) => {
         const option = filterOptions.find(
-          (opt) => opt.type === 'workoutNames' && opt.label === name
+          (opt) => opt.type === 'workoutNames' && opt.label === name,
         )
         if (option) selected.push(option)
       })
 
       filters.exerciseNames.forEach((name) => {
         const option = filterOptions.find(
-          (opt) => opt.type === 'exerciseNames' && opt.label === name
+          (opt) => opt.type === 'exerciseNames' && opt.label === name,
         )
         if (option) selected.push(option)
       })
 
       filters.locations.forEach((loc) => {
         const option = filterOptions.find(
-          (opt) => opt.type === 'locations' && opt.label === loc
+          (opt) => opt.type === 'locations' && opt.label === loc,
         )
         if (option) selected.push(option)
       })
@@ -270,7 +271,7 @@ const WorkoutFilters = () => {
 
   useEffect(() => {
     const filteredResults = filterOptions.filter((option) =>
-      option.label.toLowerCase().includes(query.toLowerCase())
+      option.label.toLowerCase().includes(query.toLowerCase()),
     )
     setResultOptions(filteredResults)
   }, [query, filterOptions])
@@ -283,8 +284,8 @@ const WorkoutFilters = () => {
   const handleDeselectOption = (option: FilterOptions[number]) => {
     setSelectedOptions((prev) =>
       prev.filter(
-        (opt) => !(opt.label === option.label && opt.type === option.type)
-      )
+        (opt) => !(opt.label === option.label && opt.type === option.type),
+      ),
     )
     updateFilters(option, 'remove')
   }
@@ -348,12 +349,12 @@ const WorkoutFilters = () => {
   }
 
   const hasWorkoutNameSelected = selectedOptions.some(
-    (opt) => opt.type === 'workoutNames'
+    (opt) => opt.type === 'workoutNames',
   )
 
   const renderedResultOptions = resultOptions.map((option) => {
     const isSelected = selectedOptions.some(
-      (sel) => sel.label === option.label && sel.type === option.type
+      (sel) => sel.label === option.label && sel.type === option.type,
     )
     const isDisabled =
       isSelected || (option.type === 'workoutNames' && hasWorkoutNameSelected)

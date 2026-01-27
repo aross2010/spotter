@@ -347,7 +347,7 @@ const Home = () => {
         </View>
         <Txt twcn="text-lg font-semibold">
           {timeSinceFirst
-            ? `${timeSinceFirst} of Workouts`
+            ? `${timeSinceFirst} on Spotter`
             : '1st Day on Spotter!'}
         </Txt>
       </View>

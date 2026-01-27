@@ -75,7 +75,7 @@ const LinkedAccounts = () => {
     const { title, provider, color, logo } = option
     const isLinked = providersLinked.some((p) => p.name === provider)
     const providerEmail = providersLinked.find(
-      (p) => p.name === provider
+      (p) => p.name === provider,
     )?.email
 
     return (
@@ -83,7 +83,7 @@ const LinkedAccounts = () => {
         <Button
           onPress={() => !isLinked && handleLinking(provider)}
           style={[
-            tw`h-14 rounded-full flex-row items-center justify-center gap-3`,
+            tw`h-12 rounded-full flex-row items-center justify-center gap-3`,
             { backgroundColor: color },
           ]}
           disabled={isLinked}

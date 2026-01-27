@@ -13,7 +13,7 @@ type SelectorProps = {
 
 const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
   const selectedIndex = options.findIndex(
-    (option) => option.value === selectedValue
+    (option) => option.value === selectedValue,
   )
   const animatedValue = useRef(new Animated.Value(selectedIndex)).current
   const [buttonLayouts, setButtonLayouts] = useState<
@@ -65,7 +65,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
       >
         <Button
           onPress={() => onSelect(option.value)}
-          style={tw`py-2 px-3 rounded-xl`}
+          style={tw`py-2 px-3 rounded-full`}
         >
           <Txt
             twcn={`text-xs text-light-grayText dark:text-dark-grayText ${isSelected ? 'text-primary dark:text-dark-text' : ''}`}
@@ -84,7 +84,7 @@ const Selector = ({ onSelect, options, selectedValue }: SelectorProps) => {
       {buttonLayouts.length === options.length && (
         <Animated.View
           style={[
-            tw`absolute bg-primary/25 rounded-lg dark:bg-primary/75`,
+            tw`absolute bg-primary/25 dark:bg-primary/75`,
             {
               width: animatedWidth,
               height: '100%',

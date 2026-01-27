@@ -476,12 +476,14 @@ const WorkoutDetails = () => {
                           </Txt>
                         )}
                       </View>
-                      {set.partialReps !== null &&
-                        set.partialReps !== undefined && (
-                          <Txt twcn="text-center text-light-text dark:text-dark-text">
-                            {set.partialReps}
-                          </Txt>
-                        )}
+                      <View style={tw`w-1/5 py-1 items-center justify-center`}>
+                        {set.partialReps !== null &&
+                          set.partialReps !== undefined && (
+                            <Txt twcn="text-center text-light-text dark:text-dark-text">
+                              {set.partialReps}
+                            </Txt>
+                          )}
+                      </View>
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
                         {intensity !== null && (
                           <Txt twcn="text-center text-light-text dark:text-dark-text">

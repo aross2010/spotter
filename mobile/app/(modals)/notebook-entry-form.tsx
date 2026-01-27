@@ -25,6 +25,7 @@ import useTheme from '../hooks/theme'
 import SFIcon from '../../components/sf-icon'
 import { ContextMenu, Host, Button as SwiftButton } from '@expo/ui/swift-ui'
 import MyDatePicker from '../../components/date-picker'
+import { GlassView } from 'expo-glass-effect'
 
 const NotebookEntryForm = () => {
   const { addEntry, updateEntry, fetchTags } = useNotebook()
@@ -375,10 +376,10 @@ const NotebookEntryForm = () => {
           }}
         >
           <KeyboardToolbar.Content>
-            <View
-              style={tw`flex-row items-center justify-center gap-3 px-2 bg-white dark:bg-dark-grayPrimary rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
+            <GlassView
+              style={tw`flex-row items-center justify-center gap-3 px-4 rounded-full border border-light-grayBorder dark:border-dark-grayBorder`}
             >
-              <View style={tw`flex-row items-center gap-1.5`}>
+              <View style={tw`flex-row items-center gap-2`}>
                 <Button
                   onPress={() => bodyInputRef.current?.toggleH2()}
                   twcn={`p-2`}
@@ -457,7 +458,7 @@ const NotebookEntryForm = () => {
                   </Txt>
                 </View>
               </View>
-            </View>
+            </GlassView>
           </KeyboardToolbar.Content>
         </KeyboardToolbar>
       </View>
