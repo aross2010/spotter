@@ -10,6 +10,7 @@ import Spinner from './activity-indicator'
 import { ScrollView } from 'react-native-gesture-handler'
 import { useWorkoutForm } from '../context/workout-form-context'
 import { ExerciseDetailsMini } from '../utils/types'
+import { toTitleCase } from '../functions/utils'
 
 type ExerciseMiniHistoryProps = {
   id: string
@@ -138,7 +139,7 @@ const ExerciseMiniHistory = ({
         <Spinner fullScreen={false} />
       ) : exercise ? (
         <>
-          <Txt twcn={`font-medium text-lg mb-2`}>{exercise.name}</Txt>
+          <Txt twcn={`font-semibold text-lg mb-4`}>{exercise.name}</Txt>
           {exercise.description && (
             <Txt twcn="text-light-grayText dark:text-dark-grayText mb-4">
               {exercise.description}
@@ -147,35 +148,35 @@ const ExerciseMiniHistory = ({
 
           {exercise.history && exercise.history.length > 0 && (
             <View>
-              <Txt twcn="font-medium mb-4">Recent Sets</Txt>
+              <Txt twcn="font-semibold mb-4">Recent Sets</Txt>
               <View
                 style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
               >
-                <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1">
+                <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1">
                   Date
                 </Txt>
                 {!exercise.isUnilateral && (
-                  <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+                  <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
                     Ex.
                   </Txt>
                 )}
                 {exercise.isUnilateral && (
-                  <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+                  <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
                     Set
                   </Txt>
                 )}
-                <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
-                  {weightMetric}
+                <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+                  {toTitleCase(weightMetric)}
                   {weightMetric === 'lbs' && '.'}
                 </Txt>
-                <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+                <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
                   Reps
                 </Txt>
-                <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+                <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
                   Part.
                 </Txt>
-                <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
-                  {intensityMetric}
+                <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+                  {intensityMetric.toLocaleUpperCase()}
                 </Txt>
               </View>
               {renderedHistory}
@@ -184,7 +185,7 @@ const ExerciseMiniHistory = ({
 
           {!exercise.history && (
             <>
-              <Txt twcn="font-medium mb-4">Recent Sets</Txt>
+              <Txt twcn="font-semibold mb-2">Recent Sets</Txt>
               <Txt twcn="text-light-grayText dark:text-dark-grayText flex-1">
                 No Exercise History available.
               </Txt>

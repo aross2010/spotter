@@ -13,7 +13,6 @@ import Error from '../components/error'
 import { WorkoutFormProvider } from '../context/workout-form-context'
 import { NotebookFormProvider } from '../context/notebook-form-context'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
-
 SplashScreen.setOptions({
   duration: 1000,
   fade: true,

@@ -38,6 +38,7 @@ import {
   ContextMenu,
   Host,
   Picker,
+  Section,
   Button as SwiftButton,
 } from '@expo/ui/swift-ui'
 import { toTitleCase } from '../../../functions/utils'
@@ -173,7 +174,7 @@ const WorkoutForm = () => {
 
   useEffect(() => {
     if (workoutData.status === 'active') {
-      // auto submit after 1 second of no changes to the form
+      // auto submit after 1.5 seconds of no changes to the form
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
@@ -187,7 +188,7 @@ const WorkoutForm = () => {
 
       autoSaveTimeoutRef.current = setTimeout(() => {
         void handleSubmitWorkout()
-      }, 1000)
+      }, 1500)
 
       return () => {
         if (autoSaveTimeoutRef.current) {
@@ -337,6 +338,28 @@ const WorkoutForm = () => {
     return true
   }
 
+  const canCreateSuperset =
+    workoutData.exercises.length >= 2 &&
+    workoutData.exercises.filter(
+      (ex) => ex.name.trim() !== '' && ex.sets.length >= 1,
+    ).length >= 2
+
+  const canCreateDropset =
+    workoutData.exercises.length >= 1 &&
+    workoutData.exercises.some((ex) => {
+      const setsWithData = ex.sets.filter((set) => {
+        const hasWeight =
+          (set.weightLbs !== null && set.weightLbs !== undefined) ||
+          (set.weightKg !== null && set.weightKg !== undefined)
+        const hasReps =
+          (set.reps !== null && set.reps !== undefined) ||
+          (set.leftReps !== null && set.leftReps !== undefined) ||
+          (set.rightReps !== null && set.rightReps !== undefined)
+        return hasWeight || hasReps
+      })
+      return setsWithData.length >= 2
+    })
+
   useEffect(() => {
     const isValid = isValidWorkout()
     const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
@@ -353,65 +376,100 @@ const WorkoutForm = () => {
           <Host style={{ width: 26, height: 26 }}>
             <ContextMenu>
               <ContextMenu.Items>
-                <SwiftButton
-                  systemImage="calendar"
-                  onPress={() => setIsDatePickerOpen(true)}
-                >
-                  {formatDate(workoutData.date)}
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="mappin"
-                  onPress={() => router.push('/workout-form/location')}
-                >
-                  {workoutData.location || 'Location'}
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="tag"
-                  onPress={() =>
-                    router.push({
-                      pathname: '/tag-selector',
-                      params: {
-                        type: 'workout',
-                      },
-                    })
-                  }
-                >
-                  {workoutData.tags.map((tag) => tag.name).join(', ') || 'Tags'}
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="pencil.and.scribble"
-                  onPress={() => router.push('/workout-form/notes')}
-                >
-                  {workoutData.notes.trim().length > 0 ? 'Edit Notes' : 'Notes'}
-                </SwiftButton>
-                <Picker
-                  label={toTitleCase(workoutData.status)}
-                  options={['Completed', 'Planned', 'Active']}
-                  variant="menu"
-                  selectedIndex={
-                    workoutData.status === 'completed'
-                      ? 0
-                      : workoutData.status === 'planned'
-                        ? 1
-                        : 2
-                  }
-                  onOptionSelected={({ nativeEvent: { index } }) =>
-                    index === 0
-                      ? handleStatusChange('completed')
-                      : index === 1
-                        ? handleStatusChange('planned')
-                        : handleStatusChange('active')
-                  }
-                />
-                <SwiftButton
-                  systemImage="chart.bar"
-                  onPress={() => {
-                    Keyboard.dismiss()
-                    ref.current?.present()
-                  }}
-                >
-                  Stats
-                </SwiftButton>
+                <Section title="Workout">
+                  <SwiftButton
+                    systemImage="calendar"
+                    onPress={() => setIsDatePickerOpen(true)}
+                  >
+                    {formatDate(workoutData.date)}
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="mappin"
+                    onPress={() => router.push('/workout-form/location')}
+                  >
+                    {workoutData.location || 'Location'}
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="tag"
+                    onPress={() =>
+                      router.push({
+                        pathname: '/tag-selector',
+                        params: {
+                          type: 'workout',
+                        },
+                      })
+                    }
+                  >
+                    {workoutData.tags.map((tag) => tag.name).join(', ') ||
+                      'Tags'}
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="pencil.and.scribble"
+                    onPress={() => router.push('/workout-form/notes')}
+                  >
+                    {workoutData.notes.trim().length > 0
+                      ? 'Edit Notes'
+                      : 'Notes'}
+                  </SwiftButton>
+                  <Picker
+                    label={toTitleCase(workoutData.status)}
+                    options={['Completed', 'Planned', 'Active']}
+                    variant="menu"
+                    selectedIndex={
+                      workoutData.status === 'completed'
+                        ? 0
+                        : workoutData.status === 'planned'
+                          ? 1
+                          : 2
+                    }
+                    onOptionSelected={({ nativeEvent: { index } }) =>
+                      index === 0
+                        ? handleStatusChange('completed')
+                        : index === 1
+                          ? handleStatusChange('planned')
+                          : handleStatusChange('active')
+                    }
+                  />
+                  <SwiftButton
+                    systemImage="chart.bar"
+                    onPress={() => {
+                      Keyboard.dismiss()
+                      ref.current?.present()
+                    }}
+                  >
+                    Stats
+                  </SwiftButton>
+                </Section>
+                <Section title="Exercises">
+                  <SwiftButton
+                    disabled={!canCreateSuperset}
+                    onPress={() => {
+                      router.push('/workout-form/supersets')
+                    }}
+                  >
+                    Supersets
+                  </SwiftButton>
+                  <SwiftButton
+                    disabled={!canCreateDropset}
+                    onPress={() => {
+                      router.push('/workout-form/dropsets')
+                    }}
+                  >
+                    Dropsets
+                  </SwiftButton>
+                  <Picker
+                    label={workoutData.weightUnit === 'lbs' ? 'Lbs.' : 'Kg.'}
+                    options={['Lbs.', 'Kg.']}
+                    variant="menu"
+                    selectedIndex={workoutData.weightUnit === 'lbs' ? 0 : 1}
+                    onOptionSelected={({ nativeEvent: { index } }) =>
+                      setWorkoutData({
+                        ...workoutData,
+                        weightUnit: index === 0 ? 'lbs' : 'kgs',
+                      })
+                    }
+                  />
+                </Section>
               </ContextMenu.Items>
               <ContextMenu.Trigger>
                 <SFIcon
@@ -527,6 +585,7 @@ const WorkoutForm = () => {
         }
       }
     } catch (error: any) {
+      console.error('Error saving workout:', error)
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {
       setIsSaving(false)

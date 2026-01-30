@@ -26,6 +26,7 @@ const WorkoutNotes = () => {
   const [stylesState, setStylesState] = useState<OnChangeStateEvent | null>(
     null,
   )
+  const [localNotes, setLocalNotes] = useState(workoutData.notes || '')
   const bodyInputRef = useRef<EnrichedTextInputInstance>(null)
   const isInitialLoadRef = useRef(false)
   const navigation = useNavigation()
@@ -96,10 +97,7 @@ const WorkoutNotes = () => {
             onChangeText={(e) => {
               const newValue = e.nativeEvent.value
               if (newValue.trim().length <= 500) {
-                setWorkoutData({
-                  ...workoutData,
-                  notes: newValue,
-                })
+                setLocalNotes(newValue)
               }
             }}
             onFocus={() => setIsFocused(true)}

@@ -43,6 +43,13 @@ const ExerciseInput = ({
   onReorderExercises,
   ...rest
 }: ExerciseInputProps) => {
+  type FocusedInputMeta = {
+    exerciseIndex: number
+    setIndex: number
+    field: string
+    isLeftSide?: boolean
+  } | null
+
   const [isExerciseNameSelectorOpen, setIsExerciseNameSelectorOpen] =
     useState(false)
   const [exerciseNameResults, setExerciseNameResults] = useState<
@@ -50,6 +57,7 @@ const ExerciseInput = ({
   >([])
   const exerciseNameInputRef = useRef<TextInput>(null)
   const lastFocusedInputRef = useRef<TextInput | null>(null)
+  const lastFocusedInputMetaRef = useRef<FocusedInputMeta>(null)
   const [newlyAddedSetId, setNewlyAddedSetId] = useState<string | null>(null)
   const [shouldFocusFirstSetWeight, setShouldFocusFirstSetWeight] =
     useState(false)
@@ -75,6 +83,7 @@ const ExerciseInput = ({
     exerciseNames,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
+    focusedInput,
     setFocusedInput,
     exerciseNumberInputValue,
     setExerciseNumberInputValue,
@@ -90,6 +99,12 @@ const ExerciseInput = ({
   const [isSynced, setIsSynced] = useState(
     exercise?.isSynced ?? preferences?.unilateralLogging === 'sync',
   )
+
+  useEffect(() => {
+    if (focusedInput) {
+      lastFocusedInputMetaRef.current = focusedInput
+    }
+  }, [focusedInput])
 
   // Sync local isSynced state with exercise data when exercise changes
   useEffect(() => {
@@ -340,6 +355,7 @@ const ExerciseInput = ({
     if (currentlyFocused) {
       lastFocusedInputRef.current = currentlyFocused as any
     }
+    setFocusedInput(null)
     ref.current?.present()
     Keyboard.dismiss()
   }
@@ -497,46 +513,38 @@ const ExerciseInput = ({
   const renderLeftAction =
     (setIndex: number) => (progress: any, dragX: any, swipeable: any) => {
       return (
-        <View
-          style={tw`bg-green dark:bg-green flex-row justify-start items-center w-1/5`}
+        <Button
+          onPress={() => {
+            handleCopySet(setIndex)
+            swipeable.close()
+          }}
+          twcn="bg-green dark:bg-green flex-row justify-center items-center w-1/5 border-b border-light-grayBorder dark:border-dark-grayBorder"
         >
-          <Button
-            onPress={() => {
-              handleCopySet(setIndex)
-              swipeable.close()
-            }}
-            twcn="p-2 w-full items-center justify-center"
-          >
-            <SFIcon
-              name="arrow.uturn.forward"
-              size={16}
-              color="white"
-            />
-          </Button>
-        </View>
+          <SFIcon
+            name="arrow.uturn.forward"
+            size={16}
+            color="white"
+          />
+        </Button>
       )
     }
 
   const renderRightAction =
     (setIndex: number) => (progress: any, dragX: any, swipeable: any) => {
       return (
-        <View
-          style={tw`bg-red dark:bg-red flex-row justify-end items-center w-1/5`}
+        <Button
+          onPress={() => {
+            handleDeleteSet(setIndex)
+            swipeable.close()
+          }}
+          twcn="bg-red dark:bg-red flex-row justify-center items-center w-1/5 border-b border-light-grayBorder dark:border-dark-grayBorder"
         >
-          <Button
-            onPress={() => {
-              handleDeleteSet(setIndex)
-              swipeable.close()
-            }}
-            twcn="p-2 w-full items-center justify-center"
-          >
-            <SFIcon
-              name="trash"
-              size={16}
-              color="white"
-            />
-          </Button>
-        </View>
+          <SFIcon
+            name="trash"
+            size={16}
+            color="white"
+          />
+        </Button>
       )
     }
 
@@ -673,6 +681,17 @@ const ExerciseInput = ({
   }
 
   const handleDeleteExercise = () => {
+    // if exercise has exercise name, delete immediately without confirmation
+    console.log('Deleting exercise:', exercise)
+    if (exercise.name.trim() == '') {
+      const updatedExercises = [...workoutData.exercises]
+      updatedExercises.splice(exerciseNumber - 1, 1)
+      setWorkoutData({
+        ...workoutData,
+        exercises: updatedExercises,
+      })
+      return
+    }
     Alert.alert(
       'Delete Exercise',
       'Are you sure you want to delete this exercise?',
@@ -1698,6 +1717,9 @@ const ExerciseInput = ({
       <MyBottomSheet
         ref={ref}
         onDismiss={() => {
+          if (lastFocusedInputMetaRef.current) {
+            setFocusedInput(lastFocusedInputMetaRef.current)
+          }
           if (lastFocusedInputRef.current) {
             requestAnimationFrame(() => {
               lastFocusedInputRef.current?.focus()

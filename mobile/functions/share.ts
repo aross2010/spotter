@@ -165,8 +165,6 @@ export const getWorkoutMessage = (workout: Workout) => {
     message += `🏷️ ${workout.tags.map((tag) => tag.name).join(', ')}`
   }
 
-  message += `\nShared via Spotter: ${APP_LINK}`
-
   return message
 }
 
@@ -253,8 +251,6 @@ const getExerciseMessage = (
   message += `🔥 Last Session:\n`
   message += lastSessionSets
 
-  message += `\nShared via Spotter: ${APP_LINK}`
-
   return message
 }
 
@@ -294,7 +290,6 @@ export const handleShareNotebookEntry = async (entry: NotebookEntry) => {
     let bodyText = convertHTMLToPlainText(entry.body)
 
     message += bodyText
-    message += `\n\nShared via Spotter: ${APP_LINK}`
 
     const result = await RNShare.share(
       {
