@@ -44,18 +44,25 @@ function getGreeting(d: Date = new Date()) {
   return 'Good Evening'
 }
 
-export const needsForceUpdate = () => {
+export const updateRequired = async () => {
+  const minVersion = await fetch(`${BASE_URL}/api/minVersion`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  const { ios, android } = await minVersion.json()
   const current = Constants.expoConfig?.version ?? '0.0.0'
-
-  const min = '2.1.0'
-
+  const min = ios
   const toNums = (v: string) => v.split('.').map(Number)
   const [a, b, c] = toNums(current)
   const [x, y, z] = toNums(min)
 
   if (a !== x) return a < x
   if (b !== y) return b < y
-  return c < z
+  if (c !== z) return c < z
+
+  return false
 }
 
 function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
@@ -134,11 +141,12 @@ const Home = () => {
     getHomeData()
   }, [])
 
-  useEffect(() => {
-    if (!needsForceUpdate()) return
+  const checkForUpdate = async () => {
+    const update = await updateRequired()
+    if (!update) return
     Alert.alert(
       'Update Required',
-      'A new version of Spotter is available. Please update the app to use the latest features and improvements.',
+      'Please update the app to use the latest features and improvements.',
       [
         {
           text: 'Update Now',
@@ -150,6 +158,10 @@ const Home = () => {
       ],
       { cancelable: false },
     )
+  }
+
+  useEffect(() => {
+    checkForUpdate()
   }, [])
 
   useEffect(() => {
