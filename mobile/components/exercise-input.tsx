@@ -1109,7 +1109,7 @@ const ExerciseInput = ({
       // Reset to current number if invalid
       setExerciseNumberInput(exerciseNumber.toString())
       setIsEditingExerciseNumber(false)
-      setFocusedInput(null)
+      // Don't clear focusedInput - let the next focused input handle it
       return
     }
 
@@ -1180,8 +1180,9 @@ const ExerciseInput = ({
     }
 
     setIsEditingExerciseNumber(false)
-    setFocusedInput(null)
-    Keyboard.dismiss()
+    // Don't set focusedInput to null or dismiss keyboard here
+    // This allows smooth transition to other inputs without toolbar flickering
+    // The next focused input will set its own focusedInput state
   }
   // Update input value when exerciseNumber prop changes
   useEffect(() => {
@@ -1379,7 +1380,6 @@ const ExerciseInput = ({
                       })
                     }
                   }}
-                  onBlur={() => setFocusedInput(null)}
                 />
               )
             })}
@@ -1475,7 +1475,6 @@ const ExerciseInput = ({
                       })
                     }
                   }}
-                  onBlur={() => setFocusedInput(null)}
                 />
               )
             })}
@@ -1571,7 +1570,6 @@ const ExerciseInput = ({
                     })
                   }
                 }}
-                onBlur={() => setFocusedInput(null)}
               />
             )
           })}
@@ -1671,7 +1669,7 @@ const ExerciseInput = ({
               }}
               onBlur={() => {
                 setIsExerciseNameSelectorOpen(false)
-                setFocusedInput(null)
+                // Don't clear focusedInput here - let the next focused input handle it
               }}
               autoComplete="off"
               autoCorrect={false}

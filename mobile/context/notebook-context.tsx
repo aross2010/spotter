@@ -29,7 +29,7 @@ type NotebookContextType = {
   loadMoreEntries: () => Promise<void>
   updateEntry: (
     entryId: string,
-    entryToUpdate: NotebookEntryData
+    entryToUpdate: NotebookEntryData,
   ) => Promise<void>
   deleteEntry: (entryId: string) => Promise<void>
   addEntry: (newEntry: NotebookEntryData) => Promise<void>
@@ -41,13 +41,14 @@ type NotebookContextType = {
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
   resetNotebookContext: () => void
+  resetFiltersAndEntries: () => Promise<void>
 }
 
 // filters: by tags
 // sort by: date (asc, desc)
 
 const NotebookContext = createContext<NotebookContextType | undefined>(
-  undefined
+  undefined,
 )
 
 type NotebookProviderProps = {
@@ -74,7 +75,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     page: number,
     tags: Tag[] = tagFilters,
     order: 'asc' | 'desc' = sortOrder,
-    resetFilters: boolean = false
+    resetFilters: boolean = false,
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -95,7 +96,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     page: number = 1,
     append: boolean = false,
     tags: Tag[] = tagFilters,
-    order: 'asc' | 'desc' = sortOrder
+    order: 'asc' | 'desc' = sortOrder,
   ) => {
     if (!user) return
 
@@ -114,7 +115,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
 
       const data = await response.json()
@@ -149,7 +150,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     )
     const tags = (await response.json()) as (Tag & { used: number })[]
     return tags
@@ -177,11 +178,11 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
 
   const updateCurrentEntries = (
     entryId: string,
-    updates: Partial<NotebookEntry>
+    updates: Partial<NotebookEntry>,
   ) => {
     setCurrentNotebookEntries((prev) => {
       const updatedEntries = prev.map((entry) =>
-        entry.id === entryId ? { ...entry, ...updates } : entry
+        entry.id === entryId ? { ...entry, ...updates } : entry,
       )
 
       // Sort: pinned first, then by date according to current sort order
@@ -199,7 +200,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
 
   const updateEntry = async (
     entryId: string,
-    entryToUpdate: NotebookEntryData
+    entryToUpdate: NotebookEntryData,
   ) => {
     const response = await fetchWithAuth(
       `${BASE_URL}/api/notebookEntries/${entryId}`,
@@ -212,14 +213,14 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
           ...entryToUpdate,
           tags: entryToUpdate.tags.map((tag) => tag.name),
         }),
-      }
+      },
     )
     const updatedEntry = (await response.json()) as NotebookEntry
 
     setCurrentNotebookEntries((prev) =>
       prev.map((entry) =>
-        entry.id === entryId ? { ...entry, ...updatedEntry } : entry
-      )
+        entry.id === entryId ? { ...entry, ...updatedEntry } : entry,
+      ),
     )
     refreshEntries()
   }
@@ -242,11 +243,11 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-              }
+              },
             )
             if (response.ok) {
               setCurrentNotebookEntries((prev) =>
-                prev.filter((entry) => entry.id !== entryId)
+                prev.filter((entry) => entry.id !== entryId),
               )
             }
           } catch (error: any) {
@@ -306,6 +307,15 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     }
   }
 
+  const resetFiltersAndEntries = async () => {
+    setTagFilters([])
+    setSortOrder('desc')
+    setCurrentPage(1)
+    setHasMore(true)
+    // Pass reset values directly instead of relying on state
+    await fetchEntries(1, false, [], 'desc')
+  }
+
   const resetNotebookContext = () => {
     setCurrentNotebookEntries([])
     setIsLoading(false)
@@ -342,6 +352,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     sortOrder,
     setSortOrder,
     resetNotebookContext,
+    resetFiltersAndEntries,
   }
 
   return (

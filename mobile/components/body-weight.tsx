@@ -72,8 +72,8 @@ const BodyWeight = ({
     if (!data?.bodyWeightProgression || data.bodyWeightProgression.length <= 1)
       return []
 
-    return data.bodyWeightProgression.map((entry, index) => ({
-      x: index,
+    return data.bodyWeightProgression.map((entry) => ({
+      x: entry.date, // Use date for time-proportional spacing
       y: entry.bodyWeight,
       date: entry.date,
     }))
@@ -103,11 +103,15 @@ const BodyWeight = ({
     })
   }, [chartData, weightUnit])
 
-  // Format X axis labels
-  const formatXLabel = (_: any, index: number) => {
-    const item = chartData[index]
-    if (!item) return ''
-    const date = new Date(item.date)
+  // Format X axis labels - receives the date value directly
+  const formatXLabel = (value: any, index: number) => {
+    // value is either a date string or we can look up by index for actual data points
+    let dateStr = value
+    if (index >= 0 && index < chartData.length) {
+      dateStr = chartData[index]?.date ?? value
+    }
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return ''
     const month = date.getUTCMonth() + 1
     const day = date.getUTCDate()
     const year = String(date.getUTCFullYear()).slice(-2)

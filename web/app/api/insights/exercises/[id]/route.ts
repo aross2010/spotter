@@ -6,9 +6,11 @@ import { getExerciseComparisonData } from '../../[id]/route'
 export const GET = withAuth(async (req: Request, user: any) => {
   const url = new URL(req.url)
   const userId = url.pathname.split('/').pop()
-  const weightUnit = (url.searchParams.get('weightUnit') || 'lbs') as
+  const weightUnitParam = url.searchParams.get('weightUnit') || 'lbs'
+  // Normalize 'kg' to 'kgs' to match function signature
+  const weightUnit = (weightUnitParam === 'kg' ? 'kgs' : weightUnitParam) as
     | 'lbs'
-    | 'kg'
+    | 'kgs'
   const exerciseIds = url.searchParams.get('exerciseIds')?.split(',') || []
 
   if (!userId) {
@@ -22,7 +24,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
   if (exerciseIds.length < 2 || exerciseIds.length > 5) {
     return NextResponse.json(
       { error: 'Please provide between 2 and 5 exercise IDs' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -30,7 +32,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     const exerciseComparisonGraph = await getExerciseComparisonData(
       userId,
       exerciseIds,
-      weightUnit
+      weightUnit,
     )
 
     return NextResponse.json(exerciseComparisonGraph)
@@ -38,7 +40,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     console.error('Error fetching exercise comparison data:', error)
     return NextResponse.json(
       { error: 'Failed to fetch exercise comparison data' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })

@@ -4,6 +4,7 @@ import db from '@/src'
 import { exercises, workouts, workoutExercises, sets } from '@/src/db/schema'
 import { eq, and, sql, desc, inArray } from 'drizzle-orm'
 import { RirToRpe, rpeToRir, toKg, toLbs } from '@/app/functions/conversions'
+import { calculate1RM } from '@/app/functions/one-rep-max'
 
 type MuscleGroup = string
 
@@ -39,6 +40,7 @@ type ExerciseDetails = {
     workoutId: string
     workoutName: string
     date: string
+    exerciseNumber: number
     sets: {
       // unilateral exercises will have 2x sets
       setNumber: number
@@ -57,6 +59,7 @@ type ExerciseDetails = {
       date: string
       data: {
         workoutId: string
+        est1RM: number
         weight: number
         reps: number
         rpe?: number
@@ -159,7 +162,7 @@ export const GET = withAuth(async (req, user) => {
       )
     }
 
-    // Group the data by workout
+    // Group the data by workout AND exercise number (same exercise can appear multiple times in one workout)
     const historyMap = new Map<
       string,
       {
@@ -177,7 +180,7 @@ export const GET = withAuth(async (req, user) => {
     let pr = 0
 
     exerciseHistory.forEach((row) => {
-      const workoutKey = row.workoutId
+      const workoutKey = `${row.workoutId}-${row.exerciseNumber}` // Include exerciseNumber in key
 
       if (!historyMap.has(workoutKey)) {
         historyMap.set(workoutKey, {
@@ -238,7 +241,7 @@ export const GET = withAuth(async (req, user) => {
       }
     })
 
-    // Build progression chart (best set per workout)
+    // Build progression chart (best set per workout - keep original grouping)
     const workoutProgression = new Map<
       string,
       {
@@ -253,11 +256,14 @@ export const GET = withAuth(async (req, user) => {
     >()
 
     historyMap.forEach((workout) => {
+      // If we already have this workout, compare and keep the better set
+      const existingEntry = workoutProgression.get(workout.workoutId)
+
       let bestSet = {
-        weight: 0,
-        reps: 0,
-        rpe: undefined as number | undefined,
-        rir: undefined as number | undefined,
+        weight: existingEntry?.bestWeight || 0,
+        reps: existingEntry?.bestReps || 0,
+        rpe: existingEntry?.rpe,
+        rir: existingEntry?.rir,
       }
 
       workout.sets.forEach((set) => {
@@ -337,6 +343,13 @@ export const GET = withAuth(async (req, user) => {
               weightMetric === 'kgs'
                 ? toKg(weight)
                 : Math.round(weight * 100) / 100,
+            est1RM: calculate1RM(
+              weight,
+              weightMetric,
+              p.bestReps,
+              intensityMetric === 'rpe' ? intensity : undefined,
+              intensityMetric === 'rir' ? intensity : undefined,
+            ),
             reps: p.bestReps,
             ...(intensityMetric === 'rpe' &&
               intensity !== undefined && { rpe: intensity }),
@@ -470,6 +483,7 @@ export const GET = withAuth(async (req, user) => {
           workoutId: workout.workoutId,
           workoutName: workout.workoutName,
           date: workout.date,
+          exerciseNumber: workout.exerciseNumber,
           sets: transformedSets,
         }
       },

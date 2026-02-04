@@ -14,6 +14,7 @@ import { WorkoutMinimal } from '../../../utils/types'
 import { useWorkoutTabStore } from '../../../stores/workout-store'
 import { useFocusEffect } from 'expo-router'
 import SFIcon from '../../../components/sf-icon'
+import { GlassView } from 'expo-glass-effect'
 
 const Workouts = () => {
   const navigation = useNavigation()
@@ -30,6 +31,7 @@ const Workouts = () => {
     workouts,
     hasLoaded,
     refreshWorkouts,
+    resetFiltersAndWorkouts,
   } = useWorkout()
   const { shouldRefresh, clearRefresh } = useWorkoutTabStore()
 
@@ -52,7 +54,7 @@ const Workouts = () => {
         clearRefresh()
       }
       return () => {}
-    }, [shouldRefresh])
+    }, [shouldRefresh]),
   )
 
   useEffect(() => {
@@ -64,9 +66,9 @@ const Workouts = () => {
       headerRight: () => {
         return (
           <View
-            style={tw`flex-row items-center ${workouts.length > 0 ? 'gap-6 px-2' : ''}`}
+            style={tw`flex-row items-center ${workouts.length > 0 || numActiveFilters > 0 ? 'gap-6 px-2' : ''}`}
           >
-            {workouts.length > 0 && (
+            {(workouts.length > 0 || numActiveFilters > 0) && (
               <View style={tw`relative`}>
                 <Button
                   onPress={() => {
@@ -85,7 +87,7 @@ const Workouts = () => {
                   <View
                     style={tw.style(
                       'absolute -top-0 -right-1 min-w-4 h-4 rounded-full items-center justify-center bg-primary',
-                      { pointerEvents: 'none' }
+                      { pointerEvents: 'none' },
                     )}
                   >
                     <Txt twcn="text-xs font-medium text-white">
@@ -283,6 +285,20 @@ const Workouts = () => {
           Try adjusting your filters or sort method to find what you're looking
           for.
         </Txt>
+        <Button
+          twcn="mt-6 py-4 px-6 items-center flex-row gap-2 justify-center rounded-full bg-primary"
+          twcnText="font-semibold text-dark-text"
+          text="Reset Filters"
+          onPress={() => {
+            resetFiltersAndWorkouts()
+          }}
+        >
+          <SFIcon
+            name="arrow.uturn.left"
+            size={16}
+            color={Colors.dark.text}
+          />
+        </Button>
       </View>
     </SafeView>
   ) : (
@@ -304,7 +320,9 @@ const Workouts = () => {
     />
   )
 
-  return !isLoading && workouts.length === 0 ? workoutPrompt : workoutsView
+  return !isLoading && workouts.length === 0 && numActiveFilters == 0
+    ? workoutPrompt
+    : workoutsView
 }
 
 export default Workouts

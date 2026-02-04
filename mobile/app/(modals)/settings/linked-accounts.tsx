@@ -14,6 +14,7 @@ import SFIcon from '../../../components/sf-icon'
 import useTheme from '../../hooks/theme'
 import googleLogo from '../../../assets/google.png'
 import appleLogo from '../../../assets/apple.png'
+import { GlassView } from 'expo-glass-effect'
 
 const providerOptions = [
   {
@@ -79,38 +80,35 @@ const LinkedAccounts = () => {
     )?.email
 
     return (
-      <View key={provider}>
-        <Button
-          onPress={() => !isLinked && handleLinking(provider)}
-          style={[
-            tw`h-12 rounded-full flex-row items-center justify-center gap-3`,
-            { backgroundColor: color },
-          ]}
-          disabled={isLinked}
-        >
+      <View
+        style={tw`flex-row items-center justify-between`}
+        key={provider}
+      >
+        <View style={tw`flex-row items-center gap-4`}>
           <Image
             source={logo}
-            style={{
-              width: 20,
-              height: 20,
-            }}
+            style={{ width: 20, height: 20 }}
             resizeMode="contain"
           />
-          <Txt
-            twcn={`font-semibold text-sm ${provider === 'apple' ? 'text-white' : 'dark:text-light-text text-light-text'}`}
+          <View>
+            <Txt twcn="text-base">{title}</Txt>
+            {isLinked && providerEmail && (
+              <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs">
+                {providerEmail}
+              </Txt>
+            )}
+          </View>
+        </View>
+
+        {!isLinked && (
+          <Button
+            onPress={() => handleLinking(provider)}
+            style={tw`flex-row items-center gap-2`}
           >
-            {isLinked ? `${title} Connected` : `Connect ${title}`}
-          </Txt>
-          <SFIcon
-            name={isLinked ? 'checkmark.circle.fill' : 'plus.circle.fill'}
-            size={20}
-            color={provider === 'apple' ? '#FFFFFF' : '#000000'}
-          />
-        </Button>
-        {isLinked && providerEmail && (
-          <Txt twcn="text-light-grayText dark:text-dark-grayText text-xs mt-1 text-center">
-            {providerEmail}
-          </Txt>
+            <Txt twcn="text-primary dark:text-primary font-semibold">
+              Connect
+            </Txt>
+          </Button>
         )}
       </View>
     )
@@ -124,7 +122,7 @@ const LinkedAccounts = () => {
         Securely link multiple sign-in providers (e.g., Apple and Google) to a
         single account, so you can log in with any of them across devices.
       </Txt>
-      <View style={tw`gap-4`}>{renderedProviders}</View>
+      <View style={tw`gap-6`}>{renderedProviders}</View>
     </SafeView>
   )
 }

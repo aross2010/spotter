@@ -138,6 +138,33 @@ export type WorkoutFormData = {
   status: WorkoutStatus
 }
 
+// Delta type for PATCH updates - only includes changed fields
+export type WorkoutFormDelta = {
+  // Metadata fields - only included if changed
+  name?: string
+  date?: string // ISO date string
+  location?: string
+  tags?: string[] // tag names
+  notes?: string
+  status?: WorkoutStatus
+  pinned?: boolean
+  // Exercise changes - only include exercises that changed
+  changedExercises?: {
+    exerciseNumber: number // 1-indexed position in workout
+    exercise: {
+      name: string
+      isUnilateral: boolean
+      sets: Omit<Set, 'id'>[] // Sets don't need frontend IDs
+    }
+  }[]
+  // Set groupings - only include if changed
+  setGroupings?: SetGrouping[]
+  // Flags to indicate what was changed
+  hasMetadataChanges: boolean
+  hasExerciseChanges: boolean
+  hasSetGroupingChanges: boolean
+}
+
 // for the workout tab workouts
 export type WorkoutMinimal = {
   id: string
@@ -180,6 +207,7 @@ export type ExerciseDetails = {
   history: {
     workoutId: string
     workoutName: string
+    exerciseNumber: number
     date: string
     sets: {
       // unilateral exercises will have 2x sets
@@ -200,6 +228,7 @@ export type ExerciseDetails = {
       date: string
       data: {
         workoutId: string
+        est1RM: number
         weight: number // in user pref, y-axis value
         reps: number
         rpe?: number
@@ -313,6 +342,28 @@ export type InsightsData = {
   }
 }
 
+export type CustomData = {
+  workouts: {
+    names: {
+      name: string
+      used: number
+    }[]
+    locations: {
+      name: string
+      used: number
+    }[]
+    tags: {
+      name: string
+      used: number
+    }[]
+  }
+  notebooks: {
+    tags: {
+      name: string
+      used: number
+    }[]
+  }
+}
 // Insights:
 
 //     Summary (no title):

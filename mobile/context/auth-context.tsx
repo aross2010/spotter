@@ -484,10 +484,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!response.ok) {
-      const { error } = await response.json()
-      console.error('Throwing error from fetchWithAuth:', error)
-      if (error != 'Token expired' && error != 'Already Read')
-        throw new Error(error)
+      const clonedResponse = response.clone()
+      try {
+        const { error } = await clonedResponse.json()
+        console.error('Throwing error from fetchWithAuth:', error)
+        if (error != 'Token expired' && error != 'Already Read')
+          throw new Error(error)
+      } catch (parseError) {
+        // If JSON parsing fails, throw a generic error
+        throw new Error(`Request failed with status ${response.status}`)
+      }
     }
 
     return response

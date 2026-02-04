@@ -1,8 +1,11 @@
 import SafeView from '../../../components/safe-view'
-import { View, Keyboard, Platform } from 'react-native'
+import { View, Keyboard, Platform, AppState } from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
-import { formatDate } from '../../../functions/formatted-date'
+import {
+  formatDate,
+  toLocalDateString,
+} from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
 import { toKg, toLbs } from '../../../functions/metric-conversions'
 import { HeaderBackButton } from '@react-navigation/elements'
@@ -31,7 +34,7 @@ import {
   useWorkoutStore,
   useWorkoutTabStore,
 } from '../../../stores/workout-store'
-import { WorkoutFormData } from '../../../utils/types'
+import { WorkoutFormData, WorkoutFormDelta } from '../../../utils/types'
 import { useExerciseStore } from '../../../stores/exercise-store'
 import SFIcon from '../../../components/sf-icon'
 import {
@@ -65,11 +68,13 @@ const WorkoutForm = () => {
     addWorkout,
     adjustFocusedInputValue,
     focusedInput,
+    setFocusedInput,
     getNames,
     exerciseNumberInputValue,
     setExerciseNumberInputValue,
     handleExerciseNumberSubmitRef,
     resetWorkoutFormContext,
+    prefetchAllExerciseHistories,
   } = useWorkoutForm()
   const { updateWorkout } = useWorkout()
   const { fetchWithAuth } = useAuth()
@@ -90,6 +95,7 @@ const WorkoutForm = () => {
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
   const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { preferences } = useUserStore()
 
   const handleCancelForm = useCallback(() => {
     if (workoutData.status === 'active') {
@@ -162,9 +168,17 @@ const WorkoutForm = () => {
         ...workout,
         date:
           mode === 'edit' ? new Date(workout.date + 'T00:00:00') : new Date(),
+        tags: mode === 'clone' ? [] : workout.tags,
+        notes: mode === 'clone' ? '' : workout.notes,
       } as WorkoutFormData
       setWorkoutData(workoutData)
-      setInitialState(workoutData)
+      // Deep clone for comparison to detect changes accurately
+      const clonedState = JSON.parse(JSON.stringify(workoutData))
+      clonedState.date = new Date(clonedState.date)
+      setInitialState(clonedState)
+
+      // Prefetch all exercise histories for edit/clone mode
+      await prefetchAllExerciseHistories(workoutData)
     } catch (error: any) {
       Alert.alert('Error', error.message)
     } finally {
@@ -172,31 +186,55 @@ const WorkoutForm = () => {
     }
   }
 
-  useEffect(() => {
-    if (workoutData.status === 'active') {
-      // auto submit after 1.5 seconds of no changes to the form
+  const autoSaveWorkout = async (shouldWait: boolean = true) => {
+    if (preferences?.autosaveActiveWorkouts === 'disabled') {
+      return // ignore auto-save if disabled
+    }
+    // auto submit after 1.5 seconds of no changes to the form
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    if (workoutData.status !== 'active') return
+    if (isSaving || isLoading) return
+
+    const isValid = isValidWorkout()
+    const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
+    if (!saveEnabled) return
+
+    autoSaveTimeoutRef.current = setTimeout(
+      () => {
+        void handleSubmitWorkout()
+      },
+      shouldWait ? 1500 : 0,
+    )
+
+    return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
+    }
+  }
 
-      if (workoutData.status !== 'active') return
-      if (isSaving || isLoading) return
-
-      const isValid = isValidWorkout()
-      const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
-      if (!saveEnabled) return
-
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        void handleSubmitWorkout()
-      }, 1500)
-
-      return () => {
-        if (autoSaveTimeoutRef.current) {
-          clearTimeout(autoSaveTimeoutRef.current)
-        }
-      }
+  useEffect(() => {
+    if (workoutData.status === 'active') {
+      void autoSaveWorkout()
     }
   }, [workoutData])
+
+  // Clear focusedInput when keyboard is dismissed
+  useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setFocusedInput(null)
+      },
+    )
+
+    return () => {
+      keyboardDidHideListener.remove()
+    }
+  }, [setFocusedInput])
 
   useEffect(() => {
     if (cloneId) {
@@ -306,6 +344,189 @@ const WorkoutForm = () => {
       exercisesChanged ||
       setGroupingsChanged
     )
+  }
+
+  // Get only the data that has changed for PATCH requests
+  const getChangedData = (): WorkoutFormDelta | null => {
+    if (!initialState) {
+      return null // Should use full PUT for new workouts
+    }
+
+    const delta: WorkoutFormDelta = {
+      hasMetadataChanges: false,
+      hasExerciseChanges: false,
+      hasSetGroupingChanges: false,
+    }
+
+    // Check metadata changes
+    if (workoutData.date.getTime() !== initialState.date.getTime()) {
+      delta.date = toLocalDateString(workoutData.date)
+      delta.hasMetadataChanges = true
+    }
+
+    if (workoutData.name.trim() !== initialState.name.trim()) {
+      delta.name = workoutData.name.trim()
+      delta.hasMetadataChanges = true
+    }
+
+    if (workoutData.location.trim() !== initialState.location.trim()) {
+      delta.location = workoutData.location.trim()
+      delta.hasMetadataChanges = true
+    }
+
+    if (workoutData.notes.trim() !== initialState.notes.trim()) {
+      delta.notes = workoutData.notes.trim()
+      delta.hasMetadataChanges = true
+    }
+
+    if (workoutData.status !== initialState.status) {
+      delta.status = workoutData.status
+      delta.hasMetadataChanges = true
+    }
+
+    // Check tags changes
+    const tagsChanged =
+      workoutData.tags.length !== initialState.tags.length ||
+      workoutData.tags.some(
+        (tag) =>
+          !initialState.tags.some((initial) => initial.name === tag.name),
+      )
+    if (tagsChanged) {
+      delta.tags = workoutData.tags.map((tag) => tag.name)
+      delta.hasMetadataChanges = true
+    }
+
+    // Check for changed exercises - if count differs, ALL exercises changed (need full rebuild)
+    const exerciseCountChanged =
+      workoutData.exercises.length !== initialState.exercises.length
+
+    if (exerciseCountChanged) {
+      // Send all exercises when count changes (exercises added/removed)
+      delta.changedExercises = workoutData.exercises.map((exercise, index) => ({
+        exerciseNumber: index + 1,
+        exercise: {
+          name: exercise.name,
+          isUnilateral: exercise.isUnilateral,
+          sets: exercise.sets.map((set) => ({
+            setNumber: set.setNumber,
+            weightLbs: set.weightLbs,
+            weightKg: set.weightKg,
+            reps: set.reps,
+            leftReps: set.leftReps,
+            rightReps: set.rightReps,
+            rpe: set.rpe,
+            leftRpe: set.leftRpe,
+            rightRpe: set.rightRpe,
+            rir: set.rir,
+            leftRir: set.leftRir,
+            rightRir: set.rightRir,
+            partialReps: set.partialReps,
+            leftPartialReps: set.leftPartialReps,
+            rightPartialReps: set.rightPartialReps,
+            cheatReps: set.cheatReps,
+          })),
+        },
+      }))
+      delta.hasExerciseChanges = true
+    } else {
+      // Check each exercise individually
+      const changedExercises: WorkoutFormDelta['changedExercises'] = []
+
+      workoutData.exercises.forEach((exercise, index) => {
+        const initialExercise = initialState.exercises[index]
+
+        const exerciseNameChanged = exercise.name !== initialExercise.name
+        const isUnilateralChanged =
+          exercise.isUnilateral !== initialExercise.isUnilateral
+        const setsChanged =
+          exercise.sets.length !== initialExercise.sets.length ||
+          exercise.sets.some((set, setIndex) => {
+            const initialSet = initialExercise.sets[setIndex]
+            if (!initialSet) return true
+
+            return (
+              set.setNumber !== initialSet.setNumber ||
+              set.weightLbs !== initialSet.weightLbs ||
+              set.weightKg !== initialSet.weightKg ||
+              set.reps !== initialSet.reps ||
+              set.leftReps !== initialSet.leftReps ||
+              set.rightReps !== initialSet.rightReps ||
+              set.rpe !== initialSet.rpe ||
+              set.leftRpe !== initialSet.leftRpe ||
+              set.rightRpe !== initialSet.rightRpe ||
+              set.rir !== initialSet.rir ||
+              set.leftRir !== initialSet.leftRir ||
+              set.rightRir !== initialSet.rightRir ||
+              set.partialReps !== initialSet.partialReps ||
+              set.leftPartialReps !== initialSet.leftPartialReps ||
+              set.rightPartialReps !== initialSet.rightPartialReps ||
+              set.cheatReps !== initialSet.cheatReps
+            )
+          })
+
+        if (exerciseNameChanged || isUnilateralChanged || setsChanged) {
+          changedExercises.push({
+            exerciseNumber: index + 1,
+            exercise: {
+              name: exercise.name,
+              isUnilateral: exercise.isUnilateral,
+              sets: exercise.sets.map((set) => ({
+                setNumber: set.setNumber,
+                weightLbs: set.weightLbs,
+                weightKg: set.weightKg,
+                reps: set.reps,
+                leftReps: set.leftReps,
+                rightReps: set.rightReps,
+                rpe: set.rpe,
+                leftRpe: set.leftRpe,
+                rightRpe: set.rightRpe,
+                rir: set.rir,
+                leftRir: set.leftRir,
+                rightRir: set.rightRir,
+                partialReps: set.partialReps,
+                leftPartialReps: set.leftPartialReps,
+                rightPartialReps: set.rightPartialReps,
+                cheatReps: set.cheatReps,
+              })),
+            },
+          })
+        }
+      })
+
+      if (changedExercises.length > 0) {
+        delta.changedExercises = changedExercises
+        delta.hasExerciseChanges = true
+      }
+    }
+
+    // Check set groupings changes
+    const setGroupingsChanged =
+      workoutData.setGroupings.length !== initialState.setGroupings.length ||
+      workoutData.setGroupings.some((grouping, index) => {
+        const initialGrouping = initialState.setGroupings[index]
+        if (!initialGrouping) return true
+
+        return (
+          grouping.groupingType !== initialGrouping.groupingType ||
+          grouping.groupSets.length !== initialGrouping.groupSets.length ||
+          grouping.groupSets.some((groupSet, groupSetIndex) => {
+            const initialGroupSet = initialGrouping.groupSets[groupSetIndex]
+            if (!initialGroupSet) return true
+
+            return (
+              groupSet.exerciseNumber !== initialGroupSet.exerciseNumber ||
+              groupSet.setNumber !== initialGroupSet.setNumber
+            )
+          })
+        )
+      })
+
+    if (setGroupingsChanged) {
+      delta.setGroupings = workoutData.setGroupings
+      delta.hasSetGroupingChanges = true
+    }
+
+    return delta
   }
 
   const isValidWorkout = () => {
@@ -551,7 +772,9 @@ const WorkoutForm = () => {
         triggerWorkoutTabRefresh()
         triggerInsightsRefresh()
         if (workoutData.status === 'active') {
-          setInitialState({ ...workoutData })
+          const clonedState = JSON.parse(JSON.stringify(workoutData))
+          clonedState.date = new Date(clonedState.date)
+          setInitialState(clonedState)
           if (res?.id) {
             setWorkoutId(res.id)
             setMode('edit') // Transition to edit mode after first save
@@ -561,12 +784,15 @@ const WorkoutForm = () => {
           router.replace('/workouts')
         }
       } else if (mode === 'edit' && workoutId) {
-        await updateWorkout(workoutId, workoutData)
+        const delta = getChangedData()
+        await updateWorkout(workoutId, workoutData, delta)
         triggerWorkoutTabRefresh()
         triggerHomeDataRefresh()
         triggerInsightsRefresh()
         if (workoutData.status === 'active') {
-          setInitialState({ ...workoutData })
+          const clonedState = JSON.parse(JSON.stringify(workoutData))
+          clonedState.date = new Date(clonedState.date)
+          setInitialState(clonedState)
         } else {
           if (from === 'workout-details') {
             triggerRefresh()
@@ -586,7 +812,8 @@ const WorkoutForm = () => {
       }
     } catch (error: any) {
       console.error('Error saving workout:', error)
-      Alert.alert('Error', error.message ?? 'Something went wrong')
+      if (AppState.currentState === 'active')
+        Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {
       setIsSaving(false)
     }
@@ -626,7 +853,12 @@ const WorkoutForm = () => {
     children,
     onPress,
   }) => (
-    <Button onPress={onPress}>
+    <Button
+      onPress={(e) => {
+        void autoSaveWorkout(false)
+        onPress(e)
+      }}
+    >
       <SFIcon
         name="checkmark"
         size={24}
@@ -819,6 +1051,7 @@ const WorkoutForm = () => {
                           parseInt(exerciseNumberInputValue) || 1
                         const newValue = Math.max(currentValue - 1, 1)
                         setExerciseNumberInputValue(newValue.toString())
+                        void autoSaveWorkout(false)
                       }}
                       twcn="p-2"
                     >

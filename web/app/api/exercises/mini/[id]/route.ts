@@ -40,7 +40,7 @@ export const GET = withAuth(async (req, user) => {
   if (!exerciseId) {
     return NextResponse.json(
       { error: 'Exercise ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -53,7 +53,7 @@ export const GET = withAuth(async (req, user) => {
     if (!exercise) {
       return NextResponse.json(
         { error: 'Exercise not found or access denied' },
-        { status: 404 }
+        { status: 404 },
       )
     }
 
@@ -93,7 +93,7 @@ export const GET = withAuth(async (req, user) => {
       .from(exercises)
       .innerJoin(
         workoutExercises,
-        eq(exercises.id, workoutExercises.exerciseId)
+        eq(exercises.id, workoutExercises.exerciseId),
       )
       .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
       .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
@@ -110,11 +110,11 @@ export const GET = withAuth(async (req, user) => {
           isUnilateral: exercise.isUnilateral,
           history: null,
         } as ExerciseDetailsMini,
-        { status: 200 }
+        { status: 200 },
       )
     }
 
-    // Group by workout and limit to 10 workouts
+    // Group by workout AND exercise number and limit to 10 workout instances
     const workoutMap = new Map<
       string,
       {
@@ -132,13 +132,15 @@ export const GET = withAuth(async (req, user) => {
     >()
 
     for (const row of exerciseHistory) {
-      // Stop if we already have 10 workouts
-      if (workoutMap.size >= 10 && !workoutMap.has(row.workoutId)) {
+      const workoutKey = `${row.workoutId}-${row.exerciseNumber}`
+
+      // Stop if we already have 10 workout instances
+      if (workoutMap.size >= 10 && !workoutMap.has(workoutKey)) {
         break
       }
 
-      if (!workoutMap.has(row.workoutId)) {
-        workoutMap.set(row.workoutId, {
+      if (!workoutMap.has(workoutKey)) {
+        workoutMap.set(workoutKey, {
           workoutId: row.workoutId,
           date: row.workoutDate,
           exerciseNumber: Number(row.exerciseNumber),
@@ -146,7 +148,7 @@ export const GET = withAuth(async (req, user) => {
         })
       }
 
-      const workout = workoutMap.get(row.workoutId)!
+      const workout = workoutMap.get(workoutKey)!
       const weight = row.weightLbs ? Number(row.weightLbs) : 0
 
       if (exercise.isUnilateral) {
@@ -165,26 +167,26 @@ export const GET = withAuth(async (req, user) => {
           row.leftRpe !== null && row.leftRpe !== undefined
             ? row.leftRpe
             : row.leftRir !== null && row.leftRir !== undefined
-            ? RirToRpe.get(Number(row.leftRir))
-            : undefined
+              ? RirToRpe.get(Number(row.leftRir))
+              : undefined
         const leftIntensityRir =
           row.leftRir !== null && row.leftRir !== undefined
             ? row.leftRir
             : row.leftRpe !== null && row.leftRpe !== undefined
-            ? rpeToRir.get(Number(row.leftRpe))
-            : undefined
+              ? rpeToRir.get(Number(row.leftRpe))
+              : undefined
         const rightIntensityRpe =
           row.rightRpe !== null && row.rightRpe !== undefined
             ? row.rightRpe
             : row.rightRir !== null && row.rightRir !== undefined
-            ? RirToRpe.get(Number(row.rightRir))
-            : undefined
+              ? RirToRpe.get(Number(row.rightRir))
+              : undefined
         const rightIntensityRir =
           row.rightRir !== null && row.rightRir !== undefined
             ? row.rightRir
             : row.rightRpe !== null && row.rightRpe !== undefined
-            ? rpeToRir.get(Number(row.rightRpe))
-            : undefined
+              ? rpeToRir.get(Number(row.rightRpe))
+              : undefined
 
         // Left side set
         if (leftReps > 0) {
@@ -237,14 +239,14 @@ export const GET = withAuth(async (req, user) => {
           row.rpe !== null && row.rpe !== undefined
             ? row.rpe
             : row.rir !== null && row.rir !== undefined
-            ? RirToRpe.get(Number(row.rir))
-            : undefined
+              ? RirToRpe.get(Number(row.rir))
+              : undefined
         const intensityRir =
           row.rir !== null && row.rir !== undefined
             ? row.rir
             : row.rpe !== null && row.rpe !== undefined
-            ? rpeToRir.get(Number(row.rpe))
-            : undefined
+              ? rpeToRir.get(Number(row.rpe))
+              : undefined
 
         if (reps > 0) {
           workout.sets.push({
@@ -281,7 +283,7 @@ export const GET = withAuth(async (req, user) => {
     console.error('Error fetching mini exercise details:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })

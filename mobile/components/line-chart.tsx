@@ -160,7 +160,7 @@ function ActivePoint({
         })
       }
     },
-    [points]
+    [points],
   )
 
   // Reset on finger lift
@@ -172,7 +172,7 @@ function ActivePoint({
         isReady.value = false
       }
     },
-    []
+    [],
   )
 
   const cx = useDerivedValue(() => animatedX.value)
@@ -409,7 +409,7 @@ const LineChart = ({
         })
       }
     },
-    []
+    [],
   )
 
   useAnimatedReaction(
@@ -429,7 +429,7 @@ const LineChart = ({
       tooltipX.value = x
       tooltipY.value = y
     },
-    []
+    [],
   )
 
   const currentIndexSV = useSharedValue(-1)
@@ -465,16 +465,38 @@ const LineChart = ({
     }
   }, [])
 
-  const chartData = useMemo(
-    () =>
-      data.map((point, index) => ({
-        x: index,
+  const chartData = useMemo(() => {
+    if (data.length === 0) return []
+
+    // Convert x values to timestamps for time-proportional spacing
+    const timestamps = data.map((point) => {
+      const xValue = point[xKey]
+      // Handle various date formats
+      if (xValue instanceof Date) return xValue.getTime()
+      if (typeof xValue === 'number') return xValue
+      // Try parsing as date string
+      const parsed = new Date(xValue)
+      return isNaN(parsed.getTime()) ? 0 : parsed.getTime()
+    })
+
+    const minTime = Math.min(...timestamps)
+    const maxTime = Math.max(...timestamps)
+    const timeRange = maxTime - minTime
+
+    return data.map((point, index) => {
+      // Normalize timestamp to 0-1 range for proportional positioning
+      const normalizedX =
+        timeRange === 0 ? 0.5 : (timestamps[index] - minTime) / timeRange
+
+      return {
+        x: normalizedX,
         y: point[yKey],
-        reps: point.reps ?? 1, // Include reps in chartData
+        reps: point.reps ?? 1,
         original: point,
-      })),
-    [data, yKey]
-  )
+        originalIndex: index, // Keep track of original index for tooltip lookup
+      }
+    })
+  }, [data, xKey, yKey])
 
   // Calculate min and max reps for radius scaling
   const { minReps, maxReps } = useMemo(() => {
@@ -501,54 +523,92 @@ const LineChart = ({
   const xTickValues = () => {
     const n = data.length
     if (n === 0) return []
-    if (n === 1) return [0]
-    if (n <= 5) return Array.from({ length: n }, (_, i) => i)
-    let ticks
-    const last = n - 1
-    const mid = Math.round(last / 2) // centered middle
+    if (n === 1) return [0.5] // Single point centered
 
-    if (n % 2 == 0) {
-      // even number of 4 data points,
-      const q1 = Math.floor(last / 4)
-      const q3 = Math.floor((3 * last) / 4)
-      // 1 2 3 4 5 6 7 8
-      // Desired 5 ticks: first, quarter, middle, three-quarters, last
-      ticks = [0, q1, q3, last]
-    } else {
-      const q1 = Math.ceil(last / 4) // bias inward (e.g., 1.5 -> 2)
-      const q3 = Math.floor((3 * last) / 4) // bias inward (e.g., 4.5 -> 4)
-      // 1 2 3 4 5 6 7 8 9 10
-      // Desired 5 ticks: first, quarter, middle, three-quarters, last
-      ticks = [0, q1, mid, q3, last]
-    }
+    // Get all normalized x positions
+    const positions = chartData.map((d) => d.x)
 
-    // Dedupe + keep 5 by filling from neighbors toward center if needed
-    const set = new Set<number>()
-    for (const t of ticks) set.add(t)
+    // Minimum spacing between labels (as fraction of chart width)
+    // ~0.15 means labels need to be at least 15% of chart width apart
+    const minSpacing = 0.15
 
-    if (set.size < 5) {
-      const candidates: number[] = []
-      // prefer positions near the middle if we need to fill gaps
-      for (let d = 1; d <= last; d++) {
-        const L = mid - d
-        const R = mid + d
-        if (L > 0) candidates.push(L)
-        if (R < last) candidates.push(R)
-      }
-      for (const c of candidates) {
-        set.add(c)
-        if (set.size === 5) break
+    // Always include first and last
+    const selectedTicks: number[] = [positions[0]]
+    let lastSelectedX = positions[0]
+
+    // Go through middle points and select those with enough spacing
+    for (let i = 1; i < positions.length - 1; i++) {
+      const x = positions[i]
+      // Check spacing from last selected tick
+      if (x - lastSelectedX >= minSpacing) {
+        // Also check spacing to the last point (we want to include it)
+        const spacingToEnd = positions[positions.length - 1] - x
+        if (spacingToEnd >= minSpacing) {
+          selectedTicks.push(x)
+          lastSelectedX = x
+        }
       }
     }
 
-    return Array.from(set).sort((a, b) => a - b)
+    // Always include the last point if it has enough spacing
+    const lastX = positions[positions.length - 1]
+    if (lastX - lastSelectedX >= minSpacing || selectedTicks.length === 1) {
+      selectedTicks.push(lastX)
+    }
+
+    // Limit to max 5 labels to avoid clutter
+    if (selectedTicks.length > 5) {
+      // Keep first, last, and evenly distributed middle points
+      const result = [selectedTicks[0]]
+      const step = (selectedTicks.length - 1) / 4
+      for (let i = 1; i < 4; i++) {
+        result.push(selectedTicks[Math.round(i * step)])
+      }
+      result.push(selectedTicks[selectedTicks.length - 1])
+      return result
+    }
+
+    return selectedTicks
   }
 
   const xFormatter = (value: number) => {
-    const index = Math.round(value)
-    if (index < 0 || index >= data.length) return ''
-    const raw = data[index]?.[xKey]
-    return formatXLabel ? formatXLabel(raw, index) : String(raw ?? '')
+    // Find the data point closest to this normalized x value
+    let closestIndex = 0
+    let minDist = Infinity
+
+    for (let i = 0; i < chartData.length; i++) {
+      const dist = Math.abs(chartData[i].x - value)
+      if (dist < minDist) {
+        minDist = dist
+        closestIndex = i
+      }
+    }
+
+    // For evenly spaced ticks (0, 0.25, 0.5, 0.75, 1), interpolate the date
+    // if no data point is close enough
+    if (minDist > 0.05 && data.length > 1) {
+      // Interpolate the date based on the normalized position
+      const timestamps = data.map((point) => {
+        const xValue = point[xKey]
+        if (xValue instanceof Date) return xValue.getTime()
+        if (typeof xValue === 'number') return xValue
+        const parsed = new Date(xValue)
+        return isNaN(parsed.getTime()) ? 0 : parsed.getTime()
+      })
+      const minTime = Math.min(...timestamps)
+      const maxTime = Math.max(...timestamps)
+      const interpolatedTime = minTime + value * (maxTime - minTime)
+      const interpolatedDate = new Date(interpolatedTime)
+
+      if (formatXLabel) {
+        // Format the interpolated date
+        return formatXLabel(interpolatedDate.toISOString().slice(0, 10), -1)
+      }
+      return interpolatedDate.toLocaleDateString()
+    }
+
+    const raw = data[closestIndex]?.[xKey]
+    return formatXLabel ? formatXLabel(raw, closestIndex) : String(raw ?? '')
   }
 
   const yTickValues = () => {
@@ -633,7 +693,7 @@ const LineChart = ({
           data={chartData}
           xKey="x"
           yKeys={['y']}
-          domain={{ x: [0, Math.max(0, data.length - 1)], y: yDomain }}
+          domain={{ x: [0, 1], y: yDomain }}
           domainPadding={{ left: 5, right: 25, top: 20, bottom: 10 }}
           padding={{ left: 0, right: 0, top: 0, bottom: 0 }}
           xAxis={{

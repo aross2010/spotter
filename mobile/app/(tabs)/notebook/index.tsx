@@ -23,6 +23,7 @@ const Notebook = () => {
     loadMoreEntries,
     tagFilters,
     sortOrder,
+    resetFiltersAndEntries,
   } = useNotebook()
   const navigation = useNavigation()
   const hasEntries = currentNotebookEntries.length > 0
@@ -284,6 +285,20 @@ const Notebook = () => {
           Try adjusting your filters or sort method to find what you're looking
           for.
         </Txt>
+        <Button
+          twcn="mt-6 py-4 px-6 items-center flex-row gap-2 justify-center rounded-full bg-primary"
+          twcnText="font-semibold text-dark-text"
+          text="Reset Filters"
+          onPress={() => {
+            resetFiltersAndEntries()
+          }}
+        >
+          <SFIcon
+            name="arrow.uturn.left"
+            size={16}
+            color={Colors.dark.text}
+          />
+        </Button>
       </View>
     </SafeView>
   ) : (

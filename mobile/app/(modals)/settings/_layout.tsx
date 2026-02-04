@@ -78,6 +78,18 @@ const SettingsLayout = () => {
           }}
         />
         <Stack.Screen
+          name="workout-data"
+          options={{
+            title: 'Modify Workout Data',
+          }}
+        />
+        <Stack.Screen
+          name="notebook-data"
+          options={{
+            title: 'Modify Notebook Data',
+          }}
+        />
+        <Stack.Screen
           name="faq"
           options={{
             title: 'FAQ',

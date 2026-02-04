@@ -10,7 +10,11 @@ import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
 import { Alert } from 'react-native'
 import { toLocalDateString } from '../functions/formatted-date'
-import { WorkoutFormData, WorkoutMinimal } from '../utils/types'
+import {
+  WorkoutFormData,
+  WorkoutFormDelta,
+  WorkoutMinimal,
+} from '../utils/types'
 import { registerContextResetter } from '../utils/context-manager'
 
 type WorkoutFilters = {
@@ -37,7 +41,7 @@ type WorkoutContextType = {
   loadMoreWorkouts: () => Promise<void>
   applyFiltersAndSort: (
     status?: string,
-    order?: 'asc' | 'desc'
+    order?: 'asc' | 'desc',
   ) => Promise<void>
   sortOrder: 'asc' | 'desc'
   setSortOrder: (order: 'asc' | 'desc') => void
@@ -46,18 +50,20 @@ type WorkoutContextType = {
   filters: WorkoutFilters
   updateFilters: (
     filterOption: FilterOptions[number],
-    action: 'add' | 'remove'
+    action: 'add' | 'remove',
   ) => void
   clearFilters: () => void
   deleteWorkout: (workoutId: string) => Promise<void>
   updateWorkout: (
     workoutId: string,
-    workoutData: WorkoutFormData
+    workoutData: WorkoutFormData,
+    delta?: WorkoutFormDelta | null,
   ) => Promise<void>
   getFilterOptions: () => Promise<void>
   filterOptions: FilterOptions
   workouts: WorkoutMinimal[] // --- IGNORE ---
   resetWorkoutContext: () => void
+  resetFiltersAndWorkouts: () => Promise<void>
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined)
@@ -97,7 +103,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const data = await response.json()
       setFilterOptions(data)
@@ -108,7 +114,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
 
   const updateFilters = (
     filterOption: FilterOptions[number],
-    action: 'add' | 'remove'
+    action: 'add' | 'remove',
   ) => {
     setFilters((prev) => {
       const { type, label } = filterOption
@@ -153,7 +159,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     locations: string[] = filters.locations,
     status: string | null = statusFilter,
     order: 'asc' | 'desc' = sortOrder,
-    resetFilters: boolean = false
+    resetFilters: boolean = false,
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -191,7 +197,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     exerciseNames: string[] = filters.exerciseNames,
     locations: string[] = filters.locations,
     status: string | null = statusFilter,
-    order: 'asc' | 'desc' = sortOrder
+    order: 'asc' | 'desc' = sortOrder,
   ) => {
     if (!user) return
 
@@ -209,7 +215,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
         exerciseNames,
         locations,
         status,
-        order
+        order,
       )
       const response = await fetchWithAuth(
         `${BASE_URL}/api/workouts/user/${user.id}?${queryParams}`,
@@ -218,7 +224,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
 
       const data = await response.json()
@@ -259,6 +265,21 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     }
   }
 
+  const resetFiltersAndWorkouts = async () => {
+    setFilters({
+      tags: [],
+      workoutNames: [],
+      exerciseNames: [],
+      locations: [],
+    })
+    setStatusFilter('all')
+    setSortOrder('desc')
+    setCurrentPage(1)
+    setHasMore(true)
+    // Pass reset values directly instead of relying on state
+    await fetchWorkouts(1, false, [], [], [], [], 'all', 'desc')
+  }
+
   const refreshWorkouts = async () => {
     setCurrentPage(1)
     setHasMore(true)
@@ -285,7 +306,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
       filters.exerciseNames,
       filters.locations,
       statusFilter,
-      sortOrder
+      sortOrder,
     )
   }
 
@@ -310,14 +331,14 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                }
+                },
               )
               if (response.ok) {
                 setCurrentWorkouts((prev) =>
-                  prev.filter((workout) => workout.id !== workoutId)
+                  prev.filter((workout) => workout.id !== workoutId),
                 )
                 setWorkouts((prev) =>
-                  prev.filter((workout) => workout.id !== workoutId)
+                  prev.filter((workout) => workout.id !== workoutId),
                 )
               }
             } catch (error: any) {
@@ -328,33 +349,54 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
           },
           style: 'destructive',
         },
-      ]
+      ],
     )
   }
 
   const updateWorkout = async (
     workoutId: string,
-    workoutData: WorkoutFormData
+    workoutData: WorkoutFormData,
+    delta?: WorkoutFormDelta | null,
   ) => {
     try {
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/workouts/${workoutId}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
+      // Use PATCH with delta if available and has changes, otherwise fall back to full PUT
+      if (
+        delta &&
+        (delta.hasMetadataChanges ||
+          delta.hasExerciseChanges ||
+          delta.hasSetGroupingChanges)
+      ) {
+        const response = await fetchWithAuth(
+          `${BASE_URL}/api/workouts/${workoutId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(delta),
           },
-          body: JSON.stringify({
-            ...workoutData,
-            tags: workoutData.tags.map((tag: any) => tag.name),
-            date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
-          }),
-        }
-      )
-      const workout = await response.json()
-      // Don't refresh here - let the caller decide when to refresh
-      // This prevents double-refresh issues
-      return workout
+        )
+        const workout = await response.json()
+        return workout
+      } else {
+        // Fall back to full PUT (for new workouts or when delta unavailable)
+        const response = await fetchWithAuth(
+          `${BASE_URL}/api/workouts/${workoutId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...workoutData,
+              tags: workoutData.tags.map((tag: any) => tag.name),
+              date: toLocalDateString(workoutData.date), // Send local date (YYYY-MM-DD)
+            }),
+          },
+        )
+        const workout = await response.json()
+        return workout
+      }
     } catch (error: any) {
       Alert.alert('Error', error.message)
       throw error
@@ -408,6 +450,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     filterOptions,
     workouts,
     resetWorkoutContext,
+    resetFiltersAndWorkouts,
   }
 
   return (

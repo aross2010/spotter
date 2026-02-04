@@ -47,23 +47,24 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
   const first = new Date(firstWorkoutDate)
   const now = new Date()
 
-  const diffTime = Math.abs(now.getTime() - first.getTime())
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1 // Add 1 so first day counts as day 1
+  const diffMs = Math.abs(now.getTime() - first.getTime())
+  const diffDays = diffMs / (1000 * 60 * 60 * 24) + 1 // Add 1 so first day counts as day 1
 
   // Less than a month (30 days) - show days
   if (diffDays < 30) {
-    return diffDays === 1 ? '1 Day' : `${diffDays} Days`
+    const wholeDays = Math.floor(diffDays)
+    return wholeDays === 1 ? '1 Day' : `${wholeDays} Days`
   }
 
-  // Less than a year - show months with decimal
+  // Less than a year - show months (continuous, based on time)
   if (diffDays < 365) {
-    const months = parseFloat((diffDays / 30).toFixed(2))
-    return `${months} Months`
+    const months = Math.floor((diffDays / 30) * 100) / 100
+    return `${months.toFixed(2)} Months`
   }
 
-  // A year or more - show years with decimal
-  const years = parseFloat((diffDays / 365).toFixed(2))
-  return `${years} Years`
+  // A year or more - show years (continuous, based on time)
+  const years = Math.floor((diffDays / 365) * 100) / 100
+  return `${years.toFixed(2)} Years`
 }
 
 const Home = () => {

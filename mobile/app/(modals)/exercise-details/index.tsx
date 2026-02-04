@@ -24,6 +24,7 @@ import { useExerciseStore } from '../../../stores/exercise-store'
 import { ExerciseDetails as ExerciseDetailsType } from '../../../utils/types'
 import { estimate1RM } from '../../../functions/one-rm'
 import SFIcon from '../../../components/sf-icon'
+import { toTitleCase } from '../../../functions/utils'
 
 const ExerciseDetails = () => {
   const { id } = useLocalSearchParams()
@@ -197,7 +198,7 @@ const ExerciseDetails = () => {
     return (
       <View
         key={s.label}
-        style={tw`flex-1 p-2.5 rounded-xl bg-white dark:bg-dark-grayPrimary`}
+        style={tw`flex-1 p-2.5 ${index === 0 ? 'rounded-tl-xl' : index == 1 ? 'rounded-tr-xl' : index == 5 ? 'rounded-bl-xl' : index == 7 ? 'rounded-br-xl' : ''} bg-white dark:bg-dark-grayPrimary`}
       >
         <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
           {s.label}
@@ -281,7 +282,8 @@ const ExerciseDetails = () => {
           {weightMetric === 'kgs' ? data.weight.toFixed(1) : data.weight}{' '}
           {weightMetric} x {data.reps}
           {hasIntensity &&
-            ` @ ${data.rir ? `RIR ${data.rir}` : `RPE ${data.rpe}`}`}
+            ` @ ${data.rir ? `RIR ${data.rir}` : `RPE ${data.rpe}`}`}{' '}
+          ({point.data.est1RM} {weightMetric})
         </Txt>
       </GlassView>
     )
@@ -294,6 +296,7 @@ const ExerciseDetails = () => {
       const allData = [
         ...exercise.stats.progressionChart.map((point) => ({
           weight: point.data.weight,
+          est1RM: point.data.est1RM,
           reps: point.data.reps,
           date: point.date,
           ...(point.data.location ? { location: point.data.location } : {}),
@@ -302,12 +305,12 @@ const ExerciseDetails = () => {
 
       return (
         <View style={tw`overflow-visible`}>
-          <Txt twcn="font-semibold mb-2 text-lg">Progression </Txt>
+          <Txt twcn="font-semibold mb-2 text-lg">Progression (Est. 1RM)</Txt>
           {allData.length > 1 ? (
             <LineChart
               data={allData}
               xKey="date"
-              yKey="weight"
+              yKey="est1RM"
               maxXLabels={5}
               formatXLabel={(dateStr) => {
                 try {
@@ -440,6 +443,11 @@ const ExerciseDetails = () => {
               <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText flex-1">
                 {needsDate ? formatDate(entry.date) : ' '}
               </Txt>
+              {!isUnilateral && (
+                <Txt twcn="text-xs flex-1 text-center">
+                  {entry.exerciseNumber}
+                </Txt>
+              )}
               {isUnilateral && (
                 <Txt twcn="text-xs flex-1 text-center">{setLabel}</Txt>
               )}
@@ -456,32 +464,38 @@ const ExerciseDetails = () => {
     )
   })
 
-  const history = (
+  const history = exercise && (
     <View>
       <Txt twcn="font-semibold mb-2 text-lg">History</Txt>
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
-        <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1">
+        <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1">
           Date
         </Txt>
-        {exercise?.isUnilateral && (
-          <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+
+        {!exercise.isUnilateral && (
+          <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+            Ex.
+          </Txt>
+        )}
+        {exercise.isUnilateral && (
+          <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
             Set
           </Txt>
         )}
-        <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
-          {weightMetric}
+        <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+          {toTitleCase(weightMetric)}
           {weightMetric === 'lbs' && '.'}
         </Txt>
-        <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+        <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
           Reps
         </Txt>
-        <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
+        <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
           Part.
         </Txt>
-        <Txt twcn="uppercase text-light-grayText dark:text-dark-grayText text-xs flex-1 text-center">
-          {intensityMetric}
+        <Txt twcn=" text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+          {intensityMetric.toLocaleUpperCase()}
         </Txt>
       </View>
       {renderedHistory}

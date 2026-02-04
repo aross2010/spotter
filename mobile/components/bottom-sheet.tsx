@@ -4,6 +4,7 @@ import BottomSheet, {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetBackdrop,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet'
 import tw from '../tw'
 import useTheme from '../app/hooks/theme'
@@ -13,6 +14,7 @@ type BottomSheetProps = {
   ref: RefObject<BottomSheetModal | null>
   usesKeyboard?: boolean
   onDismiss?: () => void
+  scroll?: boolean
 }
 
 const MyBottomSheet = ({
@@ -20,6 +22,7 @@ const MyBottomSheet = ({
   ref,
   usesKeyboard = false,
   onDismiss,
+  scroll = false,
 }: BottomSheetProps) => {
   const { theme } = useTheme()
   const backDrop = useCallback(
@@ -31,7 +34,7 @@ const MyBottomSheet = ({
         onPress={() => Keyboard.dismiss()}
       />
     ),
-    []
+    [],
   )
   return (
     <BottomSheetModal
@@ -44,11 +47,19 @@ const MyBottomSheet = ({
       onDismiss={onDismiss}
       backdropComponent={backDrop}
     >
-      <BottomSheetView
-        style={tw`bg-light-background dark:bg-dark-background relative ${usesKeyboard ? 'p-4' : 'pt-4 pb-12 px-4'}`}
-      >
-        {children}
-      </BottomSheetView>
+      {scroll ? (
+        <BottomSheetScrollView
+          style={tw`bg-light-background dark:bg-dark-background relative ${usesKeyboard ? 'p-4' : 'pt-4 pb-12 px-4'}`}
+        >
+          {children}
+        </BottomSheetScrollView>
+      ) : (
+        <BottomSheetView
+          style={tw`bg-light-background dark:bg-dark-background relative ${usesKeyboard ? 'p-4' : 'pt-4 pb-12 px-4'}`}
+        >
+          {children}
+        </BottomSheetView>
+      )}
     </BottomSheetModal>
   )
 }

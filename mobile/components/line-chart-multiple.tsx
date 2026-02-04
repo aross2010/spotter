@@ -69,7 +69,7 @@ function AnimatedLine({
   )
 }
 
-// Normalize a dataset's y values to 0-100 range
+// Normalize a dataset's y values to 0-100 range and x values based on time
 function normalizeDataSet(data: DataPoint[]): { x: number; y: number }[] {
   if (data.length === 0) return []
 
@@ -78,18 +78,26 @@ function normalizeDataSet(data: DataPoint[]): { x: number; y: number }[] {
   const maxY = Math.max(...yValues)
   const yRange = maxY - minY
 
-  // If all values are the same (flat line), center it at 50%
-  if (yRange === 0) {
-    return data.map((point, index) => ({
-      x: data.length === 1 ? 0.5 : index / (data.length - 1),
-      y: 50,
-    }))
-  }
+  // Convert dates to timestamps for time-proportional spacing
+  const timestamps = data.map((d) => new Date(d.date).getTime())
+  const minTime = Math.min(...timestamps)
+  const maxTime = Math.max(...timestamps)
+  const timeRange = maxTime - minTime
 
-  return data.map((point, index) => ({
-    x: data.length === 1 ? 0.5 : index / (data.length - 1), // normalize x to 0-1
-    y: ((point.weight - minY) / yRange) * 100, // normalize y to 0-100
-  }))
+  return data.map((point, index) => {
+    // Normalize x based on time (0-1 range)
+    const normalizedX =
+      timeRange === 0 ? 0.5 : (timestamps[index] - minTime) / timeRange
+
+    // Normalize y to 0-100 range (or 50 if all values same)
+    const normalizedY =
+      yRange === 0 ? 50 : ((point.weight - minY) / yRange) * 100
+
+    return {
+      x: normalizedX,
+      y: normalizedY,
+    }
+  })
 }
 
 const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
@@ -101,7 +109,7 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
   // Build yKeys dynamically
   const yKeys = useMemo(
     () => dataSets.map((_, i) => `y${i}` as const),
-    [dataSets.length]
+    [dataSets.length],
   )
 
   // Reset animation when datasets change
@@ -124,7 +132,6 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
   // Normalize all data sets and prepare chart data
   const { chartData, lineInfo } = useMemo(() => {
     // Create combined data array with normalized values for each line
-    // We need to create a unified x-axis, so we'll use indices 0 to maxPoints-1
     const maxPoints = Math.max(...dataSets.map((ds) => ds.graphData.length))
 
     // Normalize each dataset
@@ -134,33 +141,48 @@ const LineChartMultiple = ({ dataSets }: LineChartMultipleProps) => {
       color: LINE_COLORS[dsIndex % LINE_COLORS.length],
     }))
 
-    // Create chart data - each point has x and y values for each line
+    // Create chart data - sample at time-proportional x positions
     const chartData: Record<string, number>[] = []
 
     for (let i = 0; i < maxPoints; i++) {
+      // Use time-proportional x from the first dataset's normalized values as reference
+      // For unified x-axis, we sample all lines at these x positions
+      const xPosition = i / (maxPoints - 1 || 1)
       const point: Record<string, number> = { x: i }
 
       normalizedSets.forEach((ds, dsIndex) => {
-        // Interpolate if this dataset has fewer points
-        const normalizedIndex =
-          ds.normalized.length === 1
-            ? 0
-            : (i / (maxPoints - 1)) * (ds.normalized.length - 1)
-        const lowerIndex = Math.floor(normalizedIndex)
-        const upperIndex = Math.min(
-          Math.ceil(normalizedIndex),
-          ds.normalized.length - 1
-        )
-        const fraction = normalizedIndex - lowerIndex
+        // Find the two points surrounding this x position and interpolate
+        const normalized = ds.normalized
 
-        // Linear interpolation
-        const yValue =
-          lowerIndex === upperIndex
-            ? (ds.normalized[lowerIndex]?.y ?? 0)
-            : (ds.normalized[lowerIndex]?.y ?? 0) * (1 - fraction) +
-              (ds.normalized[upperIndex]?.y ?? 0) * fraction
+        // Find where this xPosition falls in the normalized data
+        let lowerIdx = 0
+        let upperIdx = normalized.length - 1
 
-        point[`y${dsIndex}`] = yValue
+        for (let j = 0; j < normalized.length - 1; j++) {
+          if (
+            normalized[j].x <= xPosition &&
+            normalized[j + 1].x >= xPosition
+          ) {
+            lowerIdx = j
+            upperIdx = j + 1
+            break
+          }
+        }
+
+        // Handle edge cases
+        if (xPosition <= normalized[0].x) {
+          point[`y${dsIndex}`] = normalized[0].y
+        } else if (xPosition >= normalized[normalized.length - 1].x) {
+          point[`y${dsIndex}`] = normalized[normalized.length - 1].y
+        } else {
+          // Linear interpolation based on time-proportional x
+          const x1 = normalized[lowerIdx].x
+          const x2 = normalized[upperIdx].x
+          const y1 = normalized[lowerIdx].y
+          const y2 = normalized[upperIdx].y
+          const t = (xPosition - x1) / (x2 - x1 || 1)
+          point[`y${dsIndex}`] = y1 + t * (y2 - y1)
+        }
       })
 
       chartData.push(point)

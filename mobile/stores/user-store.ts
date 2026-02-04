@@ -8,6 +8,7 @@ export type IntensityMetric = 'rpe' | 'rir'
 export type UnilateralLogging = 'sync' | 'separate'
 export type HapticFeedback = 'enabled' | 'disabled'
 export type DistanceMetric = 'km' | 'mi'
+export type AutosaveActiveWorkouts = 'enabled' | 'disabled'
 
 type UserPreferences = {
   weightMetric: WeightMetric
@@ -16,6 +17,7 @@ type UserPreferences = {
   unilateralLogging: UnilateralLogging
   hapticFeedback: HapticFeedback
   distanceMetric: DistanceMetric
+  autosaveActiveWorkouts: AutosaveActiveWorkouts
   location: string
 }
 
@@ -40,6 +42,7 @@ const initialUserPreferences: UserPreferences = {
   unilateralLogging: 'sync',
   hapticFeedback: 'enabled',
   distanceMetric: 'mi',
+  autosaveActiveWorkouts: 'enabled',
   location: '',
 }
 
@@ -108,6 +111,10 @@ export const useUserStore = create<UserStore>()(
               p?.distanceMetric ??
               s.preferences?.distanceMetric ??
               initialUserPreferences.distanceMetric,
+            autosaveActiveWorkouts:
+              p?.autosaveActiveWorkouts ??
+              s.preferences?.autosaveActiveWorkouts ??
+              initialUserPreferences.autosaveActiveWorkouts,
             location:
               p?.location !== undefined
                 ? p.location.trim()
@@ -126,6 +133,6 @@ export const useUserStore = create<UserStore>()(
       name: 'spotter-user-store',
       storage: createJSONStorage(() => storage),
       version: 2,
-    }
-  )
+    },
+  ),
 )

@@ -164,7 +164,7 @@ const WorkoutDetails = () => {
               </Button>
             ),
     })
-  }, [navigation, workout?.name])
+  }, [navigation, workout?.name, workout])
 
   const handleScreenshotWorkout = () => {
     if (isCapturing) return
@@ -478,7 +478,8 @@ const WorkoutDetails = () => {
                       </View>
                       <View style={tw`w-1/5 py-1 items-center justify-center`}>
                         {set.partialReps !== null &&
-                          set.partialReps !== undefined && (
+                          set.partialReps !== undefined &&
+                          set.partialReps !== 0 && (
                             <Txt twcn="text-center text-light-text dark:text-dark-text">
                               {set.partialReps}
                             </Txt>
@@ -589,7 +590,7 @@ const WorkoutDetails = () => {
                 width: width,
                 backgroundColor: theme.background,
                 paddingHorizontal: 16,
-                paddingTop: 90,
+                paddingTop: 75,
                 paddingBottom: 48,
                 minHeight: 1100,
               }}

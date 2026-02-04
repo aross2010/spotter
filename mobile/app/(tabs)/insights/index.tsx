@@ -225,7 +225,7 @@ const Insights = () => {
         {chartLoading && <Spinner overlay />}
       </View>
       <Txt twcn="mt-1 text-xs text-light-grayText dark:text-dark-grayText">
-        Curves represent the progression of top-sets for each exercise.
+        Curves represent the one rep max progression for each exercise.
       </Txt>
     </View>
   )
@@ -458,8 +458,8 @@ const Insights = () => {
     const volumeData = insightsData?.core?.workouts.weeklyVolume
     if (!volumeData || volumeData.length === 0) return []
 
-    return volumeData.map((week, index) => ({
-      x: index,
+    return volumeData.map((week) => ({
+      x: week.date, // Use date for time-proportional spacing
       y: week.totalVolume,
       date: week.date,
     }))
@@ -562,10 +562,14 @@ const Insights = () => {
             data={weeklyVolumeChartData}
             xKey="x"
             yKey="y"
-            formatXLabel={(_, index) => {
-              const item = weeklyVolumeChartData[index]
-              if (!item) return ''
-              const date = new Date(item.date)
+            formatXLabel={(value, index) => {
+              // value is the date string, or use index for actual data points
+              let dateStr = value
+              if (index >= 0 && index < weeklyVolumeChartData.length) {
+                dateStr = weeklyVolumeChartData[index]?.date ?? value
+              }
+              const date = new Date(dateStr)
+              if (isNaN(date.getTime())) return ''
               const month = date.getUTCMonth() + 1
               const day = date.getUTCDate()
               const year = String(date.getUTCFullYear()).slice(-2)
@@ -633,8 +637,8 @@ const Insights = () => {
         scrollEnabled={scrollEnabled}
       >
         {renderedSummary}
-        {renderedExerciseTrends}
         {renderedWeeklyVolume}
+        {renderedExerciseTrends}
         {renderedMuscleGroupAnalysis}
         {renderedRepsPerSet}
         {renderedSetsPerWorkout}

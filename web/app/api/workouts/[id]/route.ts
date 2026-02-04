@@ -11,7 +11,12 @@ import {
   users,
   exercises,
 } from '@/src/db/schema'
-import { setExercise, setSuperOrDropsets, setTags } from '../route'
+import {
+  setExercise,
+  setSuperOrDropsets,
+  setTags,
+  getExerciseId,
+} from '../route'
 import { eq, and, sql } from 'drizzle-orm'
 import { withAuth } from '../../middleware'
 import { detectMuscleGroups } from '@/app/functions/detectMuscleGroups'
@@ -19,7 +24,7 @@ import { detectMuscleGroups } from '@/app/functions/detectMuscleGroups'
 // Background function to update muscle groups for new exercises
 async function updateMuscleGroupsInBackground(
   exerciseId: string,
-  exerciseName: string
+  exerciseName: string,
 ) {
   try {
     const { primaryMuscleGroup, secondaryMuscleGroups } =
@@ -35,7 +40,7 @@ async function updateMuscleGroupsInBackground(
   } catch (error) {
     console.error(
       `Failed to update muscle groups for exercise ${exerciseName}:`,
-      error
+      error,
     )
   }
 }
@@ -70,7 +75,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   if (!id) {
     return NextResponse.json(
       { error: 'Workout ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -96,7 +101,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
     console.error('Missing required fields:', { userId, date, name, exercises })
     return NextResponse.json(
       { error: 'Missing required fields' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -107,21 +112,21 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   if (typeof name !== 'string' || name.length > 25) {
     return NextResponse.json(
       { error: 'Workout name must be a string under 25 characters' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (location && (typeof location !== 'string' || location.length > 100)) {
     return NextResponse.json(
       { error: 'Location must be a string under 100 characters' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (!Array.isArray(exercises) || exercises.length === 0) {
     return NextResponse.json(
       { error: 'Exercises must be a non-empty array' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -134,7 +139,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
     ) {
       return NextResponse.json(
         { error: 'Each exercise must have a name' },
-        { status: 400 }
+        { status: 400 },
       )
     }
   }
@@ -142,35 +147,35 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   if (setGroupings && !Array.isArray(setGroupings)) {
     return NextResponse.json(
       { error: 'Set groupings must be an array' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (tags && (!Array.isArray(tags) || tags.length > 10)) {
     return NextResponse.json(
       { error: 'Tags must be an array of strings, limited to 10' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (notes && (typeof notes !== 'string' || notes.length > 500)) {
     return NextResponse.json(
       { error: 'Notes must be a string under 500 characters' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (status && !['completed', 'planned', 'active'].includes(status)) {
     return NextResponse.json(
       { error: 'Status must be one of: completed, planned, active' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (pinned !== undefined && typeof pinned !== 'boolean') {
     return NextResponse.json(
       { error: 'Pinned must be a boolean value' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -222,7 +227,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
           exNum,
           userId,
           updatedWorkout.id,
-          tx
+          tx,
         )
 
         // Track new exercises for background processing
@@ -250,7 +255,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
         message: 'Workout updated successfully',
         id: result,
       },
-      { status: 200 }
+      { status: 200 },
     )
 
     // Trigger background muscle group updates after response
@@ -260,7 +265,7 @@ export const PUT = withAuth(async (req: Request, user: any) => {
           await Promise.all(
             newExercises.map(async (exercise) => {
               await updateMuscleGroupsInBackground(exercise.id, exercise.name)
-            })
+            }),
           )
         } catch (error) {
           console.error('Background muscle group update failed:', error)
@@ -280,6 +285,307 @@ export const PUT = withAuth(async (req: Request, user: any) => {
   }
 })
 
+// PATCH - Partial update for changed data only (optimized for speed)
+export const PATCH = withAuth(async (req: Request, user: any) => {
+  const data = await req.json()
+  const url = new URL(req.url)
+  const id = url.pathname.split('/').pop()
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Workout ID is required' },
+      { status: 400 },
+    )
+  }
+
+  const {
+    name,
+    date,
+    location,
+    notes,
+    status,
+    pinned,
+    tags,
+    changedExercises,
+    setGroupings: newSetGroupings,
+    hasMetadataChanges,
+    hasExerciseChanges,
+    hasSetGroupingChanges,
+  } = data
+
+  const userId = user.id
+  const setIdMap = new Map<string, string>()
+  const newExercises: { id: string; name: string }[] = []
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const existingUser = await tx.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId),
+      })
+
+      if (!existingUser) {
+        throw new Error('User not found')
+      }
+
+      const existingWorkout = await tx.query.workouts.findFirst({
+        where: (workouts, { eq, and }) =>
+          and(eq(workouts.id, id), eq(workouts.userId, userId)),
+        with: {
+          workoutExercises: {
+            with: {
+              sets: true,
+            },
+          },
+        },
+      })
+
+      if (!existingWorkout) {
+        throw new Error('Workout not found')
+      }
+
+      // 1. Update metadata if changed
+      if (hasMetadataChanges) {
+        const updateData: any = { updatedAt: new Date() }
+
+        if (name !== undefined) updateData.name = name
+        if (date !== undefined) updateData.date = date
+        if (location !== undefined) updateData.location = location || null
+        if (notes !== undefined) updateData.notes = notes || null
+        if (status !== undefined) updateData.status = status
+        if (pinned !== undefined) updateData.pinned = pinned
+
+        await tx.update(workouts).set(updateData).where(eq(workouts.id, id))
+
+        // Handle tags if changed
+        if (tags !== undefined) {
+          // Clear existing tags
+          await tx
+            .delete(workoutTagLinks)
+            .where(eq(workoutTagLinks.workoutId, id))
+
+          // Add new tags
+          if (tags.length > 0) {
+            await setTags(tags, id, userId, tx)
+          }
+        }
+      }
+
+      // 2. Handle exercise changes
+      if (hasExerciseChanges && changedExercises) {
+        // Build a map of existing exercise numbers to workout exercise IDs
+        const existingExerciseMap = new Map<
+          number,
+          {
+            workoutExerciseId: string
+            sets: (typeof existingWorkout.workoutExercises)[0]['sets']
+          }
+        >()
+        existingWorkout.workoutExercises.forEach((we) => {
+          existingExerciseMap.set(Number(we.exerciseNumber), {
+            workoutExerciseId: we.id,
+            sets: we.sets,
+          })
+        })
+
+        // Determine if we need to rebuild all exercises (count changed or positions shifted)
+        const currentExerciseCount = existingWorkout.workoutExercises.length
+        const hasCountChanged = changedExercises.some(
+          (ce: any) => ce.exerciseNumber > currentExerciseCount,
+        )
+
+        // Get all exercise numbers that are changing
+        const changingExerciseNumbers = new Set(
+          changedExercises.map((ce: any) => ce.exerciseNumber),
+        )
+
+        // If count changed (exercises added/removed), we need to rebuild all exercises
+        if (
+          hasCountChanged ||
+          changedExercises.length === currentExerciseCount
+        ) {
+          // Full rebuild - delete all workout exercises and recreate
+          await tx
+            .delete(workoutExercises)
+            .where(eq(workoutExercises.workoutId, id))
+
+          // Clean up orphaned set groupings
+          await tx.delete(setGroupings).where(sql`
+            NOT EXISTS (
+              SELECT 1 FROM ${sets} 
+              WHERE ${sets.setGroupingId} = ${setGroupings.id}
+            )
+          `)
+
+          // Recreate all exercises
+          let exNum = 1
+          for (const change of changedExercises) {
+            const exerciseData = await setExercise(
+              change.exercise,
+              status || existingWorkout.status || 'completed',
+              setIdMap,
+              change.exerciseNumber,
+              userId,
+              id,
+              tx,
+            )
+
+            if (exerciseData.isNew) {
+              newExercises.push({
+                id: exerciseData.id,
+                name: exerciseData.name,
+              })
+            }
+            exNum++
+          }
+        } else {
+          // Partial update - only update changed exercises
+          for (const change of changedExercises) {
+            const existing = existingExerciseMap.get(change.exerciseNumber)
+
+            if (existing) {
+              // Delete existing sets for this exercise
+              await tx
+                .delete(sets)
+                .where(eq(sets.workoutExerciseId, existing.workoutExerciseId))
+
+              // Get or create the exercise
+              const { id: exerciseId, isNew } = await getExerciseId(
+                change.exercise.name,
+                userId,
+                change.exercise.isUnilateral,
+                tx,
+              )
+
+              if (isNew) {
+                newExercises.push({
+                  id: exerciseId,
+                  name: change.exercise.name,
+                })
+              }
+
+              // Update the workout exercise link
+              await tx
+                .update(workoutExercises)
+                .set({ exerciseId })
+                .where(eq(workoutExercises.id, existing.workoutExerciseId))
+
+              // Insert new sets
+              let setNum = 1
+              for (const set of change.exercise.sets) {
+                const [insertedSet] = await tx
+                  .insert(sets)
+                  .values({
+                    workoutExerciseId: existing.workoutExerciseId,
+                    setNumber: setNum.toString(),
+                    weightLbs: set.weightLbs ?? null,
+                    weightKg: set.weightKg ?? null,
+                    reps: set.reps ?? null,
+                    leftReps: set.leftReps ?? null,
+                    rightReps: set.rightReps ?? null,
+                    rpe: set.rpe ?? null,
+                    leftRpe: set.leftRpe ?? null,
+                    rightRpe: set.rightRpe ?? null,
+                    rir: set.rir ?? null,
+                    leftRir: set.leftRir ?? null,
+                    rightRir: set.rightRir ?? null,
+                    partialReps: set.partialReps ?? null,
+                    leftPartialReps: set.leftPartialReps ?? null,
+                    rightPartialReps: set.rightPartialReps ?? null,
+                    cheatReps: set.cheatReps ?? null,
+                  })
+                  .returning({ id: sets.id, setNumber: sets.setNumber })
+
+                setIdMap.set(
+                  `${change.exerciseNumber}-${insertedSet.setNumber}`,
+                  insertedSet.id,
+                )
+                setNum++
+              }
+            }
+          }
+
+          // Build setIdMap for unchanged exercises (needed for set groupings)
+          existingWorkout.workoutExercises.forEach((we) => {
+            if (!changingExerciseNumbers.has(Number(we.exerciseNumber))) {
+              we.sets.forEach((s) => {
+                setIdMap.set(`${we.exerciseNumber}-${s.setNumber}`, s.id)
+              })
+            }
+          })
+        }
+      } else {
+        // No exercise changes - build setIdMap from existing data for set groupings
+        existingWorkout.workoutExercises.forEach((we) => {
+          we.sets.forEach((s) => {
+            setIdMap.set(`${we.exerciseNumber}-${s.setNumber}`, s.id)
+          })
+        })
+      }
+
+      // 3. Handle set grouping changes
+      if (hasSetGroupingChanges && newSetGroupings !== undefined) {
+        // Clear all existing set grouping associations
+        await tx.execute(sql`
+          UPDATE ${sets} 
+          SET set_grouping_id = NULL 
+          WHERE workout_exercise_id IN (
+            SELECT id FROM ${workoutExercises} WHERE workout_id = ${id}
+          )
+        `)
+
+        // Clean up orphaned set groupings
+        await tx.delete(setGroupings).where(sql`
+          NOT EXISTS (
+            SELECT 1 FROM ${sets} 
+            WHERE ${sets.setGroupingId} = ${setGroupings.id}
+          )
+        `)
+
+        // Create new set groupings
+        if (newSetGroupings.length > 0) {
+          await setSuperOrDropsets(newSetGroupings, setIdMap, tx)
+        }
+      }
+
+      return id
+    })
+
+    // Send response first
+    const response = NextResponse.json(
+      {
+        message: 'Workout updated successfully',
+        id: result,
+      },
+      { status: 200 },
+    )
+
+    // Trigger background muscle group updates after response
+    if (newExercises.length > 0) {
+      after(async () => {
+        try {
+          await Promise.all(
+            newExercises.map(async (exercise) => {
+              await updateMuscleGroupsInBackground(exercise.id, exercise.name)
+            }),
+          )
+        } catch (error) {
+          console.error('Background muscle group update failed:', error)
+        }
+      })
+    }
+
+    return response
+  } catch (error: any) {
+    const msg =
+      error instanceof Error ? error.message : 'Unexpected error occurred'
+    const status =
+      msg === 'User not found' || msg === 'Workout not found' ? 404 : 500
+
+    console.error('Error processing PATCH workout data:', error)
+    return NextResponse.json({ error: msg }, { status })
+  }
+})
+
 export const DELETE = withAuth(async (req: Request, user: any) => {
   const url = new URL(req.url)
   const id = url.pathname.split('/').pop()
@@ -287,7 +593,7 @@ export const DELETE = withAuth(async (req: Request, user: any) => {
   if (!id) {
     return NextResponse.json(
       { error: 'Workout ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -303,7 +609,7 @@ export const DELETE = withAuth(async (req: Request, user: any) => {
     if (workout.userId !== user.id) {
       return NextResponse.json(
         { error: 'Access denied to this workout' },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
@@ -325,7 +631,7 @@ export const DELETE = withAuth(async (req: Request, user: any) => {
 
     return NextResponse.json(
       { message: 'Workout deleted successfully', id: result.id },
-      { status: 200 }
+      { status: 200 },
     )
   } catch (error: any) {
     const msg =
@@ -344,7 +650,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
   if (!id) {
     return NextResponse.json(
       { error: 'Workout ID is required' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -377,7 +683,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     if (workout.userId !== user.id) {
       return NextResponse.json(
         { error: 'Access denied to this workout' },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
@@ -467,7 +773,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     console.error('Error fetching workout:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })

@@ -8,7 +8,9 @@ import {
   sets,
   weightEntries,
 } from '@/src/db/schema'
-import { eq, desc, sql, and, isNotNull, inArray } from 'drizzle-orm'
+import { eq, desc, sql, and, isNotNull, inArray, or } from 'drizzle-orm'
+import { calculate1RM } from '@/app/functions/one-rep-max'
+import { toKg, toLbs } from '@/app/functions/conversions'
 
 /**
  * Get exercise comparison graph data for specified exercises
@@ -20,27 +22,37 @@ import { eq, desc, sql, and, isNotNull, inArray } from 'drizzle-orm'
 export async function getExerciseComparisonData(
   userId: string,
   exerciseIds: string[],
-  weightUnit: 'lbs' | 'kg'
+  weightUnit: 'lbs' | 'kgs',
 ) {
   if (exerciseIds.length === 0 || exerciseIds.length > 5) {
     return []
   }
 
-  const weightField = weightUnit === 'kg' ? sets.weightKg : sets.weightLbs
-
-  // Get best set per workout for each exercise
-  const progressionData = await db
+  // Get all sets for each exercise to find the best set per workout
+  // Select BOTH weight fields and unilateral fields to match exercise-details logic
+  const allSetsData = await db
     .select({
       exerciseId: exercises.id,
       exerciseName: exercises.name,
+      isUnilateral: exercises.isUnilateral,
       workoutId: workouts.id,
       date: workouts.date,
-      weight: sql<number>`max(${weightField})`,
+      weightLbs: sets.weightLbs,
+      weightKg: sets.weightKg,
+      reps: sets.reps,
+      leftReps: sets.leftReps,
+      rightReps: sets.rightReps,
+      rpe: sets.rpe,
+      leftRpe: sets.leftRpe,
+      rightRpe: sets.rightRpe,
+      rir: sets.rir,
+      leftRir: sets.leftRir,
+      rightRir: sets.rightRir,
     })
     .from(sets)
     .innerJoin(
       workoutExercises,
-      eq(sets.workoutExerciseId, workoutExercises.id)
+      eq(sets.workoutExerciseId, workoutExercises.id),
     )
     .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
     .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
@@ -48,43 +60,132 @@ export async function getExerciseComparisonData(
       and(
         eq(workouts.userId, userId),
         inArray(exercises.id, exerciseIds),
-        isNotNull(weightField)
-      )
+        or(isNotNull(sets.weightLbs), isNotNull(sets.weightKg)),
+      ),
     )
-    .groupBy(exercises.id, exercises.name, workouts.id, workouts.date)
     .orderBy(workouts.date)
 
-  // Group by exercise
-  const exerciseMap = new Map<
+  // Group by exercise and find best set per workout (highest weight in LBS, reps as tiebreaker)
+  // This matches the exercise-details logic exactly
+  const exerciseWorkoutMap = new Map<
     string,
-    {
-      name: string
-      exerciseId: string
-      graphData: { date: string; weight: number }[]
-    }
+    Map<
+      string,
+      {
+        date: string
+        weightInLbs: number // Always store in LBS for consistent comparison
+        reps: number
+        rpe: number | null
+        rir: number | null
+      }
+    >
   >()
+  const exerciseNames = new Map<string, string>()
+  const exerciseIsUnilateral = new Map<string, boolean>()
 
-  progressionData.forEach((row) => {
-    if (!exerciseMap.has(row.exerciseId)) {
-      exerciseMap.set(row.exerciseId, {
-        name: row.exerciseName,
-        exerciseId: row.exerciseId,
-        graphData: [],
+  allSetsData.forEach((row) => {
+    // Convert to LBS for comparison - matching exercise-details logic
+    const weightInLbs =
+      Number(row.weightLbs) || (row.weightKg ? toLbs(Number(row.weightKg)) : 0)
+
+    // Handle unilateral exercises - use leftReps/rightReps
+    const isUnilateral = row.isUnilateral || false
+    let reps = 0
+    if (isUnilateral) {
+      const leftReps = Number(row.leftReps) || 0
+      const rightReps = Number(row.rightReps) || 0
+      // Take the lower value between left and right, or use whichever is available
+      reps =
+        leftReps && rightReps
+          ? Math.min(leftReps, rightReps)
+          : leftReps || rightReps
+    } else {
+      reps = Number(row.reps) || 1
+    }
+
+    // Handle intensity for unilateral exercises
+    const rpe = row.rpe
+      ? Number(row.rpe)
+      : row.leftRpe
+        ? Number(row.leftRpe)
+        : row.rightRpe
+          ? Number(row.rightRpe)
+          : null
+    const rir = row.rir
+      ? Number(row.rir)
+      : row.leftRir
+        ? Number(row.leftRir)
+        : row.rightRir
+          ? Number(row.rightRir)
+          : null
+
+    exerciseNames.set(row.exerciseId, row.exerciseName)
+    exerciseIsUnilateral.set(row.exerciseId, isUnilateral)
+
+    if (!exerciseWorkoutMap.has(row.exerciseId)) {
+      exerciseWorkoutMap.set(row.exerciseId, new Map())
+    }
+
+    const workoutMap = exerciseWorkoutMap.get(row.exerciseId)!
+    const existing = workoutMap.get(row.workoutId)
+
+    // Keep the set with highest weight (reps as tiebreaker) - matching exercise details logic
+    if (
+      !existing ||
+      weightInLbs > existing.weightInLbs ||
+      (weightInLbs === existing.weightInLbs && reps > existing.reps)
+    ) {
+      workoutMap.set(row.workoutId, {
+        date: row.date,
+        weightInLbs,
+        reps,
+        rpe,
+        rir,
       })
     }
-    exerciseMap.get(row.exerciseId)!.graphData.push({
-      date: row.date,
-      weight: Number(row.weight) || 0,
+  })
+
+  // Convert to final format with est1RM calculation
+  const result: {
+    name: string
+    exerciseId: string
+    graphData: { date: string; weight: number }[]
+  }[] = []
+
+  exerciseWorkoutMap.forEach((workoutMap, exerciseId) => {
+    const graphData = Array.from(workoutMap.values())
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map((entry) => {
+        // Convert weight to user preference - matching exercise-details logic
+        const weight =
+          weightUnit === 'kgs' ? toKg(entry.weightInLbs) : entry.weightInLbs
+
+        return {
+          date: entry.date,
+          weight: calculate1RM(
+            weight,
+            weightUnit,
+            entry.reps,
+            entry.rpe,
+            entry.rir,
+          ),
+        }
+      })
+
+    result.push({
+      name: exerciseNames.get(exerciseId) || '',
+      exerciseId,
+      graphData,
     })
   })
 
-  return Array.from(exerciseMap.values())
+  return result
 }
 
 export const GET = withAuth(async (req: Request, user: any) => {
   const url = new URL(req.url)
   const userId = url.pathname.split('/').pop()
-  const weightUnit = (url.searchParams.get('unit') || 'lbs') as 'lbs' | 'kg'
+  const weightUnit = (url.searchParams.get('unit') || 'lbs') as 'lbs' | 'kgs'
 
   if (!userId) {
     return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -109,9 +210,9 @@ export const GET = withAuth(async (req: Request, user: any) => {
       userExercises: [],
     }
 
-    const weightField = weightUnit === 'kg' ? sets.weightKg : sets.weightLbs
+    const weightField = weightUnit === 'kgs' ? sets.weightKg : sets.weightLbs
     const weightEntryField =
-      weightUnit === 'kg' ? weightEntries.weightKg : weightEntries.weightLbs
+      weightUnit === 'kgs' ? weightEntries.weightKg : weightEntries.weightLbs
 
     // Fetch all data in parallel
     const [
@@ -158,7 +259,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .groupBy(exercises.id, exercises.name)
             .orderBy(
               desc(sql`count(distinct ${workouts.id})`),
-              desc(sql`max(${workouts.date})`)
+              desc(sql`max(${workouts.date})`),
             )
             .limit(1)
         : Promise.resolve([]),
@@ -173,7 +274,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             })
             .from(workouts)
             .where(
-              and(eq(workouts.userId, userId), isNotNull(workouts.location))
+              and(eq(workouts.userId, userId), isNotNull(workouts.location)),
             )
             .groupBy(workouts.location)
             .orderBy(desc(sql`count(*)`), desc(sql`max(${workouts.date})`))
@@ -192,7 +293,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(sets)
             .innerJoin(
               workoutExercises,
-              eq(sets.workoutExerciseId, workoutExercises.id)
+              eq(sets.workoutExerciseId, workoutExercises.id),
             )
             .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
@@ -214,7 +315,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(workouts)
             .innerJoin(
               workoutExercises,
-              eq(workouts.id, workoutExercises.workoutId)
+              eq(workouts.id, workoutExercises.workoutId),
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
             .where(and(eq(workouts.userId, userId), isNotNull(weightField)))
@@ -222,11 +323,11 @@ export const GET = withAuth(async (req: Request, user: any) => {
               workouts.id,
               workouts.name,
               workouts.location,
-              workouts.date
+              workouts.date,
             )
             .orderBy(
               desc(sql`sum(${weightField} * COALESCE(${sets.reps}, 1))`),
-              desc(workouts.date)
+              desc(workouts.date),
             )
             .limit(1)
         : Promise.resolve([]),
@@ -246,12 +347,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .where(
               and(
                 eq(workouts.userId, userId),
-                isNotNull(exercises.primaryMuscleGroup)
-              )
+                isNotNull(exercises.primaryMuscleGroup),
+              ),
             )
             .groupBy(
               exercises.primaryMuscleGroup,
-              exercises.secondaryMuscleGroups
+              exercises.secondaryMuscleGroups,
             )
         : Promise.resolve([]),
 
@@ -265,7 +366,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(sets)
             .innerJoin(
               workoutExercises,
-              eq(sets.workoutExerciseId, workoutExercises.id)
+              eq(sets.workoutExerciseId, workoutExercises.id),
             )
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
             .where(and(eq(workouts.userId, userId), isNotNull(sets.reps)))
@@ -282,7 +383,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(workouts)
             .innerJoin(
               workoutExercises,
-              eq(workouts.id, workoutExercises.workoutId)
+              eq(workouts.id, workoutExercises.workoutId),
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
             .where(eq(workouts.userId, userId))
@@ -304,14 +405,14 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(workouts)
             .innerJoin(
               workoutExercises,
-              eq(workouts.id, workoutExercises.workoutId)
+              eq(workouts.id, workoutExercises.workoutId),
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
             .where(
               and(
                 eq(workouts.userId, userId),
-                sql`date_trunc('week', ${workouts.date}) < date_trunc('week', CURRENT_DATE)`
-              )
+                sql`date_trunc('week', ${workouts.date}) < date_trunc('week', CURRENT_DATE)`,
+              ),
             )
             .groupBy(sql`date_trunc('week', ${workouts.date})`)
             .orderBy(sql`date_trunc('week', ${workouts.date})`)
@@ -327,7 +428,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .from(exercises)
         .innerJoin(
           workoutExercises,
-          eq(exercises.id, workoutExercises.exerciseId)
+          eq(exercises.id, workoutExercises.exerciseId),
         )
         .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
         .where(eq(workouts.userId, userId))
@@ -350,7 +451,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .groupBy(exercises.id)
             .orderBy(
               desc(sql`count(distinct ${workouts.id})`),
-              desc(sql`max(${workouts.date})`)
+              desc(sql`max(${workouts.date})`),
             )
             .limit(2)
         : Promise.resolve([]),
@@ -570,7 +671,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     console.error('Error fetching insights:', error)
     return NextResponse.json(
       { error: 'Failed to fetch insights' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })

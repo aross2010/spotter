@@ -1,13 +1,13 @@
-import { ExerciseDetails } from '../utils/types'
+import { toKg } from './conversions'
 
-const calculate1RM = (
+export const calculate1RM = (
   weight: number,
   unit: 'lbs' | 'kgs',
   reps: number,
   rpe: number | null = null,
   rir: number | null = null,
 ) => {
-  if (!weight || reps <= 0) return 'N/A'
+  if (!weight || reps <= 0) return 0
 
   // Derive RIR if only RPE is provided
   let effectiveRIR: number
@@ -22,31 +22,15 @@ const calculate1RM = (
   // Use Brzycki formula - more accurate for higher rep ranges
   // Adjust effective reps by adding RIR (reps they could have done at RPE 10)
   const effectiveReps = reps + effectiveRIR
-
+  
   // Modified Brzycki: slightly more conservative for higher reps
   // Cap at 36 reps to avoid division issues
   const cappedReps = Math.min(36, effectiveReps)
   const oneRepMax = weight * (36 / (37.5 - cappedReps))
 
-  return `${Math.floor(oneRepMax)} ${unit}`
-}
-
-export const estimate1RM = (
-  exercise: ExerciseDetails,
-  weightMetric: 'lbs' | 'kgs',
-) => {
-  const lastThreeWorkouts = exercise?.stats.progressionChart.slice(-3) || []
-  if (lastThreeWorkouts.length === 0) return 'N/A'
-
-  const maxWeightSet = lastThreeWorkouts.reduce((max, workout) => {
-    return workout.data.weight > max.data.weight ? workout : max
-  }, lastThreeWorkouts[0])
-
-  return calculate1RM(
-    maxWeightSet.data.weight,
-    weightMetric,
-    maxWeightSet.data.reps,
-    maxWeightSet.data.rpe || null,
-    maxWeightSet.data.rir || null,
-  )
+  if (unit === 'kgs') {
+    return Math.floor(toKg(oneRepMax))
+  } else {
+    return Math.floor(oneRepMax)
+  }
 }

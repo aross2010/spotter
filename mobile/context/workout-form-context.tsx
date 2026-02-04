@@ -50,8 +50,9 @@ type WorkoutFormContextType = {
   updateExerciseDetails: (
     exerciseIndex: number,
     details: any,
-    loading: boolean
+    loading: boolean,
   ) => void
+  prefetchAllExerciseHistories: (data?: WorkoutFormData) => Promise<void>
   resetWorkoutFormContext: () => void
 }
 
@@ -76,7 +77,7 @@ const starterExercise = {
 }
 
 const WorkoutFormContext = createContext<WorkoutFormContextType | undefined>(
-  undefined
+  undefined,
 )
 
 export const useWorkoutForm = () => {
@@ -96,6 +97,9 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const defaultWeightMetric = preferences?.weightMetric || 'lbs'
   const defaultLocation = preferences?.location || ''
   const defaultDistanceMetric = preferences?.distanceMetric || 'mi'
+  const defaultUnilateralLogging = preferences?.unilateralLogging || 'sync'
+  const defaultAutosaveActiveWorkouts =
+    preferences?.autosaveActiveWorkouts || 'enabled'
   const [workoutData, setWorkoutData] = useState<WorkoutFormData>({
     name: '',
     date: new Date(),
@@ -120,6 +124,59 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const handleExerciseNumberSubmitRef = useRef<(() => void) | null>(null)
   const { fetchWithAuth } = useAuth()
   const { refreshWorkouts } = useWorkout()
+
+  // Sync preferences to workout form when they change
+  // Only update if the current value matches the previous default (user hasn't manually changed it)
+  const prevDefaultsRef = useRef({
+    location: defaultLocation,
+    weightMetric: defaultWeightMetric,
+    distanceMetric: defaultDistanceMetric,
+  })
+
+  useEffect(() => {
+    const prevDefaults = prevDefaultsRef.current
+
+    setWorkoutData((prev) => {
+      let updated = { ...prev }
+      let hasChanges = false
+
+      // Sync location
+      if (defaultLocation !== prevDefaults.location) {
+        if (prev.location === '' || prev.location === prevDefaults.location) {
+          updated.location = defaultLocation
+          hasChanges = true
+        }
+      }
+
+      // Sync weight unit
+      if (defaultWeightMetric !== prevDefaults.weightMetric) {
+        if (prev.weightUnit === prevDefaults.weightMetric) {
+          updated.weightUnit = defaultWeightMetric
+          hasChanges = true
+        }
+      }
+
+      // Sync distance unit
+      if (defaultDistanceMetric !== prevDefaults.distanceMetric) {
+        if (prev.distanceUnit === prevDefaults.distanceMetric) {
+          updated.distanceUnit = defaultDistanceMetric
+          hasChanges = true
+        }
+      }
+
+      return hasChanges ? updated : prev
+    })
+
+    // Update refs
+    prevDefaultsRef.current = {
+      location: defaultLocation,
+      weightMetric: defaultWeightMetric,
+      distanceMetric: defaultDistanceMetric,
+    }
+  }, [defaultLocation, defaultWeightMetric, defaultDistanceMetric])
+
+  // Note: unilateralLogging and autosaveActiveWorkouts are read directly from preferences
+  // where needed, so they don't need to be synced to workoutData
 
   // add workouts dependency
 
@@ -275,7 +332,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
 
       const { exerciseNames, workoutNames, locations, tags } =
@@ -314,7 +371,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   const updateExerciseDetails = (
     exerciseIndex: number,
     details: any,
-    loading: boolean
+    loading: boolean,
   ) => {
     setWorkoutData((prev) => {
       const updatedExercises = [...prev.exercises]
@@ -332,6 +389,48 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
         exercises: updatedExercises,
       }
     })
+  }
+
+  const prefetchAllExerciseHistories = async (data?: WorkoutFormData) => {
+    const dataToUse = data || workoutData
+    const weightMetric = preferences?.weightMetric || 'lbs'
+    const intensityMetric = preferences?.intensityMetric || 'rpe'
+    const workoutDate = dataToUse.date.toISOString().slice(0, 10)
+
+    // Map exercises with their original indices
+    const exercisesToFetch = dataToUse.exercises
+      .map((exercise, index) => ({ exercise, index }))
+      .filter(({ exercise }) => exercise.id && exercise.existing)
+
+    // Mark all as loading using original indices
+    exercisesToFetch.forEach(({ index }) => {
+      updateExerciseDetails(index, null, true)
+    })
+
+    // Fetch all histories in parallel
+    await Promise.all(
+      exercisesToFetch.map(async ({ exercise, index }) => {
+        try {
+          const res = await fetchWithAuth(
+            `${BASE_URL}/api/exercises/mini/${exercise.id}?weight=${weightMetric}&intensity=${intensityMetric}&date=${workoutDate}`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            },
+          )
+          const data = await res.json()
+          updateExerciseDetails(index, data, false)
+        } catch (error) {
+          console.error(
+            `Error prefetching exercise history for ${exercise.name}:`,
+            error,
+          )
+          updateExerciseDetails(index, null, false)
+        }
+      }),
+    )
   }
 
   // Register reset function on mount
@@ -360,6 +459,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     resetWorkoutFormContext,
     setUserTags,
     updateExerciseDetails,
+    prefetchAllExerciseHistories,
   }
 
   return (
