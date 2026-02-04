@@ -128,11 +128,11 @@ const Settings = () => {
                     await deleteAccount()
                   },
                 },
-              ]
+              ],
             )
           },
         },
-      ]
+      ],
     )
   }
 
@@ -191,7 +191,7 @@ const Settings = () => {
           </View>
         </View>
       )
-    }
+    },
   )
 
   return (
@@ -209,7 +209,6 @@ const Settings = () => {
           <Link href="https://aross.app">
             <Txt twcn="font-bold text-primary dark:text-primary ">me</Txt>
           </Link>
-          .
         </Txt>
       </View>
     </SafeView>
