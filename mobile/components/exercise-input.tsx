@@ -682,7 +682,6 @@ const ExerciseInput = ({
 
   const handleDeleteExercise = () => {
     // if exercise has exercise name, delete immediately without confirmation
-    console.log('Deleting exercise:', exercise)
     if (exercise.name.trim() == '') {
       const updatedExercises = [...workoutData.exercises]
       updatedExercises.splice(exerciseNumber - 1, 1)

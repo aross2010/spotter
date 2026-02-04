@@ -91,7 +91,6 @@ const WorkoutData = () => {
         },
       )
       const data = await res.json()
-      console.log('Fetched workout data:', JSON.stringify(data, null, 2))
       setWorkoutData(data)
       setInitialWorkoutData(JSON.parse(JSON.stringify(data)))
     } catch (error: any) {

@@ -78,7 +78,6 @@ const NotebookData = () => {
         },
       )
       const data = await res.json()
-      console.log('Fetched notebook data:', JSON.stringify(data, null, 2))
       setNotebookData(data)
       setInitialNotebookData(JSON.parse(JSON.stringify(data)))
     } catch (error: any) {

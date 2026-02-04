@@ -319,40 +319,34 @@ const LineChart = ({
     setCurrentIndex(nearestIndex)
   }, [])
 
-  // Create our own long press gesture to capture raw touch coordinates
-  // This bypasses Victory Native's broken coordinate calculation when container has padding
-  const longPressGesture = Gesture.LongPress()
-    .minDuration(longPressMs)
-    .onStart((e) => {
-      'worklet'
-      rawTouchX.value = e.x
-      isGestureActive.value = true
-    })
+  // Simple: Pan gesture that only activates after holding for longPressMs
+  // If user scrolls before that, gesture never activates and scroll works
+  const hasActivated = useSharedValue(false)
 
   const panGesture = Gesture.Pan()
-    .manualActivation(true)
-    .onTouchesMove((e, state) => {
-      // Only activate pan if long press is already active
-      if (isGestureActive.value) {
-        state.activate()
-      }
+    .activateAfterLongPress(longPressMs)
+    .onStart((e) => {
+      'worklet'
+      hasActivated.value = true
+      isGestureActive.value = true
+      rawTouchX.value = e.x
     })
     .onUpdate((e) => {
       'worklet'
-      if (isGestureActive.value) {
+      if (hasActivated.value) {
         rawTouchX.value = e.x
       }
     })
     .onEnd(() => {
       'worklet'
+      hasActivated.value = false
       isGestureActive.value = false
     })
     .onFinalize(() => {
       'worklet'
+      hasActivated.value = false
       isGestureActive.value = false
     })
-
-  const composedGesture = Gesture.Simultaneous(longPressGesture, panGesture)
 
   // Use our raw touch position to find the nearest point
   useAnimatedReaction(
@@ -684,7 +678,7 @@ const LineChart = ({
   }
 
   return (
-    <GestureDetector gesture={composedGesture}>
+    <GestureDetector gesture={panGesture}>
       <View
         ref={chartViewRef}
         style={tw`w-full h-[${chartHeight}px]`}

@@ -4,7 +4,7 @@ import { useUserStore } from '../../../stores/user-store'
 import tw from '../../../tw'
 import { formattedDate } from '../../../functions/formatted-date'
 import { formatNumber } from '../../../functions/format-number'
-import { Alert, Appearance, View } from 'react-native'
+import { Alert, Appearance, Linking, View } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../../context/auth-context'
 import { BASE_URL } from '../../../constants/auth'
@@ -33,6 +33,8 @@ import { useRef } from 'react'
 import MyBottomSheet from '../../../components/bottom-sheet'
 import { SFSymbol } from 'expo-symbols'
 import BodyWeight from '../../../components/body-weight'
+import Constants from 'expo-constants'
+import RequireUpdate from '../../../components/require-update'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
@@ -41,6 +43,20 @@ function getGreeting(d: Date = new Date()) {
   if (h >= 17 && h < 22) return 'Good Evening'
   // late night / very early
   return 'Good Evening'
+}
+
+export const needsForceUpdate = () => {
+  const current = Constants.expoConfig?.version ?? '0.0.0'
+
+  const min = '2.1.0'
+
+  const toNums = (v: string) => v.split('.').map(Number)
+  const [a, b, c] = toNums(current)
+  const [x, y, z] = toNums(min)
+
+  if (a !== x) return a < x
+  if (b !== y) return b < y
+  return c < z
 }
 
 function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
@@ -117,6 +133,24 @@ const Home = () => {
   useEffect(() => {
     SplashScreen.hideAsync()
     getHomeData()
+  }, [])
+
+  useEffect(() => {
+    if (!needsForceUpdate()) return
+    Alert.alert(
+      'Update Required',
+      'A new version of Spotter is available. Please update the app to use the latest features and improvements.',
+      [
+        {
+          text: 'Update Now',
+          onPress: () => {
+            const url = 'itms-apps://apps.apple.com/app/id6754656428'
+            Linking.openURL(url)
+          },
+        },
+      ],
+      { cancelable: false },
+    )
   }, [])
 
   useEffect(() => {
