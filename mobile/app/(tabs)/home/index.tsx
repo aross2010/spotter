@@ -34,7 +34,6 @@ import MyBottomSheet from '../../../components/bottom-sheet'
 import { SFSymbol } from 'expo-symbols'
 import BodyWeight from '../../../components/body-weight'
 import Constants from 'expo-constants'
-import RequireUpdate from '../../../components/require-update'
 
 function getGreeting(d: Date = new Date()) {
   const h = d.getHours()
