@@ -616,7 +616,7 @@ const LineChart = ({
 
     // Determine step size to have max 6 ticks with minimum 2.5 step
     // Calculate what step would give us ~5-6 ticks
-    const idealSteps = 5 // We want 5 intervals = 6 ticks
+    const idealSteps = 4 // We want 5 intervals = 6 ticks
     let step = Math.ceil(range / idealSteps / 2.5) * 2.5 // Round up to nearest 2.5
 
     // Ensure minimum step of 2.5

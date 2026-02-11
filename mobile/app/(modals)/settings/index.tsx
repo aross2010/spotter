@@ -1,4 +1,4 @@
-import { View, Alert, Linking } from 'react-native'
+import { View, Alert, Linking, Share } from 'react-native'
 import React from 'react'
 import SafeView from '../../../components/safe-view'
 import Txt from '../../../components/text'
@@ -74,13 +74,26 @@ const settingsData = [
     ],
   },
   {
-    sectionTitle: null,
+    sectionTitle: 'Feedback & Sharing',
     options: [
       {
         label: '⭐ Rate the App!',
         onPress: async () => {
           if (await StoreReview.isAvailableAsync()) {
             StoreReview.requestReview()
+          }
+        },
+      },
+      {
+        label: '📤 Share the App',
+        onPress: async () => {
+          try {
+            await Share.share({
+              message:
+                'Check out Spotter here: https://apps.apple.com/us/app/spotter-workout-tracker/id6754656428',
+            })
+          } catch (error) {
+            Alert.alert('Error', 'Unable to share the app.')
           }
         },
       },
@@ -163,7 +176,7 @@ const Settings = () => {
       const needsBorderBottom = currentSectionTitle == nextSectionTitle
       return (
         <View
-          style={tw`flex-col gap-4`}
+          style={tw`flex-col gap-2`}
           key={index}
         >
           {sectionTitle && (

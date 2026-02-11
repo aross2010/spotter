@@ -694,7 +694,7 @@ const WorkoutForm = () => {
               </ContextMenu.Items>
               <ContextMenu.Trigger>
                 <SFIcon
-                  name="info.circle"
+                  name="ellipsis.circle"
                   color={Colors.primary}
                   size={26}
                 />
@@ -781,7 +781,7 @@ const WorkoutForm = () => {
           }
         } else {
           resetWorkoutFormContext()
-          router.replace('/workouts')
+          router.back()
         }
       } else if (mode === 'edit' && workoutId) {
         const delta = getChangedData()
@@ -806,7 +806,7 @@ const WorkoutForm = () => {
             triggerExerciseDetailsRefresh()
           } else {
             resetWorkoutFormContext()
-            router.replace('/workouts')
+            router.back()
           }
         }
       }

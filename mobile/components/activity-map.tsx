@@ -1,5 +1,6 @@
 import { ScrollView, View, useWindowDimensions } from 'react-native'
-import React, { useMemo, useRef, useEffect } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'
 import { ActivityCalendar } from '../utils/types'
 import tw from '../tw'
 import Colors from '../constants/colors'
@@ -146,7 +147,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       if (dayData) {
         const hasActive = dayData.workouts.some((w) => w.status === 'active')
         const hasCompleted = dayData.workouts.some(
-          (w) => w.status === 'completed'
+          (w) => w.status === 'completed',
         )
         const hasPlanned = dayData.workouts.some((w) => w.status === 'planned')
 
@@ -229,17 +230,8 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     return { weeks, monthLabels: filteredMonthLabels }
   }, [data])
 
-  // Scroll to the end when component mounts or data changes
-  useEffect(() => {
-    if (scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: false })
-      }, 100)
-    }
-  }, [weeks])
-
   const getColorForStatus = (
-    status: 'none' | 'planned' | 'completed' | 'active'
+    status: 'none' | 'planned' | 'completed' | 'active',
   ) => {
     switch (status) {
       case 'active':
@@ -280,6 +272,75 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
   // Day labels starting from Monday to match the calendar grid
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
+  // Calculate total content width to determine initial scroll position
+  const contentWidth = useMemo(() => {
+    const columnWidth = visibleWeeks.squareWidth + visibleWeeks.gap
+    return weeks.length * columnWidth - visibleWeeks.gap // Subtract last gap
+  }, [weeks.length, visibleWeeks.squareWidth, visibleWeeks.gap])
+
+  // Calculate how much we need to scroll to show the end
+  // Subtract the visible width to scroll to the rightmost position
+  const initialScrollOffset = useMemo(() => {
+    const dayLabelsWidth = 12
+    const dayLabelsMargin = 8
+    const safeViewPadding = 32
+    const wrapperPadding = 32
+    const availableWidth =
+      width -
+      dayLabelsWidth -
+      dayLabelsMargin -
+      safeViewPadding -
+      wrapperPadding
+
+    // If content fits in viewport, don't scroll
+    if (contentWidth <= availableWidth) return 0
+
+    // Otherwise, scroll to show the end
+    return contentWidth - availableWidth
+  }, [contentWidth, width])
+
+  // Calculate available viewport width
+  const viewportWidth = useMemo(() => {
+    const dayLabelsWidth = 12
+    const dayLabelsMargin = 8
+    const safeViewPadding = 32
+    const wrapperPadding = 32
+    return (
+      width -
+      dayLabelsWidth -
+      dayLabelsMargin -
+      safeViewPadding -
+      wrapperPadding
+    )
+  }, [width])
+
+  // Initialize scrollX with the initial scroll offset
+  const [scrollX, setScrollX] = useState(initialScrollOffset)
+
+  // Filter month labels to only show those that are fully visible in the viewport
+  const visibleMonthLabels = useMemo(() => {
+    const columnWidth = visibleWeeks.squareWidth + visibleWeeks.gap
+
+    return monthLabels.filter(({ label, weekIndex }) => {
+      const labelLeft = weekIndex * columnWidth
+      // Estimate label width (rough approximation based on character count)
+      const labelWidth = label.length * 6 // Approximate 6px per character at text-xs
+      const labelRight = labelLeft + labelWidth
+
+      // Check if label is fully visible in the current viewport
+      const isFullyVisible =
+        labelLeft >= scrollX && labelRight <= scrollX + viewportWidth
+
+      return isFullyVisible
+    })
+  }, [
+    monthLabels,
+    scrollX,
+    viewportWidth,
+    visibleWeeks.squareWidth,
+    visibleWeeks.gap,
+  ])
+
   return (
     <View>
       <View style={tw`flex-row`}>
@@ -310,23 +371,30 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 0 }}
+          contentOffset={{ x: initialScrollOffset, y: 0 }}
+          onScroll={(event) => {
+            setScrollX(event.nativeEvent.contentOffset.x)
+          }}
+          scrollEventThrottle={16}
         >
           <View>
             {/* Month labels */}
             <View style={tw`flex-row mb-2 h-4`}>
-              {monthLabels.map(({ label, weekIndex }) => {
+              {visibleMonthLabels.map(({ label, weekIndex }) => {
                 // Calculate position based on square width + gap
                 const columnWidth = visibleWeeks.squareWidth + visibleWeeks.gap
                 const left = weekIndex * columnWidth
                 return (
-                  <View
+                  <Animated.View
                     key={`${label}-${weekIndex}`}
+                    entering={FadeIn.duration(200)}
+                    exiting={FadeOut.duration(200)}
                     style={[tw`absolute`, { left }]}
                   >
                     <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
                       {label}
                     </Txt>
-                  </View>
+                  </Animated.View>
                 )
               })}
             </View>

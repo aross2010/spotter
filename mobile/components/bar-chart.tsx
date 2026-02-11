@@ -64,7 +64,7 @@ function AnimatedBar({
         withTiming(height, {
           duration: ANIMATION_DURATION,
           easing: Easing.out(Easing.cubic),
-        })
+        }),
       )
     }
   }, [shouldAnimate, height, animationDelay])
@@ -103,7 +103,6 @@ const BarChart = ({
   const { colorScheme, theme } = useTheme()
   const isFocused = useIsFocused()
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [showTooltip, setShowTooltip] = useState(false)
   const [chartWidth, setChartWidth] = useState(0)
   const [hasBeenViewed, setHasBeenViewed] = useState(false)
   const longPressTimer = useRef<NodeJS.Timeout | null>(null)
@@ -181,7 +180,7 @@ const BarChart = ({
       if (index >= dataArray.length) return dataArray.length - 1
       return index
     },
-    [chartWidth, barWidth, dataArray.length]
+    [chartWidth, barWidth, dataArray.length],
   )
 
   // Store the initial touch position for accurate tracking
@@ -249,7 +248,7 @@ const BarChart = ({
           setSelectedIndex(null)
         },
       }),
-    [getBarIndexAtPosition, onScrollEnabledChange]
+    [getBarIndexAtPosition, onScrollEnabledChange],
   )
 
   // Calculate max value for scaling
@@ -337,31 +336,24 @@ const BarChart = ({
 
       return left
     },
-    [chartWidth, barWidth, dataArray.length]
+    [chartWidth, barWidth, dataArray.length],
   )
 
   // Animate tooltip position when selectedIndex changes
   useEffect(() => {
     if (selectedIndex !== null) {
       const targetLeft = getTooltipPosition(selectedIndex)
-      if (!showTooltip) {
-        // First selection - jump immediately and fade in
-        tooltipLeft.value = targetLeft
-        tooltipOpacity.value = withTiming(1, { duration: 150 })
-        setShowTooltip(true)
-      } else {
-        // Subsequent selections - animate position
-        tooltipLeft.value = withTiming(targetLeft, {
-          duration: 150,
-          easing: Easing.out(Easing.cubic),
-        })
-      }
+      // Animate position and fade in
+      tooltipLeft.value = withTiming(targetLeft, {
+        duration: 150,
+        easing: Easing.out(Easing.cubic),
+      })
+      tooltipOpacity.value = withTiming(1, { duration: 150 })
     } else {
       // Deselected - fade out
       tooltipOpacity.value = withTiming(0, { duration: 150 })
-      setShowTooltip(false)
     }
-  }, [selectedIndex, getTooltipPosition, showTooltip])
+  }, [selectedIndex, getTooltipPosition])
 
   // Animated style for tooltip
   const tooltipAnimatedStyle = useAnimatedStyle(() => ({
@@ -474,7 +466,7 @@ const BarChart = ({
           </View>
 
           {/* Tooltip */}
-          {showTooltip && selectedItem && (
+          {selectedItem && (
             <Animated.View
               style={[
                 tw`absolute`,
@@ -484,6 +476,7 @@ const BarChart = ({
                 },
                 tooltipAnimatedStyle,
               ]}
+              pointerEvents="none"
             >
               {renderTooltip ? (
                 renderTooltip(selectedItem)

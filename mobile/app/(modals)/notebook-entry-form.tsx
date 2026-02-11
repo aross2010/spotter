@@ -188,7 +188,7 @@ const NotebookEntryForm = () => {
               </ContextMenu.Items>
               <ContextMenu.Trigger>
                 <SFIcon
-                  name="info.circle"
+                  name="ellipsis.circle"
                   color={Colors.primary}
                   size={26}
                 />
@@ -261,7 +261,7 @@ const NotebookEntryForm = () => {
         })
       }
 
-      router.replace('/notebook')
+      router.back()
     } catch (error: any) {
       Alert.alert('Error', error.message ?? 'Something went wrong')
     } finally {

@@ -703,58 +703,62 @@ export const GET = withAuth(async (req: Request, user: any) => {
       }
     >()
 
-    const exercises = workout.workoutExercises.map((we) => {
-      const exerciseNumber = Number(we.exerciseNumber)
+    const exercises = workout.workoutExercises
+      .sort((a, b) => Number(a.exerciseNumber) - Number(b.exerciseNumber))
+      .map((we) => {
+        const exerciseNumber = Number(we.exerciseNumber)
 
-      const sets = we.sets.map((s) => {
-        const setNumber = Number(s.setNumber)
-        const grouping = s.setGrouping
+        const sets = we.sets.map((s) => {
+          const setNumber = Number(s.setNumber)
+          const grouping = s.setGrouping
 
-        if (grouping) {
-          if (!groupingMap.has(grouping.id)) {
-            groupingMap.set(grouping.id, {
-              id: grouping.id,
-              groupingType: grouping.type,
-              groupSets: [],
+          if (grouping) {
+            if (!groupingMap.has(grouping.id)) {
+              groupingMap.set(grouping.id, {
+                id: grouping.id,
+                groupingType: grouping.type,
+                groupSets: [],
+              })
+            }
+            groupingMap.get(grouping.id)!.groupSets.push({
+              exerciseNumber,
+              setNumber,
             })
           }
-          groupingMap.get(grouping.id)!.groupSets.push({
-            exerciseNumber,
+
+          return {
             setNumber,
-          })
-        }
+            weightLbs: s.weightLbs ? Number(s.weightLbs) : null,
+            weightKg: s.weightKg ? Number(s.weightKg) : null,
+            reps: s.reps ? Number(s.reps) : null,
+            leftReps: s.leftReps ? Number(s.leftReps) : null,
+            rightReps: s.rightReps ? Number(s.rightReps) : null,
+            rpe: s.rpe ? Number(s.rpe) : null,
+            leftRpe: s.leftRpe ? Number(s.leftRpe) : null,
+            rightRpe: s.rightRpe ? Number(s.rightRpe) : null,
+            rir: s.rir ? Number(s.rir) : null,
+            leftRir: s.leftRir ? Number(s.leftRir) : null,
+            rightRir: s.rightRir ? Number(s.rightRir) : null,
+            partialReps: s.partialReps ? Number(s.partialReps) : null,
+            leftPartialReps: s.leftPartialReps
+              ? Number(s.leftPartialReps)
+              : null,
+            rightPartialReps: s.rightPartialReps
+              ? Number(s.rightPartialReps)
+              : null,
+            cheatReps: s.cheatReps ? Number(s.cheatReps) : null,
+            id: `${exerciseNumber}-${setNumber}`,
+          }
+        })
 
         return {
-          setNumber,
-          weightLbs: s.weightLbs ? Number(s.weightLbs) : null,
-          weightKg: s.weightKg ? Number(s.weightKg) : null,
-          reps: s.reps ? Number(s.reps) : null,
-          leftReps: s.leftReps ? Number(s.leftReps) : null,
-          rightReps: s.rightReps ? Number(s.rightReps) : null,
-          rpe: s.rpe ? Number(s.rpe) : null,
-          leftRpe: s.leftRpe ? Number(s.leftRpe) : null,
-          rightRpe: s.rightRpe ? Number(s.rightRpe) : null,
-          rir: s.rir ? Number(s.rir) : null,
-          leftRir: s.leftRir ? Number(s.leftRir) : null,
-          rightRir: s.rightRir ? Number(s.rightRir) : null,
-          partialReps: s.partialReps ? Number(s.partialReps) : null,
-          leftPartialReps: s.leftPartialReps ? Number(s.leftPartialReps) : null,
-          rightPartialReps: s.rightPartialReps
-            ? Number(s.rightPartialReps)
-            : null,
-          cheatReps: s.cheatReps ? Number(s.cheatReps) : null,
-          id: `${exerciseNumber}-${setNumber}`,
+          name: we.exercise.name,
+          isUnilateral: we.exercise.isUnilateral,
+          sets,
+          existing: true,
+          id: we.exercise.id,
         }
       })
-
-      return {
-        name: we.exercise.name,
-        isUnilateral: we.exercise.isUnilateral,
-        sets,
-        existing: true,
-        id: we.exercise.id,
-      }
-    })
 
     const workoutData = {
       name: workout.name.trim(),
