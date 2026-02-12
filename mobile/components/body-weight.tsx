@@ -22,6 +22,7 @@ type BodyWeightProps = {
   setData: (data: BodyWeightData) => void
   openForm?: () => void
   onScrollEnabledChange?: (enabled: boolean) => void
+  inOverview?: boolean
 }
 
 const BodyWeight = ({
@@ -29,6 +30,7 @@ const BodyWeight = ({
   setData,
   openForm,
   onScrollEnabledChange,
+  inOverview = false,
 }: BodyWeightProps) => {
   const [loading, setLoading] = useState(false)
   const { preferences } = useUserStore()
@@ -96,7 +98,7 @@ const BodyWeight = ({
             {formattedDate}
           </Txt>
           <Txt twcn="text-sm font-semibold">
-            {point.y} {weightUnit}
+            {point.y.toFixed(1)} {weightUnit}
           </Txt>
         </GlassView>
       )
@@ -182,60 +184,56 @@ const BodyWeight = ({
         formatYLabel={formatYLabel}
         toolTips={tooltips}
         onScrollEnabledChange={onScrollEnabledChange}
-        chartHeight={150}
+        chartHeight={inOverview ? 200 : 150}
       />
 
       {/* Stats row */}
-      <View style={tw`flex-row justify-between mt-2`}>
-        <View style={tw`items-center flex-1`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            Low
-          </Txt>
-          <Txt twcn="font-semibold">
-            {data?.lowestBodyWeight ?? '-'}{' '}
-            {data?.lowestBodyWeight ? weightUnit : ''}
-          </Txt>
+      {!inOverview && (
+        <View style={tw`flex-row justify-between mt-2`}>
+          <View style={tw`items-center flex-1`}>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+              Low
+            </Txt>
+            <Txt twcn="font-semibold">
+              {data?.lowestBodyWeight ?? '-'}{' '}
+              {data?.lowestBodyWeight ? weightUnit : ''}
+            </Txt>
+          </View>
+          <View style={tw`items-center flex-1`}>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+              High
+            </Txt>
+            <Txt twcn="font-semibold">
+              {data?.highestBodyWeight ?? '-'}{' '}
+              {data?.highestBodyWeight ? weightUnit : ''}
+            </Txt>
+          </View>
+          <View style={tw`items-center flex-1`}>
+            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
+              Diff.
+            </Txt>
+            <Txt
+              twcn={`font-semibold ${data?.overallDifference && data.overallDifference > 0 ? 'text-green dark:text-green' : data?.overallDifference && data.overallDifference < 0 ? 'text-red dark:text-red' : ''}`}
+            >
+              {data?.overallDifference !== null &&
+              data?.overallDifference !== undefined
+                ? `${data.overallDifference > 0 ? '+' : ''}${data.overallDifference.toFixed(2)} ${weightUnit}`
+                : '-'}
+            </Txt>
+          </View>
         </View>
-        <View style={tw`items-center flex-1`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            High
-          </Txt>
-          <Txt twcn="font-semibold">
-            {data?.highestBodyWeight ?? '-'}{' '}
-            {data?.highestBodyWeight ? weightUnit : ''}
-          </Txt>
-        </View>
-        <View style={tw`items-center flex-1`}>
-          <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText">
-            Change
-          </Txt>
-          <Txt
-            twcn={`font-semibold ${data?.overallDifference && data.overallDifference > 0 ? 'text-green dark:text-green' : data?.overallDifference && data.overallDifference < 0 ? 'text-red dark:text-red' : ''}`}
-          >
-            {data?.overallDifference !== null &&
-            data?.overallDifference !== undefined
-              ? `${data.overallDifference > 0 ? '+' : ''}${data.overallDifference.toFixed(2)} ${weightUnit}`
-              : '-'}
-          </Txt>
-        </View>
-      </View>
+      )}
     </>
   )
 
-  return (
-    <View
-      style={tw`p-4 bg-white dark:bg-dark-grayPrimary rounded-2xl min-h-32`}
-    >
-      {loading ? (
-        <Spinner overlay />
-      ) : hasNoEntries ? (
-        noEntries
-      ) : hasSingleEntry ? (
-        singleEntry
-      ) : (
-        multipleEntries
-      )}
-    </View>
+  return loading ? (
+    <Spinner overlay />
+  ) : hasNoEntries ? (
+    noEntries
+  ) : hasSingleEntry ? (
+    singleEntry
+  ) : (
+    multipleEntries
   )
 }
 

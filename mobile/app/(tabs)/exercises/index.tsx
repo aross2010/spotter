@@ -26,7 +26,7 @@ const Exercises = () => {
   const { q } = useLocalSearchParams<{ q?: string }>()
   const [exercises, setExercises] = useState<ExerciseMinimal[]>([])
   const [filteredExercises, setFilteredExercises] = useState<ExerciseMinimal[]>(
-    []
+    [],
   )
   const [isLoading, setIsLoading] = useState(true)
   const { fetchWithAuth, authUser } = useAuth()
@@ -44,7 +44,7 @@ const Exercises = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       )
       const data: ExerciseMinimal[] = await res.json()
       setExercises(data)
@@ -63,12 +63,12 @@ const Exercises = () => {
         clearRefresh()
       }
       return () => {}
-    }, [shouldRefresh])
+    }, [shouldRefresh]),
   )
 
   useEffect(() => {
     getExercises()
-  }, [])
+  }, [authUser?.id])
 
   useEffect(() => {
     handleSearchChange(q || '')
@@ -81,7 +81,7 @@ const Exercises = () => {
     }
 
     const filtered = exercises.filter((exercise) =>
-      exercise.name.toLowerCase().includes(text.toLowerCase())
+      exercise.name.toLowerCase().includes(text.toLowerCase()),
     )
     setFilteredExercises(filtered)
   }

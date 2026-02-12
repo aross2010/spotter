@@ -119,6 +119,7 @@ export default function ModalLayout() {
           }}
         />
         <Stack.Screen name="workout-details" />
+        <Stack.Screen name="bodyweight-overview" />
         <Stack.Screen
           name="workout-filters"
           options={{

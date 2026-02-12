@@ -90,7 +90,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
   })
   const [filterOptions, setFilterOptions] = useState<FilterOptions>([])
   const { user } = useUserStore()
-  const { fetchWithAuth } = useAuth()
+  const { fetchWithAuth, authUser } = useAuth()
 
   const PAGE_SIZE = 10
 
@@ -199,7 +199,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     status: string | null = statusFilter,
     order: 'asc' | 'desc' = sortOrder,
   ) => {
-    if (!user) return
+    if (!authUser?.id) return
 
     if (append) {
       setIsLoadingMore(true)
@@ -218,7 +218,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
         order,
       )
       const response = await fetchWithAuth(
-        `${BASE_URL}/api/workouts/user/${user.id}?${queryParams}`,
+        `${BASE_URL}/api/workouts/user/${authUser.id}?${queryParams}`,
         {
           method: 'GET',
           headers: {

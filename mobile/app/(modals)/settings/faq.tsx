@@ -48,7 +48,7 @@ const faqData: FAQItem[] = [
     id: 1,
     question: 'Can I share a workout with others?',
     answer:
-      'Yes! From the workout details page, tap the share icon in the header. You can share your workout results to social media or with friends via messaging apps.',
+      'Yes! From the workout details page, tap the share icon in the header. You can share your workout results to social media or with friends via messaging apps. You may also tap the camera screenshot icon to take a screenshot of your entire workout to share.',
     category: 'Workouts',
   },
 
@@ -93,7 +93,7 @@ const faqData: FAQItem[] = [
     id: 3,
     question: 'How is exercise progression tracked?',
     answer:
-      'For each workout, the app records your top set, which is the set with the heaviest weight. This set is placed into the progression chart. Do not expect to see growth with every workout; progression will happen over long periods of consistent training.',
+      'For each workout, the app records your best set, which is then translated into an estimated one-rep max (1RM). The progression graph tracks how your 1RM has changed over time, giving you an accurate insight into how your are progressing that exercise.',
     category: 'Exercises',
   },
   {
@@ -167,6 +167,29 @@ const faqData: FAQItem[] = [
     answer:
       'RPE stands for "Rate of Perceived Exertion". It is a subjective measure of how hard a set felt on a scale from 1 to 10, with 10 being maximum effort.',
     category: 'Sets & Reps',
+  },
+
+  // Body Weight Tracking
+  {
+    id: 26,
+    question: 'How do I track my body weight?',
+    answer:
+      'Tap the "+" icon on the home screen and select "Weight Entry". You can log your current weight in your preferred unit.',
+    category: 'Body Weight Tracking',
+  },
+  {
+    id: 27,
+    question: 'Can I log my body weight more than once per day?',
+    answer:
+      'No, you may only log your body weight once per day. If you try to log a second entry on the same day, the new entry will overwrite the previous one.',
+    category: 'Body Weight Tracking',
+  },
+  {
+    id: 28,
+    question: 'Can I delete or edit a body weight entry?',
+    answer:
+      'Yes, to delete a body weight entry, go to the body weight form, select the day you wish to delete, and tap the trash icon. To modify an entry, simply log a new weight for the same day and it will overwrite the previous entry.',
+    category: 'Body Weight Tracking',
   },
 
   // Notebook
@@ -248,7 +271,14 @@ const faqData: FAQItem[] = [
     id: 29,
     question: 'Can I save a workout without exiting it?',
     answer:
-      'Yes! Set the workout to "Active" status. This saves your progress without closing the workout, allowing you to log sets as you go.',
+      'Yes! Set the workout status to "active". Now, every save you make will keep you in the workout form. Additionally, any changes you make will be quickly auto-saved for you. ',
+    category: 'Tips & Tricks',
+  },
+  {
+    id: 39,
+    question: 'Is there anyway to turn off auto-saving?',
+    answer:
+      'Yes, go to Settings > User Preferences and toggle off "Auto-Save Workouts". With this off, you will need to manually save your workouts, but it will prevent any unwanted saves while editing.',
     category: 'Tips & Tricks',
   },
 ]
@@ -261,7 +291,7 @@ const FAQ = () => {
 
   const toggleExpanded = (id: number) => {
     setExpandedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     )
   }
 
@@ -293,7 +323,7 @@ const FAQ = () => {
       acc[faq.category].push(faq)
       return acc
     },
-    {} as Record<string, FAQItem[]>
+    {} as Record<string, FAQItem[]>,
   )
 
   const categories = Object.keys(groupedFAQs)
@@ -320,7 +350,7 @@ const FAQ = () => {
             </Text>
           ) : (
             part
-          )
+          ),
         )}
       </Text>
     )

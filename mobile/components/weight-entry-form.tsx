@@ -66,7 +66,7 @@ const WeightEntryForm = ({ closeModal }: WeightEntryFormProps) => {
     date: new Date(), // disable future dates
     metric: weightUnit,
   })
-  const [weightText, setWeightText] = useState(data.weight.toFixed(1))
+  const [weightText, setWeightText] = useState('200.0')
   const formattedDataDate = formatYYYYMMDD(data.date)
 
   const identicalDate = previousEntry?.date === formattedDataDate

@@ -98,7 +98,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     tags: Tag[] = tagFilters,
     order: 'asc' | 'desc' = sortOrder,
   ) => {
-    if (!user) return
+    if (!authUser?.id) return
 
     if (append) {
       setIsLoadingMore(true)
@@ -109,7 +109,7 @@ export const NotebookProvider = ({ children }: NotebookProviderProps) => {
     try {
       const queryParams = buildQueryParams(page, tags, order)
       const response = await fetchWithAuth(
-        `${BASE_URL}/api/notebookEntries/user/${user.id}?${queryParams}`,
+        `${BASE_URL}/api/notebookEntries/user/${authUser.id}?${queryParams}`,
         {
           method: 'GET',
           headers: {

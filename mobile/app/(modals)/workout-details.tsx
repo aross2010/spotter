@@ -153,7 +153,7 @@ const WorkoutDetails = () => {
               <Button
                 onPress={() => router.back()}
                 hitSlop={12}
-                accessibilityLabel="close workout form"
+                accessibilityLabel="close workout details"
                 twcn="w-9 flex-row items-center justify-center h-full"
               >
                 <SFIcon

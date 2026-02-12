@@ -49,6 +49,7 @@ const Insights = () => {
 
   const fetchInsightsData = async () => {
     try {
+      if (!authUser) return
       const res = await fetchWithAuth(
         `${BASE_URL}/api/insights/${authUser?.id}?weightUnit=${weightUnit}`,
         {
@@ -81,8 +82,9 @@ const Insights = () => {
   }, [shouldRefresh])
 
   useEffect(() => {
+    if (!authUser) return
     fetchInsightsData()
-  }, [])
+  }, [authUser?.id])
 
   const summaryData = [
     {

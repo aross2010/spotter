@@ -71,7 +71,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
   if (userId !== user.id) {
     return NextResponse.json(
       { error: 'Unauthorized access to user home data' },
-      { status: 403 }
+      { status: 403 },
     )
   }
 
@@ -80,7 +80,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
       2,
-      '0'
+      '0',
     )}-${String(now.getDate()).padStart(2, '0')}`
 
     const [
@@ -104,7 +104,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .leftJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
         .leftJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
         .where(
-          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
         ),
 
       // Get all activity data with status and workout IDs
@@ -126,8 +126,8 @@ export const GET = withAuth(async (req: Request, user: any) => {
           and(
             eq(workouts.userId, userId),
             eq(workouts.status, 'active'),
-            eq(workouts.date, today)
-          )
+            eq(workouts.date, today),
+          ),
         )
         .orderBy(desc(workouts.date))
         .limit(1),
@@ -140,8 +140,8 @@ export const GET = withAuth(async (req: Request, user: any) => {
           and(
             eq(workouts.userId, userId),
             eq(workouts.status, 'planned'),
-            gte(workouts.date, today)
-          )
+            gte(workouts.date, today),
+          ),
         )
         .orderBy(asc(workouts.date))
         .limit(1),
@@ -151,7 +151,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
         .select({ id: workouts.id })
         .from(workouts)
         .where(
-          and(eq(workouts.userId, userId), eq(workouts.status, 'completed'))
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
         )
         .orderBy(desc(workouts.date), desc(workouts.updatedAt))
         .limit(1),
@@ -225,7 +225,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
 
     // Helper function to get full workout data
     const getFullWorkout = async (
-      workoutId: string
+      workoutId: string,
     ): Promise<WorkoutMinimal | null> => {
       const workoutResult = await db
         .select({
@@ -263,14 +263,14 @@ export const GET = withAuth(async (req: Request, user: any) => {
                 WHEN ${sets.leftReps} IS NOT NULL AND ${sets.rightReps} IS NOT NULL 
                 THEN LEAST(${sets.leftReps}, ${sets.rightReps})
                 ELSE ${sets.reps}
-              END`
+              END`,
             ),
             highRepRange: max(
               sql`CASE 
                 WHEN ${sets.leftReps} IS NOT NULL AND ${sets.rightReps} IS NOT NULL 
                 THEN GREATEST(${sets.leftReps}, ${sets.rightReps})
                 ELSE ${sets.reps}
-              END`
+              END`,
             ),
           })
           .from(workoutExercises)
@@ -333,7 +333,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     console.error('Error fetching home data:', error)
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 })

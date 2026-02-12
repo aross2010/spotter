@@ -12,8 +12,10 @@ import { useNotebook } from '../../../context/notebook-context'
 import { NotebookEntry } from '../../../utils/types'
 import { MONTHS } from '../../../constants/data'
 import SFIcon from '../../../components/sf-icon'
+import { useAuth } from '../../../context/auth-context'
 
 const Notebook = () => {
+  const { authUser } = useAuth()
   const {
     currentNotebookEntries,
     isLoading,
@@ -90,7 +92,7 @@ const Notebook = () => {
 
   useEffect(() => {
     initializeNotebook()
-  }, [])
+  }, [authUser?.id])
 
   const pinnedTitle = (
     <View style={tw`flex-row items-center gap-1 mb-2`}>

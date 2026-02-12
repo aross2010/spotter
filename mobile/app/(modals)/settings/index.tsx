@@ -77,7 +77,7 @@ const settingsData = [
     sectionTitle: 'Feedback & Sharing',
     options: [
       {
-        label: '⭐ Rate the App!',
+        label: '⭐  Rate the App',
         onPress: async () => {
           if (await StoreReview.isAvailableAsync()) {
             StoreReview.requestReview()
@@ -85,7 +85,7 @@ const settingsData = [
         },
       },
       {
-        label: '📤 Share the App',
+        label: '📤  Share the App',
         onPress: async () => {
           try {
             await Share.share({

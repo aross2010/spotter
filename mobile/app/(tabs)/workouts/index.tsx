@@ -15,9 +15,11 @@ import { useWorkoutTabStore } from '../../../stores/workout-store'
 import { useFocusEffect } from 'expo-router'
 import SFIcon from '../../../components/sf-icon'
 import { GlassView } from 'expo-glass-effect'
+import { useAuth } from '../../../context/auth-context'
 
 const Workouts = () => {
   const navigation = useNavigation()
+  const { authUser } = useAuth()
   const {
     currentWorkouts,
     filters,
@@ -59,7 +61,7 @@ const Workouts = () => {
 
   useEffect(() => {
     initializeWorkouts()
-  }, [])
+  }, [authUser?.id])
 
   useEffect(() => {
     navigation.setOptions({

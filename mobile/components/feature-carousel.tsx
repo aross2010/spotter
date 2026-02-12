@@ -7,52 +7,44 @@ import Txt from './text'
 import useTheme from '../app/hooks/theme'
 
 type Feature = {
-  imageDark: any
-  imageLight: any
+  image: any
   title: string
   description: string
 }
 
 const features: Feature[] = [
   {
-    imageDark: require('../assets/screenshots/workout-form-screenshot.png'),
-    imageLight: require('../assets/screenshots/workout-form-screenshot-light.png'),
+    image: require('../assets/screenshots/workout-form-screenshot.png'),
     title: 'Track Workouts',
     description:
       'Log sets, reps, partial reps, supersets, dropsets, intensity, and more with ease',
   },
   {
-    imageDark: require('../assets/screenshots/workout-details-screenshot.png'),
-    imageLight: require('../assets/screenshots/workout-details-screenshot-light.png'),
+    image: require('../assets/screenshots/workout-details-screenshot.png'),
     title: 'Workout Details',
     description: 'Every necessary detail from every workout at your fingertips',
   },
   {
-    imageDark: require('../assets/screenshots/exercise-details-screenshot.png'),
-    imageLight: require('../assets/screenshots/exercise-details-screenshot-light.png'),
+    image: require('../assets/screenshots/exercise-details-screenshot.png'),
     title: 'Exercise Library',
     description:
       'Track and customize every exercise performed and monitor progress',
   },
   {
-    imageDark: require('../assets/screenshots/insights-screenshot.png'),
-    imageLight: require('../assets/screenshots/insights-screenshot-light.png'),
+    image: require('../assets/screenshots/insights-screenshot.png'),
     title: 'Training Insights',
     description:
       'Analyze your training trends over time to maximize your workouts',
   },
   {
-    imageDark: require('../assets/screenshots/notes-screenshot.png'),
-    imageLight: require('../assets/screenshots/notes-screenshot-light.png'),
+    image: require('../assets/screenshots/notes-screenshot.png'),
     title: 'Detailed Notes',
     description: 'Complement your workouts with rich, detailed note taking',
   },
   {
-    imageDark: require('../assets/screenshots/weight-entry-screenshot.png'),
-    imageLight: require('../assets/screenshots/weight-entry-screenshot-light.png'),
-    title: 'Body Weight Tracking',
-    description:
-      'Monitor your body weight over time to take control of your physique',
+    image: require('../assets/screenshots/home-screenshot.png'),
+    title: 'Your Progress & Consistency',
+    description: 'Stay motivated by tracking your progress and consistency',
   },
 ]
 
@@ -90,10 +82,7 @@ const FeatureCarousel = () => {
             borderLeftWidth: 2,
             borderRightWidth: 2,
             borderBottomWidth: 0,
-            borderColor:
-              colorScheme === 'dark'
-                ? tw.color('dark-grayPrimary')
-                : tw.color('light-grayPrimary'),
+            borderColor: 'black',
           }}
         >
           {/* Inner image container */}
@@ -109,9 +98,7 @@ const FeatureCarousel = () => {
             ]}
           >
             <Image
-              source={
-                colorScheme === 'light' ? item.imageLight : item.imageDark
-              }
+              source={item.image}
               style={{
                 width: '100%',
                 height: fullImageHeight,

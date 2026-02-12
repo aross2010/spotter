@@ -91,7 +91,7 @@ function getTimeSinceFirstWorkout(firstWorkoutDate: string) {
 
 const Home = () => {
   const { user, preferences } = useUserStore()
-  const { fetchWithAuth, isLoading } = useAuth()
+  const { fetchWithAuth, isLoading, authUser } = useAuth()
   const [data, setData] = useState<HomeData | null>(null)
   const [loading, setLoading] = useState(true)
   const { shouldRefresh, clearRefresh } = useHomeDataStore()
@@ -106,9 +106,10 @@ const Home = () => {
   const featuredWorkoutStatus = data?.featuredWorkout?.status
 
   const getHomeData = async () => {
+    if (!authUser?.id) return
     try {
       const res = await fetchWithAuth(
-        `${BASE_URL}/api/home/${user?.id}?unit=${weightUnit}`,
+        `${BASE_URL}/api/home/${authUser.id}?unit=${weightUnit}`,
         {
           method: 'GET',
           headers: {
@@ -137,9 +138,10 @@ const Home = () => {
   )
 
   useEffect(() => {
+    if (!authUser?.id) return
     SplashScreen.hideAsync()
     getHomeData()
-  }, [])
+  }, [authUser?.id])
 
   const checkForUpdate = async () => {
     const update = await updateRequired()
@@ -257,12 +259,14 @@ const Home = () => {
             ? '⏰ Upcoming Workout'
             : 'Last Workout'}
       </Txt>
-      <WorkoutView
-        workout={data?.featuredWorkout.workout as WorkoutMinimal}
-        roundBottom
-        roundTop
-        isHome
-      />
+      {data?.featuredWorkout?.workout && (
+        <WorkoutView
+          workout={data.featuredWorkout.workout as WorkoutMinimal}
+          roundBottom
+          roundTop
+          isHome
+        />
+      )}
     </View>
   )
 
@@ -431,12 +435,38 @@ const Home = () => {
 
   const weight = data && data.bodyWeightData && (
     <View>
-      <Txt twcn="mb-2 text-lg font-semibold">Body Weight</Txt>
-      <BodyWeight
-        data={data?.bodyWeightData || null}
-        setData={handleChangeBodyWeightData}
-        openForm={() => ref.current?.present()}
-      />
+      <View style={tw`flex-row justify-between items-center mb-2`}>
+        <Txt twcn="text-lg font-semibold">Body Weight</Txt>
+        <Button
+          twcn="flex-row items-center gap-1"
+          onPress={() => {
+            router.push({
+              pathname: '/bodyweight-overview',
+              params: {
+                bodyWeightData: JSON.stringify(data?.bodyWeightData),
+              },
+            })
+          }}
+        >
+          <Txt twcn="text-primary dark:text-primary font-semibold">
+            View Details
+          </Txt>
+          <SFIcon
+            name="chevron.right"
+            size={12}
+            color={Colors.primary}
+          />
+        </Button>
+      </View>
+      <View
+        style={tw`p-4 bg-white dark:bg-dark-grayPrimary rounded-2xl min-h-32`}
+      >
+        <BodyWeight
+          data={data?.bodyWeightData || null}
+          setData={handleChangeBodyWeightData}
+          openForm={() => ref.current?.present()}
+        />
+      </View>
     </View>
   )
 
