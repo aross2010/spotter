@@ -26,13 +26,13 @@ export const getExerciseId = async (
   name: string,
   userId: string,
   isUnilateral: boolean,
-  tx: any
+  tx: any,
 ) => {
   // check if exists
   const existingExercise = await tx.query.exercises.findFirst({
     where: (
       exercise: typeof schema.exercises,
-      { eq, and }: { eq: any; and: any }
+      { eq, and }: { eq: any; and: any },
     ) => and(eq(exercise.name, name), eq(exercise.userId, userId)),
   })
   if (existingExercise) {
@@ -61,7 +61,7 @@ export const getExerciseId = async (
 // Background function to update muscle groups for new exercises
 async function updateMuscleGroupsInBackground(
   exerciseId: string,
-  exerciseName: string
+  exerciseName: string,
 ) {
   try {
     const { primaryMuscleGroup, secondaryMuscleGroups } =
@@ -77,7 +77,7 @@ async function updateMuscleGroupsInBackground(
   } catch (error) {
     console.error(
       `Failed to update muscle groups for exercise ${exerciseName}:`,
-      error
+      error,
     )
   }
 }
@@ -88,7 +88,7 @@ export const setSuperOrDropsets = async (
     groupSets: GroupSets
   }[],
   setIdMap: Map<string, string>,
-  tx: any
+  tx: any,
 ) => {
   const setIdsInGroupings = new Set<string>()
   for (const grouping of groupings) {
@@ -120,7 +120,7 @@ export const setSuperOrDropsets = async (
       for (let i = 1; i < setNumbers.length; i++) {
         if (setNumbers[i] !== setNumbers[i - 1] + 1) {
           throw new Error(
-            'Dropset setNumbers must be consecutive (e.g., 1, 2, 3)'
+            'Dropset setNumbers must be consecutive (e.g., 1, 2, 3)',
           )
         }
       }
@@ -136,7 +136,7 @@ export const setSuperOrDropsets = async (
       const unique = new Set(numbers)
       if (unique.size !== numbers.length) {
         throw new Error(
-          'All sets in a superset must be for different exercises'
+          'All sets in a superset must be for different exercises',
         )
       }
 
@@ -144,7 +144,7 @@ export const setSuperOrDropsets = async (
       for (let i = 1; i < numbers.length; i++) {
         if (numbers[i] !== numbers[i - 1] + 1) {
           throw new Error(
-            'Superset exerciseNumbers must be consecutive and ordered (e.g., 1, 2, 3)'
+            'Superset exerciseNumbers must be consecutive and ordered (e.g., 1, 2, 3)',
           )
         }
       }
@@ -165,13 +165,13 @@ export const setSuperOrDropsets = async (
       const { exerciseNumber, setNumber } = set
       if (!exerciseNumber || !setNumber) {
         throw new Error(
-          'Each set grouping must have exerciseNumber and setNumber'
+          'Each set grouping must have exerciseNumber and setNumber',
         )
       }
       const setId = setIdMap.get(`${exerciseNumber}-${setNumber}`)
       if (!setId) {
         throw new Error(
-          `Set not found for exercise ${exerciseNumber} and set ${setNumber}`
+          `Set not found for exercise ${exerciseNumber} and set ${setNumber}`,
         )
       }
       if (setIdsInGroupings.has(setId)) {
@@ -193,7 +193,7 @@ export const setTags = async (
   tags: string[],
   workoutId: string,
   userId: string,
-  tx: any
+  tx: any,
 ) => {
   const tagIds: string[] = []
   tags = Array.from(new Set(tags))
@@ -206,7 +206,7 @@ export const setTags = async (
     const existingTag = await tx.query.workoutTags.findFirst({
       where: (
         workoutTags: typeof schema.workoutTags,
-        { eq, and }: { eq: any; and: any }
+        { eq, and }: { eq: any; and: any },
       ) => and(eq(workoutTags.name, tag), eq(workoutTags.userId, userId)),
     })
 
@@ -240,13 +240,13 @@ export const setExercise = async (
   exNum: number,
   userId: string,
   workoutId: string,
-  tx: any
+  tx: any,
 ) => {
   const { id: exerciseId, isNew } = await getExerciseId(
     exercise.name,
     userId,
     exercise.isUnilateral,
-    tx
+    tx,
   )
 
   // Return the exercise ID and whether it's new for background processing
@@ -278,6 +278,9 @@ export const setExercise = async (
       leftRir,
       rightRir,
       partialReps,
+      leftPartialReps,
+      rightPartialReps,
+      cheatReps,
     } = set
 
     if (!reps && !(leftReps && rightReps)) {
@@ -329,6 +332,9 @@ export const setExercise = async (
         leftRir: leftRir ?? null,
         rightRir: rightRir ?? null,
         partialReps: partialReps ?? null,
+        leftPartialReps: leftPartialReps ?? null,
+        rightPartialReps: rightPartialReps ?? null,
+        cheatReps: cheatReps ?? null,
       })
       .returning({ id: sets.id, setNumber: sets.setNumber })
 
@@ -337,7 +343,7 @@ export const setExercise = async (
     }
     setIdMap.set(
       `${workoutExercise.exerciseNumber}-${insertedSet.setNumber}`,
-      insertedSet.id
+      insertedSet.id,
     )
     setNum++
   }
@@ -361,7 +367,7 @@ export const POST = withAuth(async (req, user) => {
     console.error('Missing required fields:', { userId, date, name, exercises })
     return NextResponse.json(
       { error: 'Missing required fields' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -372,21 +378,21 @@ export const POST = withAuth(async (req, user) => {
   if (typeof name !== 'string' || name.length > 100) {
     return NextResponse.json(
       { error: 'Workout name must be a string under 100 characters' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (location && (typeof location !== 'string' || location.length > 100)) {
     return NextResponse.json(
       { error: 'Location must be a string' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (!Array.isArray(exercises) || exercises.length === 0) {
     return NextResponse.json(
       { error: 'Exercises must be a non-empty array' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -399,7 +405,7 @@ export const POST = withAuth(async (req, user) => {
     ) {
       return NextResponse.json(
         { error: 'Each exercise must have a name' },
-        { status: 400 }
+        { status: 400 },
       )
     }
   }
@@ -407,28 +413,28 @@ export const POST = withAuth(async (req, user) => {
   if (setGroupings && !Array.isArray(setGroupings)) {
     return NextResponse.json(
       { error: 'Set groupings must be an array' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (tags && (!Array.isArray(tags) || tags.length > 10)) {
     return NextResponse.json(
       { error: 'Tags must be an array of strings, limited to 10' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (notes && (typeof notes !== 'string' || notes.length > 500)) {
     return NextResponse.json(
       { error: 'Notes must be a string under 500 characters' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
   if (status && !['completed', 'planned', 'active'].includes(status)) {
     return NextResponse.json(
       { error: 'Status must be one of: completed, planned, active' },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -469,7 +475,7 @@ export const POST = withAuth(async (req, user) => {
           exNum,
           userId,
           workout.id,
-          tx
+          tx,
         )
 
         // Track new exercises for background processing
@@ -497,7 +503,7 @@ export const POST = withAuth(async (req, user) => {
         message: 'Workout created successfully',
         id: result,
       },
-      { status: 201 }
+      { status: 201 },
     )
 
     // Trigger background muscle group updates after response
@@ -507,7 +513,7 @@ export const POST = withAuth(async (req, user) => {
           await Promise.all(
             newExercises.map(async (exercise) => {
               await updateMuscleGroupsInBackground(exercise.id, exercise.name)
-            })
+            }),
           )
         } catch (error) {
           console.error('Background muscle group update failed:', error)

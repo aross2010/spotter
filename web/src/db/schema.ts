@@ -74,7 +74,7 @@ export const userProviders = pgTable(
     unique('uq_user_provider').on(t.userId, t.provider),
     index('idx_provider_lookup').on(t.provider, t.providerId),
     index('idx_user_lookup').on(t.userId),
-  ]
+  ],
 )
 
 export const notebooks = pgTable('notebooks', {
@@ -92,7 +92,7 @@ export const notebookTags = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (t) => [unique().on(t.name, t.userId)] // tag names can be unique per notebook
+  (t) => [unique().on(t.name, t.userId)], // tag names can be unique per notebook
 )
 
 export const notebookEntries = pgTable('notebook_entries', {
@@ -119,7 +119,7 @@ export const notebookEntryTagLinks = pgTable(
       .notNull()
       .references(() => notebookTags.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.entryId, t.tagId] })]
+  (t) => [primaryKey({ columns: [t.entryId, t.tagId] })],
 )
 
 export const weightEntries = pgTable(
@@ -138,7 +138,7 @@ export const weightEntries = pgTable(
   (t) => [
     unique().on(t.userId, t.date),
     check('lbs_kg_consistency', sql`(weight_lbs IS NULL OR weight_kg IS NULL)`),
-  ] // ensure max one entry per user per date
+  ], // ensure max one entry per user per date
 )
 
 export const workoutTags = pgTable(
@@ -150,7 +150,7 @@ export const workoutTags = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (t) => [unique().on(t.name, t.userId)]
+  (t) => [unique().on(t.name, t.userId)],
 )
 
 export const workoutTagLinks = pgTable(
@@ -163,7 +163,7 @@ export const workoutTagLinks = pgTable(
       .notNull()
       .references(() => workoutTags.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.workoutId, t.tagId] })]
+  (t) => [primaryKey({ columns: [t.workoutId, t.tagId] })],
 )
 
 export const workouts = pgTable(
@@ -184,7 +184,7 @@ export const workouts = pgTable(
   },
   (t) => [
     check('valid_status', sql`status IN ('completed', 'active', 'planned')`),
-  ]
+  ],
 )
 
 export const workoutExercises = pgTable('workout_exercises', {
@@ -214,7 +214,7 @@ export const exercises = pgTable(
     secondaryMuscleGroups: muscleGroup('secondary_muscle_groups').array(),
     description: text('description'), // limit to n words in business logic
   },
-  (t) => [unique().on(t.name, t.userId)] // ensure unique exercise names per user
+  (t) => [unique().on(t.name, t.userId)], // ensure unique exercise names per user
 )
 
 export const sets = pgTable(
@@ -273,37 +273,33 @@ export const sets = pgTable(
     check('left_rpe_xor_left_rir', sql`(left_rpe IS NULL OR left_rir IS NULL)`),
     check(
       'right_rpe_xor_right_rir',
-      sql`(right_rpe IS NULL OR right_rir IS NULL)`
+      sql`(right_rpe IS NULL OR right_rir IS NULL)`,
     ),
     // Cheat reps and partial reps are mutually exclusive
     check('cheat_xor_partial', sql`cheat_reps IS NULL OR partial_reps IS NULL`),
     check(
       'left_cheat_xor_left_partial',
-      sql`cheat_reps IS NULL OR left_partial_reps IS NULL`
+      sql`cheat_reps IS NULL OR left_partial_reps IS NULL`,
     ),
     check(
       'right_cheat_xor_right_partial',
-      sql`cheat_reps IS NULL OR right_partial_reps IS NULL`
+      sql`cheat_reps IS NULL OR right_partial_reps IS NULL`,
     ),
     // ensure left/right fields are used together for unilateral exercises
     check(
       'left_right_rpe_consistency',
-      sql`((left_rpe IS NULL AND right_rpe IS NULL) OR (left_rpe IS NOT NULL AND right_rpe IS NOT NULL))`
+      sql`((left_rpe IS NULL AND right_rpe IS NULL) OR (left_rpe IS NOT NULL AND right_rpe IS NOT NULL))`,
     ),
     check(
       'left_right_rir_consistency',
-      sql`((left_rir IS NULL AND right_rir IS NULL) OR (left_rir IS NOT NULL AND right_rir IS NOT NULL))`
-    ),
-    check(
-      'left_right_partial_consistency',
-      sql`((left_partial_reps IS NULL AND right_partial_reps IS NULL) OR (left_partial_reps IS NOT NULL AND right_partial_reps IS NOT NULL))`
+      sql`((left_rir IS NULL AND right_rir IS NULL) OR (left_rir IS NOT NULL AND right_rir IS NOT NULL))`,
     ),
     check(
       'left_right_reps_consistency',
-      sql`((left_reps IS NULL AND right_reps IS NULL) OR (left_reps IS NOT NULL AND right_reps IS NOT NULL))`
+      sql`((left_reps IS NULL AND right_reps IS NULL) OR (left_reps IS NOT NULL AND right_reps IS NOT NULL))`,
     ),
     check('lbs_kg_consistency', sql`(weight_lbs IS NULL OR weight_kg IS NULL)`), // either lbs or kg can be used, not both
-  ]
+  ],
 )
 
 export const setGroupings = pgTable(
@@ -312,7 +308,7 @@ export const setGroupings = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     type: varchar('type', { length: 20 }).notNull(),
   },
-  (t) => [check('valid_grouping_type', sql`type IN ('superset', 'dropset')`)]
+  (t) => [check('valid_grouping_type', sql`type IN ('superset', 'dropset')`)],
 )
 
 // 1 user to many providers
@@ -341,7 +337,7 @@ export const notebookEntriesRelations = relations(
       references: [notebooks.userId],
     }),
     notebookEntryTagLinks: many(notebookEntryTagLinks),
-  })
+  }),
 )
 
 // 1 notebook tag to many links and 1 notebook
@@ -361,7 +357,7 @@ export const notebookEntryTagLinksRelations = relations(
       fields: [notebookEntryTagLinks.tagId],
       references: [notebookTags.id],
     }),
-  })
+  }),
 )
 
 // 1 workout to many exercises and tags
@@ -383,7 +379,7 @@ export const workoutExercisesRelations = relations(
       references: [workouts.id],
     }),
     sets: many(sets),
-  })
+  }),
 )
 
 // 1 exercise to many workout exercises
@@ -420,7 +416,7 @@ export const workoutTagLinksRelations = relations(
       fields: [workoutTagLinks.workoutId],
       references: [workouts.id],
     }),
-  })
+  }),
 )
 
 // 1 workout tag to many links (tag can be used in many workouts)

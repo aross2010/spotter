@@ -1483,7 +1483,7 @@ const ExerciseInput = ({
 
       return (
         <Swipeable
-          key={set.id}
+          key={`${exerciseNumber}-${setIndex}-${set.id}`}
           renderLeftActions={renderLeftAction(setIndex)}
           renderRightActions={
             setIndex === 0 && sets.length === 1
@@ -1577,7 +1577,7 @@ const ExerciseInput = ({
 
       return (
         <Swipeable
-          key={set.id}
+          key={`${exerciseNumber}-${setIndex}-${set.id}`}
           renderLeftActions={renderLeftAction(setIndex)}
           renderRightActions={
             setIndex === 0 && sets.length === 1
