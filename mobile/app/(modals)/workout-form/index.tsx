@@ -1,5 +1,11 @@
 import SafeView from '../../../components/safe-view'
-import { View, Keyboard, Platform, AppState } from 'react-native'
+import {
+  View,
+  Keyboard,
+  Platform,
+  AppState,
+  AppStateStatus,
+} from 'react-native'
 import Button from '../../../components/button'
 import tw from '../../../tw'
 import {
@@ -95,6 +101,7 @@ const WorkoutForm = () => {
   const { triggerRefresh: triggerWorkoutTabRefresh } = useWorkoutTabStore()
   const { triggerRefresh: triggerInsightsRefresh } = useInsightsStore()
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingSaveRef = useRef(false)
   const { preferences } = useUserStore()
 
   const handleCancelForm = useCallback(() => {
@@ -196,7 +203,12 @@ const WorkoutForm = () => {
     }
 
     if (workoutData.status !== 'active') return
-    if (isSaving || isLoading) return
+    if (isLoading) return
+
+    if (isSaving) {
+      pendingSaveRef.current = true
+      return
+    }
 
     const isValid = isValidWorkout()
     const saveEnabled = isValid && (mode === 'edit' ? hasChanges() : true)
@@ -692,13 +704,15 @@ const WorkoutForm = () => {
                   />
                 </Section>
               </ContextMenu.Items>
-              <ContextMenu.Trigger>
-                <SFIcon
-                  name="ellipsis.circle"
-                  color={Colors.primary}
-                  size={26}
-                />
-              </ContextMenu.Trigger>
+              {!isLoading && (
+                <ContextMenu.Trigger>
+                  <SFIcon
+                    name="ellipsis.circle"
+                    color={Colors.primary}
+                    size={26}
+                  />
+                </ContextMenu.Trigger>
+              )}
             </ContextMenu>
           </Host>
           {isSaving ? (
@@ -764,10 +778,11 @@ const WorkoutForm = () => {
   ])
 
   const handleSubmitWorkout = async () => {
+    const isActive = workoutData.status === 'active'
     setIsSaving(true)
     try {
       if (mode === 'create' || mode === 'clone') {
-        const res = await addWorkout()
+        const res = await addWorkout(isActive)
         triggerHomeDataRefresh()
         triggerWorkoutTabRefresh()
         triggerInsightsRefresh()
@@ -785,7 +800,7 @@ const WorkoutForm = () => {
         }
       } else if (mode === 'edit' && workoutId) {
         const delta = getChangedData()
-        await updateWorkout(workoutId, workoutData, delta)
+        await updateWorkout(workoutId, workoutData, delta, isActive)
         triggerWorkoutTabRefresh()
         triggerHomeDataRefresh()
         triggerInsightsRefresh()
@@ -812,10 +827,20 @@ const WorkoutForm = () => {
       }
     } catch (error: any) {
       console.error('Error saving workout:', error)
-      if (AppState.currentState === 'active')
-        Alert.alert('Error', error.message ?? 'Something went wrong')
+      const isBackgrounded = AppState.currentState !== 'active'
+      const isNetworkError =
+        error.message?.includes('Network request failed') ||
+        error.message?.includes('Aborted') ||
+        error.name === 'AbortError'
+      if (!(isActive && (isBackgrounded || isNetworkError))) {
+        Alert.alert('Error', error.message)
+      }
     } finally {
       setIsSaving(false)
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false
+        void autoSaveWorkout(false)
+      }
     }
   }
 

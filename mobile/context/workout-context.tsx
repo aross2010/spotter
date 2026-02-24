@@ -8,7 +8,7 @@ import React, {
 import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
-import { Alert } from 'react-native'
+import { Alert, AppState } from 'react-native'
 import { toLocalDateString } from '../functions/formatted-date'
 import {
   WorkoutFormData,
@@ -58,6 +58,7 @@ type WorkoutContextType = {
     workoutId: string,
     workoutData: WorkoutFormData,
     delta?: WorkoutFormDelta | null,
+    silent?: boolean,
   ) => Promise<void>
   getFilterOptions: () => Promise<void>
   filterOptions: FilterOptions
@@ -357,6 +358,7 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
     workoutId: string,
     workoutData: WorkoutFormData,
     delta?: WorkoutFormDelta | null,
+    silent?: boolean,
   ) => {
     try {
       // Use PATCH with delta if available and has changes, otherwise fall back to full PUT
@@ -398,7 +400,14 @@ export const WorkoutProvider = ({ children }: WorkoutProviderProps) => {
         return workout
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message)
+      const isBackgrounded = AppState.currentState !== 'active'
+      const isNetworkError =
+        error.message?.includes('Network request failed') ||
+        error.message?.includes('Aborted') ||
+        error.name === 'AbortError'
+      if (!(silent && (isBackgrounded || isNetworkError))) {
+        Alert.alert('Error', error.message)
+      }
       throw error
     }
   }

@@ -9,7 +9,7 @@ import React, {
 import { useUserStore } from '../stores/user-store'
 import { useAuth } from './auth-context'
 import { BASE_URL } from '../constants/auth'
-import { Alert } from 'react-native'
+import { Alert, AppState } from 'react-native'
 import { registerContextResetter } from '../utils/context-manager'
 import { nanoid } from 'nanoid/non-secure'
 import {
@@ -36,7 +36,9 @@ type WorkoutFormContextType = {
   exerciseNames: ExerciseName[]
   newlyAddedExerciseNumber: number | null
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
-  addWorkout: () => Promise<{ id: string; message: string } | undefined>
+  addWorkout: (
+    silent?: boolean,
+  ) => Promise<{ id: string; message: string } | undefined>
   locations: UsedLocations[]
   focusedInput: FocusedInputType
   setFocusedInput: (input: FocusedInputType) => void
@@ -296,7 +298,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     })
   }
 
-  const addWorkout = async () => {
+  const addWorkout = async (silent?: boolean) => {
     try {
       const response = await fetchWithAuth(`${BASE_URL}/api/workouts`, {
         method: 'POST',
@@ -313,7 +315,14 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
       await refreshWorkouts()
       return workout
     } catch (error: any) {
-      Alert.alert('Error adding workout:', error.message)
+      const isBackgrounded = AppState.currentState !== 'active'
+      const isNetworkError =
+        error.message?.includes('Network request failed') ||
+        error.message?.includes('Aborted') ||
+        error.name === 'AbortError'
+      if (!(silent && (isBackgrounded || isNetworkError))) {
+        Alert.alert('Error adding workout:', error.message)
+      }
     }
   }
 

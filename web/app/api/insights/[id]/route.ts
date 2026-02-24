@@ -28,6 +28,30 @@ export async function getExerciseComparisonData(
     return []
   }
 
+  // Fetch latest body weight for bodyweight exercise 1RM calculation
+  const latestBodyWeightResult = await db
+    .select({
+      weightLbs: weightEntries.weightLbs,
+      weightKg: weightEntries.weightKg,
+    })
+    .from(weightEntries)
+    .where(eq(weightEntries.userId, userId))
+    .orderBy(desc(weightEntries.date))
+    .limit(1)
+
+  const bodyWeightLbs = latestBodyWeightResult[0]
+    ? Number(latestBodyWeightResult[0].weightLbs) ||
+      (latestBodyWeightResult[0].weightKg
+        ? toLbs(Number(latestBodyWeightResult[0].weightKg))
+        : null)
+    : null
+  const bodyWeight =
+    bodyWeightLbs !== null
+      ? weightUnit === 'kgs'
+        ? toKg(bodyWeightLbs)
+        : bodyWeightLbs
+      : null
+
   // Get all sets for each exercise to find the best set per workout
   // Select BOTH weight fields and unilateral fields to match exercise-details logic
   const allSetsData = await db
@@ -59,6 +83,7 @@ export async function getExerciseComparisonData(
     .where(
       and(
         eq(workouts.userId, userId),
+        eq(workouts.status, 'completed'),
         inArray(exercises.id, exerciseIds),
         or(isNotNull(sets.weightLbs), isNotNull(sets.weightKg)),
       ),
@@ -168,6 +193,7 @@ export async function getExerciseComparisonData(
             entry.reps,
             entry.rpe,
             entry.rir,
+            bodyWeight,
           ),
         }
       })
@@ -200,7 +226,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
     const workoutCount = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(workouts)
-      .where(eq(workouts.userId, userId))
+      .where(and(eq(workouts.userId, userId), eq(workouts.status, 'completed')))
 
     const totalWorkouts = workoutCount[0]?.count || 0
 
@@ -237,7 +263,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
               mostRecent: sql<string>`max(${workouts.date})`,
             })
             .from(workouts)
-            .where(eq(workouts.userId, userId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+              ),
+            )
             .groupBy(workouts.name)
             .orderBy(desc(sql`count(*)`), desc(sql`max(${workouts.date})`))
             .limit(1)
@@ -255,7 +286,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(workoutExercises)
             .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-            .where(eq(workouts.userId, userId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+              ),
+            )
             .groupBy(exercises.id, exercises.name)
             .orderBy(
               desc(sql`count(distinct ${workouts.id})`),
@@ -274,7 +310,11 @@ export const GET = withAuth(async (req: Request, user: any) => {
             })
             .from(workouts)
             .where(
-              and(eq(workouts.userId, userId), isNotNull(workouts.location)),
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+                isNotNull(workouts.location),
+              ),
             )
             .groupBy(workouts.location)
             .orderBy(desc(sql`count(*)`), desc(sql`max(${workouts.date})`))
@@ -297,7 +337,13 @@ export const GET = withAuth(async (req: Request, user: any) => {
             )
             .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-            .where(and(eq(workouts.userId, userId), isNotNull(weightField)))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+                isNotNull(weightField),
+              ),
+            )
             .orderBy(desc(weightField), desc(workouts.date))
             .limit(1)
         : Promise.resolve([]),
@@ -318,7 +364,13 @@ export const GET = withAuth(async (req: Request, user: any) => {
               eq(workouts.id, workoutExercises.workoutId),
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-            .where(and(eq(workouts.userId, userId), isNotNull(weightField)))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+                isNotNull(weightField),
+              ),
+            )
             .groupBy(
               workouts.id,
               workouts.name,
@@ -347,6 +399,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .where(
               and(
                 eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
                 isNotNull(exercises.primaryMuscleGroup),
               ),
             )
@@ -369,7 +422,13 @@ export const GET = withAuth(async (req: Request, user: any) => {
               eq(sets.workoutExerciseId, workoutExercises.id),
             )
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-            .where(and(eq(workouts.userId, userId), isNotNull(sets.reps)))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+                isNotNull(sets.reps),
+              ),
+            )
             .groupBy(sets.reps)
         : Promise.resolve([]),
 
@@ -386,7 +445,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
               eq(workouts.id, workoutExercises.workoutId),
             )
             .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-            .where(eq(workouts.userId, userId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+              ),
+            )
             .groupBy(workouts.id)
         : Promise.resolve([]),
 
@@ -411,6 +475,7 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .where(
               and(
                 eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
                 sql`date_trunc('week', ${workouts.date}) < date_trunc('week', CURRENT_DATE)`,
               ),
             )
@@ -431,7 +496,9 @@ export const GET = withAuth(async (req: Request, user: any) => {
           eq(exercises.id, workoutExercises.exerciseId),
         )
         .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-        .where(eq(workouts.userId, userId))
+        .where(
+          and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
+        )
         .groupBy(exercises.id, exercises.name)
         .having(sql`count(distinct ${workouts.id}) >= 2`)
         .orderBy(exercises.name),
@@ -447,7 +514,12 @@ export const GET = withAuth(async (req: Request, user: any) => {
             .from(workoutExercises)
             .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
             .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-            .where(eq(workouts.userId, userId))
+            .where(
+              and(
+                eq(workouts.userId, userId),
+                eq(workouts.status, 'completed'),
+              ),
+            )
             .groupBy(exercises.id)
             .orderBy(
               desc(sql`count(distinct ${workouts.id})`),

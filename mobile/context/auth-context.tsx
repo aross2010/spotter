@@ -114,7 +114,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } else if (storedRefreshToken) {
               // access token expired, but we have a refresh token
               setRefreshToken(storedRefreshToken)
-              await refreshAccessToken(storedRefreshToken)
+              // Set user from expired token so they aren't shown the login screen
+              // while we attempt to refresh in the background
+              setAuthUser(decoded)
+              const newToken = await refreshAccessToken(storedRefreshToken)
+              if (!newToken) {
+                // Refresh failed (network error) — keep the user "logged in"
+                // with stale data. fetchWithAuth will retry refresh on next API call.
+                // Only signOut() clears authUser (called on 401 from server).
+              }
             }
           } catch (error) {
             if (storedRefreshToken) {
@@ -184,7 +192,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!refreshResponse.ok) {
         const errorData = await refreshResponse.json()
-        // refresh fails due to expired token, sign out
+        // Only sign out on definitive auth failures (401) — the token is truly invalid/expired
         if (refreshResponse.status === 401) {
           signOut()
         }
@@ -211,8 +219,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       return newAccessToken // Return the new access token
     } catch (error) {
-      // If there's an error refreshing, we should sign out
-      signOut()
+      // Network error / timeout — do NOT sign out.
+      // The refresh token in SecureStore is still valid; the next launch will retry.
+      console.error('Network error during token refresh:', error)
       return null
     } finally {
       refreshInProgressRef.current = false

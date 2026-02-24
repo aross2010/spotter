@@ -6,8 +6,9 @@ const calculate1RM = (
   reps: number,
   rpe: number | null = null,
   rir: number | null = null,
+  bodyWeight: number | null = null,
 ) => {
-  if (!weight || reps <= 0) return 'N/A'
+  if (reps <= 0) return 'N/A'
 
   // Derive RIR if only RPE is provided
   let effectiveRIR: number
@@ -26,7 +27,20 @@ const calculate1RM = (
   // Modified Brzycki: slightly more conservative for higher reps
   // Cap at 36 reps to avoid division issues
   const cappedReps = Math.min(36, effectiveReps)
-  const oneRepMax = weight * (36 / (37.5 - cappedReps))
+  const multiplier = 36 / (37.5 - cappedReps)
+
+  // For bodyweight exercises (0 added weight), estimate additional weight for 1RM
+  if (!weight && bodyWeight) {
+    const additionalWeight = Math.max(
+      0,
+      Math.floor(bodyWeight * (multiplier - 1)),
+    )
+    return `${additionalWeight} ${unit}`
+  }
+
+  if (!weight) return 'N/A'
+
+  const oneRepMax = weight * multiplier
 
   return `${Math.floor(oneRepMax)} ${unit}`
 }
@@ -38,15 +52,9 @@ export const estimate1RM = (
   const lastThreeWorkouts = exercise?.stats.progressionChart.slice(-3) || []
   if (lastThreeWorkouts.length === 0) return 'N/A'
 
-  const maxWeightSet = lastThreeWorkouts.reduce((max, workout) => {
-    return workout.data.weight > max.data.weight ? workout : max
-  }, lastThreeWorkouts[0])
+  // Use the highest pre-calculated est1RM from the last 3 workouts
+  const maxEst1RM = Math.max(...lastThreeWorkouts.map((w) => w.data.est1RM))
 
-  return calculate1RM(
-    maxWeightSet.data.weight,
-    weightMetric,
-    maxWeightSet.data.reps,
-    maxWeightSet.data.rpe || null,
-    maxWeightSet.data.rir || null,
-  )
+  if (maxEst1RM <= 0) return 'N/A'
+  return `${maxEst1RM} ${weightMetric}`
 }

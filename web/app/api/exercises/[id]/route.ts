@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { withAuth } from '../../middleware'
 import db from '@/src'
-import { exercises, workouts, workoutExercises, sets } from '@/src/db/schema'
+import {
+  exercises,
+  workouts,
+  workoutExercises,
+  sets,
+  weightEntries,
+} from '@/src/db/schema'
 import { eq, and, sql, desc, inArray } from 'drizzle-orm'
 import { RirToRpe, rpeToRir, toKg, toLbs } from '@/app/functions/conversions'
 import { calculate1RM } from '@/app/functions/one-rep-max'
@@ -101,59 +107,85 @@ export const GET = withAuth(async (req, user) => {
     }
 
     // Run queries in parallel for better performance
-    const [totalUserWorkoutsResult, exerciseHistory] = await Promise.all([
-      // Get total completed workouts for the user
-      db
-        .select({ count: sql<number>`count(*)` })
-        .from(workouts)
-        .where(
-          and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
-        ),
+    const [totalUserWorkoutsResult, exerciseHistory, latestBodyWeightResult] =
+      await Promise.all([
+        // Get total completed workouts for the user
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(workouts)
+          .where(
+            and(eq(workouts.userId, userId), eq(workouts.status, 'completed')),
+          ),
 
-      // Get all workout data with sets for this exercise
-      db
-        .select({
-          workoutId: workouts.id,
-          workoutName: workouts.name,
-          workoutDate: workouts.date,
-          location: workouts.location,
-          exerciseNumber: workoutExercises.exerciseNumber,
-          setId: sets.id,
-          setNumber: sets.setNumber,
-          weightLbs: sets.weightLbs,
-          weightKg: sets.weightKg,
-          reps: sets.reps,
-          leftReps: sets.leftReps,
-          rightReps: sets.rightReps,
-          rpe: sets.rpe,
-          leftRpe: sets.leftRpe,
-          rightRpe: sets.rightRpe,
-          rir: sets.rir,
-          leftRir: sets.leftRir,
-          rightRir: sets.rightRir,
-          partialReps: sets.partialReps,
-          leftPartialReps: sets.leftPartialReps,
-          rightPartialReps: sets.rightPartialReps,
-          cheatReps: sets.cheatReps,
-        })
-        .from(exercises)
-        .innerJoin(
-          workoutExercises,
-          eq(exercises.id, workoutExercises.exerciseId),
-        )
-        .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
-        .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
-        .where(
-          and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed')),
-        )
-        .orderBy(
-          desc(workouts.date),
-          workoutExercises.exerciseNumber,
-          sets.setNumber,
-        ),
-    ])
+        // Get all workout data with sets for this exercise
+        db
+          .select({
+            workoutId: workouts.id,
+            workoutName: workouts.name,
+            workoutDate: workouts.date,
+            location: workouts.location,
+            exerciseNumber: workoutExercises.exerciseNumber,
+            setId: sets.id,
+            setNumber: sets.setNumber,
+            weightLbs: sets.weightLbs,
+            weightKg: sets.weightKg,
+            reps: sets.reps,
+            leftReps: sets.leftReps,
+            rightReps: sets.rightReps,
+            rpe: sets.rpe,
+            leftRpe: sets.leftRpe,
+            rightRpe: sets.rightRpe,
+            rir: sets.rir,
+            leftRir: sets.leftRir,
+            rightRir: sets.rightRir,
+            partialReps: sets.partialReps,
+            leftPartialReps: sets.leftPartialReps,
+            rightPartialReps: sets.rightPartialReps,
+            cheatReps: sets.cheatReps,
+          })
+          .from(exercises)
+          .innerJoin(
+            workoutExercises,
+            eq(exercises.id, workoutExercises.exerciseId),
+          )
+          .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+          .innerJoin(sets, eq(workoutExercises.id, sets.workoutExerciseId))
+          .where(
+            and(eq(exercises.id, exerciseId), eq(workouts.status, 'completed')),
+          )
+          .orderBy(
+            desc(workouts.date),
+            workoutExercises.exerciseNumber,
+            sets.setNumber,
+          ),
+
+        // Fetch latest body weight for bodyweight exercise 1RM calculation
+        db
+          .select({
+            weightLbs: weightEntries.weightLbs,
+            weightKg: weightEntries.weightKg,
+          })
+          .from(weightEntries)
+          .where(eq(weightEntries.userId, userId))
+          .orderBy(desc(weightEntries.date))
+          .limit(1),
+      ])
 
     const totalUserWorkouts = totalUserWorkoutsResult[0]?.count || 0
+
+    // Get user's body weight in user's preferred unit for bodyweight exercise 1RM
+    const bodyWeightLbs = latestBodyWeightResult[0]
+      ? Number(latestBodyWeightResult[0].weightLbs) ||
+        (latestBodyWeightResult[0].weightKg
+          ? toLbs(Number(latestBodyWeightResult[0].weightKg))
+          : null)
+      : null
+    const bodyWeight =
+      bodyWeightLbs !== null
+        ? weightMetric === 'kgs'
+          ? toKg(bodyWeightLbs)
+          : bodyWeightLbs
+        : null
 
     if (exerciseHistory.length === 0) {
       return NextResponse.json(
@@ -349,6 +381,7 @@ export const GET = withAuth(async (req, user) => {
               p.bestReps,
               intensityMetric === 'rpe' ? intensity : undefined,
               intensityMetric === 'rir' ? intensity : undefined,
+              bodyWeight,
             ),
             reps: p.bestReps,
             ...(intensityMetric === 'rpe' &&

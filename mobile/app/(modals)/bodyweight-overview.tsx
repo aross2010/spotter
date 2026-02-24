@@ -181,17 +181,17 @@ const BodyWeightOverview = () => {
       <View
         style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder`}
       >
-        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1">
           Date
         </Txt>
-        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1">
           {toTitleCase(weightMetric)}
           {weightMetric === 'lbs' && '.'}
         </Txt>
-        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1">
           Since Last
         </Txt>
-        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1 text-center">
+        <Txt twcn="text-light-grayText dark:text-dark-grayText text-sm flex-1">
           Change
         </Txt>
       </View>
@@ -232,9 +232,9 @@ const BodyWeightOverview = () => {
           const isIncrease = weightChange > 0
           const isDecrease = weightChange < 0
           const changeColor = isIncrease
-            ? 'text-red'
+            ? 'text-green'
             : isDecrease
-              ? 'text-green'
+              ? 'text-red'
               : 'text-light-grayText dark:text-dark-grayText'
 
           return (
@@ -242,28 +242,22 @@ const BodyWeightOverview = () => {
               key={entry.date}
               style={tw`flex-row items-center border-b border-light-grayBorder dark:border-dark-grayBorder py-2`}
             >
-              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText flex-1 text-center">
+              <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText flex-1">
                 {formatDate(entry.date)}
               </Txt>
-              <Txt twcn="text-xs flex-1 text-center">
-                {entry.bodyWeight.toFixed(1)}
-              </Txt>
-              <Txt twcn="text-xs flex-1 text-center text-light-grayText dark:text-dark-grayText">
+              <Txt twcn="text-xs flex-1">{entry.bodyWeight.toFixed(1)}</Txt>
+              <Txt twcn="text-xs flex-1 text-light-grayText dark:text-dark-grayText">
                 {timeSince}
               </Txt>
-              <View
-                style={tw`flex-1 flex-row items-center justify-center gap-0.5`}
-              >
+              <View style={tw`flex-1 flex-row items-center gap-0.5`}>
                 {previousEntry && weightChange !== 0 && (
                   <SFIcon
                     name={isIncrease ? 'arrow.up' : 'arrow.down'}
                     size={10}
-                    color={isIncrease ? Colors.red : Colors.green}
+                    color={isIncrease ? Colors.green : Colors.red}
                   />
                 )}
-                <Txt
-                  twcn={`text-xs text-center ${changeColor} dark:${changeColor}`}
-                >
+                <Txt twcn={`text-xs ${changeColor} dark:${changeColor}`}>
                   {previousEntry
                     ? weightChange !== 0
                       ? Math.abs(weightChange).toFixed(1)
