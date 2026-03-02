@@ -229,10 +229,10 @@ const WorkoutForm = () => {
   }
 
   useEffect(() => {
-    if (workoutData.status === 'active') {
+    if (workoutData.status === 'active' && !isSaving) {
       void autoSaveWorkout()
     }
-  }, [workoutData])
+  }, [workoutData, isSaving])
 
   // Clear focusedInput when keyboard is dismissed
   useEffect(() => {
@@ -837,10 +837,7 @@ const WorkoutForm = () => {
       }
     } finally {
       setIsSaving(false)
-      if (pendingSaveRef.current) {
-        pendingSaveRef.current = false
-        void autoSaveWorkout(false)
-      }
+      pendingSaveRef.current = false
     }
   }
 
