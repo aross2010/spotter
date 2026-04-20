@@ -38,13 +38,13 @@ const WorkoutNameInput = () => {
       <Button
         key={name}
         onPress={() => handleSelectWorkoutName(name)}
-        style={tw`flex-row items-center justify-between p-4 w-full bg-transparent ${
+        style={tw`flex-row items-center justify-between p-4 gap-2 w-full bg-transparent ${
           index === workoutNamesResults.length - 1
             ? ''
             : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
         }`}
       >
-        <Txt>{name}</Txt>
+        <Txt twcn="flex-1">{name}</Txt>
         <Txt>{used}</Txt>
       </Button>
     ))

@@ -307,6 +307,7 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
     pinned,
     tags,
     changedExercises,
+    requiresExerciseRebuild,
     setGroupings: newSetGroupings,
     hasMetadataChanges,
     hasExerciseChanges,
@@ -387,22 +388,22 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
           })
         })
 
-        // Determine if we need to rebuild all exercises (count changed or positions shifted)
+        // Determine if we need to rebuild all exercises.
         const currentExerciseCount = existingWorkout.workoutExercises.length
-        const hasCountChanged = changedExercises.some(
+        const hasCountIncreased = changedExercises.some(
           (ce: any) => ce.exerciseNumber > currentExerciseCount,
         )
+        const shouldRebuildExercises =
+          requiresExerciseRebuild === true ||
+          hasCountIncreased ||
+          changedExercises.length === currentExerciseCount
 
         // Get all exercise numbers that are changing
         const changingExerciseNumbers = new Set(
           changedExercises.map((ce: any) => ce.exerciseNumber),
         )
 
-        // If count changed (exercises added/removed), we need to rebuild all exercises
-        if (
-          hasCountChanged ||
-          changedExercises.length === currentExerciseCount
-        ) {
+        if (shouldRebuildExercises) {
           // Full rebuild - delete all workout exercises and recreate
           await tx
             .delete(workoutExercises)

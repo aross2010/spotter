@@ -413,6 +413,7 @@ const WorkoutForm = () => {
       workoutData.exercises.length !== initialState.exercises.length
 
     if (exerciseCountChanged) {
+      delta.requiresExerciseRebuild = true
       // Send all exercises when count changes (exercises added/removed)
       delta.changedExercises = workoutData.exercises.map((exercise, index) => ({
         exerciseNumber: index + 1,

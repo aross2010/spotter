@@ -149,6 +149,7 @@ export type WorkoutFormDelta = {
   status?: WorkoutStatus
   pinned?: boolean
   // Exercise changes - only include exercises that changed
+  requiresExerciseRebuild?: boolean
   changedExercises?: {
     exerciseNumber: number // 1-indexed position in workout
     exercise: {

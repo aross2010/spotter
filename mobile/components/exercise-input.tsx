@@ -916,18 +916,19 @@ const ExerciseInput = ({
 
   const renderedExerciseNames = exerciseNameResults.map(
     ({ id, name, used }, index) => {
+      if (used === 0) return null
       return (
         <Button
           key={name}
           onPress={() => handleSelectExistingExercise(id, name, used)}
-          style={tw`flex-row items-center justify-between p-4 w-full ${
+          style={tw`flex-row items-center justify-between gap-2 p-4 w-full ${
             index === exerciseNameResults.length - 1
               ? ''
               : 'border-b border-light-grayBorder dark:border-dark-grayBorder'
           }`}
         >
-          <Txt style={tw`text-xs`}>{name}</Txt>
-          {used > 0 && <Txt style={tw`text-xs`}>{used}</Txt>}
+          <Txt twcn="flex-1">{name}</Txt>
+          {used > 0 && <Txt>{used}</Txt>}
         </Button>
       )
     },

@@ -14,6 +14,8 @@ type ActivityMapProps = {
   data: ActivityCalendar
 }
 
+type ActivityDayStatus = 'none' | 'planned' | 'completed' | 'active' | 'hidden'
+
 // show the year too '25
 const ActivityMap = ({ data }: ActivityMapProps) => {
   const { width } = useWindowDimensions()
@@ -57,7 +59,8 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     }
 
     const firstDate = parseDate(dates[0])
-    const lastDate = parseDate(dates[dates.length - 1])
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     // Start from the Monday before the first date
     const startDate = new Date(firstDate)
@@ -67,26 +70,23 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
     startDate.setDate(startDate.getDate() - daysToMonday)
 
-    // End on the Sunday after the last date, but ensure at least 20 weeks are shown
-    const endDate = new Date(lastDate)
-    const endDayOfWeek = endDate.getDay()
-    // If it's Sunday (0), we're already at the end; otherwise add days to get to Sunday
-    const daysToSunday = endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek
-    endDate.setDate(endDate.getDate() + daysToSunday)
+    // Keep at least 20 historical weeks visible without extending into the future.
+    const minimumStartDate = new Date(today)
+    const minimumStartDayOfWeek = minimumStartDate.getDay()
+    const minimumDaysToMonday =
+      minimumStartDayOfWeek === 0 ? 6 : minimumStartDayOfWeek - 1
+    minimumStartDate.setDate(
+      minimumStartDate.getDate() - minimumDaysToMonday - (20 - 1) * 7,
+    )
 
-    // Calculate minimum end date to show at least 20 weeks
-    const minEndDate = new Date(startDate)
-    minEndDate.setDate(minEndDate.getDate() + 20 * 7 - 1) // 20 weeks from start
-
-    // Use the later of the two dates
-    if (endDate < minEndDate) {
-      endDate.setTime(minEndDate.getTime())
+    if (startDate > minimumStartDate) {
+      startDate.setTime(minimumStartDate.getTime())
     }
 
     const weeks: {
       days: {
         date: string
-        status: 'none' | 'planned' | 'completed' | 'active'
+        status: ActivityDayStatus
       }[]
     }[] = []
 
@@ -96,7 +96,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
 
     let currentWeek: {
       date: string
-      status: 'none' | 'planned' | 'completed' | 'active'
+      status: ActivityDayStatus
     }[] = []
 
     const monthNames = [
@@ -115,7 +115,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
     ]
 
     const currentDate = new Date(startDate)
-    while (currentDate <= endDate) {
+    while (currentDate <= today) {
       const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
 
       // Check if we're at the start of a new month (on a Monday, which starts a new week)
@@ -141,7 +141,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       }
 
       // Determine status
-      let status: 'none' | 'planned' | 'completed' | 'active' = 'none'
+      let status: ActivityDayStatus = 'none'
       const dayData = data[dateString]
 
       if (dayData) {
@@ -159,10 +159,10 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
       currentWeek.push({ date: dateString, status })
 
       // If it's Sunday (0) or we've reached the end, push the week
-      if (currentDate.getDay() === 0 || currentDate >= endDate) {
-        // Fill remaining days if needed (for incomplete weeks)
+      if (currentDate.getDay() === 0 || currentDate >= today) {
+        // Fill remaining days in the current week with placeholders instead of future cells.
         while (currentWeek.length < 7) {
-          currentWeek.push({ date: '', status: 'none' })
+          currentWeek.push({ date: '', status: 'hidden' })
         }
         weeks.push({ days: currentWeek })
         currentWeek = []
@@ -231,7 +231,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
   }, [data])
 
   const getColorForStatus = (
-    status: 'none' | 'planned' | 'completed' | 'active',
+    status: ActivityDayStatus,
   ) => {
     switch (status) {
       case 'active':
@@ -240,6 +240,8 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
         return Colors.primary
       case 'planned':
         return Colors.secondary
+      case 'hidden':
+        return 'transparent'
       default:
         return colorScheme === 'dark'
           ? Colors.dark.grayBorder
@@ -412,7 +414,7 @@ const ActivityMap = ({ data }: ActivityMapProps) => {
                       style={{
                         width: visibleWeeks.squareWidth,
                         height: visibleWeeks.squareWidth,
-                        borderRadius: 4,
+                        borderRadius: day.status === 'hidden' ? 0 : 4,
                         backgroundColor: getColorForStatus(day.status),
                       }}
                     />

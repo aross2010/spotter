@@ -83,13 +83,16 @@ const WorkoutView = ({
       <View
         style={tw`p-4 ${roundTop ? 'rounded-t-2xl' : ''} ${roundBottom ? 'rounded-b-2xl mb-2' : ''} ${roundBottom ? '' : 'border-b border-light-grayBorder dark:border-dark-grayBorder'} bg-white dark:bg-dark-grayPrimary relative overflow-hidden`}
       >
-        <View style={tw`flex-row justify-between items-center`}>
-          <View>
-            <Txt twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide">
+        <View style={tw`flex-row justify-between items-center gap-2`}>
+          <View style={tw`flex-1`}>
+            <Txt
+              numberOfLines={1}
+              twcn="text-xs text-light-grayText dark:text-dark-grayText uppercase font-medium tracking-wide"
+            >
               {formatDate(date)}
               {location && (
                 <Txt
-                  twcn={`text-xs uppercase font-medium tracking-wide ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
+                  twcn={`text-xs uppercase font-medium  tracking-wide ${isLocationFiltered ? 'text-primary' : 'text-light-grayText dark:text-dark-grayText'}`}
                 >
                   {' '}
                   @ {location}
@@ -97,65 +100,67 @@ const WorkoutView = ({
               )}
             </Txt>
           </View>
-          <Host style={{ width: 22, height: 22 }}>
-            <ContextMenu>
-              <ContextMenu.Items>
-                <SwiftButton
-                  systemImage="info"
-                  onPress={() => {
-                    router.push({
-                      pathname: '/workout-details',
-                      params: {
-                        id: workout.id,
-                      },
-                    })
-                  }}
-                >
-                  View Details
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="doc.on.doc"
-                  onPress={() => {
-                    router.push({
-                      pathname: '/workout-form',
-                      params: {
-                        cloneId: workout.id,
-                      },
-                    })
-                  }}
-                >
-                  Create Copy
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="pencil"
-                  onPress={() => {
-                    router.push({
-                      pathname: '/workout-form',
-                      params: {
-                        id: workout.id,
-                        ...(isHome ? { from: 'home' } : {}),
-                      },
-                    })
-                  }}
-                >
-                  Edit
-                </SwiftButton>
-                <SwiftButton
-                  systemImage="trash"
-                  onPress={handleDeleteWorkout}
-                >
-                  Delete
-                </SwiftButton>
-              </ContextMenu.Items>
-              <ContextMenu.Trigger>
-                <SFIcon
-                  name="ellipsis"
-                  color={theme.text}
-                  size={22}
-                />
-              </ContextMenu.Trigger>
-            </ContextMenu>
-          </Host>
+          <View>
+            <Host style={{ width: 22, height: 22 }}>
+              <ContextMenu>
+                <ContextMenu.Items>
+                  <SwiftButton
+                    systemImage="info"
+                    onPress={() => {
+                      router.push({
+                        pathname: '/workout-details',
+                        params: {
+                          id: workout.id,
+                        },
+                      })
+                    }}
+                  >
+                    View Details
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="doc.on.doc"
+                    onPress={() => {
+                      router.push({
+                        pathname: '/workout-form',
+                        params: {
+                          cloneId: workout.id,
+                        },
+                      })
+                    }}
+                  >
+                    Create Copy
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="pencil"
+                    onPress={() => {
+                      router.push({
+                        pathname: '/workout-form',
+                        params: {
+                          id: workout.id,
+                          ...(isHome ? { from: 'home' } : {}),
+                        },
+                      })
+                    }}
+                  >
+                    Edit
+                  </SwiftButton>
+                  <SwiftButton
+                    systemImage="trash"
+                    onPress={handleDeleteWorkout}
+                  >
+                    Delete
+                  </SwiftButton>
+                </ContextMenu.Items>
+                <ContextMenu.Trigger>
+                  <SFIcon
+                    name="ellipsis"
+                    color={theme.text}
+                    size={22}
+                  />
+                </ContextMenu.Trigger>
+              </ContextMenu>
+            </Host>
+          </View>
         </View>
 
         <View>
