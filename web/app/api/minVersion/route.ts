@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   const minVersion = {
-    ios: '2.1.0',
+    ios: '2.2.2',
     android: '1.0.0',
   }
 
