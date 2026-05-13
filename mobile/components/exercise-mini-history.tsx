@@ -14,20 +14,18 @@ import { toTitleCase } from '../functions/utils'
 
 type ExerciseMiniHistoryProps = {
   id: string
-  exerciseIndex: number
   workoutDate: string
 }
 
 const ExerciseMiniHistory = ({
   id,
-  exerciseIndex,
   workoutDate,
 }: ExerciseMiniHistoryProps) => {
   const { preferences } = useUserStore()
   const { fetchWithAuth } = useAuth()
   const { workoutData, updateExerciseDetails } = useWorkoutForm()
 
-  const cachedDetails = workoutData.exercises[exerciseIndex]?.details
+  const cachedDetails = workoutData.exercises.find((ex) => ex.id === id)?.details
   const [isLoading, setIsLoading] = useState(cachedDetails?.loading ?? true)
   const [exercise, setExercise] = useState<ExerciseDetailsMini | null>(
     cachedDetails?.data ?? null,
@@ -46,7 +44,7 @@ const ExerciseMiniHistory = ({
 
     const fetchExercise = async () => {
       setIsLoading(true)
-      updateExerciseDetails(exerciseIndex, null, true)
+      updateExerciseDetails(id, null, true)
 
       try {
         const res = await fetchWithAuth(
@@ -60,10 +58,10 @@ const ExerciseMiniHistory = ({
         )
         const data = (await res.json()) as ExerciseDetailsMini
         setExercise(data)
-        updateExerciseDetails(exerciseIndex, data, false)
+        updateExerciseDetails(id, data, false)
       } catch (error) {
         console.error('Error fetching exercise mini history:', error)
-        updateExerciseDetails(exerciseIndex, null, false)
+        updateExerciseDetails(id, null, false)
       } finally {
         setIsLoading(false)
       }
@@ -117,14 +115,18 @@ const ExerciseMiniHistory = ({
                   <Txt twcn="text-xs flex-1 text-center">{setLabel}</Txt>
                 )}
                 <Txt twcn="text-xs flex-1 text-center">
-                  {weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight}
+                  {set.weight == 0 || set.weight === null
+                    ? '-'
+                    : weightMetric === 'kgs'
+                      ? set.weight.toFixed(1)
+                      : set.weight}
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">{set.reps}</Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.partials ? set.partials : ''}
+                  {set.partials ? set.partials : '-'}
                 </Txt>
                 <Txt twcn="text-xs flex-1 text-center">
-                  {set.intensity || set.intensity === 0 ? set.intensity : ''}
+                  {set.intensity || set.intensity === 0 ? set.intensity : '-'}
                 </Txt>
               </View>
             )

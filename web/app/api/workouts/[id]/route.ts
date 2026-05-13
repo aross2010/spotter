@@ -109,9 +109,9 @@ export const PUT = withAuth(async (req: Request, user: any) => {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
   }
 
-  if (typeof name !== 'string' || name.length > 25) {
+  if (typeof name !== 'string' || name.length > 50) {
     return NextResponse.json(
-      { error: 'Workout name must be a string under 25 characters' },
+      { error: 'Workout name must be a string under 50 characters' },
       { status: 400 },
     )
   }
@@ -318,6 +318,85 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
   const setIdMap = new Map<string, string>()
   const newExercises: { id: string; name: string }[] = []
 
+  if (name !== undefined && (typeof name !== 'string' || name.length > 50)) {
+    return NextResponse.json(
+      { error: 'Workout name must be a string under 50 characters' },
+      { status: 400 },
+    )
+  }
+
+  if (date !== undefined && !isISO8601(date)) {
+    return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
+  }
+
+  if (
+    location !== undefined &&
+    location !== null &&
+    (typeof location !== 'string' || location.length > 100)
+  ) {
+    return NextResponse.json(
+      { error: 'Location must be a string under 100 characters' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    notes !== undefined &&
+    notes !== null &&
+    (typeof notes !== 'string' || notes.length > 500)
+  ) {
+    return NextResponse.json(
+      { error: 'Notes must be a string under 500 characters' },
+      { status: 400 },
+    )
+  }
+
+  if (
+    status !== undefined &&
+    !['completed', 'planned', 'active'].includes(status)
+  ) {
+    return NextResponse.json(
+      { error: 'Status must be one of: completed, planned, active' },
+      { status: 400 },
+    )
+  }
+
+  if (pinned !== undefined && typeof pinned !== 'boolean') {
+    return NextResponse.json(
+      { error: 'Pinned must be a boolean value' },
+      { status: 400 },
+    )
+  }
+
+  if (tags !== undefined && (!Array.isArray(tags) || tags.length > 10)) {
+    return NextResponse.json(
+      { error: 'Tags must be an array of strings, limited to 10' },
+      { status: 400 },
+    )
+  }
+
+  if (changedExercises !== undefined) {
+    if (!Array.isArray(changedExercises)) {
+      return NextResponse.json(
+        { error: 'changedExercises must be an array' },
+        { status: 400 },
+      )
+    }
+    for (const change of changedExercises) {
+      if (
+        !change.exercise?.name ||
+        typeof change.exercise.name !== 'string' ||
+        change.exercise.name.trim() === '' ||
+        change.exercise.name.length > 50
+      ) {
+        return NextResponse.json(
+          { error: 'Each exercise must have a valid name under 50 characters' },
+          { status: 400 },
+        )
+      }
+    }
+  }
+
   try {
     const result = await db.transaction(async (tx) => {
       const existingUser = await tx.query.users.findFirst({
@@ -418,7 +497,6 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
           `)
 
           // Recreate all exercises
-          let exNum = 1
           for (const change of changedExercises) {
             const exerciseData = await setExercise(
               change.exercise,
@@ -436,7 +514,6 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
                 name: exerciseData.name,
               })
             }
-            exNum++
           }
         } else {
           // Partial update - only update changed exercises
@@ -496,6 +573,11 @@ export const PATCH = withAuth(async (req: Request, user: any) => {
                   })
                   .returning({ id: sets.id, setNumber: sets.setNumber })
 
+                if (!insertedSet) {
+                  throw new Error(
+                    `Failed to create set ${setNum} for exercise ${change.exerciseNumber}`,
+                  )
+                }
                 setIdMap.set(
                   `${change.exerciseNumber}-${insertedSet.setNumber}`,
                   insertedSet.id,

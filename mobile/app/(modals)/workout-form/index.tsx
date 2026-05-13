@@ -159,17 +159,16 @@ const WorkoutForm = () => {
   const getWorkoutData = async (workoutId: string | null) => {
     setIsLoading(true)
     try {
-      await getNames()
-      if (!workoutId) return
-      const response = await fetchWithAuth(
-        `${BASE_URL}/api/workouts/${workoutId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
+      const [, response] = await Promise.all([
+        getNames(),
+        workoutId
+          ? fetchWithAuth(`${BASE_URL}/api/workouts/${workoutId}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            })
+          : Promise.resolve(null),
+      ])
+      if (!workoutId || !response) return
       const workout = await response.json()
       const workoutData = {
         ...workout,
@@ -230,7 +229,12 @@ const WorkoutForm = () => {
 
   useEffect(() => {
     if (workoutData.status === 'active' && !isSaving) {
-      void autoSaveWorkout()
+      if (pendingSaveRef.current) {
+        pendingSaveRef.current = false
+        void autoSaveWorkout(false)
+      } else {
+        void autoSaveWorkout()
+      }
     }
   }, [workoutData, isSaving])
 
@@ -779,6 +783,11 @@ const WorkoutForm = () => {
   ])
 
   const handleSubmitWorkout = async () => {
+    if (isSaving) return
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+      autoSaveTimeoutRef.current = null
+    }
     const isActive = workoutData.status === 'active'
     setIsSaving(true)
     try {
@@ -838,7 +847,6 @@ const WorkoutForm = () => {
       }
     } finally {
       setIsSaving(false)
-      pendingSaveRef.current = false
     }
   }
 

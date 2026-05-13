@@ -408,31 +408,31 @@ const ExerciseDetails = () => {
                 // Show combined L/R
                 setLabel = `${set.setNumber} L/R`
                 repsValue = set.reps
-                partialsValue = set.partials || ' '
+                partialsValue = set.partials || '-'
                 intensityValue =
-                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+                  set.intensity || set.intensity === 0 ? set.intensity : '-'
               } else {
                 // Show L
                 setLabel = `${set.setNumber}L`
                 repsValue = set.reps
-                partialsValue = set.partials || ' '
+                partialsValue = set.partials || '-'
                 intensityValue =
-                  set.intensity || set.intensity === 0 ? set.intensity : ' '
+                  set.intensity || set.intensity === 0 ? set.intensity : '-'
               }
             } else {
               // This is a right set that doesn't match left
               setLabel = `${set.setNumber}R`
               repsValue = set.reps
-              partialsValue = set.partials || ' '
+              partialsValue = set.partials || '-'
               intensityValue =
-                set.intensity || set.intensity === 0 ? set.intensity : ' '
+                set.intensity || set.intensity === 0 ? set.intensity : '-'
             }
           } else {
             setLabel = set.setNumber.toString()
             repsValue = set.reps
-            partialsValue = set.partials || ' '
+            partialsValue = set.partials || '-'
             intensityValue =
-              set.intensity || set.intensity === 0 ? set.intensity : ' '
+              set.intensity || set.intensity === 0 ? set.intensity : '-'
           }
 
           return (
@@ -452,7 +452,11 @@ const ExerciseDetails = () => {
                 <Txt twcn="text-xs flex-1 text-center">{setLabel}</Txt>
               )}
               <Txt twcn="text-xs flex-1 text-center">
-                {weightMetric === 'kgs' ? set.weight.toFixed(1) : set.weight}
+                {set.weight == 0 || set.weight === null
+                  ? '-'
+                  : weightMetric === 'kgs'
+                    ? set.weight.toFixed(1)
+                    : set.weight}
               </Txt>
               <Txt twcn="text-xs flex-1 text-center">{repsValue}</Txt>
               <Txt twcn="text-xs flex-1 text-center">{partialsValue}</Txt>

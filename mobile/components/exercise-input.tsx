@@ -81,6 +81,7 @@ const ExerciseInput = ({
     workoutData,
     setWorkoutData,
     exerciseNames,
+    exerciseNamesMap,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
     focusedInput,
@@ -366,7 +367,7 @@ const ExerciseInput = ({
     const workoutDate = workoutData.date.toISOString().slice(0, 10)
 
     // Mark as loading
-    updateExerciseDetails(exerciseNumber - 1, null, true)
+    updateExerciseDetails(exerciseId, null, true)
 
     try {
       const res = await fetchWithAuth(
@@ -379,10 +380,10 @@ const ExerciseInput = ({
         },
       )
       const data = (await res.json()) as ExerciseDetailsMini
-      updateExerciseDetails(exerciseNumber - 1, data, false)
+      updateExerciseDetails(exerciseId, data, false)
     } catch (error) {
       console.error('Error pre-fetching exercise history:', error)
-      updateExerciseDetails(exerciseNumber - 1, null, false)
+      updateExerciseDetails(exerciseId, null, false)
     }
   }
 
@@ -798,7 +799,7 @@ const ExerciseInput = ({
       const updatedExercises = [...prev.exercises]
       if (exerciseNumber) {
         const currentExercise = updatedExercises[exerciseNumber - 1]
-        const selectedExercise = exerciseNames.find((ex) => ex.name === name)
+        const selectedExercise = exerciseNamesMap.get(name.toLowerCase())
         const wasUnilateral = currentExercise.isUnilateral || false
         const willBeUnilateral = selectedExercise?.isUnilateral || false
 
@@ -940,14 +941,12 @@ const ExerciseInput = ({
     const currentExercise = updatedExercises[exerciseIndex]
 
     // Check if there's a matching exercise (trimmed comparison)
-    const matchingExercise = exerciseNames.find(
-      (ex) => ex.name.toLowerCase() === text.toLowerCase().trim(),
-    )
+    const matchingExercise = exerciseNamesMap.get(text.toLowerCase().trim())
 
     // Only mark as non-existing if trimmed text doesn't match an existing exercise
     updatedExercises[exerciseIndex] = {
       ...currentExercise,
-      name: text,
+      name: matchingExercise ? text.trim() : text,
       existing: matchingExercise ? true : false,
     }
 
@@ -1259,9 +1258,7 @@ const ExerciseInput = ({
         <GlassView
           style={tw`py-1.5 px-6 rounded-lg  flex-row items-center gap-2 bg-light-grayPrimary dark:bg-dark-grayPrimary`}
         >
-          <Txt twcn="text-xs font-semibold dark:text-white text-white">
-            Add Set
-          </Txt>
+          <Txt twcn="text-xs font-semibold dark:text-white">Add Set</Txt>
           <SFIcon
             name={iconName as SFSymbol}
             size={16}
@@ -1727,7 +1724,6 @@ const ExerciseInput = ({
       >
         <ExerciseMiniHistory
           id={exercise.id as string}
-          exerciseIndex={exerciseNumber - 1}
           workoutDate={workoutData.date.toISOString().slice(0, 10)}
         />
       </MyBottomSheet>

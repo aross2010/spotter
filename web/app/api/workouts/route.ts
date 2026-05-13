@@ -33,7 +33,7 @@ export const getExerciseId = async (
     where: (
       exercise: typeof schema.exercises,
       { eq, and }: { eq: any; and: any },
-    ) => and(eq(exercise.name, name), eq(exercise.userId, userId)),
+    ) => and(eq(exercise.name, name.trim()), eq(exercise.userId, userId)),
   })
   if (existingExercise) {
     return { id: existingExercise.id, isNew: false }
@@ -49,10 +49,19 @@ export const getExerciseId = async (
       primaryMuscleGroup: null,
       secondaryMuscleGroups: [],
     })
+    .onConflictDoNothing()
     .returning()
 
   if (!exercise) {
-    throw new Error('Failed to create exercise')
+    // Concurrent request inserted the same exercise between findFirst and insert
+    const existing = await tx.query.exercises.findFirst({
+      where: (
+        ex: typeof schema.exercises,
+        { eq, and }: { eq: any; and: any },
+      ) => and(eq(ex.name, name.trim()), eq(ex.userId, userId)),
+    })
+    if (!existing) throw new Error('Failed to create exercise')
+    return { id: existing.id, isNew: false }
   }
 
   return { id: exercise.id, isNew: true }

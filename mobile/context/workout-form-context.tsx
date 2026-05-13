@@ -2,6 +2,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useMemo,
   ReactNode,
   useEffect,
   useRef,
@@ -34,6 +35,7 @@ type WorkoutFormContextType = {
   updateWorkoutData: (updates: Partial<WorkoutFormData>) => void
   workoutNames: WorkoutName[]
   exerciseNames: ExerciseName[]
+  exerciseNamesMap: Map<string, ExerciseName>
   newlyAddedExerciseNumber: number | null
   setNewlyAddedExerciseNumber: (exerciseNumber: number | null) => void
   addWorkout: (
@@ -50,7 +52,7 @@ type WorkoutFormContextType = {
   userTags: TagWithCount[]
   setUserTags: React.Dispatch<React.SetStateAction<TagWithCount[]>>
   updateExerciseDetails: (
-    exerciseIndex: number,
+    exerciseId: string,
     details: any,
     loading: boolean,
   ) => void
@@ -115,6 +117,10 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     status: 'completed',
   })
   const [exerciseNames, setExerciseNames] = useState<ExerciseName[]>([])
+  const exerciseNamesMap = useMemo(
+    () => new Map(exerciseNames.map((ex) => [ex.name.toLowerCase(), ex])),
+    [exerciseNames],
+  )
   const [workoutNames, setWorkoutNames] = useState<WorkoutName[]>([])
   const [userTags, setUserTags] = useState<TagWithCount[]>([])
   const [locations, setLocations] = useState<UsedLocations[]>([])
@@ -378,26 +384,18 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
   }
 
   const updateExerciseDetails = (
-    exerciseIndex: number,
+    exerciseId: string,
     details: any,
     loading: boolean,
   ) => {
-    setWorkoutData((prev) => {
-      const updatedExercises = [...prev.exercises]
-      if (updatedExercises[exerciseIndex]) {
-        updatedExercises[exerciseIndex] = {
-          ...updatedExercises[exerciseIndex],
-          details: {
-            loading,
-            data: details,
-          },
-        }
-      }
-      return {
-        ...prev,
-        exercises: updatedExercises,
-      }
-    })
+    setWorkoutData((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) =>
+        ex.id === exerciseId
+          ? { ...ex, details: { loading, data: details } }
+          : ex,
+      ),
+    }))
   }
 
   const prefetchAllExerciseHistories = async (data?: WorkoutFormData) => {
@@ -411,14 +409,14 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
       .map((exercise, index) => ({ exercise, index }))
       .filter(({ exercise }) => exercise.id && exercise.existing)
 
-    // Mark all as loading using original indices
-    exercisesToFetch.forEach(({ index }) => {
-      updateExerciseDetails(index, null, true)
+    // Mark all as loading using exercise IDs
+    exercisesToFetch.forEach(({ exercise }) => {
+      updateExerciseDetails(exercise.id!, null, true)
     })
 
     // Fetch all histories in parallel
     await Promise.all(
-      exercisesToFetch.map(async ({ exercise, index }) => {
+      exercisesToFetch.map(async ({ exercise }) => {
         try {
           const res = await fetchWithAuth(
             `${BASE_URL}/api/exercises/mini/${exercise.id}?weight=${weightMetric}&intensity=${intensityMetric}&date=${workoutDate}`,
@@ -430,13 +428,13 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
             },
           )
           const data = await res.json()
-          updateExerciseDetails(index, data, false)
+          updateExerciseDetails(exercise.id!, data, false)
         } catch (error) {
           console.error(
             `Error prefetching exercise history for ${exercise.name}:`,
             error,
           )
-          updateExerciseDetails(index, null, false)
+          updateExerciseDetails(exercise.id!, null, false)
         }
       }),
     )
@@ -452,6 +450,7 @@ export const WorkoutFormProvider = ({ children }: WorkoutFormProviderProps) => {
     setWorkoutData,
     workoutNames,
     exerciseNames,
+    exerciseNamesMap,
     updateWorkoutData,
     newlyAddedExerciseNumber,
     setNewlyAddedExerciseNumber,
